@@ -847,6 +847,16 @@ function server_prepare_legacy_user_defaults(section, protocol) {
         server_default_set_option(section, "vless_flow", extra);
 }
 
+function safe_filename_string(value) {
+    value = as_string(value);
+    let result = [];
+    for (let i = 0; i < length(value); i++) {
+        let chr = substr(value, i, 1);
+        push(result, regex_matches(chr, "^[A-Za-z0-9_.-]$") ? chr : "_");
+    }
+    return join("", result);
+}
+
 function server_prepare_tls_defaults(section, protocol, security) {
     if (security != "tls")
         return;
@@ -883,16 +893,6 @@ function server_prepare_tls_defaults(section, protocol, security) {
         if (!server_generate_tls_keypair_files(tls_server_name, certificate_path, key_path))
             fatal("Failed to generate TLS certificate for server '" + section + "'. Aborted.");
     }
-}
-
-function safe_filename_string(value) {
-    value = as_string(value);
-    let result = [];
-    for (let i = 0; i < length(value); i++) {
-        let chr = substr(value, i, 1);
-        push(result, regex_matches(chr, "^[A-Za-z0-9_.-]$") ? chr : "_");
-    }
-    return join("", result);
 }
 
 function prepare_server_defaults(section) {

@@ -45,8 +45,8 @@ fi
 if grep -n -E 'grep -q "105 trafira"|sed -i "/105 trafira|trafira_dont_touch_dhcp=.*uci|cp /etc/config/trafira|rm -f /tmp/luci-indexcache|killall -HUP rpcd' "$TRAFIRA_MAKEFILE" "$BUILD_SCRIPT" >/dev/null; then
   fail "package scripts must not keep backend/LuCI lifecycle business logic in shell"
 fi
-grep -Fq '#!/usr/bin/ucode' "$TRAFIRA_MAKEFILE" ||
-  fail "trafira Makefile package hooks must use ucode entrypoints"
+grep -Fq '#!/bin/sh' "$TRAFIRA_MAKEFILE" ||
+  fail "trafira Makefile package hooks must use APK-compatible shell wrappers"
 grep -Fq '/usr/bin/trafira package_prerm' "$TRAFIRA_MAKEFILE" ||
   fail "trafira Makefile prerm must delegate cleanup to package_prerm"
 grep -Fq '/usr/bin/trafira package_postinst' "$TRAFIRA_MAKEFILE" ||

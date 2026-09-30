@@ -5299,10 +5299,14 @@ function appendUniqueDomainTextValues(textValue, values) {
 }
 
 function loadCombinedDomainText(section_id) {
+  const domainValue = uci.get(UCI_PACKAGE, section_id, "domain");
   const textValue =
-    uci.get(UCI_PACKAGE, section_id, "domain") ||
+    (typeof domainValue === "string" && domainValue) ||
     uci.get(UCI_PACKAGE, section_id, "domain_suffix_text");
   const values = [
+    ...(Array.isArray(domainValue)
+      ? domainValuesWithPrefix(section_id, "domain", "full")
+      : []),
     ...domainValuesWithPrefix(section_id, "domain_suffix", ""),
     ...domainValuesWithPrefix(section_id, "domain_keyword", "keyword"),
     ...domainValuesWithPrefix(section_id, "domain_regex", "regex"),

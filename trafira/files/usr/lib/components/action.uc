@@ -221,6 +221,15 @@ function bytes_to_mib_ceil(value) {
     return value <= 0 ? 0 : int((value + 1048575) / 1048576);
 }
 
+function log_message(message, level) {
+    level = as_string(level || "info");
+    command_success_from_args([ "logger", "-t", "trafira", "[" + level + "] " + as_string(message) ]);
+}
+
+function updates_log(message, level) {
+    log_message("Updates: " + as_string(message), level || "info");
+}
+
 function ensure_tmp_download_capacity(asset_size, label) {
     asset_size = int(asset_size || 0);
     if (asset_size <= 0) {
@@ -267,15 +276,6 @@ function owner_pid() {
 function pid_running(pid) {
     pid = as_string(pid);
     return match(pid, /^[0-9]+$/) != null && command_success_from_args([ "kill", "-0", pid ]);
-}
-
-function log_message(message, level) {
-    level = as_string(level || "info");
-    command_success_from_args([ "logger", "-t", "trafira", "[" + level + "] " + as_string(message) ]);
-}
-
-function updates_log(message, level) {
-    log_message("Updates: " + as_string(message), level || "info");
 }
 
 function module_command(args) {
