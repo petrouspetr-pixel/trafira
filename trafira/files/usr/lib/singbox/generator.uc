@@ -2484,6 +2484,10 @@ function rebuild_local_domain_ip_list_ruleset(section_name, references, domains_
 
     let stamp = clock();
     let staged_path = sprintf("%s.%d.%d.stage", ruleset_path, stamp[0], stamp[1]);
+    if (!ensure_parent_dir(staged_path)) {
+        local_list_rebuild_failed(ruleset_path, "unable to prepare local domain/IP list staging directory");
+        return;
+    }
     let replacement = { version: 3, rules: [] };
     for (let reference in references) {
         // Parse each source separately so a failed or invalid member cannot be

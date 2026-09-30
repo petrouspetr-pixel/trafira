@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -eo pipefail
+trap 'printf "FAIL: generator list replacement at line %s\n" "$LINENO" >&2' ERR
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LIB="$ROOT_DIR/trafira/files/usr/lib"
+GENERATOR="${TRAFIRA_GENERATOR:-$LIB/singbox/generator.uc}"
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
+mkdir -p "$WORK_DIR/config.json.rulesets"
 printf 'old.example\n203.0.113.0/24\n' >"$WORK_DIR/local.txt"
 node - "$WORK_DIR" <<'JS'
 const fs=require('fs'),dir=process.argv[2];
@@ -11,7 +14,7 @@ const fixture={settings:{dns_server:'1.1.1.1'},section:[{'.name':'blocked','.typ
 fs.writeFileSync(`${dir}/fixture.json`,JSON.stringify(fixture));
 JS
 generate() {
-  ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture \
+  ucode -L "$LIB" "$GENERATOR" generate-config-fixture \
     "$WORK_DIR/fixture.json" "$WORK_DIR/config.json" 127.0.0.1 0 1 '' 1.14.1
 }
 generate

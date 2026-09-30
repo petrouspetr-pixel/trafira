@@ -210,7 +210,9 @@ let mode = ARGV[0] || "";
 if (mode == "version")
   exit(0);
 if (mode == "variant") {
-  print("stable\n");
+  // This fixture reports no installed version/package above: keep its variant
+  // consistent so rollback staging correctly has nothing to preserve.
+  print("not-installed\n");
   exit(0);
 }
 if (mode == "is-extended" || mode == "is-tiny")

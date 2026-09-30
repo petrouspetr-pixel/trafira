@@ -58,6 +58,13 @@ cp.execFileSync('tar', ['-czf', `${archiveDir}/control.tar.gz`, '-C', `${archive
 cp.execFileSync('tar', ['-czf', `${archiveDir}/data.tar.gz`, '-C', `${archiveDir}/data`, './binary']);
 cp.execFileSync('tar', ['-czf', `${archiveDir}/old.ipk`, '-C', archiveDir, 'control.tar.gz', 'data.tar.gz']);
 fs.writeFileSync(`${archiveDir}/broken.ipk`, 'not an archive');
+fs.mkdirSync(`${archiveDir}/empty-control`);
+fs.mkdirSync(`${archiveDir}/empty-data`);
+fs.mkdirSync(`${archiveDir}/empty-package`);
+fs.writeFileSync(`${archiveDir}/empty-control/control`, 'Package: libpthread\nVersion: 1-r1\nArchitecture: aarch64_cortex-a53\nInstalled-Size: 0\n');
+cp.execFileSync('tar', ['-czf', `${archiveDir}/empty-package/control.tar.gz`, '-C', `${archiveDir}/empty-control`, './control']);
+cp.execFileSync('tar', ['-czf', `${archiveDir}/empty-package/data.tar.gz`, '-C', `${archiveDir}/empty-data`, '.']);
+cp.execFileSync('tar', ['-czf', `${archiveDir}/empty.ipk`, '-C', `${archiveDir}/empty-package`, 'control.tar.gz', 'data.tar.gz']);
 fs.writeFileSync(`${dir}/real-archive.uc`, common + `
 let fs = require("fs");
 let is_apk = () => false;
@@ -73,6 +80,8 @@ let info = rollback_archive_info(path, "sing-box-tiny", "1.11.9-r1");
 assert(info != null && info.size >= 8192 && length(info.digest) == 64);
 assert(rollback_archive_info(path, "sing-box-tiny", "1.12.0-r1") == null);
 assert(rollback_archive_info(${JSON.stringify(`${archiveDir}/broken.ipk`)}, "sing-box-tiny", "1.11.9-r1") == null);
+let empty_info = rollback_archive_info(${JSON.stringify(`${archiveDir}/empty.ipk`)}, "libpthread", "1-r1");
+assert(empty_info != null && empty_info.size == 0);
 let old_digest = info.digest;
 fs.writefile(path, "damaged after staging");
 assert(rollback_archive_digest(path) != old_digest);
@@ -86,7 +95,8 @@ let is_apk = () => apk;
 let file_nonempty = path => present;
 let rollback_archive_field = (path, key) => meta[key];
 let rollback_archive_digest = path => "abc";
-let rollback_ipk_unpacked_bytes = path => 4096;
+let unpacked = 4096;
+let rollback_ipk_unpacked_bytes = path => unpacked;
 let read_openwrt_release_value = key => "aarch64_cortex-a53";
 let command_output_from_args = args => apk ? "aarch64" : "arch all 1\\narch aarch64_cortex-a53 10\\n";
 let command_success_from_args = args => verify;
@@ -107,6 +117,18 @@ for (let use_apk in [ false, true ]) {
   present = false;
   assert(rollback_archive_info("old.pkg", "sing-box-tiny", "1.11.9-r1") == null);
   present = true;
+}
+meta.name = "libpthread";
+unpacked = 0;
+for (let use_apk in [ false, true ]) {
+  apk = use_apk;
+  meta["installed-size"] = "0";
+  let empty = rollback_archive_info("empty.pkg", "libpthread", "1.11.9-r1");
+  assert(empty != null && empty.size == 0);
+  for (let invalid in [ "", "garbage", "-1", "10bytes", null ]) {
+    meta["installed-size"] = invalid;
+    assert(rollback_archive_info("empty.pkg", "libpthread", "1.11.9-r1") == null);
+  }
 }
 `);
 fs.writeFileSync(`${dir}/closure.uc`, common + `
@@ -138,11 +160,15 @@ fs.writeFileSync(`${dir}/stage.uc`, common + `
 let rollback_package = null;
 let rollback_package_files = [];
 let rollback_packages = [];
+let rollback_apk_world = null;
 let tmp_dir = "/stage";
+let apk = false;
+let world = "base-files\\nsing-box-tiny~1.11\\n";
+let fs = { readfile: path => world };
 let missing = "libc";
 let checked_storage = 0;
 let init_tmp_dir = () => true;
-let is_apk = () => false;
+let is_apk = () => apk;
 let ensure_dir = path => true;
 let write_file = (path, body) => true;
 let command_output_from_args = args => "arch all 1\\n";
@@ -160,6 +186,11 @@ assert(checked_storage == 200 && length(rollback_package_files) == 2);
 assert(rollback_package.version == "old-r1");
 assert(stage_previous_sing_box_package("extended-compressed", "install"));
 assert(rollback_package == null && length(rollback_package_files) == 0);
+apk = true;
+assert(stage_previous_sing_box_package("tiny", "install"));
+assert(rollback_apk_world == world);
+world = null;
+assert(!stage_previous_sing_box_package("tiny", "install"));
 `);
 fs.writeFileSync(`${dir}/download-capacity.uc`, common + `
 let apk = false;
@@ -182,14 +213,22 @@ let tmp_dir = "/stage";
 let digest = "original";
 let command = "";
 let rollback_packages = [ { name: "sing-box-tiny", version: "old-r1", path: "/stage/old.ipk", digest: "original" } ];
+let rollback_apk_world = "base-files\\nsing-box-tiny~1.11\\n";
+let world = rollback_apk_world;
+let pending = "";
+let fs = { rename: (source, target) => { world = pending; return true; } };
+let write_file = (path, data) => { pending = data; return true; };
+let remove_file = path => true;
+let owner_pid = () => "123";
 let is_apk = () => apk;
 let rollback_archive_digest = path => digest;
 let file_nonempty = path => true;
 let shell_quote = v => "'" + v + "'";
 let command_from_args = args => join(" ", args);
-let run_logged_install = (message, value) => { command = value; return true; };
+let run_logged_install = (message, value) => { command = value; if (apk) world = "base-files\\nlibc=hash-pinned\\nsing-box-tiny=hash-pinned\\n"; return true; };
 let installed_package_version = name => "old-r1";
 ${extract('rollback_files_valid')}
+${source.includes('function restore_rollback_apk_world(') ? extract('restore_rollback_apk_world') : ''}
 ${extract('pkg_install_rollback_files')}
 assert(pkg_install_rollback_files([ "/stage/old.ipk" ]));
 assert(index(command, "OPKG_CONF_DIR='/stage/rollback/empty'") >= 0);
@@ -197,6 +236,7 @@ assert(index(command, "-f /stage/rollback/offline.conf") >= 0);
 apk = true;
 assert(pkg_install_rollback_files([ "/stage/old.apk" ]));
 assert(index(command, "--no-network") >= 0);
+assert(world == rollback_apk_world);
 command = "";
 digest = "corrupt";
 assert(!pkg_install_rollback_files([ "/stage/old.apk" ]));
