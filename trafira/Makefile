@@ -41,12 +41,11 @@ define Build/Compile
 endef
 
 define Package/trafira/prerm
-#!/usr/bin/ucode
+#!/bin/sh
 
-if (getenv("IPKG_INSTROOT") == null || getenv("IPKG_INSTROOT") == "")
-	system("/usr/bin/trafira package_prerm " + (ARGV[0] || "") + " >/dev/null 2>&1");
-
-exit(0);
+[ -n "$${IPKG_INSTROOT}" ] && exit 0
+/usr/bin/trafira package_prerm "$${1:-}" >/dev/null 2>&1
+exit 0
 endef
 
 define Package/trafira/postinst

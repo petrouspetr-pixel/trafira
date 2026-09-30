@@ -1934,12 +1934,14 @@ function service_proxy_address(settings, purpose) {
 function download_to_file(url, filepath, proxy_address) {
     let attempt = 1;
     while (attempt <= 3) {
-        let command = command_from_args([ "wget", "-O", filepath, url ]);
+        // Bound the entire attempt, including a peer that keeps sending tiny chunks.
+        let args = [ "curl", "--fail", "--location", "--silent", "--show-error",
+            "--connect-timeout", "10", "--max-time", "30", "--output", filepath ];
         if (as_string(proxy_address) != "")
-            command = "http_proxy=" + shell_quote("http://" + as_string(proxy_address)) +
-                " https_proxy=" + shell_quote("http://" + as_string(proxy_address)) + " " + command;
+            push(args, "--proxy", "http://" + as_string(proxy_address), "--noproxy", "");
+        push(args, url);
 
-        if (command_success(command))
+        if (command_success_from_args(args))
             return true;
 
         log_message("Attempt " + attempt + "/3 to download " + as_string(url) + " failed", "warn");

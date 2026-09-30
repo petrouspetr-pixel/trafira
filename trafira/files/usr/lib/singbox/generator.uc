@@ -338,6 +338,21 @@ function ruleset_registered(config, tag_name) {
     return false;
 }
 
+function apply_ruleset_http_clients(config) {
+    if (sing_box_uses_legacy_independent_cache(runtime_sing_box_version))
+        return;
+
+    for (let rule_set in array_or_empty(config.route && config.route.rule_set)) {
+        if (type(rule_set) != "object" || rule_set.type != "remote")
+            continue;
+        // An explicit direct client avoids the deprecated implicit default.
+        // Preserve the selected section for downloads made through a proxy.
+        rule_set.http_client = rule_set.download_detour
+            ? { detour: rule_set.download_detour } : {};
+        delete rule_set.download_detour;
+    }
+}
+
 function ensure_custom_ruleset(config, reference) {
     let tag_name;
     let kind = runtime_rulesets.kind_from_reference_hint(reference);
@@ -2039,21 +2054,44 @@ function manual_trojan_outbound(link, tag_name) {
     return outbound;
 }
 
+function manual_hysteria2_server_ports(value) {
+    if (index(value, ",") < 0 && index(value, "-") < 0)
+        return null;
+
+    let ports = [];
+    for (let entry in split(value, ",")) {
+        let parts = split(trim(entry), "-");
+        if (length(parts) < 1 || length(parts) > 2)
+            return null;
+        let start = parse_port(parts[0]);
+        let end = length(parts) == 2 ? parse_port(parts[1]) : start;
+        if (start == null || end == null || start > end)
+            return null;
+        push(ports, as_string(start) + ":" + as_string(end));
+    }
+    return length(ports) > 0 ? ports : null;
+}
+
 function manual_hysteria2_outbound(link, tag_name) {
     let query = url_query_params(link);
     let host = url_host(link);
-    let port = parse_port(as_string(query.mport || "") != "" ? query.mport : url_port(link));
+    let port_value = trim(as_string(query.mport || "") != "" ? query.mport : url_port(link));
+    let ports = manual_hysteria2_server_ports(port_value);
+    let port = parse_port(port_value);
     let password = url_userinfo(link);
-    if (host == "" || port == null || password == "")
+    if (host == "" || (ports == null && port == null) || password == "")
         runtime_generate_unsupported("manual Hysteria2 proxy link is invalid");
 
     let outbound = {
         type: "hysteria2",
         tag: tag_name,
         server: host,
-        server_port: port,
         password
     };
+    if (ports != null)
+        outbound.server_ports = ports;
+    else
+        outbound.server_port = port;
     if (as_string(query.obfs || "") != "")
         outbound.obfs = { type: as_string(query.obfs), password: as_string(query["obfs-password"] || "") };
     if (as_string(query.upmbps || "") != "")
@@ -3149,6 +3187,7 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
     for (let section in sections)
         add_mixed_proxy_for_section(config, section, service_address);
 
+    apply_ruleset_http_clients(config);
     assert_unique_outbound_tags(config);
     let removed = runtime_prune.prune_config(config, runtime_subscription_tags);
     for (let section_name, state in runtime_section_states) {
