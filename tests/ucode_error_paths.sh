@@ -60,6 +60,14 @@ let run = command => true;
 let log = (message, level) => null;
 let server_generate_tls_keypair_files = (name, cert, key) => true;
 `, 'server_prepare_tls_defaults("test/name", "vless", "tls"); assert(index(calls, "/etc/trafira/server-certs/test_name.crt") >= 0);');
+test('capacity', 'components/action.uc', ['ensure_tmp_download_capacity','updates_log','log_message'], `
+let tmp_dir = "";
+const TMP_DOWNLOAD_RESERVE_BYTES = 0;
+let filesystem_available_bytes = path => 0;
+let mem_available_bytes = () => 0;
+let tmp_download_capacity_ok = (size, disk, ram, reserve) => false;
+let bytes_to_mib_ceil = value => 1;
+`, 'assert(ensure_tmp_download_capacity(0, "unknown") === true); assert(ensure_tmp_download_capacity(100, "large") === false); assert(length(calls) == 2);');
 NODE
 failed=0
 for test in "$WORK_DIR/"*.uc; do

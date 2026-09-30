@@ -27,6 +27,13 @@ const assert = require('assert/strict');
 const [file, version, proxy] = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(file, 'utf8'));
 const modern = ['1.14.1','1.16.0'].includes(version);
+if (modern) {
+  assert.equal(config.route.default_http_client, 'trafira-ruleset-http');
+  assert.deepEqual(config.http_clients, [{tag:'trafira-ruleset-http'}]);
+} else {
+  assert.equal(config.http_clients, undefined);
+  assert.equal(config.route.default_http_client, undefined);
+}
 const remote = config.route.rule_set.filter(r => r.type === 'remote');
 assert(remote.length >= 2);
 for (const rule of remote) {

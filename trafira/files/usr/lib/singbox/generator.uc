@@ -342,14 +342,20 @@ function apply_ruleset_http_clients(config) {
     if (sing_box_uses_legacy_independent_cache(runtime_sing_box_version))
         return;
 
+    let has_remote = false;
     for (let rule_set in array_or_empty(config.route && config.route.rule_set)) {
         if (type(rule_set) != "object" || rule_set.type != "remote")
             continue;
+        has_remote = true;
         // An explicit direct client avoids the deprecated implicit default.
         // Preserve the selected section for downloads made through a proxy.
         rule_set.http_client = rule_set.download_detour
             ? { detour: rule_set.download_detour } : {};
         delete rule_set.download_detour;
+    }
+    if (has_remote) {
+        config.http_clients = [ { tag: "trafira-ruleset-http" } ];
+        config.route.default_http_client = "trafira-ruleset-http";
     }
 }
 
