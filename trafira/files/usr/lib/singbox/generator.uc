@@ -2669,6 +2669,21 @@ function dns_ruleset_needs_response(config, tag_name) {
     return false;
 }
 
+function add_section_dns_matcher_rule(config, section, matchers, rewrite_ttl) {
+    let source_ip_cidr = legacy_condition_values(section, "source_ip_cidr");
+    add_source_dns_matchers(matchers, source_ip_cidr);
+
+    if (option(section, "action", "") == "bypass" && length(source_ip_cidr) > 0) {
+        add_source_aware_bypass_dns_rules(config, matchers, rewrite_ttl);
+        return;
+    }
+
+    matchers.action = "route";
+    matchers.server = section_dns_server(section);
+    matchers.rewrite_ttl = rewrite_ttl;
+    push_dns_matcher_rule(config, matchers);
+}
+
 function add_section_ruleset_dns_rules(config, section, tags, rewrite_ttl, server_tag) {
     let query_tags = [];
     let response_tags = [];
@@ -2709,21 +2724,6 @@ function add_section_ruleset_dns_rules(config, section, tags, rewrite_ttl, serve
     };
     add_source_dns_matchers(response, source_ip_cidr);
     push_dns_matcher_rule(config, response);
-}
-
-function add_section_dns_matcher_rule(config, section, matchers, rewrite_ttl) {
-    let source_ip_cidr = legacy_condition_values(section, "source_ip_cidr");
-    add_source_dns_matchers(matchers, source_ip_cidr);
-
-    if (option(section, "action", "") == "bypass" && length(source_ip_cidr) > 0) {
-        add_source_aware_bypass_dns_rules(config, matchers, rewrite_ttl);
-        return;
-    }
-
-    matchers.action = "route";
-    matchers.server = section_dns_server(section);
-    matchers.rewrite_ttl = rewrite_ttl;
-    push_dns_matcher_rule(config, matchers);
 }
 
 function source_aware_dns_sources(sections) {

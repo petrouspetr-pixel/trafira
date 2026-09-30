@@ -150,6 +150,7 @@ assert_true(uci.del_list("dhcp.@dnsmasq[0].server", "127.0.0.42"), "anonymous de
 assert_equal(uci.get("dhcp.cfg01411c.server"), "1.1.1.1", "anonymous del_list must affect resolved section");
 
 require("uci").reject_writes();
+assert_true(!uci.set_section("dhcp.fixture", "dnsmasq"), "cursor set_section false must propagate");
 assert_true(!uci.set("dhcp.@dnsmasq[0].noresolv", "0"), "cursor set false must propagate");
 assert_true(!uci.add_list("dhcp.@dnsmasq[0].server", "8.8.8.8"), "cursor add_list false must propagate");
 assert_true(!uci.del_list("dhcp.@dnsmasq[0].server", "1.1.1.1"), "cursor del_list false must propagate");

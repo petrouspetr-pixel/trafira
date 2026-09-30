@@ -10,6 +10,14 @@ LUCI_UCI_DEFAULTS="$ROOT_DIR/luci-app-trafira/root/etc/uci-defaults/50_luci-traf
 BUILD_SCRIPT="$ROOT_DIR/build.sh"
 WORK_DIR="$(mktemp -d)"
 export TRAFIRA_PACKAGE_UPGRADE_STATE="$WORK_DIR/package-was-running"
+# Every lifecycle test uses an explicit local service fixture.
+cat >"$WORK_DIR/noop-init" <<'SH'
+#!/usr/bin/env bash
+[ "$1" != status ]
+SH
+chmod 0755 "$WORK_DIR/noop-init"
+export TRAFIRA_INIT="$WORK_DIR/noop-init"
+
 
 cleanup() {
   rm -rf "$WORK_DIR"
