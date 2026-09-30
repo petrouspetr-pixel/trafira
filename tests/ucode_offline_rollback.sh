@@ -242,6 +242,47 @@ digest = "corrupt";
 assert(!pkg_install_rollback_files([ "/stage/old.apk" ]));
 assert(command == "");
 `);
+fs.writeFileSync(`${dir}/recovery-retention.uc`, common + `
+let tmp_dir = "/tmp/trafira-updates.fixture";
+let retain_rollback_files = true;
+let removed = [];
+let moved = "";
+let logged = "";
+let fs = { rename: (source, target) => { moved = target; return true; } };
+let command_success_from_args = args => { if (args[0] == "rm") push(removed, args[2]); return true; };
+let cleanup_stale_tmp_files = () => null;
+let updates_log = (message, level) => { logged = message; };
+${extract('cleanup_tmp_dir')}
+cleanup_tmp_dir();
+assert(length(removed) == 0);
+assert(index(moved, "/tmp/trafira-recovery.") == 0);
+assert(index(logged, moved) >= 0);
+tmp_dir = "/tmp/trafira-updates.success";
+retain_rollback_files = false;
+cleanup_tmp_dir();
+assert(length(removed) == 1 && removed[0] == "/tmp/trafira-updates.success");
+`);
+fs.writeFileSync(`${dir}/recovery-failure.uc`, common + `
+let retain_rollback_files = false;
+let package_ok = false;
+let binary_ok = true;
+let sing_box_variant_is_package_managed = variant => true;
+let restore_sing_box_package_variant = variant => package_ok;
+let restore_sing_box_backup = path => binary_ok;
+let restore_rollback_apk_world = () => true;
+let updates_log = (message, level) => null;
+${extract('restore_sing_box_install_backup')}
+assert(restore_sing_box_install_backup("tiny", "/backup/binary"));
+assert(retain_rollback_files);
+retain_rollback_files = false;
+binary_ok = false;
+assert(!restore_sing_box_install_backup("tiny", "/backup/binary"));
+assert(retain_rollback_files);
+retain_rollback_files = false;
+package_ok = true;
+assert(restore_sing_box_install_backup("tiny", "/backup/binary"));
+assert(!retain_rollback_files);
+`);
 // Guard every switching entry point: preflight failure must occur before stop.
 for (const name of ['install_sing_box_extended_package', 'install_sing_box_extended', 'install_package_sing_box']) {
   const body = extract(name);
@@ -254,7 +295,12 @@ const extended = extract('install_sing_box_extended_package');
 if (extended.indexOf('move_file_to_backup("/usr/bin/sing-box"') > extended.indexOf('run_logged_pkg_remove_sing_box_conflict('))
   throw Error('Tiny/stable binary backup must precede removal');
 NODE
+failed=0
 for fixture in "$WORK_DIR/"*.uc; do
-  ucode "$fixture"
+  if ! ucode "$fixture"; then
+    printf 'FAILED rollback fixture: %s\n' "$(basename "$fixture")" >&2
+    failed=1
+  fi
 done
+[ "$failed" -eq 0 ]
 printf 'offline sing-box package rollback passed\n'

@@ -2739,9 +2739,32 @@ function add_section_ruleset_dns_rules(config, section, tags, rewrite_ttl, serve
     if (length(response_tags) == 0)
         return;
 
+    if (option(section, "action", "") == "bypass" && length(source_ip_cidr) > 0) {
+        // Preserve dnsmasq's local records and split DNS, but never return its
+        // cached FakeIP answer to a source explicitly bypassing the proxy.
+        let probe = { action: "evaluate", server: runtime_constants.DNSMASQ_DNS_SERVER_TAG, rewrite_ttl };
+        add_source_dns_matchers(probe, source_ip_cidr);
+        push_dns_matcher_rule(config, probe);
+        let local_answer = { rule_set: single_or_array(response_tags), match_response: true };
+        add_source_dns_matchers(local_answer, source_ip_cidr);
+        push_dns_matcher_rule(config, {
+            type: "logical",
+            mode: "and",
+            rules: [ local_answer, {
+                ip_cidr: [ runtime_constants.FAKEIP_INET4_RANGE, runtime_constants.FAKEIP_INET6_RANGE ],
+                match_response: true,
+                invert: true
+            } ],
+            action: "respond"
+        });
+    }
+
     // Address rules must see a real answer. Keep the original section destination
     // (including FakeIP) after the response matches either its domains or addresses.
-    let evaluate = { action: "evaluate", server: runtime_constants.DNS_SERVER_TAG };
+    let evaluate = {
+        action: "evaluate",
+        server: option(section, "action", "") == "dns" ? server_tag : runtime_constants.DNS_SERVER_TAG
+    };
     add_source_dns_matchers(evaluate, source_ip_cidr);
     push_dns_matcher_rule(config, evaluate);
     let response = {

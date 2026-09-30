@@ -2132,14 +2132,48 @@ function rebuild_domain_ip_lists_from_rule(section, settings) {
         subnets_path = temp_path();
         ok = subnets_path != "" && write_file(subnets_path, join("\n", subnet_chunks));
     }
+    let previous_path = staged_path + ".previous";
+    let saved_previous = false;
+    let keep_previous = false;
+    if (ok && file_exists_value(previous_path)) {
+        // A failed earlier rollback may have left the only usable generation
+        // here. Never overwrite that recovery copy on another attempt.
+        log_message("Previous domain/IP list recovery is still pending at " + previous_path, "error");
+        ok = false;
+    }
+    if (ok && file_exists_value(path)) {
+        if (copy_file(path, previous_path))
+            saved_previous = true;
+        else {
+            // The active generation has not changed; discard a partial copy.
+            remove_file(previous_path);
+            ok = false;
+        }
+    }
     if (ok)
         ok = fs.rename(staged_path, path);
     remove_file(staged_path);
     if (!ok)
         log_message("Domain/IP list replacement failed; keeping previous rules for " + section_name(section), "error");
     // Only validated, fully downloaded data may be applied to the running rules.
-    if (ok && subnets_path != "")
-        ok = add_plain_subnet_file_to_nft_for_section(section, subnets_path);
+    if (ok && subnets_path != "" && !add_plain_subnet_file_to_nft_for_section(section, subnets_path)) {
+        ok = false;
+        if (saved_previous) {
+            if (!fs.rename(previous_path, path)) {
+                keep_previous = true;
+                log_message("Could not restore domain/IP list file; previous rules are preserved at " + previous_path, "error");
+            }
+        }
+        else {
+            remove_file(path);
+            if (file_exists_value(path))
+                log_message("Could not remove failed initial domain/IP list file at " + path, "error");
+        }
+        // File rollback cannot undo subnet chunks already accepted by nft.
+        log_message("Domain/IP list nft application failed; partial nft changes may remain for " + section_name(section), "error");
+    }
+    if (saved_previous && !keep_previous)
+        remove_file(previous_path);
     if (subnets_path != "")
         remove_file(subnets_path);
     return ok;
