@@ -256,4 +256,22 @@ assert_absent 'dhcp.@dnsmasq[0].trafira_noresolv'
 assert_absent 'dhcp.@dnsmasq[0].trafira_cachesize'
 assert_log_contains 'commit dhcp'
 
+# Persist absent originals across separate configure/restore processes.
+printf 'trafira.settings.shutdown_correctly=1\n' > "$STATE"
+ucode -L "$UCODE_LIB" "$APPLY" configure force
+ucode -L "$UCODE_LIB" "$APPLY" configure force
+ucode -L "$UCODE_LIB" "$APPLY" restore force
+assert_absent 'dhcp.@dnsmasq[0].server'
+assert_absent 'dhcp.@dnsmasq[0].noresolv'
+assert_absent 'dhcp.@dnsmasq[0].cachesize'
+
+# User changes after configure survive a later process's rollback.
+printf 'dhcp.@dnsmasq[0].server=1.1.1.1\n' > "$STATE"
+ucode -L "$UCODE_LIB" "$APPLY" configure force
+"$WORK_DIR/bin/uci" set 'dhcp.@dnsmasq[0].server=9.9.9.9'
+"$WORK_DIR/bin/uci" set 'dhcp.@dnsmasq[0].cachesize=999'
+run_restore
+assert_value 'dhcp.@dnsmasq[0].server' '9.9.9.9'
+assert_value 'dhcp.@dnsmasq[0].cachesize' '999'
+
 printf 'DNS apply checks passed\n'

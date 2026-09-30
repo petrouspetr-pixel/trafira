@@ -32,23 +32,24 @@ function uci_exists(path) {
 }
 
 function uci_delete(path) {
-    uci.delete(path);
+    if (uci_exists(path) && !uci.delete(path))
+        die("DNS UCI delete failed\n");
 }
 
 function uci_set(path, value) {
-    uci.set(path, value);
+    if (!uci.set(path, value))
+        die("DNS UCI set failed\n");
 }
 
 function uci_add_list(path, value) {
-    uci.add_list(path, value);
+    if (!uci.add_list(path, value))
+        die("DNS UCI add_list failed\n");
 }
 
-function uci_del_list(path, value) {
-    return uci.del_list(path, value);
-}
 
 function uci_commit(package_name) {
-    uci.commit(package_name);
+    if (!uci.commit(package_name))
+        die("DNS UCI commit failed\n");
 }
 
 function words(value) {
@@ -66,6 +67,14 @@ function list_has(values, needle) {
         if (value == needle)
             return true;
     return false;
+}
+
+function uci_del_list(path, value) {
+    if (!list_has(uci_get(path), value))
+        return true;
+    if (!uci.del_list(path, value))
+        die("DNS UCI del_list failed\n");
+    return true;
 }
 
 function log(message, level) {
@@ -94,7 +103,10 @@ function dnsmasq_has_trafira_dns() {
 }
 
 function dnsmasq_has_trafira_managed_state() {
-    return uci_get("dhcp.@dnsmasq[0].trafira_server") != "" ||
+    return uci_exists("dhcp.@dnsmasq[0].trafira_snapshot_server") ||
+        uci_exists("dhcp.@dnsmasq[0].trafira_snapshot_noresolv") ||
+        uci_exists("dhcp.@dnsmasq[0].trafira_snapshot_cachesize") ||
+        uci_get("dhcp.@dnsmasq[0].trafira_server") != "" ||
         uci_get("dhcp.@dnsmasq[0].trafira_noresolv") != "" ||
         uci_get("dhcp.@dnsmasq[0].trafira_cachesize") != "" ||
         uci_get("dhcp.@dnsmasq[0].trafira_notinterface") != "" ||
@@ -123,148 +135,182 @@ function dnsmasq_legacy_interfaces() {
     return legacy_interfaces;
 }
 
-function backup_dnsmasq_config_option(key, backup_key) {
-    if (uci_get("dhcp.@dnsmasq[0]." + backup_key) != "")
+// Snapshot presence separately: an absent option must not become a default
+// value on rollback. Existing legacy backups remain authoritative.
+function snapshot_dnsmasq_option(key, applied) {
+    let path = "dhcp.@dnsmasq[0].";
+    let marker = path + "trafira_snapshot_" + key;
+    if (uci_exists(marker))
         return;
-
-    let value = uci_get("dhcp.@dnsmasq[0]." + key);
-    if (value != "")
-        uci_set("dhcp.@dnsmasq[0]." + backup_key, value);
+    let backup = path + "trafira_" + key;
+    let present = uci_exists(backup);
+    let value = uci_get(backup);
+    if (!present) {
+        present = uci_exists(path + key);
+        value = uci_get(path + key);
+        if (key == "server") {
+            let servers = [];
+            for (let server in words(value))
+                if (server != SB_DNS_INBOUND_ADDRESS)
+                    push(servers, server);
+            value = join(" ", servers);
+            present = value != "";
+        }
+        else if (dnsmasq_default_has_trafira_dns()) {
+            // Old installs had no absence marker; retain their known fallback.
+            value = key == "noresolv" ? "0" : "150";
+            present = true;
+        }
+        if (present)
+            uci_set(backup, value);
+    }
+    uci_set(path + "trafira_applied_" + key, applied);
+    uci_set(marker, present ? "present" : "absent");
 }
 
-function backup_dnsmasq_server_list() {
-    if (uci_get("dhcp.@dnsmasq[0].trafira_server") != "")
-        return;
-
-    for (let server in words(dnsmasq_default_servers())) {
-        if (server != SB_DNS_INBOUND_ADDRESS)
-            uci_add_list("dhcp.@dnsmasq[0].trafira_server", server);
-    }
+function replace_dnsmasq_servers(values) {
+    uci_delete("dhcp.@dnsmasq[0].server");
+    for (let value in words(values))
+        uci_add_list("dhcp.@dnsmasq[0].server", value);
 }
 
-function restore_dnsmasq_config_option(key, backup_key, default_value) {
-    let value = uci_get("dhcp.@dnsmasq[0]." + backup_key);
-    if (value != "") {
-        uci_set("dhcp.@dnsmasq[0]." + key, value);
-        uci_delete("dhcp.@dnsmasq[0]." + backup_key);
-    }
-    else if (as_string(default_value) != "") {
-        uci_set("dhcp.@dnsmasq[0]." + key, default_value);
-    }
-    else {
-        uci_delete("dhcp.@dnsmasq[0]." + key);
+function clear_dnsmasq_snapshots() {
+    for (let key in [ "server", "noresolv", "cachesize", "notinterface" ]) {
+        uci_delete("dhcp.@dnsmasq[0].trafira_" + key);
+        uci_delete("dhcp.@dnsmasq[0].trafira_snapshot_" + key);
+        uci_delete("dhcp.@dnsmasq[0].trafira_applied_" + key);
     }
 }
 
 function dnsmasq_cleanup_legacy_instance() {
-    let legacy_instance_present = dnsmasq_legacy_instance_exists();
-    let legacy_interfaces = legacy_instance_present ? dnsmasq_legacy_interfaces() : "";
-
-    uci_delete("dhcp.trafira");
-
-    let backup_notinterfaces = uci_get("dhcp.@dnsmasq[0].trafira_notinterface");
-    if (backup_notinterfaces != "") {
-        uci_delete("dhcp.@dnsmasq[0].notinterface");
-        for (let value in words(backup_notinterfaces))
-            uci_add_list("dhcp.@dnsmasq[0].notinterface", value);
-        uci_delete("dhcp.@dnsmasq[0].trafira_notinterface");
+    let present = dnsmasq_legacy_instance_exists();
+    if (!present)
         return;
+    let path = "dhcp.@dnsmasq[0].";
+    let interfaces = dnsmasq_legacy_interfaces();
+    let current = uci_get(path + "notinterface");
+    let backup = uci_get(path + "trafira_notinterface");
+    let expected = true;
+    for (let value in words(current))
+        if (!list_has(interfaces, value) && !list_has(backup, value))
+            expected = false;
+    for (let value in words(interfaces))
+        if (!list_has(current, value))
+            expected = false;
+    if (expected && backup != "") {
+        uci_delete(path + "notinterface");
+        for (let value in words(backup))
+            uci_add_list(path + "notinterface", value);
     }
-
-    if (legacy_instance_present) {
-        for (let value in words(legacy_interfaces))
-            uci_del_list("dhcp.@dnsmasq[0].notinterface", value);
+    else {
+        for (let value in words(interfaces))
+            if (!list_has(backup, value))
+                uci_del_list(path + "notinterface", value);
     }
-
-    uci_delete("dhcp.@dnsmasq[0].trafira_notinterface");
+    uci_delete("dhcp.trafira");
 }
 
 function dnsmasq_configure_default_instance() {
-    let default_has_trafira_dns = dnsmasq_default_has_trafira_dns();
-
-    backup_dnsmasq_server_list();
-    if (!default_has_trafira_dns) {
-        backup_dnsmasq_config_option("noresolv", "trafira_noresolv");
-        backup_dnsmasq_config_option("cachesize", "trafira_cachesize");
-    }
-
-    uci_delete("dhcp.@dnsmasq[0].server");
-    uci_add_list("dhcp.@dnsmasq[0].server", SB_DNS_INBOUND_ADDRESS);
+    snapshot_dnsmasq_option("server", SB_DNS_INBOUND_ADDRESS);
+    snapshot_dnsmasq_option("noresolv", "1");
+    snapshot_dnsmasq_option("cachesize", "0");
+    // The backup must survive an interrupted configure before forwarding changes.
+    uci_commit("dhcp");
+    replace_dnsmasq_servers(SB_DNS_INBOUND_ADDRESS);
     uci_set("dhcp.@dnsmasq[0].noresolv", "1");
     uci_set("dhcp.@dnsmasq[0].cachesize", "0");
 }
 
 function dnsmasq_restore_default_instance() {
-    let server_list = dnsmasq_default_servers();
-    let backup_servers = uci_get("dhcp.@dnsmasq[0].trafira_server");
-    let managed_global_dns = list_has(server_list, SB_DNS_INBOUND_ADDRESS);
-
-    uci_delete("dhcp.@dnsmasq[0].server");
-    if (backup_servers != "") {
-        for (let value in words(backup_servers))
-            uci_add_list("dhcp.@dnsmasq[0].server", value);
-        uci_delete("dhcp.@dnsmasq[0].trafira_server");
+    let path = "dhcp.@dnsmasq[0].";
+    let servers = dnsmasq_default_servers();
+    let applied = uci_get(path + "trafira_applied_server") || SB_DNS_INBOUND_ADDRESS;
+    let managed = list_has(servers, applied);
+    let snapshot = uci_get(path + "trafira_snapshot_server");
+    let backup = uci_get(path + "trafira_server");
+    if (trim(servers) == applied) {
+        replace_dnsmasq_servers(snapshot == "absent" ? "" : backup);
     }
-    else {
-        for (let value in words(server_list)) {
-            if (value != SB_DNS_INBOUND_ADDRESS)
-                uci_add_list("dhcp.@dnsmasq[0].server", value);
-        }
+    else if (managed) {
+        // External additions/replacements own the current list. Remove only
+        // our address; do not reinstate a stale upstream server backup.
+        uci_del_list(path + "server", applied);
     }
-    uci_delete("dhcp.@dnsmasq[0].trafira_server");
 
-    let noresolv = uci_get("dhcp.@dnsmasq[0].trafira_noresolv");
-    if (noresolv != "")
-        restore_dnsmasq_config_option("noresolv", "trafira_noresolv", "");
-    else if (managed_global_dns)
-        uci_set("dhcp.@dnsmasq[0].noresolv", "0");
-
-    let cachesize = uci_get("dhcp.@dnsmasq[0].trafira_cachesize");
-    if (cachesize != "")
-        restore_dnsmasq_config_option("cachesize", "trafira_cachesize", "");
-    else if (managed_global_dns)
-        uci_set("dhcp.@dnsmasq[0].cachesize", "150");
+    for (let item in [ [ "noresolv", "1", "0" ], [ "cachesize", "0", "150" ] ]) {
+        let key = item[0];
+        let current = uci_get(path + key);
+        let expected = uci_get(path + "trafira_applied_" + key) || item[1];
+        let marker = uci_get(path + "trafira_snapshot_" + key);
+        let has_backup = uci_exists(path + "trafira_" + key);
+        // Missing legacy options are restored for compatibility; new snapshots
+        // distinguish an external deletion from the value we applied.
+        if (current != expected && !(marker == "" && current == "" && has_backup))
+            continue;
+        if (marker == "absent")
+            uci_delete(path + key);
+        else if (has_backup)
+            uci_set(path + key, uci_get(path + "trafira_" + key));
+        else if (managed && marker == "")
+            uci_set(path + key, item[2]);
+    }
 }
 
 function dnsmasq_configure(force) {
-    if (!uci_available())
-        return true;
-
-    if (as_string(force) != "force" && uci_get(CONFIG_NAME + ".settings.shutdown_correctly") == "0") {
-        if (dnsmasq_default_config_is_complete()) {
-            log("Previous Trafira shutdown was unclean; dnsmasq already points to sing-box", "info");
+    try {
+        if (!uci_available())
             return true;
+
+        if (as_string(force) != "force" && uci_get(CONFIG_NAME + ".settings.shutdown_correctly") == "0") {
+            if (dnsmasq_default_config_is_complete()) {
+                log("Previous Trafira shutdown was unclean; dnsmasq already points to sing-box", "info");
+                return true;
+            }
+            log("Previous Trafira shutdown was unclean and dnsmasq is not ready; applying Trafira DNS settings", "info");
         }
-        log("Previous Trafira shutdown was unclean and dnsmasq is not ready; applying Trafira DNS settings", "info");
+
+        log("Configuring dnsmasq to forward DNS to sing-box", "info");
+        dnsmasq_cleanup_legacy_instance();
+        dnsmasq_configure_default_instance();
+        uci_commit("dhcp");
+
+        return restart_dnsmasq();
     }
-
-    log("Configuring dnsmasq to forward DNS to sing-box", "info");
-    dnsmasq_cleanup_legacy_instance();
-    dnsmasq_configure_default_instance();
-    uci_commit("dhcp");
-
-    return restart_dnsmasq();
+    catch (e) {
+        log(as_string(e), "err");
+        return false;
+    }
 }
 
 function dnsmasq_restore(force, quiet) {
-    if (!uci_available())
-        return true;
-
-    if (!quiet)
-        log("Restoring DNS settings in dnsmasq", "info");
-    if (as_string(force) != "force" && uci_get(CONFIG_NAME + ".settings.shutdown_correctly") == "1") {
-        if (!dnsmasq_has_trafira_dns()) {
-            log("dnsmasq already uses non-Trafira DNS settings; restore is not required", "info");
+    try {
+        if (!uci_available())
             return true;
+
+        if (!quiet)
+            log("Restoring DNS settings in dnsmasq", "info");
+        if (as_string(force) != "force" && uci_get(CONFIG_NAME + ".settings.shutdown_correctly") == "1") {
+            if (!dnsmasq_has_trafira_dns() && !dnsmasq_has_trafira_managed_state()) {
+                log("dnsmasq already uses non-Trafira DNS settings; restore is not required", "info");
+                return true;
+            }
+            log("Trafira DNS settings are still present after a clean shutdown; restoring DNS settings in dnsmasq", "info");
         }
-        log("Trafira DNS settings are still present after a clean shutdown; restoring DNS settings in dnsmasq", "info");
+
+        dnsmasq_cleanup_legacy_instance();
+        dnsmasq_restore_default_instance();
+        uci_commit("dhcp");
+        if (!restart_dnsmasq())
+            return false;
+        // Retain rollback information when applying or restarting failed.
+        clear_dnsmasq_snapshots();
+        uci_commit("dhcp");
+        return true;
     }
-
-    dnsmasq_cleanup_legacy_instance();
-    dnsmasq_restore_default_instance();
-    uci_commit("dhcp");
-
-    return restart_dnsmasq();
+    catch (e) {
+        log(as_string(e), "err");
+        return false;
+    }
 }
 
 function failsafe_restore() {
@@ -283,8 +329,7 @@ function failsafe_restore() {
         log("Rolling back Trafira DNS changes in dnsmasq", "warn");
     }
 
-    dnsmasq_restore("force", true);
-    return true;
+    return dnsmasq_restore("force", true);
 }
 
 let mode = ARGV[0] || "";

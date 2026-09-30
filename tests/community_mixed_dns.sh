@@ -12,6 +12,15 @@ cat >"$WORK_DIR/fixture.json" <<'JSON'
  {".name":"builtin",".type":"section","enabled":"1","action":"block","rule_set":["discord"]}
 ]}
 JSON
+node - "$WORK_DIR" <<'JS'
+const fs = require('fs'), dir = process.argv[2];
+const fixture = JSON.parse(fs.readFileSync(`${dir}/fixture.json`));
+fs.writeFileSync(`${dir}/mixed.json`,JSON.stringify({version:3,rules:[{domain_suffix:['local.example']},{ip_cidr:['203.0.113.0/24']}]}));
+fs.writeFileSync(`${dir}/mixed.txt`,'local.example\n203.0.113.0/24\n');
+fixture.section.push({'.name':'localjson','.type':'section',enabled:'1',action:'block',rule_set:[`${dir}/mixed.json`]});
+fixture.section.push({'.name':'localtext','.type':'section',enabled:'1',action:'block',domain_ip_lists:[`${dir}/mixed.txt`]});
+fs.writeFileSync(`${dir}/fixture.json`,JSON.stringify(fixture));
+JS
 for version in 1.13.18 1.14.1 1.16.0; do
   ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture \
     "$WORK_DIR/fixture.json" "$WORK_DIR/$version.json" 127.0.0.1 0 1 '' "$version"
@@ -32,6 +41,13 @@ for (const version of ['1.13.18','1.14.1','1.16.0']) {
   }
   for (const rule of c.dns.rules.flatMap(visit).filter(usesMixed))
     assert.equal(rule.match_response,true,`${version}: mixed address sets require response matching`);
+  for (const set of c.route.rule_set.filter(s => s.type === 'local' && s.format === 'source')) {
+    const local = JSON.parse(fs.readFileSync(set.path));
+    if (!JSON.stringify(local).includes('ip_cidr')) continue;
+    const selections = c.dns.rules.flatMap(visit).filter(r => array(r.rule_set).includes(set.tag));
+    assert(selections.length > 0, 'mixed local domain/IP list remains eligible for DNS selection');
+    for (const rule of selections) assert.equal(rule.match_response,true,'mixed local list uses modern response matching');
+  }
   for (const [source,server] of [['192.0.2.1/32','fakeip-server'],['192.0.2.2/32','dns-server']]) {
     const i = c.dns.rules.findIndex(r => usesMixed(r) && array(r.source_ip_cidr).includes(source));
     assert(i > 0,`${version}: source-scoped response route`);

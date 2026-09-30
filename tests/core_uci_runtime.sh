@@ -16,6 +16,7 @@ fail() {
 }
 
 cat >"$WORK_DIR/uci.uc" <<'UCODE'
+let reject_writes = false;
 let state = {
     dhcp: {
         cfg01411c: {
@@ -54,6 +55,7 @@ function cursor() {
             return package_state(package_name)["" + section_name] || null;
         },
         set: function(package_name, section_name, option_name, value) {
+            if (reject_writes) return false;
             let sections = package_state(package_name);
             section_name = "" + section_name;
             if (value == null) {
@@ -70,6 +72,7 @@ function cursor() {
             return true;
         },
         delete: function(package_name, section_name, option_name) {
+            if (reject_writes) return false;
             let sections = package_state(package_name);
             section_name = "" + section_name;
             if (!sections[section_name])
@@ -103,7 +106,7 @@ function cursor() {
     };
 }
 
-return { cursor };
+return { cursor, reject_writes: () => { reject_writes = true; } };
 UCODE
 
 cat >"$WORK_DIR/check.uc" <<'UCODE'
@@ -146,6 +149,12 @@ assert_equal(uci.get("dhcp.cfg01411c.server"), "127.0.0.42 1.1.1.1", "anonymous 
 assert_true(uci.del_list("dhcp.@dnsmasq[0].server", "127.0.0.42"), "anonymous del_list must succeed");
 assert_equal(uci.get("dhcp.cfg01411c.server"), "1.1.1.1", "anonymous del_list must affect resolved section");
 
+require("uci").reject_writes();
+assert_true(!uci.set("dhcp.@dnsmasq[0].noresolv", "0"), "cursor set false must propagate");
+assert_true(!uci.add_list("dhcp.@dnsmasq[0].server", "8.8.8.8"), "cursor add_list false must propagate");
+assert_true(!uci.del_list("dhcp.@dnsmasq[0].server", "1.1.1.1"), "cursor del_list false must propagate");
+assert_true(!uci.delete("dhcp.@dnsmasq[0].server"), "cursor delete false must propagate");
+assert_true(uci.delete("dhcp.@dnsmasq[0].missing"), "absent delete is idempotent");
 assert_true(uci.delete("dhcp.@dnsmasq[9].server") == false, "missing anonymous section must fail writes");
 UCODE
 

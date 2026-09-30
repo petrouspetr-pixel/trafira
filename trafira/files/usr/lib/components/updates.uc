@@ -2125,7 +2125,7 @@ function rebuild_domain_ip_lists_from_rule(section, settings) {
     let subnets_path = "";
     if (ok && length(subnet_chunks) > 0) {
         subnets_path = temp_path();
-        ok = subnets_path != "" && write_file(subnets_path, join(subnet_chunks, "\n"));
+        ok = subnets_path != "" && write_file(subnets_path, join("\n", subnet_chunks));
     }
     if (ok)
         ok = fs.rename(staged_path, path);

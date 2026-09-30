@@ -199,11 +199,12 @@ function dont_touch_dhcp_enabled() {
 
 function restore_dnsmasq_if_needed() {
     if (dont_touch_dhcp_enabled())
-        return;
+        return true;
 
-    command_success_from_args([ BIN_PATH, "restore_dnsmasq" ]);
+    let restored = command_success_from_args([ BIN_PATH, "restore_dnsmasq" ]);
     if (path_exists(DNS_APPLY_UC))
-        command_success_from_args([ "ucode", DNS_APPLY_UC, "failsafe-restore" ]);
+        return command_success_from_args([ "ucode", DNS_APPLY_UC, "failsafe-restore" ]);
+    return restored;
 }
 
 function remove_managed_sing_box() {
@@ -219,7 +220,7 @@ function remove_managed_sing_box() {
 }
 
 function remember_upgrade_state(action) {
-    if (as_string(action) != "upgrade") {
+    if (as_string(action) == "remove") {
         unlink_if_exists(PACKAGE_UPGRADE_STATE);
         return;
     }
@@ -235,12 +236,16 @@ function prerm_cleanup(action) {
     remember_upgrade_state(action);
     if (!PACKAGE_TEST_MODE) {
         command_success_from_args([ INIT_PATH, "stop" ]);
-        restore_dnsmasq_if_needed();
-        remove_managed_sing_box();
+        if (!restore_dnsmasq_if_needed())
+            return false;
+        // opkg may provide no action during replacement; only explicit removal
+        // owns deletion of separately installed compressed binary variants.
+        if (as_string(action) == "remove")
+            remove_managed_sing_box();
     }
 
     let firewall_ok = true;
-    if (as_string(action) != "upgrade")
+    if (as_string(action) == "remove")
         firewall_ok = remove_tproxy_firewall_include();
 
     return remove_rt_tables_entry() && firewall_ok;
