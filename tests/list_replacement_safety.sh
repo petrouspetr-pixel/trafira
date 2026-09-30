@@ -38,9 +38,11 @@ let download_to_file = (url,p,proxy) => {
     return fs.writefile(p, "new.example\\n203.0.113.0/24\\n") != null;
 };
 let routing_rulesets_module = () => ({ruleset_tag: (name,a,b) => name, has_rules: p => length(json(fs.readfile(p)).rules) > 0});
+let fail_import = false;
 let ruleset_module_success = args => {
     if (args[0] == "create-source") return fs.writefile(args[1], '{"version":3,"rules":[]}') != null;
     if (args[0] == "import-plain-list") {
+        if (fail_import) return false;
         let data = json(fs.readfile(args[2]));
         let text = trim(fs.readfile(args[1]) || "");
         if (text != "") { let rule={}; rule[args[3]]=split(text,"\\n"); push(data.rules,rule); }
@@ -49,8 +51,10 @@ let ruleset_module_success = args => {
     return false;
 };
 let nft_calls = 0;
+let empty_parse = false;
 let nft_module_success = args => {
     if (args[0] == "split-domain-subnet-file") {
+        if (empty_parse) { fs.writefile(args[2],""); fs.writefile(args[3],""); return true; }
         fs.writefile(args[2],"new.example\\n"); fs.writefile(args[3],"203.0.113.0/24\\n"); return true;
     }
     nft_calls++; return true;
@@ -68,6 +72,14 @@ section.domain_ip_lists=[TMP_RULESET_FOLDER+"/missing-local.txt"];
 check(!rebuild_domain_ip_lists_from_rule(section,{}),"missing local source must fail");
 check(fs.readfile(path)==old,"missing local source erased prior list");
 section.domain_ip_lists=["https://good.test/list"];
+empty_parse=true;
+check(!rebuild_domain_ip_lists_from_rule(section,{}),"HTTP-success source without valid entries must fail");
+check(fs.readfile(path)==old && nft_calls==0,"invalid source erased previous rules");
+empty_parse=false;
+fail_import=true;
+check(!rebuild_domain_ip_lists_from_rule(section,{}),"failed import must report failure");
+check(fs.readfile(path)==old && nft_calls==0,"failed import changed live rules");
+fail_import=false;
 let real_rename=fs.rename;
 fs.rename=(a,b)=>false;
 check(!rebuild_domain_ip_lists_from_rule(section,{}),"failed publication must report failure");
@@ -76,6 +88,12 @@ fs.rename=real_rename;
 check(rebuild_domain_ip_lists_from_rule(section,{}),"successful replacement failed");
 check(index(fs.readfile(path),"new.example")>=0 && index(fs.readfile(path),"old.example")<0,"replacement must not retain old entries");
 check(nft_calls==1,"successful replacement should apply collected subnets once");
+section.action="dns";
+nft_calls=0;
+fs.writefile(path,old);
+check(rebuild_domain_ip_lists_from_rule(section,{}),"DNS-only replacement failed");
+check(index(fs.readfile(path),"new.example")>=0,"DNS-only replacement did not publish domains");
+check(nft_calls==0,"DNS-only replacement must not change nft sets");
 print("List replacement safety checks passed\\n");
 `);
 NODE
