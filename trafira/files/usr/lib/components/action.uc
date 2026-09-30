@@ -25,6 +25,8 @@ let install_failure_detail = "";
 let rollback_package = null;
 let rollback_package_files = [];
 let rollback_packages = [];
+let rollback_apk_world = null;
+let retain_rollback_files = false;
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -311,7 +313,7 @@ function helper_success(mode, args) {
 }
 
 function cleanup_stale_tmp_files() {
-    command_success_from_args([ "find", "/tmp", "-maxdepth", "1", "-type", "d", "-name", "trafira-updates.*", "-mmin", "+" + as_string(TMP_STALE_TTL_MINUTES), "-exec", "rm", "-rf", "{}", "+" ]);
+    command_success_from_args([ "find", "/tmp", "-maxdepth", "1", "-type", "d", "-name", "trafira-updates.*", "-mmin", "+" + as_string(TMP_STALE_TTL_MINUTES), "-exec", "test", "!", "-e", "{}/.keep-rollback", ";", "-exec", "rm", "-rf", "{}", "+" ]);
     command_success_from_args([ "find", "/tmp", "-maxdepth", "1", "-type", "f", "(", "-name", "trafira-updates-command.*", "-o", "-name", "trafira-updates-http.*", ")", "-mmin", "+" + as_string(TMP_FILE_STALE_TTL_MINUTES), "-delete" ]);
 }
 
@@ -373,6 +375,18 @@ function helper_success_input(input, mode, args) {
 
 function cleanup_tmp_dir() {
     if (tmp_dir != "") {
+        if (retain_rollback_files) {
+            // The marker also protects recovery if the same-filesystem rename
+            // fails. Normal stale cleanup never matches the recovery prefix.
+            write_file(tmp_dir + "/.keep-rollback", "1\n");
+            let recovery_path = replace(tmp_dir, /\/trafira-updates[.]/, "/trafira-recovery.");
+            if (fs.rename(tmp_dir, recovery_path))
+                tmp_dir = recovery_path;
+            updates_log("Sing-box package rollback was incomplete; recovery files retained at " + tmp_dir +
+                " (temporary storage, lost on reboot)", "error");
+            tmp_dir = "";
+            return;
+        }
         command_success_from_args([ "rm", "-rf", tmp_dir ]);
         tmp_dir = "";
     }
@@ -1403,14 +1417,19 @@ function rollback_archive_info(path, name, version) {
             shell_quote(path) + " ./data.tar.gz 2>/dev/null) | tar -tzf - >/dev/null 2>&1"))
             return null;
     }
-    let size = int(rollback_archive_field(path, "installed-size"));
+    let size_text = as_string(rollback_archive_field(path, "installed-size"));
+    if (match(size_text, /^[0-9]+$/) == null)
+        return null;
+    let size = int(size_text);
     if (!is_apk()) {
         let unpacked = rollback_ipk_unpacked_bytes(path);
         if (unpacked > size)
             size = unpacked;
     }
     let digest = rollback_archive_digest(path);
-    if (arch == "" || !supported || size <= 0 || digest == "")
+    // Empty musl compatibility packages (libpthread/librt) are valid members
+    // of the dependency closure. Missing or malformed sizes were rejected above.
+    if (arch == "" || !supported || size < 0 || digest == "")
         return null;
     return { path, name, version, size, digest };
 }
@@ -1559,17 +1578,26 @@ function stage_previous_sing_box_package(variant, action) {
     rollback_package = null;
     rollback_package_files = [];
     rollback_packages = [];
+    rollback_apk_world = null;
+    retain_rollback_files = false;
     let name = variant == "tiny" ? "sing-box-tiny" : variant == "stable" ? "sing-box" :
         variant == "extended" ? "sing-box-extended" : "";
     if (name == "")
         return true;
     if (!init_tmp_dir())
         return false;
+    if (is_apk()) {
+        rollback_apk_world = fs.readfile("/etc/apk/world");
+        if (rollback_apk_world == null)
+            return false;
+    }
     let packages = rollback_installed_packages(name, installed_package_version(name));
     if (packages == null)
         return false;
     let directory = tmp_dir + "/rollback";
     if (!ensure_dir(directory) || !ensure_dir(directory + "/empty"))
+        return false;
+    if (is_apk() && !write_file(directory + "/apk.world", rollback_apk_world))
         return false;
     if (!is_apk() && !write_file(directory + "/offline.conf", "dest root /\nlists_dir ext " + directory +
         "/empty\n" + command_output_from_args([ "opkg", "print-architecture" ])))
@@ -1587,6 +1615,8 @@ function stage_previous_sing_box_package(variant, action) {
         if (info.name == name)
             rollback_package = info;
     }
+    if (!write_file(directory + "/packages.json", sprintf("%J\n", rollback_packages)))
+        return false;
     ensure_install_storage("sing_box", action, total_size);
     return rollback_package != null;
 }
@@ -1600,6 +1630,20 @@ function rollback_files_valid() {
     return true;
 }
 
+function restore_rollback_apk_world() {
+    if (!is_apk() || rollback_apk_world == null)
+        return true;
+    // Local apk add installs the exact archives but adds their identity pins to
+    // world. Packages have already been restored; restore only original intent,
+    // leaving the package manager's installed database untouched.
+    let staged = "/etc/apk/world.trafira-rollback." + owner_pid();
+    if (!write_file(staged, rollback_apk_world) || !fs.rename(staged, "/etc/apk/world")) {
+        remove_file(staged);
+        return false;
+    }
+    return true;
+}
+
 function pkg_install_rollback_files(files) {
     if (!rollback_files_valid())
         return false;
@@ -1609,7 +1653,11 @@ function pkg_install_rollback_files(files) {
     for (let file in files)
         push(args, file);
     let command = (is_apk() ? "" : "OPKG_CONF_DIR=" + shell_quote(directory + "/empty") + " ") + command_from_args(args);
-    if (!run_logged_install("Restoring staged sing-box packages without network", command + " </dev/null"))
+    let installed = run_logged_install("Restoring staged sing-box packages without network", command + " </dev/null");
+    // A failed transaction can also have changed world; do not leave dependency
+    // pins behind even when the caller must fall back to the binary backup.
+    let world_restored = restore_rollback_apk_world();
+    if (!installed || !world_restored)
         return false;
     for (let info in rollback_packages)
         if (installed_package_version(info.name) != info.version)
@@ -1695,9 +1743,10 @@ function restore_sing_box_install_backup(previous_variant, backup_binary) {
     if (sing_box_variant_is_package_managed(previous_variant)) {
         if (restore_sing_box_package_variant(previous_variant))
             return true;
+        retain_rollback_files = true;
         if (as_string(backup_binary) != "" && restore_sing_box_backup(backup_binary)) {
             updates_log("Package rollback failed; restored the previous sing-box binary backup", "warn");
-            return true;
+            return restore_rollback_apk_world();
         }
         return false;
     }
@@ -1718,6 +1767,8 @@ function restore_sing_box_after_failed_extended_install(previous_variant, backup
     restore_sing_box_variant_state(previous_marker, previous_version_state);
     restore_sing_box_service_from_marker(previous_marker);
     clear_version_caches();
+    if (!restore_status)
+        retain_rollback_files = true;
     return restore_status;
 }
 
@@ -1734,6 +1785,8 @@ function restore_sing_box_after_failed_extended_package_install(previous_variant
     restore_sing_box_variant_state(previous_marker, previous_version_state);
     restore_sing_box_service_from_marker(previous_marker);
     clear_version_caches();
+    if (!restore_status)
+        retain_rollback_files = true;
     return restore_status;
 }
 
@@ -1754,6 +1807,8 @@ function restore_sing_box_after_failed_package_install(target_package, previous_
         remove_file(backup_cronet);
     }
     clear_version_caches();
+    if (!restore_status)
+        retain_rollback_files = true;
     return restore_status;
 }
 
