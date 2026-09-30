@@ -2448,36 +2448,61 @@ function source_file_exists(path) {
     return fs.readfile(path) != null;
 }
 
+function local_list_rebuild_failed(ruleset_path, message) {
+    if (source_rulesets.has_rules(ruleset_path)) {
+        warn(message, "; preserving previous materialized list\n");
+        return;
+    }
+    runtime_generate_unsupported(message + "; no previous materialized list is available");
+}
+
 function rebuild_local_domain_ip_list_ruleset(section_name, references, domains_only) {
     let ruleset_path = domain_ip_list_ruleset_path(section_name);
     let has_local = false;
-
+    let has_remote = false;
     for (let reference in references) {
-        if (reference_is_local(reference)) {
+        if (reference_is_local(reference))
             has_local = true;
-            break;
-        }
+        else
+            has_remote = true;
     }
-
     if (!has_local)
         return;
-
-    fs.unlink(ruleset_path);
-    source_rulesets.create_source(ruleset_path);
-
-    for (let reference in references) {
-        reference = as_string(reference);
-        if (!reference_is_local(reference))
-            continue;
-        if (!source_file_exists(reference)) {
-            warn("local domain/IP list not found: ", reference, "\n");
-            continue;
-        }
-
-        source_rulesets.import_plain_list(reference, ruleset_path, "domain_suffix", "domains", "5000");
-        if (!domains_only)
-            source_rulesets.import_plain_list(reference, ruleset_path, "ip_cidr", "subnets", "5000");
+    // The updater owns combined local/remote materialization. Rebuilding just its
+    // local portion here would discard the downloaded remote entries.
+    if (has_remote) {
+        local_list_rebuild_failed(ruleset_path,
+            "mixed local/remote list replacement requires the list updater");
+        return;
     }
+    for (let reference in references) {
+        if (!source_file_exists(reference)) {
+            local_list_rebuild_failed(ruleset_path, "local domain/IP list not found: " + reference);
+            return;
+        }
+    }
+
+    let stamp = clock();
+    let staged_path = sprintf("%s.%d.%d.stage", ruleset_path, stamp[0], stamp[1]);
+    let replacement = { version: 3, rules: [] };
+    for (let reference in references) {
+        // Parse each source separately so a failed or invalid member cannot be
+        // concealed by valid rules from an earlier member of the replacement.
+        source_rulesets.create_source(staged_path);
+        source_rulesets.import_plain_list(reference, staged_path, "domain_suffix", "domains", "5000");
+        if (!domains_only)
+            source_rulesets.import_plain_list(reference, staged_path, "ip_cidr", "subnets", "5000");
+        let parsed = read_json_file(staged_path);
+        fs.unlink(staged_path);
+        if (type(parsed) != "object" || type(parsed.rules) != "array" || length(parsed.rules) == 0) {
+            local_list_rebuild_failed(ruleset_path, "local domain/IP list has no valid rules: " + reference);
+            return;
+        }
+        for (let rule in parsed.rules)
+            push(replacement.rules, rule);
+    }
+    if (!atomic_write_json_file(ruleset_path, replacement))
+        local_list_rebuild_failed(ruleset_path, "unable to publish local domain/IP lists for " + section_name);
 }
 
 function add_domain_ip_list_ruleset(config, section_name, rule_set_tags, dns_rule_set_tags, references, domains_only) {

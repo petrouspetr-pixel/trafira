@@ -544,210 +544,6 @@ function pkg_install_files(files) {
     return command_success(pkg_install_files_command(files));
 }
 
-function rollback_archive_field(path, field) {
-    let metadata = is_apk() ? command_output_from_args([ "apk", "--allow-untrusted", "adbdump", path ]) :
-        command_output("(tar -xzOf " + shell_quote(path) + " control.tar.gz 2>/dev/null || tar -xzOf " +
-            shell_quote(path) + " ./control.tar.gz 2>/dev/null) | tar -xzOf - ./control 2>/dev/null");
-    let key = (is_apk() ? field : field == "name" ? "Package" : field == "version" ? "Version" :
-        field == "arch" ? "Architecture" : "Installed-Size") + ":";
-    for (let line in split(metadata, "\n")) {
-        line = trim(line);
-        if (substr(line, 0, length(key)) == key)
-            return trim(substr(line, length(key)));
-    }
-    return "";
-}
-
-function rollback_archive_digest(path) {
-    let value = split(trim(command_output_from_args([ "sha256sum", path ])), /\s+/)[0];
-    return match(as_string(value), /^[0-9a-f]{64}$/) != null ? value : "";
-}
-
-function rollback_archive_info(path, name, version) {
-    if (!file_nonempty(path) || rollback_archive_field(path, "name") != name ||
-        version == "" || rollback_archive_field(path, "version") != version)
-        return null;
-    let arch = rollback_archive_field(path, "arch");
-    let supported = arch == "all" || arch == "noarch";
-    if (is_apk()) {
-        supported = supported || arch == trim(command_output_from_args([ "apk", "--print-arch" ])) ||
-            arch == read_openwrt_release_value("DISTRIB_ARCH");
-        if (!command_success_from_args([ "apk", "verify", "--allow-untrusted", path ]))
-            return null;
-    }
-    else {
-        for (let line in split(command_output_from_args([ "opkg", "print-architecture" ]), "\n")) {
-            let fields = split(trim(line), /\s+/);
-            if (length(fields) > 1 && fields[1] == arch)
-                supported = true;
-        }
-        if (!command_success("(tar -xzOf " + shell_quote(path) + " data.tar.gz 2>/dev/null || tar -xzOf " +
-            shell_quote(path) + " ./data.tar.gz 2>/dev/null) | tar -tzf - >/dev/null 2>&1"))
-            return null;
-    }
-    let size = int(rollback_archive_field(path, "installed-size"));
-    let digest = rollback_archive_digest(path);
-    if (arch == "" || !supported || size <= 0 || digest == "")
-        return null;
-    return { path, name, version, size, digest };
-}
-
-// Resolve the installed dependency closure, including providers selected by apk.
-// Unknown formats or unresolved dependencies abort before any service is stopped.
-function rollback_installed_packages(name, version) {
-    if (is_apk()) {
-        let output = command_output_from_args([ "apk", "query", "--from", "installed", "--recursive",
-            "--format", "json", "--fields", "name,version", name + "=" + version ]);
-        let packages = null;
-        try { packages = json(output); } catch (e) { return null; }
-        if (type(packages) != "array" || length(packages) == 0)
-            return null;
-        let found = false;
-        for (let item in packages) {
-            if (as_string(item.name) == "" || as_string(item.version) == "" ||
-                installed_package_version(item.name) != item.version)
-                return null;
-            if (item.name == name && item.version == version)
-                found = true;
-        }
-        return found ? packages : null;
-    }
-    let installed = {};
-    let providers = {};
-    for (let record in split(read_file("/usr/lib/opkg/status"), "\n\n")) {
-        let fields = {};
-        for (let line in split(record, "\n")) {
-            let pos = index(line, ":");
-            if (pos > 0)
-                fields[substr(line, 0, pos)] = trim(substr(line, pos + 1));
-        }
-        if (!fields.Package || !fields.Version || !match(as_string(fields.Status), / installed$/))
-            continue;
-        installed[fields.Package] = { name: fields.Package, version: fields.Version, depends: as_string(fields.Depends) };
-        for (let provided in split(as_string(fields.Provides), ",")) {
-            let alias = replace(trim(provided), /[ (=<>].*$/, "");
-            if (alias != "")
-                providers[alias] = fields.Package;
-        }
-    }
-    if (!installed[name] || installed[name].version != version)
-        return null;
-    let queue = [ name ];
-    let seen = {};
-    let packages = [];
-    for (let i = 0; i < length(queue); i++) {
-        let current = queue[i];
-        if (seen[current])
-            continue;
-        seen[current] = true;
-        let item = installed[current];
-        if (!item || length(packages) >= 128)
-            return null;
-        push(packages, item);
-        for (let dependency in split(item.depends, ",")) {
-            if (trim(dependency) == "")
-                continue;
-            let resolved = "";
-            for (let alternative in split(dependency, "|")) {
-                let candidate = replace(trim(alternative), /[ (=<>].*$/, "");
-                if (installed[candidate] || providers[candidate]) {
-                    resolved = installed[candidate] ? candidate : providers[candidate];
-                    break;
-                }
-            }
-            if (resolved == "")
-                return null;
-            push(queue, resolved);
-        }
-    }
-    return packages;
-}
-
-function stage_rollback_archive(name, version, directory) {
-    if (!ensure_tmp_download_capacity(1, "rollback " + name))
-        return null;
-    let command = is_apk() ? command_from_args([ "apk", "fetch", "-o", directory, name + "=" + version ]) :
-        "cd " + shell_quote(directory) + " && " + command_from_args([ "opkg", "download", name ]);
-    // opkg cannot select an old version with download: metadata below MUST match.
-    if (run_logged("Staging exact rollback package " + name + " " + version, command)) {
-        for (let file in (fs.glob(directory + (is_apk() ? "/*.apk" : "/*.ipk")) || [])) {
-            let info = rollback_archive_info(file, name, version);
-            if (info != null)
-                return info;
-        }
-    }
-    if (name != "sing-box-extended")
-        return null;
-    let upstream_version = replace(version, /-r?[0-9]+$/, "");
-    for (let tag in [ "v" + upstream_version, upstream_version ]) {
-        let release = set_sing_box_extended_release_from_json(http_get(
-            "https://api.github.com/repos/shtorm-7/sing-box-extended/releases/tags/" + tag), false);
-        if (release == null || !ensure_tmp_download_capacity(release.asset_size, release.asset_name))
-            continue;
-        let file = directory + "/" + release.asset_name;
-        if (download_with_retry(release.asset_url, file, "previous sing-box-extended package")) {
-            let info = rollback_archive_info(file, name, version);
-            if (info != null)
-                return info;
-        }
-    }
-    return null;
-}
-
-function stage_previous_sing_box_package(variant, action) {
-    rollback_package = null;
-    rollback_package_files = [];
-    rollback_packages = [];
-    let name = variant == "tiny" ? "sing-box-tiny" : variant == "stable" ? "sing-box" :
-        variant == "extended" ? "sing-box-extended" : "";
-    if (name == "")
-        return true;
-    if (!init_tmp_dir())
-        return false;
-    let packages = rollback_installed_packages(name, installed_package_version(name));
-    if (packages == null)
-        return false;
-    let directory = tmp_dir + "/rollback";
-    if (!ensure_dir(directory) || !ensure_dir(directory + "/empty"))
-        return false;
-    if (!is_apk() && !write_file(directory + "/offline.conf", "dest root /\nlists_dir ext " + directory +
-        "/empty\n" + command_output_from_args([ "opkg", "print-architecture" ])))
-        return false;
-    let total_size = 0;
-    for (let item in packages) {
-        let info = stage_rollback_archive(item.name, item.version, directory);
-        if (info == null) {
-            updates_log("Cannot stage exact rollback package " + item.name + " " + item.version, "err");
-            return false;
-        }
-        total_size += info.size;
-        push(rollback_packages, info);
-        push(rollback_package_files, info.path);
-        if (info.name == name)
-            rollback_package = info;
-    }
-    ensure_install_storage("sing_box", action, total_size);
-    return rollback_package != null;
-}
-
-function pkg_install_rollback_files(files) {
-    for (let info in rollback_packages)
-        if (rollback_archive_digest(info.path) != info.digest)
-            return false;
-    let directory = tmp_dir + "/rollback";
-    let args = is_apk() ? [ "apk", "add", "--no-network", "--allow-untrusted" ] :
-        [ "opkg", "-f", directory + "/offline.conf", "install", "--force-overwrite", "--force-reinstall", "--force-downgrade" ];
-    for (let file in files)
-        push(args, file);
-    let command = (is_apk() ? "" : "OPKG_CONF_DIR=" + shell_quote(directory + "/empty") + " ") + command_from_args(args);
-    if (!run_logged_install("Restoring staged sing-box packages without network", command + " </dev/null"))
-        return false;
-    for (let info in rollback_packages)
-        if (installed_package_version(info.name) != info.version)
-            return false;
-    return true;
-}
-
 function pkg_remove_sing_box_conflict(package_name) {
     package_name = as_string(package_name);
     if (!pkg_is_installed(package_name))
@@ -1558,6 +1354,269 @@ function resolve_sing_box_extended_release(compressed) {
     return set_sing_box_extended_release_from_json(release_json, compressed);
 }
 
+function rollback_archive_field(path, field) {
+    let metadata = is_apk() ? command_output_from_args([ "apk", "--allow-untrusted", "adbdump", path ]) :
+        command_output("(tar -xzOf " + shell_quote(path) + " control.tar.gz 2>/dev/null || tar -xzOf " +
+            shell_quote(path) + " ./control.tar.gz 2>/dev/null) | tar -xzOf - ./control 2>/dev/null");
+    let key = (is_apk() ? field : field == "name" ? "Package" : field == "version" ? "Version" :
+        field == "arch" ? "Architecture" : "Installed-Size") + ":";
+    for (let line in split(metadata, "\n")) {
+        line = trim(line);
+        if (substr(line, 0, length(key)) == key)
+            return trim(substr(line, length(key)));
+    }
+    return "";
+}
+
+function rollback_archive_digest(path) {
+    let value = split(trim(command_output_from_args([ "sha256sum", path ])), /\s+/)[0];
+    return match(as_string(value), /^[0-9a-f]{64}$/) != null ? value : "";
+}
+
+function rollback_ipk_unpacked_bytes(path) {
+    // OpenWrt producers have used both bytes and KiB for Installed-Size.
+    // Measure the actual archive as a lower bound instead of trusting that unit.
+    return int(trim(command_output("(tar -xzOf " + shell_quote(path) +
+        " data.tar.gz 2>/dev/null || tar -xzOf " + shell_quote(path) +
+        " ./data.tar.gz 2>/dev/null) | tar -tvzf - 2>/dev/null | awk '{ sum += $3 } END { printf \"%.0f\", sum }'")));
+}
+
+function rollback_archive_info(path, name, version) {
+    if (!file_nonempty(path) || rollback_archive_field(path, "name") != name ||
+        version == "" || rollback_archive_field(path, "version") != version)
+        return null;
+    let arch = rollback_archive_field(path, "arch");
+    let supported = arch == "all" || arch == "noarch";
+    if (is_apk()) {
+        supported = supported || arch == trim(command_output_from_args([ "apk", "--print-arch" ])) ||
+            arch == read_openwrt_release_value("DISTRIB_ARCH");
+        if (!command_success_from_args([ "apk", "verify", "--allow-untrusted", path ]))
+            return null;
+    }
+    else {
+        for (let line in split(command_output_from_args([ "opkg", "print-architecture" ]), "\n")) {
+            let fields = split(trim(line), /\s+/);
+            if (length(fields) > 1 && fields[1] == arch)
+                supported = true;
+        }
+        if (!command_success("(tar -xzOf " + shell_quote(path) + " data.tar.gz 2>/dev/null || tar -xzOf " +
+            shell_quote(path) + " ./data.tar.gz 2>/dev/null) | tar -tzf - >/dev/null 2>&1"))
+            return null;
+    }
+    let size = int(rollback_archive_field(path, "installed-size"));
+    if (!is_apk()) {
+        let unpacked = rollback_ipk_unpacked_bytes(path);
+        if (unpacked > size)
+            size = unpacked;
+    }
+    let digest = rollback_archive_digest(path);
+    if (arch == "" || !supported || size <= 0 || digest == "")
+        return null;
+    return { path, name, version, size, digest };
+}
+
+// Resolve the installed dependency closure, including providers selected by apk.
+// Unknown formats or unresolved dependencies abort before any service is stopped.
+function rollback_installed_packages(name, version) {
+    if (is_apk()) {
+        let output = command_output_from_args([ "apk", "query", "--from", "installed", "--recursive",
+            "--format", "json", "--fields", "name,version", name + "=" + version ]);
+        let packages = null;
+        try { packages = json(output); } catch (e) { return null; }
+        if (type(packages) != "array" || length(packages) == 0)
+            return null;
+        let found = false;
+        for (let item in packages) {
+            if (as_string(item.name) == "" || as_string(item.version) == "" ||
+                installed_package_version(item.name) != item.version)
+                return null;
+            if (item.name == name && item.version == version)
+                found = true;
+        }
+        return found ? packages : null;
+    }
+    let installed = {};
+    let providers = {};
+    for (let record in split(read_file("/usr/lib/opkg/status"), "\n\n")) {
+        let fields = {};
+        for (let line in split(record, "\n")) {
+            let pos = index(line, ":");
+            if (pos > 0)
+                fields[substr(line, 0, pos)] = trim(substr(line, pos + 1));
+        }
+        if (!fields.Package || !fields.Version || !match(as_string(fields.Status), / installed$/))
+            continue;
+        installed[fields.Package] = { name: fields.Package, version: fields.Version,
+            depends: as_string(fields.Depends) + "," + as_string(fields["Pre-Depends"]) };
+        for (let provided in split(as_string(fields.Provides), ",")) {
+            let alias = replace(trim(provided), /[ (=<>].*$/, "");
+            if (alias != "")
+                providers[alias] = fields.Package;
+        }
+    }
+    if (!installed[name] || installed[name].version != version)
+        return null;
+    let queue = [ name ];
+    let seen = {};
+    let packages = [];
+    for (let i = 0; i < length(queue); i++) {
+        let current = queue[i];
+        if (seen[current])
+            continue;
+        seen[current] = true;
+        let item = installed[current];
+        if (!item || length(packages) >= 128)
+            return null;
+        push(packages, item);
+        for (let dependency in split(item.depends, ",")) {
+            if (trim(dependency) == "")
+                continue;
+            let resolved = "";
+            for (let alternative in split(dependency, "|")) {
+                let candidate = replace(trim(alternative), /[ (=<>].*$/, "");
+                if (installed[candidate] || providers[candidate]) {
+                    resolved = installed[candidate] ? candidate : providers[candidate];
+                    break;
+                }
+            }
+            if (resolved == "")
+                return null;
+            push(queue, resolved);
+        }
+    }
+    return packages;
+}
+
+function rollback_repository_size(name, version) {
+    if (is_apk()) {
+        let output = command_output_from_args([ "apk", "query", "--from", "repositories", "--format", "json",
+            "--fields", "name,version,file-size", name + "=" + version ]);
+        try {
+            let packages = json(output);
+            if (type(packages) == "array")
+                for (let item in packages)
+                    if (item.name == name && item.version == version)
+                        return int(item["file-size"]);
+        } catch (e) { return 0; }
+        return 0;
+    }
+    for (let record in split(command_output_from_args([ "opkg", "info", name ]), "\n\n")) {
+        let fields = {};
+        for (let line in split(record, "\n")) {
+            let pos = index(line, ":");
+            if (pos > 0)
+                fields[substr(line, 0, pos)] = trim(substr(line, pos + 1));
+        }
+        if (fields.Package == name && fields.Version == version && int(fields.Size) > 0)
+            return int(fields.Size);
+    }
+    return 0;
+}
+
+function stage_rollback_archive(name, version, directory) {
+    let download_size = rollback_repository_size(name, version);
+    if (download_size > 0 && !ensure_tmp_download_capacity(download_size, "rollback " + name))
+        return null;
+    let command = is_apk() ? command_from_args([ "apk", "fetch", "-o", directory, name + "=" + version ]) :
+        "cd " + shell_quote(directory) + " && " + command_from_args([ "opkg", "download", name ]);
+    // opkg cannot select an old version with download: metadata below MUST match.
+    if (download_size > 0 && run_logged("Staging exact rollback package " + name + " " + version, command)) {
+        for (let file in (fs.glob(directory + (is_apk() ? "/*.apk" : "/*.ipk")) || [])) {
+            let info = rollback_archive_info(file, name, version);
+            if (info != null)
+                return info;
+        }
+    }
+    if (name != "sing-box-extended")
+        return null;
+    let upstream_version = replace(version, /-r?[0-9]+$/, "");
+    for (let tag in [ "v" + upstream_version, upstream_version ]) {
+        let metadata = http_get("https://api.github.com/repos/shtorm-7/sing-box-extended/releases/tags/" + tag);
+        let release = set_sing_box_extended_release_from_json(metadata, false);
+        if (release == null || !ensure_tmp_download_capacity(release.asset_size, release.asset_name))
+            continue;
+        let expected_digest = "";
+        try {
+            let document = json(metadata);
+            for (let asset in (document.assets || []))
+                if (asset.browser_download_url == release.asset_url &&
+                    match(as_string(asset.digest), /^sha256:[0-9a-f]{64}$/))
+                    expected_digest = substr(asset.digest, 7);
+        } catch (e) { continue; }
+        if (expected_digest == "")
+            continue;
+        let file = directory + "/" + release.asset_name;
+        if (download_with_retry(release.asset_url, file, "previous sing-box-extended package")) {
+            let info = rollback_archive_info(file, name, version);
+            if (info != null && info.digest == expected_digest)
+                return info;
+        }
+    }
+    return null;
+}
+
+function stage_previous_sing_box_package(variant, action) {
+    rollback_package = null;
+    rollback_package_files = [];
+    rollback_packages = [];
+    let name = variant == "tiny" ? "sing-box-tiny" : variant == "stable" ? "sing-box" :
+        variant == "extended" ? "sing-box-extended" : "";
+    if (name == "")
+        return true;
+    if (!init_tmp_dir())
+        return false;
+    let packages = rollback_installed_packages(name, installed_package_version(name));
+    if (packages == null)
+        return false;
+    let directory = tmp_dir + "/rollback";
+    if (!ensure_dir(directory) || !ensure_dir(directory + "/empty"))
+        return false;
+    if (!is_apk() && !write_file(directory + "/offline.conf", "dest root /\nlists_dir ext " + directory +
+        "/empty\n" + command_output_from_args([ "opkg", "print-architecture" ])))
+        return false;
+    let total_size = 0;
+    for (let item in packages) {
+        let info = stage_rollback_archive(item.name, item.version, directory);
+        if (info == null) {
+            updates_log("Cannot stage exact rollback package " + item.name + " " + item.version, "err");
+            return false;
+        }
+        total_size += info.size;
+        push(rollback_packages, info);
+        push(rollback_package_files, info.path);
+        if (info.name == name)
+            rollback_package = info;
+    }
+    ensure_install_storage("sing_box", action, total_size);
+    return rollback_package != null;
+}
+
+function rollback_files_valid() {
+    if (length(rollback_packages) == 0)
+        return false;
+    for (let info in rollback_packages)
+        if (!file_nonempty(info.path) || rollback_archive_digest(info.path) != info.digest)
+            return false;
+    return true;
+}
+
+function pkg_install_rollback_files(files) {
+    if (!rollback_files_valid())
+        return false;
+    let directory = tmp_dir + "/rollback";
+    let args = is_apk() ? [ "apk", "add", "--no-network", "--allow-untrusted" ] :
+        [ "opkg", "-f", directory + "/offline.conf", "install", "--force-overwrite", "--force-reinstall", "--force-downgrade" ];
+    for (let file in files)
+        push(args, file);
+    let command = (is_apk() ? "" : "OPKG_CONF_DIR=" + shell_quote(directory + "/empty") + " ") + command_from_args(args);
+    if (!run_logged_install("Restoring staged sing-box packages without network", command + " </dev/null"))
+        return false;
+    for (let info in rollback_packages)
+        if (installed_package_version(info.name) != info.version)
+            return false;
+    return true;
+}
+
 function sing_box_runtime_output(mode, args) {
     let command_args = [ LIB_DIR + "/singbox/runtime.uc", mode ];
     for (let arg in (type(args) == "array" ? args : []))
@@ -1597,6 +1656,10 @@ function replace_sing_box_package_variant(target_package, conflict_package, targ
     return pkg_install_name_downgrade(target_package, target_version);
 }
 
+function sing_box_variant_is_package_managed(variant) {
+    return variant == "stable" || variant == "tiny" || variant == "extended";
+}
+
 function restore_sing_box_package_variant(previous_variant) {
     if (sing_box_variant_is_package_managed(previous_variant)) {
         let name = previous_variant == "tiny" ? "sing-box-tiny" : previous_variant == "stable" ? "sing-box" : "sing-box-extended";
@@ -1605,9 +1668,13 @@ function restore_sing_box_package_variant(previous_variant) {
         for (let file in rollback_package_files)
             if (!file_nonempty(file))
                 return false;
+        if (!rollback_files_valid())
+            return false;
         prepare_sing_box_package_service_install();
+        // Removing even the same package ensures apk restores missing payload
+        // files after a failure that happened before the old package was removed.
         for (let other in [ "sing-box-tiny", "sing-box", "sing-box-extended" ])
-            if (other != name && !pkg_remove_sing_box_conflict(other))
+            if (!pkg_remove_sing_box_conflict(other))
                 return false;
         return pkg_install_rollback_files(rollback_package_files) &&
             installed_package_version(name) == rollback_package.version;
@@ -1623,9 +1690,6 @@ function restore_sing_box_package_variant(previous_variant) {
     return false;
 }
 
-function sing_box_variant_is_package_managed(variant) {
-    return variant == "stable" || variant == "tiny" || variant == "extended";
-}
 
 function restore_sing_box_install_backup(previous_variant, backup_binary) {
     if (sing_box_variant_is_package_managed(previous_variant)) {
@@ -1890,16 +1954,15 @@ function install_sing_box_extended(action, compressed) {
 
     remove_file(archive_file);
     ensure_install_storage("sing_box", action, staged_install_bytes(tmp_binary, tmp_cronet));
+    if (!stage_previous_sing_box_package(current_variant, action))
+        action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
+    stop_trafira_before_sing_box_change();
     let new_version = validate_sing_box_extended_binary(tmp_binary, tmp_dir);
     if (new_version == "") {
         remove_file(tmp_binary);
         remove_file(tmp_cronet);
         action_fail("sing_box", action, "Downloaded " + label + " failed validation", current_version, latest_version);
     }
-    if (!stage_previous_sing_box_package(current_variant, action))
-        action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
-    stop_trafira_before_sing_box_change();
-
     let backup_binary = "";
     let backup_cronet = "";
     let cronet_touched = false;

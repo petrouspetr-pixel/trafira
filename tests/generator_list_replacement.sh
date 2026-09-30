@@ -38,6 +38,15 @@ node - "$ruleset" <<'JS'
 const fs=require('fs'),assert=require('assert/strict'),text=fs.readFileSync(process.argv[2],'utf8');
 assert(text.includes('new.example'));assert(!text.includes('old.example'),'successful replacement removes stale entries');
 JS
+cp "$ruleset" "$WORK_DIR/previous.json"
+printf '<html>download failed</html>\n' >"$WORK_DIR/invalid.txt"
+node - "$WORK_DIR" <<'JS'
+const fs=require('fs'),dir=process.argv[2],file=`${dir}/fixture.json`,fixture=JSON.parse(fs.readFileSync(file));
+fixture.section[0].domain_ip_lists.push(`${dir}/invalid.txt`);
+fs.writeFileSync(file,JSON.stringify(fixture));
+JS
+generate
+cmp "$ruleset" "$WORK_DIR/previous.json" || { echo 'FAIL: invalid later source published a partial replacement' >&2; exit 1; }
 rm "$WORK_DIR/local.txt" "$ruleset"
 if generate; then echo 'FAIL: missing first-start list must fail clearly' >&2; exit 1; fi
 printf 'generator list replacement checks passed\n'

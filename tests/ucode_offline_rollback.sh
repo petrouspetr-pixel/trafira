@@ -27,6 +27,7 @@ let pkg_remove_sing_box_conflict = name => true;
 let remove_managed_sing_box_service_script = () => true;
 let remove_file = path => true;
 let file_nonempty = path => true;
+let rollback_files_valid = () => true;
 let installed_package_version = name => installed;
 let pkg_install_rollback_files = files => { installed = rollback_package.version; return length(files) == 2; };
 function assert(ok) { if (!ok) { warn("Offline exact-version rollback failed\\n"); exit(1); } }
@@ -45,6 +46,37 @@ const common = `
 let as_string = v => v == null ? "" : "" + v;
 function assert(ok) { if (!ok) { warn("Rollback preflight assertion failed\\n"); exit(1); } }
 `;
+// Real gzip/tar package and SHA256 parsing, with only the router's architecture
+// list substituted. All archive bytes are generated locally; no router/network.
+const cp = require('child_process');
+const archiveDir = `${dir}/ipk`;
+fs.mkdirSync(`${archiveDir}/control`, {recursive: true});
+fs.mkdirSync(`${archiveDir}/data`, {recursive: true});
+fs.writeFileSync(`${archiveDir}/control/control`, 'Package: sing-box-tiny\nVersion: 1.11.9-r1\nArchitecture: aarch64_cortex-a53\nInstalled-Size: 1\n');
+fs.writeFileSync(`${archiveDir}/data/binary`, Buffer.alloc(8192, 97));
+cp.execFileSync('tar', ['-czf', `${archiveDir}/control.tar.gz`, '-C', `${archiveDir}/control`, './control']);
+cp.execFileSync('tar', ['-czf', `${archiveDir}/data.tar.gz`, '-C', `${archiveDir}/data`, './binary']);
+cp.execFileSync('tar', ['-czf', `${archiveDir}/old.ipk`, '-C', archiveDir, 'control.tar.gz', 'data.tar.gz']);
+fs.writeFileSync(`${archiveDir}/broken.ipk`, 'not an archive');
+fs.writeFileSync(`${dir}/real-archive.uc`, common + `
+let fs = require("fs");
+let is_apk = () => false;
+let read_openwrt_release_value = key => "aarch64_cortex-a53";
+${['shell_quote','command_from_args','command_status','command_success','command_success_from_args','command_output','file_nonempty'].map(extract).join('\n')}
+function command_output_from_args(args) {
+  if (args[0] == "opkg") return "arch all 1\\narch aarch64_cortex-a53 10\\n";
+  return command_output(command_from_args(args));
+}
+${['rollback_archive_field','rollback_archive_digest','rollback_ipk_unpacked_bytes','rollback_archive_info'].map(extract).join('\n')}
+let path = ${JSON.stringify(`${archiveDir}/old.ipk`)};
+let info = rollback_archive_info(path, "sing-box-tiny", "1.11.9-r1");
+assert(info != null && info.size >= 8192 && length(info.digest) == 64);
+assert(rollback_archive_info(path, "sing-box-tiny", "1.12.0-r1") == null);
+assert(rollback_archive_info(${JSON.stringify(`${archiveDir}/broken.ipk`)}, "sing-box-tiny", "1.11.9-r1") == null);
+let old_digest = info.digest;
+fs.writefile(path, "damaged after staging");
+assert(rollback_archive_digest(path) != old_digest);
+`);
 fs.writeFileSync(`${dir}/metadata.uc`, common + `
 let apk = false;
 let present = true;
@@ -54,6 +86,7 @@ let is_apk = () => apk;
 let file_nonempty = path => present;
 let rollback_archive_field = (path, key) => meta[key];
 let rollback_archive_digest = path => "abc";
+let rollback_ipk_unpacked_bytes = path => 4096;
 let read_openwrt_release_value = key => "aarch64_cortex-a53";
 let command_output_from_args = args => apk ? "aarch64" : "arch all 1\\narch aarch64_cortex-a53 10\\n";
 let command_success_from_args = args => verify;
@@ -128,6 +161,21 @@ assert(rollback_package.version == "old-r1");
 assert(stage_previous_sing_box_package("extended-compressed", "install"));
 assert(rollback_package == null && length(rollback_package_files) == 0);
 `);
+fs.writeFileSync(`${dir}/download-capacity.uc`, common + `
+let apk = false;
+let is_apk = () => apk;
+let metadata = "Package: sing-box-tiny\\nVersion: old-r1\\nSize: 4096\\n\\nPackage: sing-box-tiny\\nVersion: new-r1\\nSize: 9999\\n";
+let command_output_from_args = args => metadata;
+${extract('rollback_repository_size')}
+assert(rollback_repository_size("sing-box-tiny", "old-r1") == 4096);
+assert(rollback_repository_size("sing-box-tiny", "unavailable-r1") == 0);
+apk = true;
+metadata = '[{"name":"sing-box-tiny","version":"old-r1","file-size":4096}]';
+assert(rollback_repository_size("sing-box-tiny", "old-r1") == 4096);
+assert(rollback_repository_size("sing-box-tiny", "new-r1") == 0);
+metadata = '{}';
+assert(rollback_repository_size("sing-box-tiny", "old-r1") == 0);
+`);
 fs.writeFileSync(`${dir}/offline-command.uc`, common + `
 let apk = false;
 let tmp_dir = "/stage";
@@ -136,10 +184,12 @@ let command = "";
 let rollback_packages = [ { name: "sing-box-tiny", version: "old-r1", path: "/stage/old.ipk", digest: "original" } ];
 let is_apk = () => apk;
 let rollback_archive_digest = path => digest;
+let file_nonempty = path => true;
 let shell_quote = v => "'" + v + "'";
 let command_from_args = args => join(" ", args);
 let run_logged_install = (message, value) => { command = value; return true; };
 let installed_package_version = name => "old-r1";
+${extract('rollback_files_valid')}
 ${extract('pkg_install_rollback_files')}
 assert(pkg_install_rollback_files([ "/stage/old.ipk" ]));
 assert(index(command, "OPKG_CONF_DIR='/stage/rollback/empty'") >= 0);

@@ -141,16 +141,18 @@ assert_eq "extracted payload" "$(cat "$command_success_output")" \
   "component command success preserves explicit output redirection"
 
 awk '
-prev3 == "    remove_file(archive_file);" &&
-prev2 == "    ensure_install_storage(\"sing_box\", action, staged_install_bytes(tmp_binary, tmp_cronet));" &&
-prev1 == "    stop_trafira_before_sing_box_change();" &&
-$0 == "    let new_version = validate_sing_box_extended_binary(tmp_binary, tmp_dir);" {
-  safe_validation = 1
+/^function install_sing_box_extended\(action, compressed\)/ { scoped = 1 }
+scoped && /remove_file\(archive_file\);/ { released = NR }
+scoped && /ensure_install_storage\("sing_box", action, staged_install_bytes/ { space = NR }
+scoped && /stage_previous_sing_box_package\(current_variant, action\)/ { staged = NR }
+scoped && /stop_trafira_before_sing_box_change\(\);/ { stopped = NR }
+scoped && /let new_version = validate_sing_box_extended_binary/ {
+  safe_validation = released && released < space && space < staged && staged < stopped && stopped < NR
 }
-{ prev3 = prev2; prev2 = prev1; prev1 = $0 }
+scoped && /^}/ { scoped = 0 }
 END { exit safe_validation ? 0 : 1 }
 ' "$ACTION_UC" ||
-  fail "compressed sing-box validation must release the archive and stop the running service to avoid OpenWrt OOM"
+  fail "compressed sing-box validation must release the archive, preflight storage, stage rollback and stop the service before binary validation"
 grep -Fq 'install_staged_file(tmp_binary, "/usr/bin/sing-box", "0755")' "$ACTION_UC" ||
   fail "compressed sing-box binary installation must support moving from tmpfs to overlay"
 grep -Fq 'install_staged_file(tmp_cronet, "/usr/lib/libcronet.so", "0644")' "$ACTION_UC" ||
