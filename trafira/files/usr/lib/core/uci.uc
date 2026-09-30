@@ -390,11 +390,14 @@ function delete_path(path) {
         return false;
 
     try {
-        if (parts.option == "")
-            c.delete(parts.package, parts.section);
-        else
-            c.delete(parts.package, parts.section, parts.option);
-        return true;
+        if (parts.option == "") {
+            if (c.get_all(parts.package, parts.section) == null)
+                return true;
+            return c.delete(parts.package, parts.section) != false;
+        }
+        if (c.get(parts.package, parts.section, parts.option) == null)
+            return true;
+        return c.delete(parts.package, parts.section, parts.option) != false;
     }
     catch (e) {
         return false;
@@ -417,8 +420,7 @@ function set_section(path, type_name) {
         return false;
 
     try {
-        c.set(parts.package, parts.section, as_string(type_name));
-        return true;
+        return c.set(parts.package, parts.section, as_string(type_name)) != false;
     }
     catch (e) {
         return false;
@@ -459,8 +461,7 @@ function set(path, value) {
         return false;
 
     try {
-        c.set(parts.package, parts.section, parts.option, type(value) == "array" ? value : as_string(value));
-        return true;
+        return c.set(parts.package, parts.section, parts.option, type(value) == "array" ? value : as_string(value)) != false;
     }
     catch (e) {
         return false;
@@ -485,8 +486,7 @@ function add_list(path, value) {
     try {
         let values = value_to_list(c.get(parts.package, parts.section, parts.option));
         push(values, as_string(value));
-        c.set(parts.package, parts.section, parts.option, values);
-        return true;
+        return c.set(parts.package, parts.section, parts.option, values) != false;
     }
     catch (e) {
         return false;
@@ -523,10 +523,8 @@ function del_list(path, value) {
 
     try {
         if (length(values) == 0)
-            c.delete(parts.package, parts.section, parts.option);
-        else
-            c.set(parts.package, parts.section, parts.option, values);
-        return true;
+            return c.delete(parts.package, parts.section, parts.option) != false;
+        return c.set(parts.package, parts.section, parts.option, values) != false;
     }
     catch (e) {
         return false;

@@ -235,7 +235,8 @@ function prerm_cleanup(action) {
 
     remember_upgrade_state(action);
     if (!PACKAGE_TEST_MODE) {
-        command_success_from_args([ INIT_PATH, "stop" ]);
+        if (!command_success_from_args([ INIT_PATH, "stop" ]))
+            return false;
         if (!restore_dnsmasq_if_needed())
             return false;
         // opkg may provide no action during replacement; only explicit removal
