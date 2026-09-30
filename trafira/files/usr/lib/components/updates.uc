@@ -1976,8 +1976,8 @@ function remote_ruleset_path(section, kind) {
     return TMP_RULESET_FOLDER + "/" + routing_rulesets_module().ruleset_tag(section_name(section), "remote", kind) + ".json";
 }
 
-function reset_domain_ip_list_ruleset(section) {
-    let path = domain_ip_list_ruleset_path(section);
+function reset_domain_ip_list_ruleset(section, staged_path) {
+    let path = as_string(staged_path) || domain_ip_list_ruleset_path(section);
     ensure_dir(TMP_RULESET_FOLDER);
     remove_file(path);
     return ruleset_module_success([ "create-source", path ]);
@@ -2040,9 +2040,11 @@ function add_json_ruleset_subnets_to_nft_for_section(section, json_file, label) 
     return ok;
 }
 
-function import_domain_ip_list_file_into_rulesets(filepath, section) {
-    if (!file_exists_value(filepath))
-        return true;
+function import_domain_ip_list_file_into_rulesets(filepath, section, staged_path, subnet_chunks) {
+    if (!file_exists_value(filepath)) {
+        log_message("Domain/IP list source is missing: " + as_string(filepath), "error");
+        return false;
+    }
 
     let domains_tmpfile = temp_path();
     let subnets_tmpfile = temp_path();
@@ -2051,24 +2053,33 @@ function import_domain_ip_list_file_into_rulesets(filepath, section) {
         return false;
     }
 
-    let ruleset_filepath = domain_ip_list_ruleset_path(section);
+    let ruleset_filepath = as_string(staged_path) || domain_ip_list_ruleset_path(section);
     let ok = nft_module_success([ "split-domain-subnet-file", filepath, domains_tmpfile, subnets_tmpfile ]);
     let domains_only = option(section, "action", "") == "dns";
     if (ok)
         ok = ruleset_module_success([ "import-plain-list", domains_tmpfile, ruleset_filepath, "domain_suffix", "domains", "5000" ]);
     if (ok && !domains_only)
         ok = ruleset_module_success([ "import-plain-list", subnets_tmpfile, ruleset_filepath, "ip_cidr", "subnets", "5000" ]);
-    if (ok && !domains_only)
-        ok = add_plain_subnet_file_to_nft_for_section(section, subnets_tmpfile);
+    if (ok && !domains_only) {
+        if (type(subnet_chunks) == "array") {
+            let data = fs.readfile(subnets_tmpfile);
+            if (data == null)
+                ok = false;
+            else
+                push(subnet_chunks, data);
+        }
+        else
+            ok = add_plain_subnet_file_to_nft_for_section(section, subnets_tmpfile);
+    }
 
     remove_files([ domains_tmpfile, subnets_tmpfile ]);
     return ok;
 }
 
-function import_domain_ip_list_reference_into_rulesets(reference, section, settings) {
+function import_domain_ip_list_reference_into_rulesets(reference, section, settings, staged_path, subnet_chunks) {
     reference = as_string(reference);
     if (match(reference, /^https?:\/\//) == null)
-        return import_domain_ip_list_file_into_rulesets(reference, section);
+        return import_domain_ip_list_file_into_rulesets(reference, section, staged_path, subnet_chunks);
 
     let tmpfile = temp_path();
     if (tmpfile == "")
@@ -2077,7 +2088,7 @@ function import_domain_ip_list_reference_into_rulesets(reference, section, setti
     let ok = true;
     if (download_to_file(reference, tmpfile, service_proxy_address(settings, "lists")) && file_nonempty(tmpfile)) {
         convert_crlf_to_lf(tmpfile);
-        ok = import_domain_ip_list_file_into_rulesets(tmpfile, section);
+        ok = import_domain_ip_list_file_into_rulesets(tmpfile, section, staged_path, subnet_chunks);
     }
     else {
         log_message("Failed to download remote domain/IP list " + reference + "; skipping it until the next successful update", "error");
@@ -2096,15 +2107,36 @@ function rebuild_domain_ip_lists_from_rule(section, settings) {
     if (length(references) == 0)
         return true;
 
-    if (!reset_domain_ip_list_ruleset(section))
+    // Build the complete section beside its active file. Failed downloads and
+    // parsing must not discard the last usable generation or update live nft sets.
+    let path = domain_ip_list_ruleset_path(section);
+    let staged_path = path + ".stage." + owner_pid();
+    let subnet_chunks = [];
+    if (!reset_domain_ip_list_ruleset(section, staged_path)) {
+        remove_file(staged_path);
         return false;
+    }
 
     let ok = true;
     for (let reference in references)
-        if (!import_domain_ip_list_reference_into_rulesets(reference, section, settings))
+        if (!import_domain_ip_list_reference_into_rulesets(reference, section, settings, staged_path, subnet_chunks))
             ok = false;
 
-    cleanup_empty_ruleset(domain_ip_list_ruleset_path(section));
+    let subnets_path = "";
+    if (ok && length(subnet_chunks) > 0) {
+        subnets_path = temp_path();
+        ok = subnets_path != "" && write_file(subnets_path, join(subnet_chunks, "\n"));
+    }
+    if (ok)
+        ok = fs.rename(staged_path, path);
+    remove_file(staged_path);
+    if (!ok)
+        log_message("Domain/IP list replacement failed; keeping previous rules for " + section_name(section), "error");
+    // Only validated, fully downloaded data may be applied to the running rules.
+    if (ok && subnets_path != "")
+        ok = add_plain_subnet_file_to_nft_for_section(section, subnets_path);
+    if (subnets_path != "")
+        remove_file(subnets_path);
     return ok;
 }
 
