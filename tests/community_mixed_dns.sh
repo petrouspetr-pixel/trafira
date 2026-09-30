@@ -58,6 +58,21 @@ for (const version of ['1.13.18','1.14.1','1.16.0']) {
     assert.deepEqual(c.dns.rules[i-1].inbound,c.dns.rules[i].inbound);
   }
   assert(c.dns.rules.some(r => usesMixed(r) && r.match_response && array(r.source_ip_cidr).includes('192.0.2.3/32')), 'custom DNS actions handle mixed community lists');
+  const customIndex = c.dns.rules.findIndex(r => usesMixed(r) && r.match_response && array(r.source_ip_cidr).includes('192.0.2.3/32'));
+  assert.equal(c.dns.rules[customIndex-1].server,c.dns.rules[customIndex].server,
+    'custom DNS address selection must evaluate its configured resolver, preserving split DNS');
+  const bypassProbe = c.dns.rules.findIndex(r => r.action === 'evaluate' && r.server === 'dnsmasq-server' && array(r.source_ip_cidr).includes('192.0.2.2/32'));
+  assert(bypassProbe >= 0,'source-aware mixed bypass must query dnsmasq before global DNS');
+  const bypassRespond = c.dns.rules[bypassProbe+1];
+  assert.equal(bypassRespond.action,'respond','preserve matching dnsmasq local answers');
+  assert.equal(bypassRespond.type,'logical');
+  assert.equal(bypassRespond.mode,'and');
+  assert(bypassRespond.rules.some(r => usesMixed(r) && r.match_response && array(r.source_ip_cidr).includes('192.0.2.2/32')),
+    'dnsmasq response must match the mixed list and requested source');
+  assert(bypassRespond.rules.some(r => r.match_response && r.invert && array(r.ip_cidr).includes('198.18.0.0/15') && array(r.ip_cidr).includes('fc00::/18')),
+    'never return a cached FakeIP answer for a bypass source');
+  const bypassFallback = c.dns.rules.findIndex(r => usesMixed(r) && r.match_response && r.server === 'dns-server' && array(r.source_ip_cidr).includes('192.0.2.2/32'));
+  assert(bypassFallback > bypassProbe+1,'real DNS fallback follows dnsmasq response matching');
 }
 JS
 printf 'mixed community DNS checks passed\n'

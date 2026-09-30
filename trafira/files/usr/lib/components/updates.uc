@@ -2055,6 +2055,11 @@ function import_domain_ip_list_file_into_rulesets(filepath, section, staged_path
 
     let ruleset_filepath = as_string(staged_path) || domain_ip_list_ruleset_path(section);
     let ok = nft_module_success([ "split-domain-subnet-file", filepath, domains_tmpfile, subnets_tmpfile ]);
+    if (ok && trim(as_string(fs.readfile(domains_tmpfile))) == "" &&
+        trim(as_string(fs.readfile(subnets_tmpfile))) == "") {
+        log_message("Domain/IP list source contains no valid entries: " + as_string(filepath), "error");
+        ok = false;
+    }
     let domains_only = option(section, "action", "") == "dns";
     if (ok)
         ok = ruleset_module_success([ "import-plain-list", domains_tmpfile, ruleset_filepath, "domain_suffix", "domains", "5000" ]);

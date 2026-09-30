@@ -227,6 +227,8 @@ function remember_upgrade_state(action) {
 
     if (command_success_from_args([ INIT_PATH, "status" ]))
         fs.writefile(PACKAGE_UPGRADE_STATE, "1\n");
+    else
+        unlink_if_exists(PACKAGE_UPGRADE_STATE);
 }
 
 function prerm_cleanup(action) {

@@ -52,12 +52,13 @@ let ruleset_module_success = args => {
 };
 let nft_calls = 0;
 let empty_parse = false;
+let fail_nft = false;
 let nft_module_success = args => {
     if (args[0] == "split-domain-subnet-file") {
         if (empty_parse) { fs.writefile(args[2],""); fs.writefile(args[3],""); return true; }
         fs.writefile(args[2],"new.example\\n"); fs.writefile(args[3],"203.0.113.0/24\\n"); return true;
     }
-    nft_calls++; return true;
+    nft_calls++; return !fail_nft;
 };
 function check(ok,message) { if (!ok) { warn("FAIL: "+message+"\\n"); exit(1); } }
 ` + bodies.map(b=>b.code).join('\n') + `
@@ -88,6 +89,11 @@ fs.rename=real_rename;
 check(rebuild_domain_ip_lists_from_rule(section,{}),"successful replacement failed");
 check(index(fs.readfile(path),"new.example")>=0 && index(fs.readfile(path),"old.example")<0,"replacement must not retain old entries");
 check(nft_calls==1,"successful replacement should apply collected subnets once");
+fs.writefile(path,old);
+fail_nft=true;
+check(!rebuild_domain_ip_lists_from_rule(section,{}),"failed nft application must report failure");
+check(fs.readfile(path)==old,"failed nft application discarded previous materialized rules");
+fail_nft=false;
 section.action="dns";
 nft_calls=0;
 fs.writefile(path,old);
