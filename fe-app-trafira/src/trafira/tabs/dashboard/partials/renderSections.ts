@@ -318,6 +318,11 @@ function renderDefaultState({
     ]
       .filter(Boolean)
       .join(' ');
+    const activeOutboundName = outbound.selected
+      ? outbound.urlTestInfo?.selectedName ||
+        outbound.priorityInfo?.selectedName ||
+        outbound.displayName
+      : undefined;
     return E(
       'div',
       {
@@ -330,6 +335,16 @@ function renderDefaultState({
           onChooseOutbound(section.sectionName, section.code, outbound.code),
       },
       [
+        ...(activeOutboundName
+          ? [
+              E('span', {
+                class:
+                  'fkp_dashboard-page__outbound-grid__item__active-indicator',
+                title: activeOutboundName,
+                'aria-label': `${_('Selected')}: ${activeOutboundName}`,
+              }),
+            ]
+          : []),
         ...(outboundSwitching
           ? [
               svgEl(

@@ -2240,6 +2240,7 @@ function renderDefaultState({
       section.withTagSelect && !canChooseOutbound ? "fkp_dashboard-page__outbound-grid__item--disabled" : "",
       outboundSwitching ? "fkp_dashboard-page__outbound-grid__item--switching" : ""
     ].filter(Boolean).join(" ");
+    const activeOutboundName = outbound.selected ? outbound.urlTestInfo?.selectedName || outbound.priorityInfo?.selectedName || outbound.displayName : void 0;
     return E(
       "div",
       {
@@ -2249,6 +2250,13 @@ function renderDefaultState({
         click: () => canChooseOutbound && onChooseOutbound(section.sectionName, section.code, outbound.code)
       },
       [
+        ...activeOutboundName ? [
+          E("span", {
+            class: "fkp_dashboard-page__outbound-grid__item__active-indicator",
+            title: activeOutboundName,
+            "aria-label": `${_("Selected")}: ${activeOutboundName}`
+          })
+        ] : [],
         ...outboundSwitching ? [
           svgEl(
             "svg",
@@ -7721,6 +7729,22 @@ var styles = `
 
 .fkp_dashboard-page__outbound-grid__item--active {
     border-color: var(--success-color-medium, green);
+}
+
+.fkp_dashboard-page__outbound-grid__item__active-indicator {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success-color-medium, green);
+    box-shadow: 0 0 0 2px var(--background-color-high, white);
+}
+
+.fkp_dashboard-page__outbound-grid__item--active
+    .fkp_dashboard-page__outbound-grid__item__header {
+    padding-right: 12px;
 }
 
 .fkp_dashboard-page__outbound-grid__item--disabled {

@@ -480,6 +480,22 @@ export const styles = `
     border-color: var(--success-color-medium, green);
 }
 
+.fkp_dashboard-page__outbound-grid__item__active-indicator {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success-color-medium, green);
+    box-shadow: 0 0 0 2px var(--background-color-high, white);
+}
+
+.fkp_dashboard-page__outbound-grid__item--active
+    .fkp_dashboard-page__outbound-grid__item__header {
+    padding-right: 12px;
+}
+
 .fkp_dashboard-page__outbound-grid__item--disabled {
     cursor: default;
 }
