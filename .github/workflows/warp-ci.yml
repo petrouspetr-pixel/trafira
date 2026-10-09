@@ -68,3 +68,39 @@ jobs:
         run: |
           cd /tmp/scout
           sudo env "PATH=$PATH" GOCACHE=/tmp/warp-test-go "GOMODCACHE=$HOME/go/pkg/mod" go test ./...
+
+  network:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - name: Build pinned test daemons and namespace tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libjson-c-dev pkg-config nftables iproute2 curl python3 wireguard-tools
+          git clone --depth 1 --branch v0.0.20250529 https://github.com/jow-/ucode.git /tmp/ucode
+          cmake -S /tmp/ucode -B /tmp/ucode/build -DUBUS_SUPPORT=OFF -DUCI_SUPPORT=OFF -DULOOP_SUPPORT=OFF
+          cmake --build /tmp/ucode/build --parallel
+          sudo cmake --install /tmp/ucode/build
+          sudo ldconfig
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 90 https://github.com/SagerNet/sing-box/releases/download/v1.12.12/sing-box-1.12.12-linux-amd64.tar.gz -o /tmp/sing-box.tar.gz
+          echo '7c103cb2f9a7dc54cb82962043596718ed27989a478d6405f0939a9b775f889f  /tmp/sing-box.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/sing-box.tar.gz -C /tmp
+          sudo install -m 0755 /tmp/sing-box-1.12.12-linux-amd64/sing-box /usr/local/bin/sing-box
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 90 https://codeload.github.com/amnezia-vpn/amneziawg-go/tar.gz/refs/tags/v3.1.20260828 -o /tmp/awg.tar.gz
+          echo '24c656cfb80ff6855702710eaf2e3729fa710bf6bfdbbbdfba01984ccd17de95  /tmp/awg.tar.gz' | sha256sum -c -
+          mkdir /tmp/awg
+          tar -xf /tmp/awg.tar.gz --strip-components=1 -C /tmp/awg
+          (cd /tmp/awg && CGO_ENABLED=0 go build -o /tmp/awg-test .)
+          sudo mkdir -p /usr/libexec
+          sudo install -m0755 /tmp/awg-test /usr/libexec/trafira-warp-amneziawg-go
+          cc -O2 -Wall -Wextra -Werror components/warp/trafira-warp-awg/files/warp-awgctl.c -o /tmp/awgctl
+          cc -O2 -Wall -Wextra -Werror components/warp/trafira-warp-awg/files/warp-exec.c -o /tmp/warp-exec
+          sudo install -m0755 /tmp/awgctl /usr/libexec/trafira-warp-awgctl
+          sudo install -m0755 /tmp/warp-exec /usr/libexec/trafira-warp-exec
+      - name: Verify actual WARP packet paths and process failure
+        run: sudo env RUN_TRAFIRA_WARP_NETWORK_TESTS=1 bash tests/warp_network.sh
