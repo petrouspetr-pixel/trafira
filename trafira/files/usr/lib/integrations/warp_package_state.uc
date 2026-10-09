@@ -25,7 +25,10 @@ function execute(action,path) {
     if(!saved?.transport || type(saved.files)!="object")return {success:false,error:"invalid_state"};
     if(action=="resume") {
         if(!saved.transport.running)return {success:system("/etc/init.d/trafira-warp stop >/dev/null 2>&1")==0};
-        return require("warp.runtime").activate({...saved.transport.config,enabled:true},"package-resume");
+        let result=require("warp.runtime").activate({...saved.transport.config,enabled:true},"package-resume");
+        if(!result.success)return result;
+        let current=state.load(state.DIRECTORY+"/transport.json");
+        return {success:current && state.save(state.DIRECTORY+"/transport.json",{...current,enabled:saved.transport.config.enabled===true})};
     }
     if(action=="restore") {
         for(let name in ["account.json","registration.json"])

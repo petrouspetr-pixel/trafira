@@ -21,7 +21,7 @@ function worker(id) {
         else {
             let runtime=require("warp.runtime");
             let adapter=require("integrations.warp_attach"),model=require("integrations.warp_model");
-            let integration={mark:int(require("core.constants").NFT_OUTBOUND_MARK),
+            let integration={mark:require("warp.transport").outbound_mark(),
                 restore:(saved)=>saved?adapter.restore(saved):true,
                 references:(iface)=>model.references({config:adapter.references()},iface)};
             if(index(["attach","detach"],request.request.action)>=0) {

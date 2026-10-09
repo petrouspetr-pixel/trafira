@@ -7,6 +7,10 @@ start_service() {
     # OpenWrt invokes start after package replacement; only the coordinator may
     # resume a previously running service after its complete family is verified.
     [ "${PKG_UPGRADE:-0}" != 1 ] || return 0
+    if [ -e /etc/trafira/warp-packages/journal.json ] && ! ucode -L /usr/lib/trafira /usr/lib/trafira/integrations/warp_cli.uc permit-start; then
+        /usr/bin/trafira component_action warp recover >/dev/null
+        return $?
+    fi
     if [ -e /etc/trafira-warp/active.json ] && ! ucode -L /usr/lib/trafira /usr/lib/trafira/integrations/warp_cli.uc permit-start; then
         ucode -L /usr/lib/trafira -L /usr/lib/trafira-warp /usr/lib/trafira/integrations/warp_cli.uc recover >/dev/null
         return 0

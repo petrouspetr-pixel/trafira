@@ -63,6 +63,8 @@ add set inet WarpTest local4 { type ipv4_addr; flags interval; elements = { 127.
 add set inet WarpTest local6 { type ipv6_addr; flags interval; elements = { ::1/128, fe80::/10, 2001:db8:2::/64 }; }
 add chain inet WarpTest mangle_output { type route hook output priority -150; policy accept; }
 add chain inet WarpTest proxy { type filter hook prerouting priority -100; policy accept; }
+add rule inet WarpTest proxy ip daddr @local4 return
+add rule inet WarpTest proxy ip6 daddr @local6 return
 add rule inet WarpTest proxy iifname "lan" ip saddr 192.0.2.2 meta l4proto { tcp, udp } meta mark set 0x04000000 tproxy ip to 127.0.0.1:1602 accept
 add rule inet WarpTest proxy iifname "lan" ip6 saddr 2001:db8:2::2 meta l4proto { tcp, udp } meta mark set 0x04000000 tproxy ip6 to [::1]:1603 accept
 """)
@@ -110,7 +112,7 @@ try:
     (work/'base.json').write_text(json.dumps(config))
     uc('let fs=require("fs"),r=require("config.router_origin"),c=json(fs.readfile("'+str(work/'base.json')+'"));r.attach(c,{router_origin_enabled:"1",router_origin_section:"vpn"},[{".name":"vpn",action:"connection"}]);require("core.common").strip_internal_fields(c);fs.writefile("'+str(work/'router.json')+'",sprintf("%J",c));')
     run(['sing-box','check','-c',work/'router.json'],router)
-    start(['sing-box','run','-c',work/'router.json'],router,'sing-box');time.sleep(.6)
+    core=start(['sing-box','run','-c',work/'router.json'],router,'sing-box');time.sleep(.6)
     base_rules()
     nft('''table inet Audit {
  counter direct4 {} counter direct6 {} counter plain_peer {}
@@ -133,7 +135,15 @@ try:
     wait(lambda:ip(router,'-j','link','show').stdout.find('tfwarp0')<0,'supervisor removes tunnel after runner death')
     curl(success=False);curl(address='[2001:db8:1::2]',success=False)
     curl(client,source='192.0.2.2',success=False);curl(client,'[2001:db8:1::2]',source='2001:db8:2::2',success=False);counters_zero()
-    curl(client,address='192.0.2.1',source='192.0.2.3')
+    curl(client,address='192.0.2.1',source='192.0.2.2')
+    core.terminate();core.wait(timeout=5)
+    core=start(['sing-box','run','-c',work/'router.json'],router,'sing-box-cold');time.sleep(.6)
+    assert core.poll() is None,'cold core must start with unavailable WARP'
+    curl(client,source='192.0.2.2',success=False);counters_zero()
+    # Restart the actual owned runner and its oif policy after abrupt loss.
+    runner=start(['ucode','-L',LIB,'-L',work/'addon',work/'addon/warp/runner.uc'],router,'awg-restart')
+    wait(lambda:json.loads(uc('print(sprintf("%J",require("warp.transport").status()));')).get('running'),'runner restarts')
+    curl(client,source='192.0.2.2');curl();counters_zero()
     # Interrupted nft rebuild protects selected connections, leaving management.
     guard=uc('print(require("service.runtime_apply").guard_script({source_network_interfaces:["lan"],router_origin_enabled:"1"},{},{}));')
     nft(guard);run(['nft','delete','table','inet','WarpTest'],router)

@@ -4,7 +4,7 @@ const LIB=getenv("TRAFIRA_LIB")||"/usr/lib/trafira";
 const ADDON=getenv("TRAFIRA_WARP_LIB")||"/usr/lib/trafira-warp";
 function quote(value){return "'"+replace(""+value,/'/g,"'\\''")+"'";}
 function valid(status) {
-    if(type(status)!="object" || status.schema!=1 || status.owner!="trafira-warp" || status.running!==true || !match(status.interface||"",/^tfwarp[0-9]$/) || status.fwmark!=int(constants.NFT_OUTBOUND_MARK))return false;
+    if(type(status)!="object" || status.schema!=1 || status.owner!="trafira-warp" || status.running!==true || !match(status.interface||"",/^tfwarp[0-9]$/) || status.fwmark!=int(substr(constants.NFT_OUTBOUND_MARK,0,2)=="0x"?substr(constants.NFT_OUTBOUND_MARK,2):constants.NFT_OUTBOUND_MARK,substr(constants.NFT_OUTBOUND_MARK,0,2)=="0x"?16:10))return false;
     let endpoint=match(status.endpoint||"",/^([^:]+):([0-9]+)$/);
     return endpoint && ip.valid_ipv4(endpoint[1]) && int(endpoint[2])>0 && int(endpoint[2])<=65535 && type(status.listen_port)=="int" && status.listen_port>0 && status.listen_port<=65535;
 }

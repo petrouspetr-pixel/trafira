@@ -81,7 +81,10 @@ function previous(ctx) {
     return stage(ctx,selected,release,ctx.work+"/old");
 }
 function install_files(ctx,selected) {
-    if(selected.empty)return ctx.remove(policy.NAMES);
+    if(selected.empty) {
+        let installed=filter(policy.NAMES,(name)=>ctx.version(name)!="");
+        return !length(installed) || ctx.remove(installed);
+    }
     for(let item in selected.packages)if(!verify_item(ctx,selected.directory+"/"+item.file,item))return false;
     return ctx.install(map(selected.packages,(item)=>selected.directory+"/"+item.file));
 }
@@ -90,7 +93,9 @@ function recover(ctx) {
     let journal=load(path);if(!journal || journal.schema!=1 || !journal.previous)return fail("recovery_error");
     let old=journal.previous;
     if(old.empty!==true && old.directory!=CACHE+"/rollback")return fail("recovery_error");
-    if(!run(["/etc/init.d/trafira-warp","stop"]) && ctx.version("luci-app-trafira-warp"))return fail("recovery_error");
+    // Interrupted replacement may have removed the init script. Reinstalling
+    // the staged old family must still be possible; a present script must stop.
+    if(fs.stat("/etc/init.d/trafira-warp") && !run(["/etc/init.d/trafira-warp","stop"]))return fail("recovery_error");
     if(!install_files(ctx,old))return fail("recovery_error");
     if(!old.empty && (!same_family(family(ctx),old.packages) || !package_state("restore",CACHE+"/rollback/state.json") || !archive_cache(ctx,old,CACHE+"/rollback",CACHE+"/current")))return fail("recovery_error");
     if(old.empty && !clear(CACHE+"/current"))return fail("recovery_error");

@@ -60,6 +60,8 @@ function snapshot(settings,sections) {
             push(result.vpn,{ip:endpoint[1],port:int(endpoint[2])});
         }
     }
+    let addon=getenv("TRAFIRA_WARP_LIB")||"/usr/lib/trafira-warp";
+    if(fs.stat(addon+"/warp/runtime.uc"))include_warp(result,known_interfaces,require("integrations.warp_transport").read());
     // Native interface transports have no sing-box socket mark. Only active
     // WG/AWG sockets can currently be identified safely across endpoint roaming.
     for(let section in sections)if(common.bool_option(section,"enabled",true))

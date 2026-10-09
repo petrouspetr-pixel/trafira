@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 let fs=require("fs"),state=require("warp.state"),job=require("warp.job");
+function number(value){return type(value)=="string" && substr(value,0,2)=="0x"?int(substr(value,2),16):int(value);}
+function outbound_mark(){return number(getenv("NFT_OUTBOUND_MARK")||"0x08000000");}
 function valid_interface(value){return type(value)=="string" && match(value,/^tfwarp[0-9]$/);}
 function ipv4(value) {
     if(type(value)!="string" || !match(value,/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/))return false;
@@ -25,7 +27,7 @@ function choose_interface(sections,devices) {
     return null;
 }
 function valid_config(c) {
-    if(type(c)!="object" || !valid_interface(c.interface) || !valid_endpoint(c.endpoint) || c.fwmark!=134217728 || c.mtu!=1280 || !ipv4(c.ipv4) || (c.ipv6 && !ipv6(c.ipv6)))return false;
+    if(type(c)!="object" || !valid_interface(c.interface) || !valid_endpoint(c.endpoint) || c.fwmark!=outbound_mark() || c.fwmark<1 || c.fwmark>4294967295 || c.mtu!=1280 || !ipv4(c.ipv4) || (c.ipv6 && !ipv6(c.ipv6)))return false;
     for(let key in ["private_key","peer_public_key"])if(type(c[key])!="string" || !match(c[key],/^[A-Za-z0-9+\/]{43}=$/))return false;
     if(type(c.jc)!="int" || c.jc<1 || c.jc>10 || type(c.jmin)!="int" || type(c.jmax)!="int" || c.jmin<1 || c.jmax<c.jmin || c.jmax>1280)return false;
     return (type(c.i1)=="string" && length(c.i1)>0 && length(c.i1)<=8192 && !match(c.i1,/[\r\n]/));
@@ -117,7 +119,7 @@ function mark_available(mark) {
         let rules=output(["ip",family,"rule","show"]);if(rules==null)return false;
         for(let line in split(rules,"\n")) {
             let found=match(line,/fwmark (0x[0-9a-fA-F]+|[0-9]+)(?:\/(0x[0-9a-fA-F]+|[0-9]+))?/);
-            if(found && (mark & (found[2]?int(found[2]):4294967295))==(int(found[1]) & (found[2]?int(found[2]):4294967295)))return false;
+            if(found && (mark & (found[2]?number(found[2]):4294967295))==(number(found[1]) & (found[2]?number(found[2]):4294967295)))return false;
         }
     }
     return true;
@@ -169,4 +171,4 @@ function restore(saved,id) {
     }
     return state.remove(state.DIRECTORY+"/transport.json") && state.remove(state.DIRECTORY+"/awg.conf");
 }
-return {routing_identity,route_setup,route_clear,owned,config_text,snapshot,apply,restore,mark_available,valid_interface,ipv4,ipv6,valid_endpoint,choose_interface,valid_config,network_section,address_commands,status,quote,output};
+return {outbound_mark,routing_identity,route_setup,route_clear,owned,config_text,snapshot,apply,restore,mark_available,valid_interface,ipv4,ipv6,valid_endpoint,choose_interface,valid_config,network_section,address_commands,status,quote,output};
