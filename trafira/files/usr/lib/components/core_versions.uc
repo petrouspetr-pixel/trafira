@@ -54,7 +54,9 @@ function from_github(releases,env) {
         let version=replace(release.tag_name,/^v/,""),prefix="https://github.com/shtorm-7/sing-box-extended/releases/download/"+release.tag_name+"/";
         if(!match(version,/^[0-9]+\.[0-9]+\.[0-9]+/) || match(lc(version),/(alpha|beta|rc|nightly|dev)/))continue;
         for(let asset in type(release.assets)=="array"?release.assets:[]) {
-            if(type(asset)!="object" || !safe(asset.name) || substr(asset.name,0,18)!="sing-box-extended_" && substr(asset.name,0,18)!="sing-box-extended-")continue;
+            if(type(asset)!="object" || !safe(asset.name))continue;
+            let expected_prefix=compressed?"sing-box-"+version+"-":"sing-box-extended_";
+            if(substr(asset.name,0,length(expected_prefix))!=expected_prefix)continue;
             if(substr(asset.name,-length(suffix))!=suffix || asset.browser_download_url!=prefix+asset.name)continue;
             if(type(asset.size)!="int" || asset.size<=0)continue;
             let digest=asset.digest||"";
