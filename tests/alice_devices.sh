@@ -144,23 +144,33 @@ const path = require('path');
 const assert = require('assert/strict');
 const dir = process.argv[2];
 const read = (name) => JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
-const byKey = (report) => Object.fromEntries(report.devices.map((device) => [device.mac || device.ips[0], device]));
+const byKey = (report) => {
+  const devices = {};
+  for (const device of report.devices) {
+    if (device.mac && !devices[device.mac]) devices[device.mac] = device;
+    for (const ip of device.ips) devices[ip] = device;
+  }
+  return devices;
+};
 
 const allow = read('allow.out');
 assert.equal(allow.enabled, true);
 assert.equal(allow.list_mode, 'allow');
 assert.equal(allow.dashboard_visible, true, 'the dashboard panel is shown by default');
 let devices = byKey(allow);
-assert.equal(Object.keys(devices).length, 7, 'FAILED, uplink, link-local-only neighbours and upstream WireGuard peers are skipped');
+assert.equal(allow.devices.length, 8, 'LAN addresses sharing a MAC are listed separately; FAILED, uplink, link-local-only neighbours and upstream WireGuard peers are skipped');
 assert(!devices['aa:bb:cc:00:00:06'], 'uplink neighbours are not client devices');
 assert(!devices['aa:bb:cc:00:00:07'], 'devices without routable addresses are skipped');
 
-const iphone = devices['aa:bb:cc:00:00:01'];
+const iphone = devices['192.168.1.10'];
 assert.equal(iphone.name, 'iphone');
-assert.deepEqual(iphone.ips, ['192.168.1.10', '2001:db8::10'], 'IPs merge by MAC without link-local');
+assert.deepEqual(iphone.ips, ['192.168.1.10'], 'each LAN IP is reported separately');
 assert.equal(iphone.online, true);
-assert.equal(iphone.status, 'mixed', 'IPv4 is listed but IPv6 bypasses Trafira');
+assert.equal(iphone.status, 'trafira', 'the listed IP uses Trafira');
 assert.equal(iphone.matched_by, 'ip:192.168.1.10/32');
+const iphoneIpv6 = devices['2001:db8::10'];
+assert.equal(iphoneIpv6.name, '', 'a lease name is not copied to another IP sharing the MAC');
+assert.equal(iphoneIpv6.status, 'direct', 'the unlisted IP bypasses Trafira');
 
 const byMac = devices['aa:bb:cc:00:00:02'];
 assert.equal(byMac.matched_by, 'mac:aa:bb:cc:00:00:02');
@@ -199,7 +209,8 @@ assert.deepEqual(allow.warnings, [
 ]);
 
 devices = byKey(read('deny.out'));
-assert.equal(devices['aa:bb:cc:00:00:01'].status, 'mixed', 'deny mode also preserves mixed IPv4/IPv6 routing');
+assert.equal(devices['192.168.1.10'].status, 'direct', 'deny mode bypasses the listed IP');
+assert.equal(devices['2001:db8::10'].status, 'trafira', 'deny mode still routes the unlisted IP');
 assert.equal(devices['aa:bb:cc:00:00:03'].status, 'trafira');
 assert.equal(devices['10.8.0.2'].status, 'direct');
 assert.equal(devices['aa:bb:cc:00:00:05'].status, 'not_captured');

@@ -60,7 +60,7 @@ function addLocalDeviceChoice(choices, ip, name) {
     return;
   }
 
-  choices[normalizedIp] = normalizedName;
+  choices[normalizedIp] = `${normalizedIp} · ${normalizedName}`;
 }
 
 function addRouterIp(routerIps, ip) {
