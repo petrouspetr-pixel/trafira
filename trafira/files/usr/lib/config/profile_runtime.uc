@@ -71,4 +71,24 @@ function restore(state){
 function hooks(document,directory){
     return {validate:(path)=>validate(document,directory,path),capture,activate,restore};
 }
-return {prepare,hooks,dependencies};
+function read_document(path,directory,name){
+    let info=fs.lstat(path);
+    if(!info || info.type!="file" || info.size>1048576)return {success:false,error:"invalid_config_file"};
+    let f=fs.open(path,"re");if(!f)return {success:false,error:"invalid_config_file"};
+    let text=f.read(1048577);f.close();
+    if(text==null || length(text)>1048576)return {success:false,error:"invalid_config_file"};
+    let isolated=directory+"/read",saved=isolated+"/saved";
+    if(!fs.mkdir(isolated,448))return {success:false,error:"storage_unavailable"};
+    if(!fs.mkdir(saved,448) || !private_write(isolated+"/trafira",text))return {success:false,error:"storage_unavailable"};
+    let document={schema:1,name,config:[]};
+    try {
+        let cursor=require("uci").cursor(isolated,saved);
+        if(!cursor.load("trafira"))return {success:false,error:"invalid_config_file"};
+        for(let kind in format.TYPES)cursor.foreach("trafira",kind,function(section){push(document.config,section);});
+        cursor.unload("trafira");
+        sort(document.config,(a,b)=>int(a[".index"]||0)-int(b[".index"]||0));
+    }catch(e){return {success:false,error:"invalid_config_file"};}
+    let validation=format.validate(document);
+    return validation.valid?{success:true,document}:{success:false,error:"invalid_profile",errors:validation.errors};
+}
+return {prepare,hooks,dependencies,read_document};
