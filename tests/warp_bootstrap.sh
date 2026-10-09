@@ -11,5 +11,7 @@ assert(!length(result.vpn) && !length(result.vpn_ports),"ordinary UDP to same pe
 let script=require("config.router_origin").nft("Test","local4","local6","0x04000000",result);
 assert(script && index(script,"162.159.192.1")<0 && index(script,"32000")<0,"only existing transport mark exemption");
 assert(!r.include_warp({}, {}, {...live,fwmark:67108864}),"capture mark rejected");
+assert(r.include_warp({vpn:[],vpn_ports:[]},{},{schema:1,owner:"trafira-warp",interface:"tfwarp0",running:false,configured:true}),"verified inactive owned WARP permits fail-closed core reload");
+assert(!r.include_warp({}, {}, {schema:1,owner:"trafira-warp",interface:"wan",running:false,configured:true}),"inactive foreign interface rejected");
 print("WARP router-origin ownership and mark isolation passed\n");
 '

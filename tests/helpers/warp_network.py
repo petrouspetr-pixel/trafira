@@ -80,7 +80,8 @@ try:
     ip(client,'route','add','default','via','192.0.2.1');ip(client,'-6','route','add','default','via','2001:db8:2::1')
     ip(server,'addr','add','198.51.100.2/32','dev','lo')
     ip(server,'route','add','192.0.2.0/24','via','162.159.192.2');ip(server,'-6','route','add','2001:db8:2::/64','via','2001:db8:1::1')
-    ip(router,'route','add','198.51.100.2/32','via','162.159.192.1')
+    ip(router,'route','add','default','via','162.159.192.1')
+    ip(router,'-6','route','add','default','via','2001:db8:1::2')
     run(['sysctl','-qw','net.ipv4.ip_forward=1','net.ipv6.conf.all.forwarding=1','net.ipv4.conf.all.rp_filter=0','net.ipv4.conf.wan.rp_filter=0','net.ipv4.conf.lo.rp_filter=0','net.ipv4.conf.all.route_localnet=1'],router)
     for family in ['-4','-6']:
         ip(router,family,'rule','add','pref','105','fwmark','0x04000000/0x04000000','table','200')
@@ -115,12 +116,15 @@ try:
     core=start(['sing-box','run','-c',work/'router.json'],router,'sing-box');time.sleep(.6)
     base_rules()
     nft('''table inet Audit {
- counter direct4 {} counter direct6 {} counter plain_peer {}
+ counter direct4 {}
+ counter direct6 {}
+ counter plain_peer {}
  chain egress { type filter hook postrouting priority 0; policy accept;
  oifname "wan" ip daddr 198.51.100.2 tcp dport 18080 counter name direct4
  oifname "wan" ip6 daddr 2001:db8:1::2 tcp dport 18080 counter name direct6
  oifname "wan" ip daddr 162.159.192.1 udp dport 2408 meta mark 0 counter name plain_peer
- }}''')
+ }
+ }''')
     # Ordinary LAN traffic retains its direct path; protected LAN uses WARP.
     curl(client,source='192.0.2.3');curl(client,'[2001:db8:1::2]',source='2001:db8:2::3')
     run(['nft','reset','counters','table','inet','Audit'],router)

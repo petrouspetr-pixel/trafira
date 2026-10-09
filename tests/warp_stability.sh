@@ -10,5 +10,6 @@ assert(summary.samples==4 && summary.transport_errors==1,"403 and429 differ from
 assert(summary.http_restricted==2 && summary.median==0.2 && summary.p95==0.3,"successful transport timing statistics");
 assert(!s.valid_request(10,["google"]) && !s.valid_request(15,["http://localhost/"]),"bounded catalogue only");
 assert(s.valid_request(15,["google","chatgpt"]),"supported duration andservices");
+assert(!s.valid_request(15,["google","google"]),"duplicate probes rejected");
 print("WARP stability checks passed\n");
 '

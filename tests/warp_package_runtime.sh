@@ -39,4 +39,4 @@ else if(action=="resume" || action=="restore") {
 }else exit(1);
 exit(0);
 UC
-ucode -L "$ROOT/trafira/files/usr/lib" -L "$WORK/lib" "$ROOT/tests/helpers/warp_package_fixture.uc"
+ucode -L "$WORK/lib" -L "$ROOT/trafira/files/usr/lib" "$ROOT/tests/helpers/warp_package_fixture.uc"
