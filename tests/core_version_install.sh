@@ -17,6 +17,15 @@ let selected_core={expected_digest:"before",original_version:"1.14.2",candidate:
 let selected_error="",current="1.14.2",digest="before",finished=0,healthy=true;
 let selected_hooks={current:()=>current,digest:()=>digest};
 let core_selection={finish:()=>{finished++;return {success:false,error:"pin_write_failed"};}};
+let trafira_was_running=false;
+const BIN_PATH="/usr/bin/trafira",LIB_DIR="/test/lib";
+let file_exists=()=>true,trafira_status_running_with_timeout=()=>false;
+let command_from_args=(args)=>join(" ",args);
+let command_success_from_args=(args)=>index(join(" ",args),"sing-box-service-running")>=0;
+let command_success=(cmd)=>index(cmd,"sing-box-service-running")>=0;
+${extract('capture_trafira_running_state')}
+capture_trafira_running_state();
+assert(trafira_was_running,"live degraded core remains running for installer restart and health verification");
 ${extract('selected_core_unchanged')}
 ${extract('finish_selected_core')}
 assert(selected_core_unchanged(),"unchanged candidate may stop service");

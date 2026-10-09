@@ -57,3 +57,15 @@ const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
 assert.equal(JSON.parse(fs.readFileSync(`${dir}/router.json`)).decision.outbound,'vpn-out','router ignores LAN Alice bypass');
 assert.equal(JSON.parse(fs.readFileSync(`${dir}/bootstrap.json`)).decision.status,'direct','bootstrap exclusion explained');
 JS
+
+# FakeIP is not an observed real destination and cannot disprove an earlier CIDR.
+printf 'trafira.settings=settings\ntrafira.settings.config_path=%s/config.json\n' "$WORK_DIR" >"$TRAFIRA_UCI_STATE_FILE"
+cat >"$WORK_DIR/config.json" <<'JSON'
+{"route":{"rules":[{"ip_cidr":"203.0.113.0/24","action":"route","outbound":"vpn-out"}],"final":"direct-out"},"dns":{"rules":[],"final":"dns-server","servers":[{"type":"fakeip","tag":"fakeip-server","inet4_range":"198.18.0.0/15","inet6_range":"fc00::/18"}]},"outbounds":[{"tag":"vpn-out","type":"direct"}]}
+JSON
+run '{"domain":"store.example","destination_ip":"198.18.0.20","source":{"kind":"device","ip":"192.0.2.5"},"port":443,"network":"tcp"}' >"$WORK_DIR/fakeip.json"
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.decision.status!=="indeterminate")throw Error("FakeIP was mistaken for real destination");' "$WORK_DIR/fakeip.json"
+# A persisted Alice edit is not evidence that the capture rules have changed.
+printf 'trafira.settings.alice_mode_enabled=1\ntrafira.settings.alice_list_mode=allow\ntrafira.settings.alice_ips=198.51.100.5\n' >>"$TRAFIRA_UCI_STATE_FILE"
+run '{"domain":"store.example","source":{"kind":"device","ip":"192.0.2.5"},"port":443,"network":"tcp"}' >"$WORK_DIR/unapplied.json"
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.decision.status==="direct")throw Error("Unapplied Alice settings masquerade as active capture");' "$WORK_DIR/unapplied.json"

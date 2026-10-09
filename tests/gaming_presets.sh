@@ -21,6 +21,11 @@ assert(!g.build(preset,{...request,expected_digest:"old"},current).valid,"stale 
 assert(!g.build(preset,request,{...current,sections:[settings,{...vpn,enabled:"0"}]}).valid,"disabled proxy rejected");
 let again=g.build(preset,request,{...current,sections:result.config});
 assert(again.valid && length(again.config)==length(result.config),"idempotent apply");
+let saved=json(sprintf("%J",result.config));
+// UCI does not persist empty lists: exercise that serialized representation.
+for(let section in saved)for(let key in keys(section))if(type(section[key])=="array" && !length(section[key]))delete section[key];
+assert(g.build(preset,request,{...current,sections:saved}).valid,"unmodified persisted preset is idempotent");
+assert(g.remove(result.owner,"delete",false,{...current,sections:saved}).valid,"unmodified persisted preset deletes without edited confirmation");
 let edited=json(sprintf("%J",result.config));
 for(let section in edited)if(section.preset_owner) {section.label="User edit";break;}
 assert(!g.build(preset,request,{...current,sections:edited}).valid,"user edits need explicit replacement");
