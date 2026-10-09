@@ -68,7 +68,7 @@ grep -Fq $'trafira_alice_interfaces\t{ "wg0" }' "$NFT_LOG"
 
 ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/config/validator.uc" \
   validate-runtime-fixture "$WORK_DIR/enabled.json" "{}"
-grep -Fq "Alice mode interface 'wg0' is not in source_network_interfaces" "$LOGGER_LOG"
+grep -Fq "Alice Mode interface 'wg0' is not in source_network_interfaces" "$LOGGER_LOG"
 mkdir -p "$WORK_DIR/enabled.config.section-cache" "$WORK_DIR/enabled.config.rulesets"
 ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/singbox/generator.uc" \
   generate-config-fixture "$WORK_DIR/enabled.json" "$WORK_DIR/enabled.config" "127.0.0.1"
@@ -114,7 +114,7 @@ ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/nft/apply.uc" nft-create-runtime-base-fixt
   "$WORK_DIR/disabled.json" TrafiraTable localv4 trafira_subnets trafira_ports trafira_ip_ports \
   trafira_interfaces br-lan 0x00100000 0x00200000 198.18.0.0/15 1602 0
 if grep -Fq $'alice_gate' "$NFT_LOG"; then
-  printf 'FAIL: disabled Alice mode must not install the source gate\n' >&2
+  printf 'FAIL: disabled Alice Mode must not install the source gate\n' >&2
   exit 1
 fi
 node - "$WORK_DIR/enabled.json" "$WORK_DIR/empty.json" <<'NODE'
@@ -146,13 +146,13 @@ NODE
 ENABLED_SING_SIGNATURE="$(ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/state.uc" sing-box-signature-body-fixture "$WORK_DIR/enabled.json")"
 DISABLED_SING_SIGNATURE="$(ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/state.uc" sing-box-signature-body-fixture "$WORK_DIR/disabled.json")"
 [ "$ENABLED_SING_SIGNATURE" != "$DISABLED_SING_SIGNATURE" ] || {
-  printf 'FAIL: switching Alice mode must reload sing-box\n' >&2
+  printf 'FAIL: switching Alice Mode must reload sing-box\n' >&2
   exit 1
 }
 ENABLED_NFT_SIGNATURE="$(ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/state.uc" nft-signature-body-fixture "$WORK_DIR/enabled.json")"
 DISABLED_NFT_SIGNATURE="$(ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/state.uc" nft-signature-body-fixture "$WORK_DIR/disabled.json")"
 [ "$ENABLED_NFT_SIGNATURE" != "$DISABLED_NFT_SIGNATURE" ] || {
-  printf 'FAIL: switching Alice mode must rebuild nftables\n' >&2
+  printf 'FAIL: switching Alice Mode must rebuild nftables\n' >&2
   exit 1
 }
 for variant in deny other-mac other-interface; do
@@ -179,8 +179,8 @@ if ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/config/validator.uc" \
   printf 'FAIL: invalid Alice IP was accepted\n' >&2
   exit 1
 fi
-grep -Fq 'Invalid Alice mode device IP or subnet' "$WORK_DIR/invalid.log"
-for variant in invalid-mac:'Invalid Alice mode MAC address' invalid-interface:'Invalid Alice mode interface' invalid-mode:'Invalid Alice mode list mode'; do
+grep -Fq 'Invalid Alice Mode device IP or subnet' "$WORK_DIR/invalid.log"
+for variant in invalid-mac:'Invalid Alice Mode MAC address' invalid-interface:'Invalid Alice Mode interface' invalid-mode:'Invalid Alice Mode list mode'; do
   fixture="${variant%%:*}"
   message="${variant#*:}"
   if ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/config/validator.uc" \
@@ -194,4 +194,4 @@ for variant in invalid-mac:'Invalid Alice mode MAC address' invalid-interface:'I
     exit 1
   }
 done
-printf 'Alice mode checks passed\n'
+printf 'Alice Mode checks passed\n'
