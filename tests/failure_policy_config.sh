@@ -36,5 +36,11 @@ response.dns.rules=[{action:"evaluate",server:"dns-server",__trafira_origin:{sec
 let protected=p.apply(response,[section],{vpn:{mode:"primary"}});
 assert(protected.dns.rules[0].action=="evaluate" && protected.dns.servers[2].detour=="vpn-out","address evaluation stays on protected DNS");
 assert(p.apply(response,[section],{}).dns.rules[0].action=="reject","cold address evaluation fails closed before any DNS lookup");
+let alias=json(sprintf("%J",base));
+push(alias.outbounds,{tag:"game-json",type:"selector",outbounds:["vpn-out"]},{tag:"game-out",type:"selector",outbounds:["game-json"]});
+push(alias.route.rules,{action:"route",outbound:"game-out",__trafira_origin:{section:"game"}});
+push(alias.dns.rules,{action:"route",server:"dns-server",__trafira_origin:{section:"game"}});
+let inherited=p.apply(alias,[section,{".name":"game",action:"connection"}],{});
+assert(inherited.route.rules[3].action=="reject" && inherited.dns.rules[2].action=="reject","pure selector aliases inherit protected destination policy including DNS");
 print("failure policy configuration checks passed\n");
 '
