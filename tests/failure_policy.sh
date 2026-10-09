@@ -29,12 +29,12 @@ state=p.step(null,{primary:"down",reserve:"up"},300,{...policy,mode:"block"}).st
 assert(state.mode=="blocked","block never selects reserve or direct");
 assert(p.step(null,{primary:"down"},300,{mode:"legacy"}).transition==null,"legacy remains unmanaged");
 assert(!p.valid({...policy,failures:0}) && !p.valid({...policy,recoveries:11}) && !p.valid({...policy,hold_seconds:29}),"policy bounds");
-assert(p.validate_sections([
+assert(length(p.validate_sections([
  {".name":"a",enabled:"1",action:"proxy",failure_policy:"reserve",failure_reserve_section:"b"},
  {".name":"b",enabled:"1",action:"proxy",outbound_detour_enabled:"1",outbound_detour_section:"a"}
-]).length>0,"reserve and detour cycles rejected together");
-assert(p.validate_sections([
+]))>0,"reserve and detour cycles rejected together");
+assert(length(p.validate_sections([
  {".name":"a",enabled:"1",action:"proxy",failure_policy:"reserve",failure_reserve_section:"missing"}
-]).length>0,"missing reserve rejected");
+]))>0,"missing reserve rejected");
 print("failure policy state machine checks passed\n");
 '
