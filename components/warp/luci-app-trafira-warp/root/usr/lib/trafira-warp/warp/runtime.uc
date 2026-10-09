@@ -2,11 +2,9 @@
 let fs=require("fs"),state=require("warp.state"),job=require("warp.job"),transport=require("warp.transport"),scout=require("warp.scout"),stability=require("warp.stability");
 function status() {
     let current=transport.status(),account=state.load(state.DIRECTORY+"/account.json"),test=state.load(state.RUNTIME+"/test.json"),candidate=state.load(state.RUNTIME+"/candidate.json");
-    let result={...current,registered:scout.account_valid(account),job:job.status()};
+    let result={...current,registered:scout.account_valid(account),job:job.status(),watchdog:require("warp.watchdog").public_status()};
     if(test) {
-        result.test={...state.public_status(test),summary:{}};
-        for(let key in ["samples","transport_errors","http_restricted","median","p95"])
-            if(index(["int","double"],type((test.summary||{})[key]))>=0)result.test.summary[key]=test.summary[key];
+        result.test={...state.public_status(test),summary:stability.public_summary(test.summary)};
     }
     if(candidate && scout.candidate_current(candidate,scout.digest(),current.generation||0,clock()[0]) && transport.valid_config(candidate.config))
         result.candidate={candidate_id:candidate.candidate_id,endpoint:candidate.config.endpoint,expires_at:candidate.expires_at};

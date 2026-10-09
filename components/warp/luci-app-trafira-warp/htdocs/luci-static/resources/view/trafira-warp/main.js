@@ -86,6 +86,7 @@ return view.extend({
   items.push(element('p',{},_('Tunnel')+': '+(s.running?_('Running'):s.enabled?_('Stopped; recovery pending'):_('Disabled'))));
   items.push(element('p',{},_('Handshake age (seconds)')+': '+(s.handshake_age==null?_('Unknown'):String(s.handshake_age))));
   items.push(element('p',{},_('Last HTTPS check')+': '+(s.https_ok?_('Passed'):_('Not confirmed'))));
+  if(s.watchdog && s.watchdog.exhausted)items.push(element('p',{},_('Automatic recovery paused after three attempts. Check the connection and use Reconnect to retry.')));
   if(s.endpoint)items.push(element('p',{},_('Endpoint')+': '+String(s.endpoint)));
   if(!s.success || j.success===false)items.push(element('p',{},errors[s.error||j.error]||_('The operation failed. Check status and retry.')));
   if(j.recovery_pending)items.push(element('p',{},_('An unfinished operation needs recovery. Retry an action to restore its backup first.')));
@@ -114,6 +115,12 @@ return view.extend({
   ]));
   if(s.test && s.test.summary){var t=s.test.summary;items.push(element('p',{},
    _('Samples')+': '+String(t.samples||0)+'; '+_('Transport errors')+': '+String(t.transport_errors||0)+'; '+_('HTTP 403/429')+': '+String(t.http_restricted||0)+'; '+_('Median / p95 (ms)')+': '+(t.median==null?_('Unknown'):String(Math.round(t.median*1000)))+' / '+(t.p95==null?_('Unknown'):String(Math.round(t.p95*1000)))));}
+  if(s.test && s.test.summary && s.test.summary.services) {
+   var names={google:'Google',chatgpt:'ChatGPT',gemini:'Gemini',grok:'Grok',cloudflare:'Cloudflare'};
+   Object.keys(names).forEach(function(id){var row=s.test.summary.services[id];if(!row)return;
+    items.push(element('p',{},names[id]+': '+_('Samples')+': '+String(row.samples||0)+'; '+_('DNS errors')+': '+String(row.dns_errors||0)+'; '+_('Connection errors')+': '+String(row.connection_errors||0)+'; '+_('HTTP errors')+': '+String(row.http_errors||0)+'; '+_('HTTP 403/429')+': '+String(row.http_restricted||0)));
+   });
+  }
   if(j.running)items.push(self.button(_('Cancel operation'),function(){self.act({action:'cancel',job_id:j.job_id});},self.pending));
   this.panel.replaceChildren.apply(this.panel,items);
  },

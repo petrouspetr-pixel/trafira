@@ -12,16 +12,38 @@ function valid_address(ip) {
     return a[0]>0 && a[0]<224 && a[0]!=10 && a[0]!=127 && !(a[0]==169 && a[1]==254) && !(a[0]==172 && a[1]>=16 && a[1]<=31) &&
         !(a[0]==192 && a[1]==168) && !(a[0]==100 && a[1]>=64 && a[1]<=127) && !(a[0]==198 && (a[1]==18 || a[1]==19));
 }
-function summarize(samples) {
-    let times=[],errors=0,restricted=0;
+const METRICS=["samples","transport_errors","dns_errors","connection_errors","http_errors","http_restricted","ok","median","p95"];
+function stats(samples) {
+    let times=[],result={samples:length(samples),transport_errors:0,dns_errors:0,connection_errors:0,http_errors:0,http_restricted:0,ok:0};
     for(let sample in samples) {
-        if(!sample.success)errors++;
-        else if(type(sample.total)=="double" || type(sample.total)=="int")push(times,sample.total);
-        if(index([403,429],sample.code)>=0)restricted++;
+        let code=sample.code||0;
+        if(!sample.success && !code) {
+            result.transport_errors++;
+            if(index(["dns_failed","dns_empty"],sample.error)>=0)result.dns_errors++;else result.connection_errors++;
+        }
+        if(index([403,429],code)>=0)result.http_restricted++;
+        else if(code>=400)result.http_errors++;
+        else if(sample.success && code>=200 && code<400)result.ok++;
+        if(code>=100 && index(["double","int"],type(sample.total))>=0)push(times,sample.total);
     }
     sort(times,(a,b)=>a-b);let n=length(times);
-    let median=n?(n%2?times[int(n/2)]:(times[n/2-1]+times[n/2])/2):null;
-    return {samples:length(samples),transport_errors:errors,http_restricted:restricted,median,p95:n?times[int((n*95+99)/100)-1]:null};
+    result.median=n?(n%2?times[int(n/2)]:(times[n/2-1]+times[n/2])/2):null;
+    result.p95=n?times[int((n*95+99)/100)-1]:null;return result;
+}
+function summarize(samples) {
+    let result=stats(samples);result.services={};
+    for(let id in keys(SERVICES)){let selected=filter(samples,(s)=>s.service==id);if(length(selected))result.services[id]=stats(selected);}
+    return result;
+}
+function public_summary(value) {
+    value=type(value)=="object"?value:{};
+    let result={services:{}};
+    for(let key in METRICS)if(index(["int","double"],type(value[key]))>=0 && value[key]>=0)result[key]=value[key];
+    for(let id in keys(SERVICES))if(type(value.services)=="object" && type(value.services[id])=="object") {
+        let entry={};for(let key in METRICS)if(index(["int","double"],type(value.services[id][key]))>=0 && value.services[id][key]>=0)entry[key]=value.services[id][key];
+        result.services[id]=entry;
+    }
+    return result;
 }
 function curl(iface,url,id,extra) {
     return process.run(["curl","-4","--noproxy","*","--interface",iface,"--connect-timeout","5","--max-time","8","--silent","--show-error",...(extra||[]),url],8,id);
@@ -35,7 +57,7 @@ function probe(iface,service,id) {
     if(!length(addresses))return {service,success:false,error:"dns_empty",code:0};
     let result=curl(iface,"https://"+entry.host+entry.path,id,["--resolve",entry.host+":443:"+addresses[0],"--output","/dev/null","--write-out","%{http_code} %{time_total}"]);
     let parts=split(trim(result.text||"")," "),code=int(parts[0]||"0"),total=double(parts[1]||"0");
-    return {service,success:result.success && code>=100,code,total,error:result.success?null:result.error};
+    return {service,success:result.success && code>=200 && code<400,code,total,error:result.success?null:result.error};
 }
 function health(iface,id) {
     let result=curl(iface,"https://1.1.1.1/cdn-cgi/trace",id,["--fail"]);
@@ -61,4 +83,4 @@ function run(duration,services,id) {
     state.save(state.RUNTIME+"/test.json",{job_id:id,running:false,generation:start.generation,started_at:started,samples,summary:summarize(samples),...trace,error});
     return {success:!error,error};
 }
-return {SERVICES,valid_request,valid_address,summarize,probe,health,run};
+return {SERVICES,valid_request,valid_address,summarize,public_summary,probe,health,run};

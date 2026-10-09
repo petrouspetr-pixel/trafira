@@ -16,7 +16,6 @@ for(let n=0;n<20;n++) {
     system("sleep 0.1");
 }
 if(!identity || !job.live(identity) || !state.save(state.RUNTIME+"/transport.json",{worker:identity,generation:c.generation}))exit(1);
-let pid=identity.pid;
 let ready=false;
 for(let n=0;n<15;n++) {
     if(!job.live(identity))exit(1);
@@ -28,7 +27,8 @@ let enabled6=trim(fs.readfile("/proc/sys/net/ipv6/conf/all/disable_ipv6")||"1")!
 if(success)for(let args in transport.address_commands(c,enabled6))if(transport.output(args)==null)success=false;
 if(success)success=transport.output(["ip","link","set","dev",c.interface,"mtu",""+c.mtu,"up"])!=null;
 if(success)success=transport.route_setup(c);
-if(!success){if(job.live(identity))system("kill -TERM "+pid);exit(1);}
+// Exiting triggers the pinned supervisor/guardian cleanup; never signal a sampled PID.
+if(!success)exit(1);
 if(!state.save(state.RUNTIME+"/transport.json",{worker:identity,generation:c.generation,ready:true,ifindex:trim(fs.readfile("/sys/class/net/"+c.interface+"/ifindex")||"")}))exit(1);
 pipe.close();
 exit(1);

@@ -36,7 +36,7 @@ function worker(id) {
     if(current?.job_id==id)m.state.save(m.state.RUNTIME+"/job.json",{...m.state.public_status(result),job_id:id,running:false});
     locks.release(lock);return result;
 }
-function action(text,recovery) {
+function action(text,recovery,automatic) {
     if(type(text)!="string" || length(text)>16384)return fail("invalid_request");
     let request;try {request=json(text);}catch(e){return fail("invalid_request");}
     if(recovery)request={action:"status"};
@@ -53,6 +53,7 @@ function action(text,recovery) {
         if(m.job.status().running)result=fail("busy");
         else if(index(["preview_attach","preview_detach"],request.action)>=0)result=require("integrations.warp_attach").preview(request,m.state);
         else {
+            if(!automatic && index(["enable","reconnect","register","scan_apply"],request.action)>=0)require("warp.watchdog").reset();
             let id=sprintf("w-%x-%x",clock()[0],clock()[1]),root=m.state.RUNTIME;
             if(!m.state.save(root+"/request.json",{job_id:id,request}) || !m.state.save(root+"/job.json",{job_id:id,running:true,started_at:clock()[0]}))result=fail("storage_unavailable");
             else {
@@ -65,6 +66,12 @@ function action(text,recovery) {
         }
     }catch(e){result=fail("operation_failed");}
     locks.release(lock);return result;
+}
+if(ARGV[0]=="watchdog") {
+    let lock=locks.acquire("warp-watchdog",false),result={reconnect:false};
+    if(lock){try {result=require("warp.watchdog").tick();}catch(e){}locks.release(lock);}
+    if(result.reconnect)action('{"action":"reconnect"}',false,true);
+    exit(0);
 }
 if(ARGV[0]=="package-state") {
     let result=require("integrations.warp_package_state").execute(ARGV[1],ARGV[2]);

@@ -53,13 +53,22 @@ function capture() {
     let info=fs.lstat(transaction.TARGET);if(!info || info.type!="file" || info.size>1048576)die("configuration_unavailable");
     let text=fs.readfile(transaction.TARGET),digest=hash(transaction.TARGET);
     if(text==null || !digest || text!=fs.readfile(transaction.TARGET))die("configuration_unavailable");
-    return {text,digest,service:runtime.hooks(null,"").capture()};
+    let preview=require("warp.state").load(RUN+"/preview.json");
+    if(!preview || preview.expected_digest!=digest)die("conflict");
+    let work=jobs.new_directory(),applied_digest=null;if(!work)die("storage_unavailable");
+    try {let prepared=runtime.prepare(preview.document,work.directory);if(prepared.success)applied_digest=hash(prepared.path);}catch(e){}
+    jobs.cleanup(work.directory);
+    if(!applied_digest || hash(transaction.TARGET)!=digest)die("conflict");
+    return {text,digest,applied_digest,service:runtime.hooks(null,"").capture()};
 }
 function restore(saved) {
     if(!saved || type(saved.text)!="string")return false;
     let base=runtime.hooks(null,"");
     if(transaction.status().recovery_pending && !transaction.recover(base).success)return false;
     if(hash(transaction.TARGET)==saved.digest)return base.restore(saved.service);
+    // The outer journal owns only its original and prepared candidate digests.
+    // A later profile/manual edit must never be rolled back by this stale job.
+    if(!saved.applied_digest || hash(transaction.TARGET)!=saved.applied_digest)return false;
     let work=jobs.new_directory();if(!work)return false;
     let ok=false;
     try {
@@ -68,7 +77,7 @@ function restore(saved) {
             if(source.success) {
                 let prepared=runtime.prepare(source.document,work.directory),hooks=runtime.hooks(source.document,work.directory);
                 hooks.capture=()=>({running:false,enabled:saved.service.enabled});
-                ok=prepared.success && transaction.apply(prepared.path,hash(transaction.TARGET),"warp-restore",hooks).success && base.restore(saved.service);
+                ok=prepared.success && transaction.apply(prepared.path,saved.applied_digest,"warp-restore",hooks).success && base.restore(saved.service);
             }
         }
     }catch(e){}

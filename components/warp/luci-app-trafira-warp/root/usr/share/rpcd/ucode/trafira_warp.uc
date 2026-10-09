@@ -4,14 +4,22 @@ const CLI=getenv("TRAFIRA_WARP_CLI")||"/usr/bin/trafira-config";
 function clean(value,depth) {
     if(type(value)!="object" || depth>2)return {success:false,error:"invalid_response"};
     let out={success:value.success!==false};
-    for(let key in ["running","enabled","registered","restored","recovery_pending","rollback_error","https_ok","warp","removal"])
+    for(let key in ["running","enabled","registered","restored","recovery_pending","rollback_error","https_ok","warp","removal","exhausted"])
         if(type(value[key])=="bool")out[key]=value[key];
     for(let key in ["job_id","candidate_id","preview_id","expected_digest","section","error","stage","interface","owner"])
         if(type(value[key])=="string" && match(value[key],/^[a-zA-Z0-9_-]{1,96}$/))out[key]=value[key];
-    for(let key in ["schema","generation","handshake_age","checked_at","started_at","completed_at","expires_at","samples","transport_errors","http_restricted","median","p95"])
+    for(let key in ["schema","generation","handshake_age","checked_at","started_at","completed_at","expires_at","samples","transport_errors","http_restricted","median","p95","dns_errors","connection_errors","http_errors","ok","attempts","failures","next_retry_at"])
         if(index(["int","double"],type(value[key]))>=0 && value[key]>=0)out[key]=value[key];
     if(type(value.endpoint)=="string" && match(value.endpoint,/^[0-9.]+:[0-9]{1,5}$/))out.endpoint=value.endpoint;
-    for(let key in ["job","candidate","test","summary"])if(type(value[key])=="object")out[key]=clean(value[key],depth+1);
+    for(let key in ["job","candidate","test","summary","watchdog"])if(type(value[key])=="object")out[key]=clean(value[key],depth+1);
+    if(type(value.services)=="object") {
+        out.services={};
+        for(let id in ["google","chatgpt","gemini","grok","cloudflare"])if(type(value.services[id])=="object") {
+            let entry={};for(let key in ["samples","transport_errors","dns_errors","connection_errors","http_errors","http_restricted","ok","median","p95"])
+                if(index(["int","double"],type(value.services[id][key]))>=0 && value.services[id][key]>=0)entry[key]=value.services[id][key];
+            out.services[id]=entry;
+        }
+    }
     if(type(value.changes)=="array")out.changes=map(slice(value.changes,0,256),(change)=>{
         let v={};if(type(change)!="object")return v;
         if(type(change.section)=="string" && match(change.section,/^[a-zA-Z0-9_]{1,96}$/))v.section=change.section;

@@ -15,10 +15,5 @@ while :; do
     child=$!
     wait "$child" || exit 0
     child=
-    status=$(ucode -L /usr/lib/trafira -L /usr/lib/trafira-warp /usr/lib/trafira/integrations/warp_cli.uc action '{"action":"status"}' 2>/dev/null) || continue
-    enabled=$(printf '%s' "$status" | jsonfilter -e '@.enabled')
-    running=$(printf '%s' "$status" | jsonfilter -e '@.running')
-    if [ "$enabled" = true ] && [ "$running" = false ]; then
-        /usr/bin/trafira-config warp_action '{"action":"reconnect"}' >/dev/null 2>&1 || true
-    fi
+    ucode -L /usr/lib/trafira -L /usr/lib/trafira-warp /usr/lib/trafira/integrations/warp_cli.uc watchdog >/dev/null 2>&1 || true
 done

@@ -204,3 +204,15 @@ msgstr "минут"
 
 msgid "Median / p95 (ms)"
 msgstr "Медиана / p95 (мс)"
+
+msgid "Automatic recovery paused after three attempts. Check the connection and use Reconnect to retry."
+msgstr "Автовосстановление приостановлено после трёх попыток. Проверьте подключение и нажмите «Переподключить», чтобы повторить."
+
+msgid "DNS errors"
+msgstr "Ошибки DNS"
+
+msgid "Connection errors"
+msgstr "Ошибки соединения"
+
+msgid "HTTP errors"
+msgstr "Ошибки HTTP"
