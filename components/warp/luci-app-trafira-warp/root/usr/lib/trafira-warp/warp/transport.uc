@@ -47,7 +47,7 @@ function status() {
     if(!c || !valid_config(c) || !runtime || runtime.ready!==true || runtime.generation!=c.generation || !job.live(runtime.worker))return inactive;
     if(fs.readlink("/proc/"+runtime.worker.pid+"/exe")!="/usr/libexec/trafira-warp-amneziawg-go")return {...inactive,error:"ownership_error"};
     let cursor=require("uci").cursor(),section=cursor.get_all("network",c.interface);
-    if(!section || section.trafira_warp_managed!="1" || section.device!=c.interface || section.proto!="none")return {...inactive,error:"ownership_error"};
+    if(!owned(section,c.interface))return {...inactive,error:"ownership_error"};
     if(trim(fs.readfile("/sys/class/net/"+c.interface+"/ifindex")||"")!=runtime.ifindex)return {...inactive,error:"ownership_error"};
     let socket=fs.lstat("/var/run/amneziawg/"+c.interface+".sock");
     if(!socket || socket.type!="socket" || !fs.stat("/sys/class/net/"+c.interface))return inactive;

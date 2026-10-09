@@ -1,0 +1,20 @@
+{
+  "luci-app-trafira-warp": {
+    "description": "Manage optional WARP for Trafira",
+    "read": {
+      "ubus": {
+        "luci.trafira_warp": [
+          "status",
+          "job_status"
+        ]
+      }
+    },
+    "write": {
+      "ubus": {
+        "luci.trafira_warp": [
+          "action"
+        ]
+      }
+    }
+  }
+}

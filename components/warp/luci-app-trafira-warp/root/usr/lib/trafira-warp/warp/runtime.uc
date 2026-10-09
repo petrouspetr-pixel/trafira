@@ -51,6 +51,14 @@ function hooks(integration) {
         }
         if(index(["attach","detach"],request.action)>=0)return integration.apply?integration.apply(request,id):{success:false,error:"integration_unavailable"};
         let config=state.load(state.DIRECTORY+"/transport.json");
+        if(request.action=="unregister") {
+            if(!integration.references)return {success:false,error:"integration_unavailable"};
+            if(config && length(integration.references(config.interface)))return {success:false,error:"references_exist"};
+            if(!transport.restore({config:null,running:false},id))return {success:false,error:"remove_failed"};
+            for(let path in [state.DIRECTORY+"/account.json",state.DIRECTORY+"/registration.json",state.RUNTIME+"/candidate.json",state.RUNTIME+"/preview.json",state.RUNTIME+"/transport.json"])
+                if(!state.remove(path))return {success:false,error:"storage_unavailable"};
+            return {success:true,registered:false};
+        }
         if(index(["enable","disable","reconnect"],request.action)>=0) {
             if(!config)return {success:false,error:"selection_required"};
             if(request.action=="reconnect" && config.enabled!==true)return {success:false,error:"service_disabled"};
@@ -58,6 +66,6 @@ function hooks(integration) {
         }
         return {success:false,error:"unsupported_action"};
     }
-    return {snapshot,restore,perform};
+    return {snapshot,restore,perform,validate:integration.validate};
 }
 return {status,hooks,activate};

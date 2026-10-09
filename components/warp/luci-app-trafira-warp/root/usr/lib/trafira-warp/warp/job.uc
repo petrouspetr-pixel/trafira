@@ -72,6 +72,8 @@ function execute(request,hooks,id) {
     try {
         result=recover(hooks);
         if(result.success) {
+            let validation=hooks.validate?hooks.validate(request):{success:true};
+            if(!validation.success){lock.close();return validation;}
             let snapshot=hooks.snapshot();
             if(type(snapshot)!="object" || !enough_space(snapshot) || !state.save(BACKUP,{schema:1,job_id:id,snapshot}) ||
                 !state.save(ACTIVE,{schema:1,job_id:id,worker:identity(),stage:"prepared",expected_digest:request.expected_digest}))result=failure("storage_unavailable");

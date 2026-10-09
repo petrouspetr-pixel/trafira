@@ -16,6 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5.0.0
       - run: python3 -m unittest discover -s tests/warp -p 'test_*.py'
+      - run: node --test tests/warp/test_view.cjs
   packages:
     runs-on: ubuntu-24.04
     timeout-minutes: 45

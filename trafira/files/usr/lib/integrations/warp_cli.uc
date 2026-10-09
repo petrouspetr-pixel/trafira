@@ -20,10 +20,13 @@ function worker(id) {
         if(!request || request.job_id!=id || !current || current.job_id!=id || !current.running)result=fail("invalid_job");
         else {
             let runtime=require("warp.runtime");
-            let integration={mark:int(require("core.constants").NFT_OUTBOUND_MARK)};
+            let adapter=require("integrations.warp_attach"),model=require("integrations.warp_model");
+            let integration={mark:int(require("core.constants").NFT_OUTBOUND_MARK),
+                restore:(saved)=>saved?adapter.restore(saved):true,
+                references:(iface)=>model.references({config:adapter.references()},iface)};
             if(index(["attach","detach"],request.request.action)>=0) {
-                let adapter=require("integrations.warp_attach");
-                integration.capture=adapter.capture;integration.restore=adapter.restore;
+                integration.capture=adapter.capture;
+                integration.validate=(input)=>adapter.validate(input,m.state);
                 integration.apply=(input)=>adapter.apply(input,m.state);
             }
             result=m.job.execute(request.request,runtime.hooks(integration),id);

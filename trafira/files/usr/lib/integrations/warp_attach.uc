@@ -34,11 +34,15 @@ function preview(request,state) {
     }catch(e){result=fail("preview_failed");}
     jobs.cleanup(work.directory);return result;
 }
-function apply(request,state) {
+function validate(request,state) {
     let preview=state.load(RUN+"/preview.json"),current=state.load(STATE+"/transport.json");
     if(!preview || preview.preview_id!=request.preview_id || preview.expected_digest!=request.expected_digest || hash(transaction.TARGET)!=request.expected_digest || preview.action!=request.action || preview.generation!=(current?.generation||0) || preview.expires_at<clock()[0])return fail("conflict");
     if(request.action=="attach") {let live=transport.read();if(!live.running || !live.https_ok || !live.warp)return fail("transport_unhealthy");}
-    let work=jobs.new_directory();if(!work)return fail("storage_unavailable");
+    return {success:true};
+}
+function apply(request,state) {
+    let validation=validate(request,state);if(!validation.success)return validation;
+    let preview=state.load(RUN+"/preview.json"),work=jobs.new_directory();if(!work)return fail("storage_unavailable");
     let prepared=runtime.prepare(preview.document,work.directory),result;
     try {result=prepared.success?transaction.apply(prepared.path,request.expected_digest,"warp",runtime.hooks(preview.document,work.directory)):prepared;}
     catch(e){result=fail("apply_failed");}
@@ -48,7 +52,7 @@ function capture() {
     if(transaction.status().recovery_pending)die("recovery_required");
     let info=fs.lstat(transaction.TARGET);if(!info || info.type!="file" || info.size>1048576)die("configuration_unavailable");
     let text=fs.readfile(transaction.TARGET),digest=hash(transaction.TARGET);
-    if(text==null || !digest)die("configuration_unavailable");
+    if(text==null || !digest || text!=fs.readfile(transaction.TARGET))die("configuration_unavailable");
     return {text,digest,service:runtime.hooks(null,"").capture()};
 }
 function restore(saved) {
@@ -75,4 +79,4 @@ function references() {
     for(let type_name in format.TYPES)for(let section in config.section_objects("trafira",type_name))push(sections,section);
     return sections;
 }
-return {preview,apply,capture,restore,references};
+return {preview,validate,apply,capture,restore,references};

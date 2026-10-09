@@ -25,3 +25,29 @@ let custom={schema:1,name:"fixture",config:[{".name":"settings",".type":"setting
 assert(length(m.references(custom,"tfwarp0"))==1,"custom outbound references block transport removal");
 print("WARP attach model checks passed\n");
 '
+
+# The real generator must bind the owned interface and preserve closed policy/DNS.
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+export WARP_FIXTURE="$WORK/fixture.json"
+ucode -L "$ROOT/trafira/files/usr/lib" -e '
+let m=require("integrations.warp_model"),format=require("config.profile_format"),fs=require("fs");
+let doc={schema:1,name:"fixture",config:[{".name":"settings",".type":"settings",dns_type:"doh",dns_server:"https://1.1.1.1/dns-query",service_listen_address:"127.0.0.1"}]};
+let result=m.attach(doc,{schema:1,owner:"trafira-warp",interface:"tfwarp0",running:true,https_ok:true,warp:true},"a","a");
+assert(result.success,"attach fixture");
+for(let s in result.document.config)if(s[".name"]==result.section)s.user_domains=["example.test"];
+fs.writefile(getenv("WARP_FIXTURE"),sprintf("%J",format.fixture(result.document.config)));
+'
+mkdir -p "$WORK/config.json.section-cache"
+ucode -L "$ROOT/trafira/files/usr/lib" "$ROOT/trafira/files/usr/lib/singbox/generator.uc" generate-config-fixture "$WARP_FIXTURE" "$WORK/config.json" 127.0.0.1 0 1 '' 1.14.1
+python3 - "$WORK/config.json" <<'PYTEST'
+import json,sys
+from pathlib import Path
+config=json.loads(Path(sys.argv[1]).read_text())
+baseline=json.loads(Path(sys.argv[1]+'.failure-policy.json').read_text())
+assert any(o.get('bind_interface')=='tfwarp0' for o in baseline['config']['outbounds']),baseline
+assert baseline['sections'][0]['failure_policy']=='block'
+assert not any(r.get('outbound')=='cfwarp-out' for r in config['route']['rules'])
+assert config['dns']['servers'],config
+print('WARP real generator binding, DNS and cold fail-closed policy passed')
+PYTEST
