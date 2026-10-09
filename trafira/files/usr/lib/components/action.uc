@@ -30,7 +30,7 @@ let retain_rollback_files = false;
 let selected_request = null, selected_core = null, selected_hooks = null;
 let selected_error = "", selected_original_config = null, selected_result = {};
 let selected_release = null;
-let core_selection = require("components.core_selection");
+let core_selection = null;
 const CONFIG_FILE = getenv("TRAFIRA_CONFIG_FILE") || "/etc/config/trafira";
 
 function as_string(value) {
@@ -2343,7 +2343,10 @@ function install_trafira() {
 }
 
 function prepare_selected_core(action) {
+    // Ordinary unpinned installs keep their established resolver and API.
+    if (!selected_request && !uci_core.get("trafira.settings.sing_box_pinned_version") && !uci_core.get("trafira.settings.sing_box_pinned_variant")) return;
     let sources=require("components.core_sources"),pins=require("components.core_pin"),versions=require("components.core_versions");
+    core_selection=require("components.core_selection");
     let pin=pins.read(),env=sources.environment();
     if (!selected_request && !pin) return;
     if (!selected_request) {

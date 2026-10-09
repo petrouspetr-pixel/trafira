@@ -52,3 +52,13 @@ assert(s.stage(root+"/valid.apk",candidate,root+"/path-stage").error=="unsafe_ar
 assert(fs.readfile(root+"/extractions")=="extract\n","only valid APK extracted");
 print("core candidate package checks passed\n");
 '
+
+# Older opkg repositories use -N rather than APK's -rN revision suffix.
+mkdir -p "$WORK_DIR/ipk-revision-stage"
+printf 'Package: sing-box\nVersion: 1.14.2-1\nArchitecture: aarch64\n' >"$WORK_DIR/control/control"
+tar -czf "$WORK_DIR/ipk/control.tar.gz" -C "$WORK_DIR/control" ./control
+tar -czf "$WORK_DIR/revision.ipk" -C "$WORK_DIR/ipk" ./debian-binary ./control.tar.gz ./data.tar.gz
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
+let s=require("components.core_candidate"),root=getenv("CORE_CANDIDATE_TEST");
+assert(s.stage(root+"/revision.ipk",{version:"1.14.2-1",variant:"stable",architecture:"aarch64",package_type:"ipk"},root+"/ipk-revision-stage").success,"opkg revision stripped only for binary comparison");
+'
