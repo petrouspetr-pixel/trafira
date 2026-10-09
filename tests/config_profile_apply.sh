@@ -8,7 +8,11 @@ export TRAFIRA_TRANSACTION_DIR="$WORK_DIR/transactions"
 export TRAFIRA_CONFIG_FILE="$WORK_DIR/config"
 export PROFILE_APPLY_FIXTURE_DIR="$WORK_DIR"
 mkdir -p "$TRAFIRA_RUNTIME_STATE_DIR"
-ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$ROOT_DIR/tests/fixtures/config_profile_apply.uc"
+mkdir -p "$WORK_DIR/debug-lib/service"
+# Expose exceptions only inside the synthetic test, never in production reports.
+sed 's/let recovery=recover_locked(hooks);/warn(sprintf("transaction fixture exception: %J\\n",e)); let recovery=recover_locked(hooks);/' \
+  "$ROOT_DIR/trafira/files/usr/lib/service/config_transaction.uc" >"$WORK_DIR/debug-lib/service/config_transaction.uc"
+ucode -L "$WORK_DIR/debug-lib" -L "$ROOT_DIR/trafira/files/usr/lib" "$ROOT_DIR/tests/fixtures/config_profile_apply.uc"
 test "$(stat -c %a "$TRAFIRA_TRANSACTION_DIR")" = 700
 # Simulate process death in the small window after the atomic replacement.
 printf original >"$TRAFIRA_CONFIG_FILE"
