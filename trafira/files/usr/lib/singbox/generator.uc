@@ -3159,6 +3159,13 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
         if (!atomic_write_json_file(runtime_subscription.section_cache_path(section_name), state))
             runtime_generate_unsupported("failed to write section cache for " + section_name);
     }
+    let failure_store = require("singbox.failure_store");
+    let failure_sections = failure_store.descriptors(sections), failure_base = null;
+    if (length(failure_sections)) {
+        failure_base = json(sprintf("%J", config));
+        // A new generation starts blocked until this runtime proves health.
+        config = require("singbox.failure_config").apply(config, failure_sections, {});
+    }
     let origins = provenance.extract(config);
     strip_internal_fields(config);
     if (!write_json_file(output_path, config)) {
@@ -3167,6 +3174,8 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
     }
     if (!provenance.save(output_path,origins))
         warn("Routing provenance could not be saved; route diagnostics will report missing origins\n");
+    if (!failure_store.save_base(output_path, failure_base, failure_sections))
+        runtime_generate_unsupported("failed to save private failure-policy baseline");
 }
 
 function generate_config_fixture(fixture_path, output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version) {
