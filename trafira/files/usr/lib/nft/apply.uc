@@ -898,6 +898,13 @@ function nft_create_runtime_base(table, localv4_set, common_set, port_set, ip_po
         !nft_create_chain(table, "proxy", "{ type filter hook prerouting priority -100; policy accept; }"))
         return false;
 
+    // Leave real IPsec destinations to the normal firewall before marking.
+    // FakeIP destinations must still reach sing-box for domain recovery.
+    if (common.bool_option(settings, "exclude_wifi_calling", false) &&
+        (!nft_add_rule(table, "mangle", [ "iifname", "@" + as_string(interface_set), "ip", "daddr", "!=", fakeip_range, "udp", "dport", "{ 500, 4500 }", "return" ]) ||
+         !nft_add_rule(table, "mangle", [ "iifname", "@" + as_string(interface_set), "ip6", "daddr", "!=", fakeip6_range, "udp", "dport", "{ 500, 4500 }", "return" ])))
+        return false;
+
     if (alice.enabled && !nft_create_alice_gate(table, interface_set, alice.list_mode))
         return false;
 

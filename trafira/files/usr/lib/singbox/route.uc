@@ -19,6 +19,8 @@ function config(settings, runtime) {
     let output_network_interface = option(settings, "output_network_interface", "");
     let mwan3_active = type(runtime) == "object" && bool_value(runtime.mwan3_active);
     let sniff_inbounds = [ runtime_constants.TPROXY_INBOUND_TAG, runtime_constants.DNS_INBOUND_TAG ];
+    if (bool_option(settings, "exclude_bittorrent", false))
+        push(sniff_inbounds, runtime_constants.TPROXY_INBOUND6_TAG);
     if (type(runtime) == "object" && bool_value(runtime.source_aware_dns))
         push(sniff_inbounds, runtime_constants.SOURCE_DNS_INBOUND_TAG);
     if (type(runtime) == "object" && bool_value(runtime.alice_mode))
@@ -44,6 +46,14 @@ function config(settings, runtime) {
         // The Alice listener accepts DNS redirects only. Reject other payloads
         // instead of sending them through final=direct back to port 1604.
         push(result.rules, { action: "reject", inbound: [ runtime_constants.ALICE_DNS_INBOUND_TAG ] });
+
+    if (bool_option(settings, "exclude_bittorrent", false))
+        push(result.rules, {
+            action: "route",
+            inbound: [ runtime_constants.TPROXY_INBOUND_TAG, runtime_constants.TPROXY_INBOUND6_TAG ],
+            protocol: "bittorrent",
+            outbound: runtime_constants.BYPASS_OUTBOUND_TAG
+        });
 
     if (output_network_interface != "")
         result.default_interface = output_network_interface;
