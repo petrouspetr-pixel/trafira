@@ -42,14 +42,14 @@ function prepare(document,directory){
     if(!fs.chmod(directory,448) || !private_write(directory+"/trafira",format.to_uci(document.config)))return {success:false,error:"storage_unavailable"};
     return {success:true,path:directory+"/trafira"};
 }
-function validate(document,directory,path){
+function validate(document,directory,path,core){
     if(!format.validate(document).valid || fs.readfile(path)!=format.to_uci(document.config))return false;
     let fixture=format.fixture(document.config),fixture_path=directory+"/fixture.json",generated=directory+"/sing-box.json";
     if(!private_write(fixture_path,sprintf("%J",fixture)))return false;
     if(!run(module_args("config/validator.uc",["validate-runtime-fixture",fixture_path,"{}"])))return false;
-    let version=output(module_args("singbox/runtime.uc",["version"]));
+    let version=core?core.version:output(module_args("singbox/runtime.uc",["version"]));
     if(!version)return false;
-    let variant=output(module_args("singbox/runtime.uc",["variant"]));
+    let variant=core?core.variant:output(module_args("singbox/runtime.uc",["variant"]));
     let address=fixture.settings.service_listen_address||output(module_args("singbox/runtime.uc",["service-listen-address"]));
     if(!address)return false;
     let mwan3=run(module_args("config/validator.uc",["mwan3-is-active"]))?"1":"0";
@@ -58,6 +58,11 @@ function validate(document,directory,path){
     try {config=json(fs.readfile(generated));}catch(e){return false;}
     if(!dependencies(config))return false;
     // Check is read-only; it must never start an alternate runtime.
+    if(core) {
+        let binary=fs.lstat(core.binary),libraries=fs.lstat(core.library_path);
+        if(!binary || binary.type!="file" || !libraries || libraries.type!="directory")return false;
+        return run(["env","LD_LIBRARY_PATH="+core.library_path,core.binary,"-c",generated,"check"]);
+    }
     return run(["sing-box","-c",generated,"check"]);
 }
 function running(){return run(module_args("service/state.uc",["trafira-running",constants.RT_TABLE_NAME,constants.NFT_TABLE_NAME,constants.NFT_FAKEIP_MARK]));}
@@ -69,8 +74,8 @@ function restore(state){
     if(state.running)return run([INIT,"restart"]) && running();
     return run([INIT,"stop"]) && !running();
 }
-function hooks(document,directory){
-    return {validate:(path)=>validate(document,directory,path),capture,activate,restore};
+function hooks(document,directory,core){
+    return {validate:(path)=>validate(document,directory,path,core),capture,activate,restore};
 }
 function read_document(path,directory,name){
     let info=fs.lstat(path);
