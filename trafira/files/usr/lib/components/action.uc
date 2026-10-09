@@ -2405,6 +2405,9 @@ function prepare_selected_core(action) {
     };
     let prepared=core_selection.prepare(selected_request,selected_hooks);
     if (!prepared.success) {selected_error=prepared.error;action_fail("sing_box",action,"Selected core preflight failed");}
+    if (hash(directory+"/original.uci")!=prepared.expected_digest) {
+        selected_error="conflict";action_fail("sing_box",action,"Configuration changed while preserving rollback settings");
+    }
     selected_core=prepared;selected_release=prepared.candidate;
     // Release the expanded candidate before staging rollback packages. The
     // already verified, private archive remains the installer's sole input.

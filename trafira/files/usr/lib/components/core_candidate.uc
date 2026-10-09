@@ -43,6 +43,7 @@ function binary_version(binary,directory,library_path) {
 function finish(binary,library_path,candidate,directory) {
     if(!fs.chmod(binary,493))return failure("extract_failed");
     let version=binary_version(binary,directory,library_path),expected=replace(candidate.version,/-r[0-9]+$/,"");
+    if(candidate.repository_package && candidate.package_type=="ipk")expected=replace(expected,/-[0-9]+$/,"");
     if(!version || version!=expected)return failure("candidate_version_mismatch");
     return {success:true,binary,library_path,version,variant:candidate.variant};
 }
