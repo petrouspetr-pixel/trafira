@@ -569,6 +569,8 @@ function rule_has_list_update_source(section) {
 
     if (!bool_option(section, "enabled", true))
         return false;
+    if (option(section, "community_lists", "") != "" || option(section, "rule_set", "") != "")
+        return true;
     if (option(section, "action", "") == "dns")
         return list_has_remote_references(option(section, "domain_ip_lists", ""));
 
@@ -2576,6 +2578,11 @@ function list_update() {
     log_message("Downloading and processing lists", "info");
     let sections = uci_sections("section");
     let ok = true;
+
+    let startup_cache = require("singbox.ruleset_cache");
+    let current_config = read_json_file(option(settings, "config_path", "/etc/sing-box/config.json"));
+    if (type(current_config) == "object" && !startup_cache.refresh(current_config, proxy_address))
+        ok = false;
 
     for (let section in sections)
         if (!rebuild_domain_ip_lists_from_rule(section, settings))

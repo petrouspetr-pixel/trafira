@@ -1648,6 +1648,8 @@ function has_remote_sing_box_ruleset_sources_from_sections(sections) {
 }
 
 function has_list_update_sources_from_sections(sections) {
+    if (has_remote_sing_box_ruleset_sources_from_sections(sections))
+        return true;
     for (let section in sections)
         if (rule_has_list_update_source(
             bool_option(section, "enabled", true),

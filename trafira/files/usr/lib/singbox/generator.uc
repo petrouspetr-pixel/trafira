@@ -3322,6 +3322,8 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
         add_mixed_proxy_for_section(config, section, service_address);
 
     apply_ruleset_http_clients(config);
+    let startup_cache = require("singbox.ruleset_cache");
+    startup_cache.apply(config, runtime_sing_box_version);
     assert_unique_outbound_tags(config);
     let removed = runtime_prune.prune_config(config, runtime_subscription_tags);
     for (let section_name, state in runtime_section_states) {
