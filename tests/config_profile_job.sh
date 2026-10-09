@@ -41,4 +41,14 @@ if (!r.success || r.running || JSON.stringify(r).includes('private')) throw Erro
 JS
 grep -q private "$TRAFIRA_CONFIG_FILE"
 test "$(cat "$TRAFIRA_TRANSACTION_DIR/previous.uci")" = original
+ucode -L "$TRAFIRA_LIB" -e '
+let fs=require("fs"),job=require("config.profile_job"),h=require("singbox.provenance");
+let root=getenv("TRAFIRA_RUNTIME_STATE_DIR")+"/profile-work",work=job.new_directory();
+fs.writefile(work.directory+"/request.json",sprintf("%J",{recover:true,digest:h.hash_file(getenv("TRAFIRA_CONFIG_FILE"))}));
+fs.writefile(root+"/job.json",sprintf("%J",{running:true,job_id:work.id,started_at:clock()[0]}));
+fs.writefile(getenv("TRAFIRA_CONFIG_FILE"),"concurrent edit");
+let result=job.worker(work.id);
+assert(!result.success && result.error=="conflict","queued recovery checks digest again after taking its lock");
+assert(fs.readfile(getenv("TRAFIRA_CONFIG_FILE"))=="concurrent edit","concurrent edit preserved");
+'
 printf 'background profile apply checks passed\n'
