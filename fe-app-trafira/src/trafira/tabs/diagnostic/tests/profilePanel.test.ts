@@ -2,6 +2,25 @@ import { describe, expect, it, vi } from 'vitest';
 import { ProfilePanelController } from '../profilePanel';
 
 describe('configuration profiles controller', () => {
+  it('keeps background operations busy while allowing status polling', async () => {
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({ success: true, running: true, job_id: 'job-1' })
+      .mockResolvedValueOnce({
+        success: true,
+        running: false,
+        job_id: 'job-1',
+      });
+    const render = vi.fn();
+    const controller = new ProfilePanelController(call, render);
+    controller.mount();
+    await controller.submit({ action: 'apply', id: 'p-1', digest: 'old' });
+    expect(render.mock.lastCall?.[0].running).toBe(true);
+    await controller.submit({ action: 'remove', id: 'p-1' });
+    expect(call).toHaveBeenCalledTimes(1);
+    await controller.submit({ action: 'status' });
+    expect(render.mock.lastCall?.[0].running).toBe(false);
+  });
   it('does not submit an apply operation twice', async () => {
     let finish!: (value: object) => void;
     const call = vi.fn().mockImplementation(

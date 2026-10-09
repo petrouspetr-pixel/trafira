@@ -84,7 +84,7 @@ function read_document(path,directory,name){
     try {
         let cursor=require("uci").cursor(isolated,saved);
         if(!cursor.load("trafira"))return {success:false,error:"invalid_config_file"};
-        for(let kind in format.TYPES)cursor.foreach("trafira",kind,function(section){push(document.config,section);});
+        cursor.foreach("trafira",null,function(section){push(document.config,section);});
         cursor.unload("trafira");
         sort(document.config,(a,b)=>int(a[".index"]||0)-int(b[".index"]||0));
     }catch(e){return {success:false,error:"invalid_config_file"};}

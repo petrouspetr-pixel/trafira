@@ -6,8 +6,13 @@ export interface ProfileRequest {
 }
 export interface ProfileState {
   busy: boolean;
+  running: boolean;
+  digest: string;
+  canRestore: boolean;
   entries: Array<{ id: string; name: string; invalid: boolean }>;
   preview: {
+    id: string;
+    applicable: boolean;
     digest: string;
     changes: Array<{ section: string; option: string; change: string }>;
   } | null;
@@ -17,6 +22,9 @@ export interface ProfileState {
 }
 const initial = (): ProfileState => ({
   busy: false,
+  running: false,
+  digest: '',
+  canRestore: false,
   entries: [],
   preview: null,
   jobId: '',
@@ -54,12 +62,20 @@ export class ProfilePanelController {
   }
   async submit(request: ProfileRequest) {
     if (!this.active || this.state.busy) return;
+    if (this.state.running && !['status', 'list'].includes(request.action))
+      return;
     const generation = ++this.generation;
     this.state = { ...this.state, busy: true, error: '', restored: false };
     this.render(this.state);
     try {
       const result = (await this.call(request)) as Record<string, unknown>;
       if (!this.active || generation !== this.generation) return;
+      if (typeof result.running === 'boolean')
+        this.state = { ...this.state, running: result.running };
+      if (typeof result.digest === 'string')
+        this.state = { ...this.state, digest: result.digest };
+      if (typeof result.can_restore === 'boolean')
+        this.state = { ...this.state, canRestore: result.can_restore };
       if (result.success === false || result.rollback_error) {
         this.state = {
           ...this.state,
@@ -87,6 +103,8 @@ export class ProfilePanelController {
           this.state = {
             ...this.state,
             preview: {
+              id: request.id || '',
+              applicable: result.applicable !== false,
               digest: text(result.digest),
               changes: changes
                 .filter((item) => item && typeof item === 'object')
@@ -100,6 +118,8 @@ export class ProfilePanelController {
         }
         if (result.job_id)
           this.state = { ...this.state, jobId: text(result.job_id) };
+        if (['apply', 'restore', 'remove'].includes(request.action))
+          this.state = { ...this.state, preview: null };
         this.state = { ...this.state, restored: result.restored === true };
       }
     } catch {
