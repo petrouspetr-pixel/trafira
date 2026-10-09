@@ -252,8 +252,8 @@ var SERVER_OUTBOUND_TYPES = /* @__PURE__ */ new Set([
   "hysteria2",
   "hysteria"
 ]);
-function invalid(message) {
-  return { valid: false, message };
+function invalid(message2) {
+  return { valid: false, message: message2 };
 }
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -1150,20 +1150,20 @@ var Logger = class {
   }
   push(level, ...args) {
     if (!this.levels.includes(level)) level = "info";
-    const message = this.format(level, ...args);
-    this.logs.push(message);
+    const message2 = this.format(level, ...args);
+    this.logs.push(message2);
     switch (level) {
       case "error":
-        console.error(message);
+        console.error(message2);
         break;
       case "warn":
-        console.warn(message);
+        console.warn(message2);
         break;
       case "info":
-        console.info(message);
+        console.info(message2);
         break;
       default:
-        console.log(message);
+        console.log(message2);
     }
   }
   debug(...args) {
@@ -1274,15 +1274,15 @@ var COMMAND_TIMEOUT = 1e4;
 
 // src/helpers/executeShellCommand.ts
 async function executeShellCommand({
-  command: command4,
+  command: command5,
   args,
   timeout = COMMAND_TIMEOUT
 }) {
   try {
     return await withTimeout(
-      fs.exec(command4, args),
+      fs.exec(command5, args),
       timeout,
-      [command4, ...args].join(" ")
+      [command5, ...args].join(" ")
     );
   } catch (err) {
     const error = err;
@@ -2584,7 +2584,7 @@ function render() {
 }
 
 // src/helpers/showToast.ts
-function showToast(message, type, duration = 3e3) {
+function showToast(message2, type, duration = 3e3) {
   let container = document.querySelector(".toast-container");
   if (!container) {
     container = document.createElement("div");
@@ -2593,7 +2593,7 @@ function showToast(message, type, duration = 3e3) {
   }
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.textContent = message;
+  toast.textContent = message2;
   container.appendChild(toast);
   setTimeout(() => toast.classList.add("visible"), 100);
   setTimeout(() => {
@@ -2652,10 +2652,10 @@ function getOutboundTagBySection(sectionName) {
 }
 
 // src/trafira/methods/shell/callBaseMethod.ts
-async function callBaseMethod(method, args = [], command4 = "/usr/bin/trafira", options = {}) {
+async function callBaseMethod(method, args = [], command5 = "/usr/bin/trafira", options = {}) {
   try {
     const response = await executeShellCommand({
-      command: command4,
+      command: command5,
       args: [method, ...args],
       timeout: options.timeout ?? 15e3
     });
@@ -2754,11 +2754,11 @@ var TRANSIENT_RPC_ERROR_PATTERNS = [
   "request aborted",
   "operation was aborted"
 ];
-function isTransientRpcError(message) {
-  if (!message) {
+function isTransientRpcError(message2) {
+  if (!message2) {
     return false;
   }
-  const normalized = message.toLowerCase();
+  const normalized = message2.toLowerCase();
   return TRANSIENT_RPC_ERROR_PATTERNS.some(
     (pattern) => normalized.includes(pattern)
   );
@@ -2783,8 +2783,8 @@ var GET_UI_STATE_RPC_TIMEOUT_MS = 3e3;
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-function translate(message) {
-  return typeof _ === "function" ? _(message) : message;
+function translate(message2) {
+  return typeof _ === "function" ? _(message2) : message2;
 }
 function parseJsonObjectOutput(output) {
   if (!output) {
@@ -5352,10 +5352,10 @@ function componentDisplayName(component) {
 }
 function showLogNotification(notification) {
   if (notification.kind === "component-update") {
-    const message = _("New version %s is available for %s").replace("%s", notification.version).replace("%s", componentDisplayName(notification.component));
+    const message2 = _("New version %s is available for %s").replace("%s", notification.version).replace("%s", componentDisplayName(notification.component));
     ui.addNotification(
       _("Component update available"),
-      E("div", {}, message),
+      E("div", {}, message2),
       "warning",
       "fkp-component-update-notification"
     );
@@ -6097,8 +6097,8 @@ async function completeSubscriptionUpdateJob(jobId, sectionName, response) {
   }
   const shouldNotify = jobId ? shouldNotifyOwnedUiAction("subscription", jobId) : false;
   const failed2 = !response.success || response.data.success === false;
-  const message = response.success ? response.data.message || _("Failed to update subscriptions") : response.error || _("Failed to update subscriptions");
-  if (failed2 && isTransientRpcError(message)) {
+  const message2 = response.success ? response.data.message || _("Failed to update subscriptions") : response.error || _("Failed to update subscriptions");
+  if (failed2 && isTransientRpcError(message2)) {
     void refreshRuntimeUiState({ force: true });
     return;
   }
@@ -6143,9 +6143,9 @@ async function followSubscriptionUpdateState(state) {
   } catch (error) {
     logger.error("[DASHBOARD]", "followSubscriptionUpdateState failed", error);
     if (!pageUnloading) {
-      const message = error instanceof Error ? error.message : _("Failed to update subscriptions");
+      const message2 = error instanceof Error ? error.message : _("Failed to update subscriptions");
       setSubscriptionUpdating(sectionName, false);
-      if (!isTransientRpcError(message)) {
+      if (!isTransientRpcError(message2)) {
         showToast(_("Failed to update subscriptions"), "error");
       }
     }
@@ -6934,9 +6934,9 @@ async function handleUpdateSubscription(section) {
   } catch (error) {
     logger.error("[DASHBOARD]", "handleUpdateSubscription: failed", error);
     if (!pageUnloading) {
-      const message = error instanceof Error ? error.message : _("Failed to update subscriptions");
+      const message2 = error instanceof Error ? error.message : _("Failed to update subscriptions");
       setSubscriptionUpdating(section.sectionName, false);
-      if (!isTransientRpcError(message)) {
+      if (!isTransientRpcError(message2)) {
         showToast(_("Failed to update subscriptions"), "error");
       }
     }
@@ -8208,7 +8208,8 @@ function render2() {
       E("div", { id: "fkp_diagnostic-page-actions" }),
       E("div", { id: "fkp_diagnostic-page-system-info" }),
       E("div", { id: "fkp_diagnostic-page-snapshots" }),
-      E("div", { id: "trafira-profiles" })
+      E("div", { id: "trafira-profiles" }),
+      E("div", { id: "trafira-gaming-presets" })
     ])
   ]);
 }
@@ -8239,15 +8240,15 @@ var SnapshotController = class {
   }
   async refresh() {
     clearTimeout(this.timer);
-    const generation2 = this.generation;
+    const generation3 = this.generation;
     try {
       const report = await this.read();
-      if (!this.active || generation2 !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.report = report;
       this.failures = 0;
       this.render(report, "", this.starting);
     } catch {
-      if (!this.active || generation2 !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.failures++;
       this.render(this.report, "Could not read snapshot status", this.starting);
     }
@@ -8257,21 +8258,21 @@ var SnapshotController = class {
   }
   async prepare() {
     if (this.starting) return;
-    const generation2 = this.generation;
+    const generation3 = this.generation;
     this.starting = true;
     this.render(this.report, "", true);
     try {
       const result = await this.start();
       if (!result.success) throw new Error("rejected");
-      if (!this.active || generation2 !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.starting = false;
       await this.refresh();
     } catch {
-      if (this.active && generation2 === this.generation) {
+      if (this.active && generation3 === this.generation) {
         this.render(this.report, "Could not start snapshot preparation", false);
       }
     } finally {
-      if (generation2 === this.generation) this.starting = false;
+      if (generation3 === this.generation) this.starting = false;
     }
   }
 };
@@ -8390,15 +8391,15 @@ var RouteExplanationController = class {
   }
   async submit(request) {
     if (!this.active) return;
-    const generation2 = ++this.generation;
+    const generation3 = ++this.generation;
     this.render(null, "", true);
     try {
       const report = await this.read(request);
       if (!report.success) throw new Error("rejected");
-      if (this.active && this.generation === generation2)
+      if (this.active && this.generation === generation3)
         this.render(report, "", false);
     } catch {
-      if (this.active && this.generation === generation2)
+      if (this.active && this.generation === generation3)
         this.render(null, "Could not explain route", false);
     }
   }
@@ -8488,7 +8489,7 @@ var controller = new RouteExplanationController(
 var mountId = 0;
 var routeExplanationPanel = {
   mount() {
-    const generation2 = ++mountId;
+    const generation3 = ++mountId;
     const container = document.getElementById("trafira-route-explanation");
     if (!container) return;
     const domain = E("input", {
@@ -8584,7 +8585,7 @@ var routeExplanationPanel = {
     );
     controller.mount();
     void command2("get_alice_devices").then((report) => {
-      if (generation2 !== mountId) return;
+      if (generation3 !== mountId) return;
       devices = [];
       for (const device of report.devices || [])
         for (const address of device.ips || []) {
@@ -8653,12 +8654,12 @@ var ProfilePanelController = class {
     if (!this.active || this.state.busy) return;
     if (this.state.running && !["status", "list"].includes(request.action))
       return;
-    const generation2 = ++this.generation;
+    const generation3 = ++this.generation;
     this.state = { ...this.state, busy: true, error: "", restored: false };
     this.render(this.state);
     try {
       const result = await this.call(request);
-      if (!this.active || generation2 !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       if (typeof result.running === "boolean")
         this.state = { ...this.state, running: result.running };
       if (typeof result.digest === "string")
@@ -8706,14 +8707,14 @@ var ProfilePanelController = class {
         this.state = { ...this.state, restored: result.restored === true };
       }
     } catch {
-      if (!this.active || generation2 !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.state = {
         ...this.state,
         error: "The profile operation failed.",
         preview: null
       };
     }
-    if (this.active && generation2 === this.generation) {
+    if (this.active && generation3 === this.generation) {
       this.state = { ...this.state, busy: false };
       this.render(this.state);
     }
@@ -8743,7 +8744,7 @@ var profilesPanel = {
     this.unmount();
     const host = document.getElementById("trafira-profiles");
     if (!host) return;
-    const generation2 = mountId2;
+    const generation3 = mountId2;
     let last;
     let transferring = false;
     const name = E("input", {
@@ -8757,7 +8758,7 @@ var profilesPanel = {
       accept: ".json,application/json"
     });
     const result = E("div", {});
-    const message = E("p", {});
+    const message2 = E("p", {});
     const buttons = [];
     let apply;
     let restore;
@@ -8771,7 +8772,7 @@ var profilesPanel = {
     }
     async function submit(request, refresh = false) {
       await controller2.submit(request);
-      if (refresh && generation2 === mountId2 && !last.error)
+      if (refresh && generation3 === mountId2 && !last.error)
         await controller2.submit({ action: "list" });
     }
     function button(label, click) {
@@ -8818,7 +8819,7 @@ var profilesPanel = {
     async function transfer(kind) {
       if (transferring || last.busy || last.running) return;
       transferring = true;
-      message.textContent = _("Transferring profile");
+      message2.textContent = _("Transferring profile");
       updateButtons();
       let transferId = "";
       try {
@@ -8831,7 +8832,7 @@ var profilesPanel = {
             throw new Error("begin");
           transferId = begin.id;
           for (let offset = 0; offset < bytes.length; offset += 12288) {
-            if (generation2 !== mountId2) throw new Error("closed");
+            if (generation3 !== mountId2) throw new Error("closed");
             const sent = await command3({
               action: "import_chunk",
               id: transferId,
@@ -8840,7 +8841,7 @@ var profilesPanel = {
             });
             if (!sent.success) throw new Error("chunk");
           }
-          if (generation2 !== mountId2) throw new Error("closed");
+          if (generation3 !== mountId2) throw new Error("closed");
           const imported = await command3({
             action: "import_finish",
             id: transferId
@@ -8858,7 +8859,7 @@ var profilesPanel = {
           let offset = 0;
           const chunks = [];
           for (; ; ) {
-            if (generation2 !== mountId2) throw new Error("closed");
+            if (generation3 !== mountId2) throw new Error("closed");
             const part = await command3({
               action: "export_read",
               id: transferId,
@@ -8873,7 +8874,7 @@ var profilesPanel = {
               throw new Error("size");
             if (part.done) break;
           }
-          if (generation2 !== mountId2) throw new Error("closed");
+          if (generation3 !== mountId2) throw new Error("closed");
           const bytes = new Uint8Array(offset);
           let position = 0;
           for (const chunk of chunks) {
@@ -8889,11 +8890,11 @@ var profilesPanel = {
           link.click();
           URL.revokeObjectURL(url);
         }
-        if (generation2 === mountId2)
-          message.textContent = _("Profile transfer completed");
+        if (generation3 === mountId2)
+          message2.textContent = _("Profile transfer completed");
       } catch {
-        if (generation2 === mountId2)
-          message.textContent = _(
+        if (generation3 === mountId2)
+          message2.textContent = _(
             "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
           );
       } finally {
@@ -8902,7 +8903,7 @@ var profilesPanel = {
             () => void 0
           );
         transferring = false;
-        if (generation2 === mountId2) updateButtons();
+        if (generation3 === mountId2) updateButtons();
       }
     }
     actions.push(
@@ -8932,11 +8933,11 @@ var profilesPanel = {
         )
       ),
       file,
-      message,
+      message2,
       result
     );
     const controller2 = new ProfilePanelController(command3, (state) => {
-      if (generation2 !== mountId2) return;
+      if (generation3 !== mountId2) return;
       if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
         const chosen = select.value;
         select.replaceChildren(
@@ -9010,6 +9011,399 @@ var profilesPanel = {
       window.clearInterval(active.timer);
     }
     active = null;
+  }
+};
+
+// src/trafira/tabs/diagnostic/gamingPresetPanel.ts
+var GamingPresetController = class {
+  constructor(call, render7) {
+    this.call = call;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+    this.reviewed = null;
+    this.state = {
+      busy: false,
+      running: false,
+      jobId: "",
+      error: "",
+      preview: null
+    };
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  invalidate() {
+    this.reviewed = null;
+    this.state.preview = null;
+    this.render({ ...this.state });
+  }
+  async preview(selection, digest) {
+    if (!selection.owner && (!selection.preset || !selection.device_ips?.length || !selection.proxy_section || !["before-device-routes", "after-device-routes"].includes(
+      selection.placement || ""
+    )))
+      return;
+    if (!digest) return;
+    await this.submit({
+      ...selection,
+      action: selection.owner ? "preview_remove" : "preview",
+      expected_digest: digest
+    });
+  }
+  async apply() {
+    if (!this.reviewed || !this.state.preview?.applicable) return;
+    await this.submit({
+      ...this.reviewed,
+      action: this.reviewed.owner ? "remove" : "apply"
+    });
+  }
+  async poll() {
+    await this.submit({ action: "status" });
+  }
+  async submit(request) {
+    if (!this.active || this.state.busy || this.state.running && request.action !== "status")
+      return;
+    const generation3 = ++this.generation;
+    this.state = { ...this.state, busy: true, error: "" };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (!this.active || generation3 !== this.generation) return;
+      if (typeof result.running === "boolean")
+        this.state.running = result.running;
+      if (typeof result.job_id === "string") this.state.jobId = result.job_id;
+      if (result.success === false || result.rollback_error) {
+        this.reviewed = null;
+        this.state.preview = null;
+        this.state.error = result.rollback_error ? "rollback_failed" : String(result.error || "operation_failed");
+      } else if (request.action === "preview" || request.action === "preview_remove") {
+        this.state.preview = result;
+        this.reviewed = result.applicable === true ? {
+          ...request,
+          device_ips: Array.isArray(request.device_ips) ? [...request.device_ips] : void 0
+        } : null;
+      } else if (request.action !== "status") {
+        this.reviewed = null;
+        this.state.preview = null;
+      }
+    } catch {
+      if (this.active && generation3 === this.generation) {
+        this.state.error = "request_failed";
+        this.reviewed = null;
+        this.state.preview = null;
+      }
+    } finally {
+      if (this.active && generation3 === this.generation) {
+        this.state = { ...this.state, busy: false };
+        this.render(this.state);
+      }
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderGamingPresets.ts
+async function command4(request) {
+  const response = await executeShellCommand({
+    command: "/usr/bin/trafira-config",
+    args: ["gaming_preset_action", JSON.stringify(request)],
+    timeout: 3e4
+  });
+  if (response.code) throw new Error("Gaming preset request failed");
+  return JSON.parse(response.stdout);
+}
+function message(code) {
+  const messages = {
+    conflict: _("Configuration changed. Review the differences again."),
+    alice_bypass: _(
+      "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
+    ),
+    alice_broad_bypass: _(
+      "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
+    ),
+    preset_edited: _(
+      "These rules were edited. Confirm replacement or keep them as ordinary rules."
+    ),
+    unknown_device: _(
+      "The selected address is no longer known. Refresh the device list."
+    ),
+    invalid_proxy: _("Select an enabled connection rule."),
+    candidate_check_failed: _(
+      "The generated configuration did not pass validation."
+    ),
+    busy: _("Another configuration operation is already running."),
+    rollback_failed: _(
+      "Restoration failed. Check the service before continuing."
+    )
+  };
+  return messages[code] || _("The operation failed. Refresh the page and review the settings.") + " (" + code + ")";
+}
+var mounted = null;
+var generation2 = 0;
+var gamingPresetsPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-gaming-presets");
+    if (!host) return;
+    const mine = generation2;
+    let catalog = null;
+    let state;
+    let loading2 = false;
+    const platform = E("select", {}), device = E("select", {}), proxy = E("select", {});
+    const placement = E("select", {}, [
+      E("option", { value: "" }, _("Choose rule priority")),
+      E(
+        "option",
+        { value: "before-device-routes" },
+        _("Before existing device rules")
+      ),
+      E(
+        "option",
+        { value: "after-device-routes" },
+        _("After existing device rules")
+      )
+    ]);
+    const addresses = E("div", {}), output = E("div", {}), status2 = E("p", {}), existing = E("div", {});
+    const enable = E("input", { type: "checkbox" }), replace = E("input", { type: "checkbox" });
+    const buttons = [];
+    let apply;
+    function button(label, click) {
+      const b = E(
+        "button",
+        { class: "cbi-button cbi-button-action", click },
+        label
+      );
+      buttons.push(b);
+      return b;
+    }
+    function update() {
+      const busy = loading2 || state?.busy || state?.running;
+      for (const b of buttons) b.disabled = !!busy;
+      for (const input of [platform, device, proxy, placement, enable, replace])
+        input.disabled = !!busy;
+      for (const input of Array.from(addresses.querySelectorAll("input")))
+        input.disabled = !!busy;
+      if (apply) apply.disabled = !!busy || state?.preview?.applicable !== true;
+    }
+    const controller2 = new GamingPresetController(command4, (next) => {
+      const wasRunning = state?.running;
+      state = next;
+      status2.textContent = state.error ? message(state.error) : state.running ? _("Applying configuration. You can reconnect to this page.") : "";
+      output.replaceChildren();
+      if (state.preview) {
+        const p = state.preview;
+        output.append(
+          E(
+            "p",
+            {},
+            p.applicable ? _("Configuration validation passed. Review the changes below.") : _("The generated configuration did not pass validation.")
+          )
+        );
+        output.append(
+          E(
+            "pre",
+            {
+              style: "white-space:pre-wrap;overflow-wrap:anywhere;max-height:24em;overflow:auto"
+            },
+            JSON.stringify(
+              {
+                routes: p.routes,
+                changes: p.changes,
+                conflicts: p.conflicts,
+                checks: p.checks
+              },
+              null,
+              2
+            )
+          )
+        );
+      }
+      update();
+      if (wasRunning && !state.running && !state.error) void refresh();
+    });
+    function showAddresses() {
+      controller2.invalidate();
+      addresses.replaceChildren();
+      const selected = catalog?.devices[Number(device.value)];
+      if (!selected) return;
+      const candidates = catalog.devices.filter(
+        (d) => d.mac === selected.mac && d.interface === selected.interface
+      );
+      const values = [...new Set(candidates.flatMap((d) => d.ips))];
+      for (const address of values) {
+        const input = E("input", {
+          type: "checkbox",
+          value: address
+        });
+        input.addEventListener("change", () => controller2.invalidate());
+        addresses.append(
+          E("label", { style: "display:block" }, [input, " " + address])
+        );
+      }
+    }
+    async function refresh() {
+      if (loading2 || state?.busy || state?.running) return;
+      loading2 = true;
+      controller2.invalidate();
+      update();
+      try {
+        const result = await command4({ action: "catalog" });
+        if (mine !== generation2) return;
+        if (result.success !== true)
+          throw new Error(String(result.error || "catalog_unavailable"));
+        catalog = result;
+        platform.replaceChildren(
+          ...catalog.presets.map(
+            (p) => E(
+              "option",
+              { value: p.id },
+              `${p.id} \xB7 ${p.checked_at} \xB7 v${p.revision}`
+            )
+          )
+        );
+        device.replaceChildren(
+          E("option", { value: "" }, _("Select a known device")),
+          ...catalog.devices.map(
+            (d, i) => E(
+              "option",
+              { value: String(i) },
+              `${d.name || d.mac} \xB7 ${d.interface} \xB7 ${d.ips.join(", ")}`
+            )
+          )
+        );
+        proxy.replaceChildren(
+          E("option", { value: "" }, _("Select a connection")),
+          ...catalog.proxies.map(
+            (p) => E("option", { value: p.id }, p.label || p.id)
+          )
+        );
+        addresses.replaceChildren();
+        existing.replaceChildren();
+        for (const owner of catalog.owners) {
+          existing.append(
+            E(
+              "p",
+              {},
+              owner.platform + " \xB7 " + owner.owner + (owner.edited ? " \xB7 " + _("Edited") : "")
+            )
+          );
+          existing.append(
+            button(_("Keep as ordinary rules"), () => {
+              void controller2.preview(
+                { owner: owner.owner, mode: "keep" },
+                catalog.digest
+              );
+            })
+          );
+          existing.append(
+            button(_("Preview deletion"), () => {
+              if (owner.edited && !window.confirm(
+                _(
+                  "Delete the edited preset rules? The next step shows the changes."
+                )
+              ))
+                return;
+              void controller2.preview(
+                { owner: owner.owner, mode: "delete", confirm: owner.edited },
+                catalog.digest
+              );
+            })
+          );
+        }
+        status2.textContent = "";
+      } catch (error) {
+        if (mine === generation2)
+          status2.textContent = message(
+            error instanceof Error ? error.message : "catalog_unavailable"
+          );
+      } finally {
+        if (mine === generation2) {
+          loading2 = false;
+          update();
+        }
+      }
+    }
+    for (const input of [platform, proxy, placement, enable, replace])
+      input.addEventListener("change", () => controller2.invalidate());
+    device.addEventListener("change", showAddresses);
+    host.replaceChildren(
+      E("h3", {}, _("Gaming presets")),
+      E(
+        "p",
+        {},
+        _(
+          "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
+        )
+      ),
+      E(
+        "p",
+        {},
+        _(
+          "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
+        )
+      ),
+      platform,
+      device,
+      addresses,
+      proxy,
+      placement,
+      E("label", { style: "display:block" }, [
+        enable,
+        " " + _("Enable only these addresses in Alice Mode if required")
+      ]),
+      E("label", { style: "display:block" }, [
+        replace,
+        " " + _("Replace my edits to this preset after preview")
+      ]),
+      E("div", {}, [
+        button(_("Refresh devices"), () => {
+          void refresh();
+        }),
+        button(_("Preview gaming rules"), () => {
+          if (!catalog || device.value === "") return;
+          void controller2.preview(
+            {
+              preset: platform.value,
+              device_ips: Array.from(
+                addresses.querySelectorAll("input:checked")
+              ).map((i) => i.value),
+              proxy_section: proxy.value,
+              placement: placement.value,
+              enable_device: enable.checked,
+              replace_edited: replace.checked
+            },
+            catalog.digest
+          );
+        }),
+        apply = button(_("Apply reviewed changes"), () => {
+          void controller2.apply();
+        })
+      ]),
+      status2,
+      output,
+      existing
+    );
+    controller2.mount();
+    mounted = {
+      controller: controller2,
+      timer: window.setInterval(() => {
+        void controller2.poll();
+      }, 2e3)
+    };
+    void controller2.poll().then(() => refresh());
+  },
+  unmount() {
+    generation2++;
+    if (mounted) {
+      mounted.controller.unmount();
+      window.clearInterval(mounted.timer);
+    }
+    mounted = null;
   }
 };
 
@@ -11957,6 +12351,7 @@ async function onPageMount2() {
   void snapshots.mount();
   routeExplanationPanel.mount();
   profilesPanel.mount();
+  gamingPresetsPanel.mount();
   diagnosticMountId += 1;
   const mountId3 = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -11998,6 +12393,7 @@ function onPageUnmount2({
   snapshots.unmount();
   routeExplanationPanel.unmount();
   profilesPanel.unmount();
+  gamingPresetsPanel.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;
@@ -14247,9 +14643,9 @@ function shouldApplyCompletedComponentActionResult(result, notify) {
 // src/trafira/tabs/updates/checkResultLifecycle.ts
 function shouldPreserveCompletedCheckResultOnNextMount({
   action,
-  mounted
+  mounted: mounted2
 }) {
-  return action === "check_update" && !mounted;
+  return action === "check_update" && !mounted2;
 }
 function shouldResetCheckResultsOnMount({
   anyActionLoading,
@@ -14264,10 +14660,10 @@ function shouldRefreshComponentStateBeforeRender(uiState) {
   );
 }
 function shouldExposeCheckResults({
-  mounted,
+  mounted: mounted2,
   cacheResolved
 }) {
-  return mounted && cacheResolved;
+  return mounted2 && cacheResolved;
 }
 
 // src/trafira/tabs/updates/coreVersionPicker.ts
@@ -14348,7 +14744,7 @@ var CoreVersionPicker = class {
     if (!this.active || this.pending || this.state.stage === "installing" && request.action !== "status")
       return;
     this.pending = true;
-    const generation2 = this.generation;
+    const generation3 = this.generation;
     this.state = {
       ...this.state,
       error: "",
@@ -14357,7 +14753,7 @@ var CoreVersionPicker = class {
     this.render(this.state);
     try {
       const result = await this.call(request);
-      if (!this.active || generation2 !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       if (result.success === false || result.rollback_error) {
         this.state = {
           ...this.state,
@@ -14395,14 +14791,14 @@ var CoreVersionPicker = class {
         };
       }
     } catch {
-      if (!this.active || generation2 !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.state = {
         ...this.state,
         stage: request.action === "status" ? this.state.stage : "failed",
         error: "The sing-box version operation failed."
       };
     } finally {
-      if (this.active && generation2 === this.generation) {
+      if (this.active && generation3 === this.generation) {
         this.pending = false;
         this.render(this.state);
       }
@@ -14424,7 +14820,7 @@ var coreVersionsPanel = {
       checked: true
     });
     const info = E("p", {});
-    const message = E("p", { role: "status" });
+    const message2 = E("p", { role: "status" });
     const refresh = E(
       "button",
       { class: "cbi-button", click: () => void picker.load(true) },
@@ -14485,7 +14881,7 @@ var coreVersionsPanel = {
         install.disabled = busy || !state.selected;
         unpin.disabled = busy || !state.pinnedVersion;
         info.textContent = `${_("Installed version")}: ${state.currentVersion || "\u2014"} \xB7 ${_("Pinned version")}: ${state.pinnedVersion || "\u2014"}${state.cachedAt ? ` \xB7 ${_("Catalog checked")}: ${new Date(state.cachedAt * 1e3).toLocaleString()}` : ""}`;
-        message.textContent = [
+        message2.textContent = [
           state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : "",
           state.restored ? _("The previous version was restored.") : ""
         ].filter(Boolean).join(" ");
@@ -14506,7 +14902,7 @@ var coreVersionsPanel = {
         select,
         E("label", {}, [pin, _("Pin selected version")]),
         E("div", {}, [refresh, install, unpin]),
-        message
+        message2
       ])
     );
     picker.mount();
@@ -14847,8 +15243,8 @@ async function completeComponentActionJob(key, jobId, response) {
   }
   const shouldNotify = shouldNotifyOwnedUiAction("component", jobId);
   if (!response.success || response.data.success === false) {
-    const message = response.success ? response.data.message || _("Failed to execute") : response.error || _("Failed to execute");
-    if (isTransientRpcError(message)) {
+    const message2 = response.success ? response.data.message || _("Failed to execute") : response.error || _("Failed to execute");
+    if (isTransientRpcError(message2)) {
       setActionLoading(key, false);
       void refreshComponentActionState();
       return;
@@ -14856,7 +15252,7 @@ async function completeComponentActionJob(key, jobId, response) {
     handledComponentJobs.add(jobId);
     setActionLoading(key, false);
     if (shouldNotify) {
-      showToast(message, "error");
+      showToast(message2, "error");
     }
     await ackComponentActionJob(jobId);
     return;
@@ -14896,10 +15292,10 @@ async function followComponentActionState(state) {
   } catch (error) {
     logger.error("[UPDATES]", "followComponentActionState failed", error);
     if (!pageUnloading2) {
-      const message = getErrorMessage(error, _("Failed to execute"));
+      const message2 = getErrorMessage(error, _("Failed to execute"));
       setActionLoading(key, false);
-      if (!isTransientRpcError(message)) {
-        showToast(message, "error");
+      if (!isTransientRpcError(message2)) {
+        showToast(message2, "error");
       }
     }
   } finally {
@@ -14923,9 +15319,9 @@ async function followAlreadyRunningComponentAction(button) {
   await followComponentActionState(state);
   return true;
 }
-function isComponentActionAlreadyRunningError(message) {
+function isComponentActionAlreadyRunningError(message2) {
   return Boolean(
-    message && message.includes("Another component action is already running")
+    message2 && message2.includes("Another component action is already running")
   );
 }
 function handleComponentUiState(uiState) {
@@ -15013,10 +15409,10 @@ async function handleComponentAction(button) {
   } catch (error) {
     logger.error("[UPDATES]", "handleComponentAction failed", error);
     if (!pageUnloading2) {
-      const message = getErrorMessage(error, _("Failed to execute"));
+      const message2 = getErrorMessage(error, _("Failed to execute"));
       setActionLoading(button.key, false);
-      if (!isTransientRpcError(message)) {
-        showToast(message, "error");
+      if (!isTransientRpcError(message2)) {
+        showToast(message2, "error");
       }
       void refreshComponentActionState();
     }

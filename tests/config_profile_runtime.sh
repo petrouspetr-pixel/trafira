@@ -62,7 +62,7 @@ for(let address in ["192.0.2.5","2001:db8::5"]) {
  assert(other.outbound=="bypass-out","remaining selected device direct");
  assert(matcher.explain(generated,{...req,source_ip:"192.0.2.6"},{},{}).outbound!=store.outbound,"other device excluded");
  let dns={...generated,route:{rules:generated.dns.rules,final:generated.dns.final}};
- assert(matcher.explain(dns,req,{},{}).status!="indeterminate","source-scoped store DNS is evaluable");
+ assert(matcher.explain(dns,{...req,inbound:require("singbox.constants").SOURCE_DNS_INBOUND_TAG,query_type:"A"},{},{}).outbound=="fakeip-server","source-scoped store DNS receives FakeIP");
 }
 fs.writefile(prepared.path,"changed");
 assert(!hooks.validate(prepared.path),"tampered candidate rejected");

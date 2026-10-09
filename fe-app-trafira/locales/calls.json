@@ -329,11 +329,25 @@
     ]
   },
   {
+    "call": "After existing device rules",
+    "key": "After existing device rules",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:84"
+    ]
+  },
+  {
     "call": "Alice Mode",
     "key": "Alice Mode",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:437",
       "src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:238"
+    ]
+  },
+  {
+    "call": "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying.",
+    "key": "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:30"
     ]
   },
   {
@@ -443,10 +457,24 @@
     ]
   },
   {
+    "call": "Another configuration operation is already running.",
+    "key": "Another configuration operation is already running.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:46"
+    ]
+  },
+  {
     "call": "Apply profile",
     "key": "Apply profile",
     "places": [
       "src/trafira/tabs/diagnostic/renderProfiles.ts:87"
+    ]
+  },
+  {
+    "call": "Apply reviewed changes",
+    "key": "Apply reviewed changes",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:318"
     ]
   },
   {
@@ -461,6 +489,13 @@
     "key": "Apply the Trafira configuration again to enable saved copies for this core",
     "places": [
       "src/trafira/tabs/diagnostic/renderSnapshots.ts:58"
+    ]
+  },
+  {
+    "call": "Applying configuration. You can reconnect to this page.",
+    "key": "Applying configuration. You can reconnect to this page.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:119"
     ]
   },
   {
@@ -562,6 +597,13 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5622",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6067",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6479"
+    ]
+  },
+  {
+    "call": "Before existing device rules",
+    "key": "Before existing device rules",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:79"
     ]
   },
   {
@@ -872,7 +914,7 @@
     "call": "Checking, please wait",
     "key": "Checking, please wait",
     "places": [
-      "src/trafira/tabs/diagnostic/initController.ts:1026",
+      "src/trafira/tabs/diagnostic/initController.ts:1027",
       "src/trafira/tabs/diagnostic/checks/runByedpiCheck.ts:14",
       "src/trafira/tabs/diagnostic/checks/runDnsCheck.ts:15",
       "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:15",
@@ -920,6 +962,13 @@
     "key": "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only.",
     "places": [
       "src/trafira/tabs/updates/renderCoreVersions.ts:100"
+    ]
+  },
+  {
+    "call": "Choose rule priority",
+    "key": "Choose rule priority",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:75"
     ]
   },
   {
@@ -1072,6 +1121,13 @@
     ]
   },
   {
+    "call": "Configuration changed. Review the differences again.",
+    "key": "Configuration changed. Review the differences again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:29"
+    ]
+  },
+  {
     "call": "Configuration for Trafira service",
     "key": "Configuration for Trafira service",
     "places": [
@@ -1083,6 +1139,13 @@
     "key": "Configuration profiles",
     "places": [
       "src/trafira/tabs/diagnostic/renderProfiles.ts:208"
+    ]
+  },
+  {
+    "call": "Configuration validation passed. Review the changes below.",
+    "key": "Configuration validation passed. Review the changes below.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:129"
     ]
   },
   {
@@ -1298,6 +1361,13 @@
     "key": "Delete profile",
     "places": [
       "src/trafira/tabs/diagnostic/renderProfiles.ts:97"
+    ]
+  },
+  {
+    "call": "Delete the edited preset rules? The next step shows the changes.",
+    "key": "Delete the edited preset rules? The next step shows the changes.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:240"
     ]
   },
   {
@@ -1857,6 +1927,13 @@
     ]
   },
   {
+    "call": "Edited",
+    "key": "Edited",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:224"
+    ]
+  },
+  {
     "call": "Enable",
     "key": "Enable",
     "places": [
@@ -1918,6 +1995,13 @@
     "key": "Enable Mixed Proxy Authentication",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7924"
+    ]
+  },
+  {
+    "call": "Enable only these addresses in Alice Mode if required",
+    "key": "Enable only these addresses in Alice Mode if required",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:292"
     ]
   },
   {
@@ -2342,6 +2426,13 @@
     ]
   },
   {
+    "call": "Gaming presets",
+    "key": "Gaming presets",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:270"
+    ]
+  },
+  {
     "call": "Generate a random 16-character hexadecimal HWID",
     "key": "Generate a random 16-character hexadecimal HWID",
     "places": [
@@ -2381,7 +2472,7 @@
     "call": "Global check",
     "key": "Global check",
     "places": [
-      "src/trafira/tabs/diagnostic/initController.ts:685"
+      "src/trafira/tabs/diagnostic/initController.ts:686"
     ]
   },
   {
@@ -3287,6 +3378,13 @@
     ]
   },
   {
+    "call": "Keep as ordinary rules",
+    "key": "Keep as ordinary rules",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:228"
+    ]
+  },
+  {
     "call": "Keep existing behavior",
     "key": "Keep existing behavior",
     "places": [
@@ -3907,10 +4005,10 @@
     "key": "Not running",
     "places": [
       "src/trafira/tabs/diagnostic/diagnostic.store.ts:125",
-      "src/trafira/tabs/diagnostic/initController.ts:119",
-      "src/trafira/tabs/diagnostic/initController.ts:349",
-      "src/trafira/tabs/diagnostic/initController.ts:406",
-      "src/trafira/tabs/diagnostic/initController.ts:492"
+      "src/trafira/tabs/diagnostic/initController.ts:120",
+      "src/trafira/tabs/diagnostic/initController.ts:350",
+      "src/trafira/tabs/diagnostic/initController.ts:407",
+      "src/trafira/tabs/diagnostic/initController.ts:493"
     ]
   },
   {
@@ -4295,6 +4393,13 @@
     ]
   },
   {
+    "call": "Preview deletion",
+    "key": "Preview deletion",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:236"
+    ]
+  },
+  {
     "call": "Preview failed: %s",
     "key": "Preview failed: %s",
     "places": [
@@ -4306,6 +4411,13 @@
     "key": "Preview filters",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3425"
+    ]
+  },
+  {
+    "call": "Preview gaming rules",
+    "key": "Preview gaming rules",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:302"
     ]
   },
   {
@@ -4535,6 +4647,13 @@
     ]
   },
   {
+    "call": "Refresh devices",
+    "key": "Refresh devices",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:299"
+    ]
+  },
+  {
     "call": "Refresh status",
     "key": "Refresh status",
     "places": [
@@ -4588,6 +4707,13 @@
     "key": "Rename profile",
     "places": [
       "src/trafira/tabs/diagnostic/renderProfiles.ts:78"
+    ]
+  },
+  {
+    "call": "Replace my edits to this preset after preview",
+    "key": "Replace my edits to this preset after preview",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:296"
     ]
   },
   {
@@ -4671,6 +4797,7 @@
     "call": "Restoration failed. Check the service before continuing.",
     "key": "Restoration failed. Check the service before continuing.",
     "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:47",
       "src/trafira/tabs/updates/renderCoreVersions.ts:40"
     ]
   },
@@ -4947,6 +5074,20 @@
     ]
   },
   {
+    "call": "Select a connection",
+    "key": "Select a connection",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:209"
+    ]
+  },
+  {
+    "call": "Select a known device",
+    "key": "Select a known device",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:199"
+    ]
+  },
+  {
     "call": "Select a network interface",
     "key": "Select a network interface",
     "places": [
@@ -4990,6 +5131,13 @@
     ]
   },
   {
+    "call": "Select an enabled connection rule.",
+    "key": "Select an enabled connection rule.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:42"
+    ]
+  },
+  {
     "call": "Select an enabled Connection section as reserve",
     "key": "Select an enabled Connection section as reserve",
     "places": [
@@ -5022,6 +5170,13 @@
     "key": "Select DNS protocol to use",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:168"
+    ]
+  },
+  {
+    "call": "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened.",
+    "key": "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:281"
     ]
   },
   {
@@ -5209,7 +5364,7 @@
     "places": [
       "src/trafira/methods/shell/index.ts:376",
       "src/trafira/methods/shell/index.ts:397",
-      "src/trafira/tabs/diagnostic/initController.ts:597"
+      "src/trafira/tabs/diagnostic/initController.ts:598"
     ]
   },
   {
@@ -5316,7 +5471,7 @@
     "call": "Show sing-box config",
     "key": "Show sing-box config",
     "places": [
-      "src/trafira/tabs/diagnostic/initController.ts:755",
+      "src/trafira/tabs/diagnostic/initController.ts:756",
       "src/trafira/tabs/diagnostic/partials/renderAvailableActions.ts:116"
     ]
   },
@@ -5605,6 +5760,13 @@
     ]
   },
   {
+    "call": "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint.",
+    "key": "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:274"
+    ]
+  },
+  {
     "call": "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core.",
     "key": "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core.",
     "places": [
@@ -5805,6 +5967,14 @@
     ]
   },
   {
+    "call": "The generated configuration did not pass validation.",
+    "key": "The generated configuration did not pass validation.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:43",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:130"
+    ]
+  },
+  {
     "call": "The installed version changed. Refresh the version list.",
     "key": "The installed version changed. Refresh the version list.",
     "places": [
@@ -5817,6 +5987,13 @@
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5695",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6140"
+    ]
+  },
+  {
+    "call": "The operation failed. Refresh the page and review the settings.",
+    "key": "The operation failed. Refresh the page and review the settings.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:53"
     ]
   },
   {
@@ -5838,6 +6015,13 @@
     "key": "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8038"
+    ]
+  },
+  {
+    "call": "The selected address is no longer known. Refresh the device list.",
+    "key": "The selected address is no longer known. Refresh the device list.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:39"
     ]
   },
   {
@@ -5867,6 +6051,20 @@
     "key": "There are rules using Zapret2",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:81"
+    ]
+  },
+  {
+    "call": "These rules were edited. Confirm replacement or keep them as ordinary rules.",
+    "key": "These rules were edited. Confirm replacement or keep them as ordinary rules.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:36"
+    ]
+  },
+  {
+    "call": "This Alice Mode exception also covers other devices. Edit it manually before applying this preset.",
+    "key": "This Alice Mode exception also covers other devices. Edit it manually before applying this preset.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:33"
     ]
   },
   {
@@ -6753,7 +6951,7 @@
     "call": "View logs",
     "key": "View logs",
     "places": [
-      "src/trafira/tabs/diagnostic/initController.ts:720",
+      "src/trafira/tabs/diagnostic/initController.ts:721",
       "src/trafira/tabs/diagnostic/partials/renderAvailableActions.ts:107"
     ]
   },
