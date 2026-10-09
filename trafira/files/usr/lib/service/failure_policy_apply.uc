@@ -77,6 +77,7 @@ function apply_states(expected,states) {
             else {
                 let previous=store.read(path),candidate=transform.apply(base.config,base.sections,states);
                 let origins=provenance.extract(candidate),candidate_path=directory+"/candidate.json",guard_path=directory+"/guard.nft";
+                require("core.common").strip_internal_fields(candidate);
                 let script=guard_script(guarded_ports(base),constants.NFT_FAKEIP_MARK);
                 let file=fs.open(guard_path,"wex",384),saved=false;
                 if(file) {saved=file.write(script||"")==length(script||"");file.close();}
