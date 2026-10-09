@@ -61,16 +61,12 @@ function recover(hooks) {
     catch(e){result={success:false,rollback_error:"recovery_failed"};}
     locks.release(lock);return result;
 }
-function apply(candidate_path,expected_digest,reason,hooks) {
-    let lock=locks.acquire("config-apply");if(!lock)return failure("busy");
-    let result;
-    try {
-        result=apply_locked(candidate_path,expected_digest,reason,hooks);
-    } catch(e) {
-        let recovery=recover_locked(hooks);
-        result={success:false,error:"apply_failed",restored:recovery.restored||false,rollback_error:recovery.rollback_error};
-    }
-    locks.release(lock);return result;
+function rollback_failure(error,hooks,job_id) {
+    let restored=recover_locked(hooks);
+    let result={success:false,error,restored:restored.success && restored.restored,job_id};
+    if(!restored.success) result.rollback_error=restored.rollback_error||restored.error;
+    durable_write(RESULT,sprintf("%J",result));
+    return result;
 }
 function apply_locked(candidate_path,expected_digest,reason,hooks) {
     if(!ensure())return failure("storage_unavailable");
@@ -95,12 +91,16 @@ function apply_locked(candidate_path,expected_digest,reason,hooks) {
     if(!durable_write(PREVIOUS,original))return rollback_failure("previous_backup_failed",hooks,state.job_id);
     return finish({success:true,restored:false,job_id:state.job_id});
 }
-function rollback_failure(error,hooks,job_id) {
-    let restored=recover_locked(hooks);
-    let result={success:false,error,restored:restored.success && restored.restored,job_id};
-    if(!restored.success) result.rollback_error=restored.rollback_error||restored.error;
-    durable_write(RESULT,sprintf("%J",result));
-    return result;
+function apply(candidate_path,expected_digest,reason,hooks) {
+    let lock=locks.acquire("config-apply");if(!lock)return failure("busy");
+    let result;
+    try {
+        result=apply_locked(candidate_path,expected_digest,reason,hooks);
+    } catch(e) {
+        let recovery=recover_locked(hooks);
+        result={success:false,error:"apply_failed",restored:recovery.restored||false,rollback_error:recovery.rollback_error};
+    }
+    locks.release(lock);return result;
 }
 function status() {
     let state=object(JOURNAL);
