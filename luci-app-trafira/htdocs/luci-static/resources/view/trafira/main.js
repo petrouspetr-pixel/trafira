@@ -5862,7 +5862,7 @@ var failurePoliciesPanel = {
                 E(
                   "td",
                   {},
-                  row.changedAgo === null ? "\uFFFD" : String(row.changedAgo)
+                  row.changedAgo === null ? "\u2014" : String(row.changedAgo)
                 )
               ])
             )
