@@ -115,7 +115,7 @@ try:
     assert json.loads(uc('print(sprintf("%J",require("warp.stability").health("tfwarp0","fixture")));'))['warp'],'verified HTTPS over real AWG'
 
     start(['python3','-m','http.server','18080','--bind','192.0.2.1','--directory',work],router,'management')
-    config={'log':{'level':'error'},'inbounds':[{'type':'tproxy','tag':'lan4','listen':'127.0.0.1','listen_port':1602},{'type':'tproxy','tag':'lan6','listen':'::1','listen_port':1603}], 'outbounds':[{'type':'direct','tag':'vpn-out','bind_interface':'tfwarp0'}], 'route':{'rules':[{'action':'sniff','inbound':['lan4','lan6']}],'default_mark':134217728,'final':'vpn-out'}, 'dns':{'servers':[],'rules':[]}}
+    config={'log':{'level':'error'},'inbounds':[{'type':'tproxy','tag':'lan4','listen':'127.0.0.1','listen_port':1602},{'type':'tproxy','tag':'lan6','listen':'::1','listen_port':1603}], 'outbounds':[{'type':'direct','tag':'vpn-out','bind_interface':'tfwarp0'}], 'route':{'rules':[{'action':'sniff','inbound':['lan4','lan6','dns-test']}],'default_mark':134217728,'final':'vpn-out'}, 'dns':{'servers':[],'rules':[]}}
     config['inbounds'].append({'type':'direct','tag':'dns-test','listen':'127.0.0.42','listen_port':53})
     config['route']['rules'].append({'action':'hijack-dns','protocol':'dns'})
     config['route']['default_domain_resolver']='dns-server'
@@ -140,6 +140,9 @@ try:
     run(['nft','reset','counters','table','inet','Audit'],router)
     curl(client,source='192.0.2.2');curl(client,'[2001:db8:1::2]',source='2001:db8:2::2');counters_zero()
     run(['curl','--noproxy','*','--interface','192.0.2.2','--cacert',work/'tls.crt','--max-time','3','--resolve','warp.test:18443:198.51.100.2','-fsS','https://warp.test:18443/'],client);counters_zero()
+    watchdog=start(['sh',ROOT/'components/warp/luci-app-trafira-warp/root/usr/libexec/trafira-warp-watchdog'],router,'watchdog')
+    time.sleep(.1);watchdog.kill();watchdog.wait(timeout=5)
+    curl(client,source='192.0.2.2');counters_zero()
     # Router-origin off is direct, on is bound to WARP with no broad UDP bypass.
     curl();run(['nft','reset','counters','table','inet','Audit'],router)
     origin=uc('print(require("config.router_origin").nft("WarpTest","local4","local6","0x04000000",{dns:[],ntp:[],vpn:[],vpn_ports:[]}));')
