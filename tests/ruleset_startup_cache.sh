@@ -5,6 +5,9 @@ WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 export TRAFIRA_RULESET_CACHE_DIR="$WORK_DIR/cache"
 mkdir -p "$WORK_DIR/bin"
+mkdir -p "$TRAFIRA_RULESET_CACHE_DIR"
+printf 'interrupted write' >"$TRAFIRA_RULESET_CACHE_DIR/.stage.OLD123"
+touch -t 200001010000 "$TRAFIRA_RULESET_CACHE_DIR/.stage.OLD123"
 export PATH="$WORK_DIR/bin:$PATH"
 cat >"$WORK_DIR/bin/sing-box" <<'SH'
 #!/bin/sh
@@ -80,6 +83,8 @@ check(cache.save(source, file), "source-format snapshot validated with compile")
 cache.apply({route:{rule_set:[source]}}, "1.14.2");
 check(source.initial_path && source.format == "source", "preserve source format");
 check(cache.refresh(config, "127.0.0.1:4535"), "refresh through selected proxy");
+check(!fs.stat(source.initial_path), "obsolete URL snapshot pruned");
+check(!fs.stat(getenv("TRAFIRA_RULESET_CACHE_DIR") + "/.stage.OLD123"), "orphan staging file pruned");
 let calls = fs.readfile(ARGV[0] + "/curl.log");
 check(index(calls, "--proxy http://127.0.0.1:4535 --noproxy") >= 0, "downloads honor proxy");
 check(index(calls, "--max-time 30 --max-filesize 4194304") >= 0, "download bounded in time and size");
@@ -94,6 +99,9 @@ check(!changed.initial_path, "changed URL cannot reuse old list");
 let legacy = {type: "remote", tag: "test", url: rule.url, format: "binary"};
 cache.apply({route: {rule_set: [legacy]}}, "1.13.21");
 check(!legacy.initial_path, "legacy core must not receive unsupported field");
+fs.writefile(ARGV[0] + "/curl.log", "");
+check(cache.refresh({route:{rule_set:[legacy]}}, "127.0.0.1:4535"), "legacy refresh remains unchanged");
+check(fs.readfile(ARGV[0] + "/curl.log") == "", "no unused downloads on old cores");
 fs.writefile(saved, "corrupt");
 delete rule.initial_path;
 cache.apply(config, "1.14.2");
