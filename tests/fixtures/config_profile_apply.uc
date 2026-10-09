@@ -3,6 +3,9 @@ let target=getenv("TRAFIRA_CONFIG_FILE"),candidate=getenv("PROFILE_APPLY_FIXTURE
 fs.writefile(target,"original");fs.writefile(candidate,"candidate");
 let digest=hash(target),activations=0,restores=0;
 let hooks={validate:()=>true,capture:()=>({running:true,enabled:true}),activate:()=>{activations++;return true;},restore:()=>{restores++;return true;}};
+fs.writefile(getenv("PROFILE_APPLY_FIXTURE_DIR")+"/no-space","1");
+assert(t.apply(candidate,digest,"test",hooks).error=="insufficient_space" && fs.readfile(target)=="original","reserve rollback space before replacement");
+fs.unlink(getenv("PROFILE_APPLY_FIXTURE_DIR")+"/no-space");
 hooks.validate=()=>false;
 let rejected=t.apply(candidate,digest,"test",hooks);
 assert(rejected.error=="candidate_check_failed" && fs.readfile(target)=="original","validation fails without replacement: "+sprintf("%J",rejected));

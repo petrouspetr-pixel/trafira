@@ -9,6 +9,19 @@ export TRAFIRA_CONFIG_FILE="$WORK_DIR/config"
 export PROFILE_APPLY_FIXTURE_DIR="$WORK_DIR"
 export TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 mkdir -p "$TRAFIRA_RUNTIME_STATE_DIR"
+export PROFILE_TEST_REAL_DF
+PROFILE_TEST_REAL_DF=$(command -v df)
+mkdir -p "$WORK_DIR/bin"
+cat >"$WORK_DIR/bin/df" <<'SH'
+#!/bin/sh
+if [ -e "$PROFILE_APPLY_FIXTURE_DIR/no-space" ]; then
+  printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\nfixture 100 100 0 100%% /\n'
+else
+  exec "$PROFILE_TEST_REAL_DF" "$@"
+fi
+SH
+chmod +x "$WORK_DIR/bin/df"
+export PATH="$WORK_DIR/bin:$PATH"
 cat >"$WORK_DIR/normal-start.uc" <<'UC'
 let fs=require("fs"),t=require("service.config_transaction");
 assert(t.before_start().success,"normal nested startup allowed");
