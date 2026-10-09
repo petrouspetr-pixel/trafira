@@ -48,7 +48,7 @@ function public_status(value) {
     let result={success:value.success!==false,running:value.running===true};
     for(let key in ["restored","recovery_pending","registered","enabled","https_ok","warp","rollback_error"])
         if(type(value[key])=="bool")result[key]=value[key];
-    for(let key in ["job_id","error","stage","interface","owner","mode"])
+    for(let key in ["job_id","candidate_id","preview_id","expected_digest","section","error","stage","interface","owner","mode"])
         if(type(value[key])=="string" && match(value[key],/^[a-zA-Z0-9_-]{1,96}$/))result[key]=value[key];
     for(let key in ["schema","generation","started_at","completed_at","handshake_age"])
         if(type(value[key])=="int" && value[key]>=0)result[key]=value[key];

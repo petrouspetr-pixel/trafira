@@ -44,10 +44,11 @@ function output(args) {
 function status() {
     let c=state.load(state.DIRECTORY+"/transport.json"),runtime=state.load(state.RUNTIME+"/transport.json");
     let inactive={schema:1,owner:"trafira-warp",success:true,running:false,enabled:c?.enabled===true,generation:c?.generation||0};
-    if(!c || !valid_config(c) || !runtime || !job.live(runtime.worker))return inactive;
+    if(!c || !valid_config(c) || !runtime || runtime.ready!==true || runtime.generation!=c.generation || !job.live(runtime.worker))return inactive;
     if(fs.readlink("/proc/"+runtime.worker.pid+"/exe")!="/usr/libexec/trafira-warp-amneziawg-go")return {...inactive,error:"ownership_error"};
     let cursor=require("uci").cursor(),section=cursor.get_all("network",c.interface);
     if(!section || section.trafira_warp_managed!="1" || section.device!=c.interface || section.proto!="none")return {...inactive,error:"ownership_error"};
+    if(trim(fs.readfile("/sys/class/net/"+c.interface+"/ifindex")||"")!=runtime.ifindex)return {...inactive,error:"ownership_error"};
     let socket=fs.lstat("/var/run/amneziawg/"+c.interface+".sock");
     if(!socket || socket.type!="socket" || !fs.stat("/sys/class/net/"+c.interface))return inactive;
     let ctl="/usr/libexec/trafira-warp-awgctl",mark=output([ctl,"get",c.interface,"fwmark"]),endpoint=output([ctl,"get",c.interface,"endpoint"]),port=output([ctl,"get",c.interface,"listen_port"]);
@@ -73,10 +74,11 @@ function route_setup(c) {
     let owned_route=routing_identity(c.interface);
     for(let family in ["-4","-6"]) {
         if(family=="-6" && (!c.ipv6 || trim(fs.readfile("/proc/sys/net/ipv6/conf/all/disable_ipv6")||"1")=="1"))continue;
-        let text=output(["ip",family,"-j","rule","show"]),routes=output(["ip",family,"-j","route","show","table",""+owned_route.table]);
+        let text=output(["ip",family,"-j","rule","show"]),routes=output(["ip",family,"-j","route","show","table","all"]);
         let rules,entries;
         try {rules=json(text);entries=json(routes);}catch(e){return false;}
         if(type(rules)!="array" || type(entries)!="array")return false;
+        entries=filter(entries,(route)=>int(route.table)==owned_route.table);
         let found=false;
         for(let rule in rules) {
             if(rule.priority!=owned_route.priority && rule.table!=owned_route.table)continue;
@@ -86,6 +88,23 @@ function route_setup(c) {
         for(let route in entries)if(route.dst!="default" || route.dev!=c.interface || route.gateway)return false;
         if(!length(entries) && output(["ip",family,"route","add","default","dev",c.interface,"table",""+owned_route.table])==null)return false;
         if(!found && output(["ip",family,"rule","add","priority",""+owned_route.priority,"oif",c.interface,"lookup",""+owned_route.table])==null)return false;
+    }
+    return true;
+}
+function route_clear(c) {
+    let owned_route=routing_identity(c.interface);if(!owned_route)return false;
+    for(let family in ["-4","-6"]) {
+        let text=output(["ip",family,"-j","rule","show"]),routes=output(["ip",family,"-j","route","show","table","all"]),rules,entries;
+        try {rules=json(text);entries=json(routes);}catch(e){return false;}
+        if(type(rules)!="array" || type(entries)!="array")return false;
+        for(let rule in rules)if(rule.priority==owned_route.priority || int(rule.table)==owned_route.table) {
+            if(rule.priority!=owned_route.priority || int(rule.table)!=owned_route.table || rule.oif!=c.interface)return false;
+            if(output(["ip",family,"rule","del","priority",""+owned_route.priority,"oif",c.interface,"lookup",""+owned_route.table])==null)return false;
+        }
+        for(let route in entries)if(int(route.table)==owned_route.table) {
+            if(route.dst!="default" || route.dev!=c.interface || route.gateway)return false;
+            if(output(["ip",family,"route","del","default","dev",c.interface,"table",""+owned_route.table])==null)return false;
+        }
     }
     return true;
 }
@@ -141,6 +160,7 @@ function restore(saved,id) {
         let existing=cursor.get_all("network",current.interface);
         if(existing && !owned(existing,current.interface))return false;
         output(["/etc/init.d/trafira-warp","stop"]);
+        if(!route_clear(current))return false;
         if(existing) {
             output(["ubus","call","network.interface."+current.interface,"down"]);
             cursor.delete("network",current.interface);if(!cursor.commit("network"))return false;
@@ -148,4 +168,4 @@ function restore(saved,id) {
     }
     return state.remove(state.DIRECTORY+"/transport.json") && state.remove(state.DIRECTORY+"/awg.conf");
 }
-return {routing_identity,route_setup,owned,config_text,snapshot,apply,restore,mark_available,valid_interface,ipv4,ipv6,valid_endpoint,choose_interface,valid_config,network_section,address_commands,status,quote,output};
+return {routing_identity,route_setup,route_clear,owned,config_text,snapshot,apply,restore,mark_available,valid_interface,ipv4,ipv6,valid_endpoint,choose_interface,valid_config,network_section,address_commands,status,quote,output};

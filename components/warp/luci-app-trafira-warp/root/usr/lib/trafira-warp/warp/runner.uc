@@ -29,5 +29,6 @@ if(success)for(let args in transport.address_commands(c,enabled6))if(transport.o
 if(success)success=transport.output(["ip","link","set","dev",c.interface,"mtu",""+c.mtu,"up"])!=null;
 if(success)success=transport.route_setup(c);
 if(!success){if(job.live(identity))system("kill -TERM "+pid);exit(1);}
+if(!state.save(state.RUNTIME+"/transport.json",{worker:identity,generation:c.generation,ready:true,ifindex:trim(fs.readfile("/sys/class/net/"+c.interface+"/ifindex")||"")}))exit(1);
 pipe.close();
 exit(1);
