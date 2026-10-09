@@ -58,6 +58,9 @@
     },
     "write": {
       "file": {
+        "/usr/bin/trafira-config": [
+          "exec"
+        ],
         "/var/run/trafira/ui-state/*": [
           "write"
         ],

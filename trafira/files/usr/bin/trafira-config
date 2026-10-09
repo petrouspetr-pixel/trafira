@@ -1,0 +1,10 @@
+#!/usr/bin/ucode
+
+// Separate entrypoint: LuCI grants this command only to configuration writers.
+const LIB=getenv("TRAFIRA_LIB")||"/usr/lib/trafira";
+if(ARGV[0]!="profile_action" || length(ARGV)!=2 || length(ARGV[1])>65536) {
+    print('{"success":false,"error":"invalid_request"}\n');
+    exit(1);
+}
+function quote(value){return "'"+replace(""+value,/'/g,"'\\''")+"'";}
+exit(system(join(" ",map(["ucode","-L",LIB,LIB+"/config/profile_cli.uc","action",ARGV[1]],quote))));

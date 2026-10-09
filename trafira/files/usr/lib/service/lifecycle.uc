@@ -1398,6 +1398,7 @@ function uninstall() {
     command_success_from_args([ "rm", "-rf", LUCI_VIEW_DIR ]);
     remove_file(SERVICE_INIT);
     remove_file(BIN_PATH);
+    remove_file("/usr/bin/trafira-config");
     remove_file("/usr/share/luci/menu.d/luci-app-trafira.json");
     remove_file("/usr/share/rpcd/acl.d/luci-app-trafira.json");
     remove_file("/etc/uci-defaults/50_luci-trafira");

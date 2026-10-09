@@ -7,7 +7,7 @@ import {
 
 async function command(request: object): Promise<Record<string, unknown>> {
   const result = await executeShellCommand({
-    command: '/usr/bin/trafira',
+    command: '/usr/bin/trafira-config',
     args: ['profile_action', JSON.stringify(request)],
     timeout: 30000,
   });
@@ -30,7 +30,6 @@ export const profilesPanel = {
     const generation = mountId;
     let last: ProfileState;
     let transferring = false;
-    let controller: ProfilePanelController;
     const name = E('input', {
       type: 'text',
       maxLength: 64,
@@ -226,7 +225,7 @@ export const profilesPanel = {
       message,
       result,
     );
-    controller = new ProfilePanelController(command, (state) => {
+    const controller = new ProfilePanelController(command, (state) => {
       if (generation !== mountId) return;
       if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
         const chosen = select.value;

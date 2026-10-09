@@ -3849,3 +3849,93 @@ msgstr ""
 
 msgid "Explain route"
 msgstr ""
+
+msgid "Configuration profiles"
+msgstr ""
+
+msgid "Profile name"
+msgstr ""
+
+msgid "Save current settings"
+msgstr ""
+
+msgid "Rename profile"
+msgstr ""
+
+msgid "Show differences"
+msgstr ""
+
+msgid "Apply profile"
+msgstr ""
+
+msgid "Restore previous settings"
+msgstr ""
+
+msgid "Delete profile"
+msgstr ""
+
+msgid "Delete the selected saved profile? Current settings will remain unchanged."
+msgstr ""
+
+msgid "Transferring profile"
+msgstr ""
+
+msgid "Profile transfer completed"
+msgstr ""
+
+msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+msgstr ""
+
+msgid "Import profile"
+msgstr ""
+
+msgid "Export profile"
+msgstr ""
+
+msgid "Save up to eight profiles. Applying a profile may restart routing."
+msgstr ""
+
+msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
+msgstr ""
+
+msgid "Applying settings in the background. You can close this page."
+msgstr ""
+
+msgid "Previous settings were restored."
+msgstr ""
+
+msgid "Only changed section and option names are shown; values are hidden."
+msgstr ""
+
+msgid "The profile cannot be used with the current configuration and components."
+msgstr ""
+
+msgid "Configuration changed. Review the differences again."
+msgstr ""
+
+msgid "Another configuration operation is already running."
+msgstr ""
+
+msgid "Restore the interrupted operation before continuing."
+msgstr ""
+
+msgid "The profile format is invalid or unsupported."
+msgstr ""
+
+msgid "A maximum of eight profiles can be saved."
+msgstr ""
+
+msgid "Restoration failed. Check the service before continuing."
+msgstr ""
+
+msgid "The profile operation failed."
+msgstr ""
+
+msgid "Added"
+msgstr ""
+
+msgid "Removed"
+msgstr ""
+
+msgid "Changed"
+msgstr ""

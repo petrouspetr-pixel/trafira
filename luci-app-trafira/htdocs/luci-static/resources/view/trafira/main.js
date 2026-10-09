@@ -974,8 +974,8 @@ function renderWarning(warning) {
     ),
     dhcp_source_partial: _("Some DHCP lease entries were invalid and skipped.")
   };
-  const text = messages[warning.code];
-  return E("div", { class: `${BLOCK}__warning`, role: "alert" }, text);
+  const text2 = messages[warning.code];
+  return E("div", { class: `${BLOCK}__warning`, role: "alert" }, text2);
 }
 function renderHandshake(device, nowSeconds) {
   const handshake = device.kind === "wireguard" ? formatHandshakeAge(device.last_handshake, nowSeconds) : "";
@@ -1127,8 +1127,8 @@ function renderFlagEmojis(value) {
 }
 
 // src/helpers/downloadAsTxt.ts
-function downloadAsTxt(text, filename) {
-  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+function downloadAsTxt(text2, filename) {
+  const blob = new Blob([text2], { type: "text/plain;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   const safeName = filename.endsWith(".txt") ? filename : `${filename}.txt`;
@@ -1274,15 +1274,15 @@ var COMMAND_TIMEOUT = 1e4;
 
 // src/helpers/executeShellCommand.ts
 async function executeShellCommand({
-  command: command3,
+  command: command4,
   args,
   timeout = COMMAND_TIMEOUT
 }) {
   try {
     return await withTimeout(
-      fs.exec(command3, args),
+      fs.exec(command4, args),
       timeout,
-      [command3, ...args].join(" ")
+      [command4, ...args].join(" ")
     );
   } catch (err) {
     const error = err;
@@ -2602,9 +2602,9 @@ function showToast(message, type, duration = 3e3) {
 }
 
 // src/helpers/copyToClipboard.ts
-function copyToClipboard(text) {
+function copyToClipboard(text2) {
   const textarea = document.createElement("textarea");
-  textarea.value = text;
+  textarea.value = text2;
   document.body.appendChild(textarea);
   textarea.select();
   try {
@@ -2651,10 +2651,10 @@ function getOutboundTagBySection(sectionName) {
 }
 
 // src/trafira/methods/shell/callBaseMethod.ts
-async function callBaseMethod(method, args = [], command3 = "/usr/bin/trafira", options = {}) {
+async function callBaseMethod(method, args = [], command4 = "/usr/bin/trafira", options = {}) {
   try {
     const response = await executeShellCommand({
-      command: command3,
+      command: command4,
       args: [method, ...args],
       timeout: options.timeout ?? 15e3
     });
@@ -4433,10 +4433,10 @@ var TabService = class _TabService {
     }));
   }
   getActiveTabId() {
-    const active = document.querySelector(
+    const active2 = document.querySelector(
       ".cbi-tab:not(.cbi-tab-disabled)"
     );
-    return active?.dataset.tab || null;
+    return active2?.dataset.tab || null;
   }
   notify() {
     const tabs = this.getTabsInfo();
@@ -4656,10 +4656,10 @@ function jsonEqual(a, b) {
   }
 }
 var StoreService = class {
-  constructor(initial) {
+  constructor(initial2) {
     this.listeners = /* @__PURE__ */ new Set();
-    this.value = initial;
-    this.initial = structuredClone(initial);
+    this.value = initial2;
+    this.initial = structuredClone(initial2);
   }
   get() {
     return this.value;
@@ -5031,29 +5031,29 @@ var componentActions = /* @__PURE__ */ new Set();
 var subscriptionSections = /* @__PURE__ */ new Set();
 var latencySections = /* @__PURE__ */ new Set();
 var serviceActions = /* @__PURE__ */ new Set();
-function setMembership(set, value, active) {
-  if (active) {
+function setMembership(set, value, active2) {
+  if (active2) {
     set.add(value);
   } else {
     set.delete(value);
   }
 }
-function setLocalComponentAction(action, active) {
-  setMembership(componentActions, action, active);
+function setLocalComponentAction(action, active2) {
+  setMembership(componentActions, action, active2);
 }
-function setLocalSubscriptionAction(section, active) {
+function setLocalSubscriptionAction(section, active2) {
   if (section) {
-    setMembership(subscriptionSections, section, active);
+    setMembership(subscriptionSections, section, active2);
   }
 }
-function setLocalLatencyAction(section, active) {
+function setLocalLatencyAction(section, active2) {
   if (section) {
-    setMembership(latencySections, section, active);
+    setMembership(latencySections, section, active2);
   }
 }
-function setLocalServiceAction(action, active) {
+function setLocalServiceAction(action, active2) {
   if (action === "restart" || action === "start" || action === "stop") {
-    setMembership(serviceActions, action, active);
+    setMembership(serviceActions, action, active2);
   }
 }
 function getLocalActionOverlay() {
@@ -5806,7 +5806,7 @@ if (typeof window !== "undefined") {
     pageUnloading = false;
   });
 }
-async function fetchDashboardSectionsOnce(mountId2) {
+async function fetchDashboardSectionsOnce(mountId3) {
   if (getDashboardServiceAvailability() === "stopped") {
     return false;
   }
@@ -5821,7 +5821,7 @@ async function fetchDashboardSectionsOnce(mountId2) {
   });
   try {
     const { data, success } = await CustomTrafiraMethods.getDashboardSections();
-    if (!dashboardMounted || mountId2 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
+    if (!dashboardMounted || mountId3 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
       return false;
     }
     if (!success) {
@@ -5839,7 +5839,7 @@ async function fetchDashboardSectionsOnce(mountId2) {
     return true;
   } catch (error) {
     logger.error("[DASHBOARD]", "fetchDashboardSections: failed", error);
-    if (!dashboardMounted || mountId2 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
+    if (!dashboardMounted || mountId3 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
       return false;
     }
     const current = store.get().sectionsWidget;
@@ -5854,10 +5854,10 @@ async function fetchDashboardSectionsOnce(mountId2) {
     return false;
   }
 }
-async function fetchAliceDevices(mountId2) {
+async function fetchAliceDevices(mountId3) {
   try {
     const response = await TrafiraShellMethods.getAliceDevices();
-    if (!dashboardMounted || mountId2 !== dashboardMountId) {
+    if (!dashboardMounted || mountId3 !== dashboardMountId) {
       return;
     }
     if (!response.success || !response.data || typeof response.data !== "object") {
@@ -5872,7 +5872,7 @@ async function fetchAliceDevices(mountId2) {
     });
   } catch (error) {
     logger.error("[DASHBOARD]", "fetchAliceDevices: failed", error);
-    if (!dashboardMounted || mountId2 !== dashboardMountId) {
+    if (!dashboardMounted || mountId3 !== dashboardMountId) {
       return;
     }
     const current = store.get().aliceDevicesWidget;
@@ -5892,13 +5892,13 @@ async function fetchDashboardSections(options = {}) {
     }
     return sectionsRefreshPromise;
   }
-  const mountId2 = dashboardMountId;
+  const mountId3 = dashboardMountId;
   const promise = (async () => {
     let success = false;
     do {
       sectionsRefreshQueued = false;
-      success = await fetchDashboardSectionsOnce(mountId2);
-    } while (sectionsRefreshQueued && dashboardMounted && mountId2 === dashboardMountId);
+      success = await fetchDashboardSectionsOnce(mountId3);
+    } while (sectionsRefreshQueued && dashboardMounted && mountId3 === dashboardMountId);
     return success;
   })();
   sectionsRefreshPromise = promise;
@@ -6121,9 +6121,9 @@ function stopActionStateWatcher() {
   actionStateUnsubscribe = null;
 }
 async function connectToClashSockets(dataUpdatesId) {
-  const mountId2 = dashboardMountId;
+  const mountId3 = dashboardMountId;
   const clashApiSecret = await getClashApiSecret2();
-  if (!dashboardMounted || mountId2 !== dashboardMountId || dataUpdatesId !== dashboardDataUpdatesId || getDashboardServiceAvailability() === "stopped") {
+  if (!dashboardMounted || mountId3 !== dashboardMountId || dataUpdatesId !== dashboardDataUpdatesId || getDashboardServiceAvailability() === "stopped") {
     return;
   }
   socket.subscribe(
@@ -6346,8 +6346,8 @@ function formatUrlTestModalValue(value) {
   if (typeof value === "boolean") {
     return value ? _("Yes") : _("No");
   }
-  const text = `${value ?? ""}`.trim();
-  return text || _("No");
+  const text2 = `${value ?? ""}`.trim();
+  return text2 || _("No");
 }
 function getUrlTestLatencyClass(latency) {
   if (!latency) {
@@ -6878,11 +6878,11 @@ function updateLatencyProgressInline(sectionsWidget) {
     if (!label) {
       return false;
     }
-    const text = getLatencyTestLabel(
+    const text2 = getLatencyTestLabel(
       sectionsWidget.latencyProgressSections[section.sectionName]
     );
-    if (label.textContent !== text) {
-      label.textContent = text;
+    if (label.textContent !== text2) {
+      label.textContent = text2;
     }
   }
   return true;
@@ -7161,11 +7161,11 @@ async function onPageMount() {
   onPageUnmount();
   dashboardMounted = true;
   dashboardMountId += 1;
-  const mountId2 = dashboardMountId;
+  const mountId3 = dashboardMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
   if (!hasRuntimeSnapshot) {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!dashboardMounted || mountId2 !== dashboardMountId) {
+    if (!dashboardMounted || mountId3 !== dashboardMountId) {
       return;
     }
     if (!uiState) {
@@ -8094,7 +8094,8 @@ function render2() {
       E("div", { id: "fkp_diagnostic-page-wiki" }),
       E("div", { id: "fkp_diagnostic-page-actions" }),
       E("div", { id: "fkp_diagnostic-page-system-info" }),
-      E("div", { id: "fkp_diagnostic-page-snapshots" })
+      E("div", { id: "fkp_diagnostic-page-snapshots" }),
+      E("div", { id: "trafira-profiles" })
     ])
   ]);
 }
@@ -8493,6 +8494,409 @@ var routeExplanationPanel = {
   unmount() {
     mountId++;
     controller.unmount();
+  }
+};
+
+// src/trafira/tabs/diagnostic/profilePanel.ts
+var initial = () => ({
+  busy: false,
+  running: false,
+  digest: "",
+  canRestore: false,
+  entries: [],
+  preview: null,
+  jobId: "",
+  error: "",
+  restored: false
+});
+var text = (value) => typeof value === "string" ? value : "";
+var errors = {
+  conflict: "Configuration changed. Review the differences again.",
+  busy: "Another configuration operation is already running.",
+  recovery_required: "Restore the interrupted operation before continuing.",
+  candidate_check_failed: "The profile cannot be used with the current configuration and components.",
+  invalid_profile: "The profile format is invalid or unsupported.",
+  profile_limit: "A maximum of eight profiles can be saved."
+};
+var ProfilePanelController = class {
+  constructor(call, render7) {
+    this.call = call;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+    this.state = initial();
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.state = initial();
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  async submit(request) {
+    if (!this.active || this.state.busy) return;
+    if (this.state.running && !["status", "list"].includes(request.action))
+      return;
+    const generation = ++this.generation;
+    this.state = { ...this.state, busy: true, error: "", restored: false };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (!this.active || generation !== this.generation) return;
+      if (typeof result.running === "boolean")
+        this.state = { ...this.state, running: result.running };
+      if (typeof result.digest === "string")
+        this.state = { ...this.state, digest: result.digest };
+      if (typeof result.can_restore === "boolean")
+        this.state = { ...this.state, canRestore: result.can_restore };
+      if (result.success === false || result.rollback_error) {
+        this.state = {
+          ...this.state,
+          preview: null,
+          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : errors[text(result.error)] || "The profile operation failed.",
+          restored: result.restored === true
+        };
+      } else {
+        if (Array.isArray(result.entries)) {
+          this.state = {
+            ...this.state,
+            entries: result.entries.filter((item) => item && typeof item === "object").map((item) => ({
+              id: text(item.id),
+              name: text(item.name),
+              invalid: item.invalid === true
+            }))
+          };
+        }
+        if (request.action === "preview") {
+          const changes = Array.isArray(result.changes) ? result.changes : [];
+          this.state = {
+            ...this.state,
+            preview: {
+              id: request.id || "",
+              applicable: result.applicable !== false,
+              digest: text(result.digest),
+              changes: changes.filter((item) => item && typeof item === "object").map((item) => ({
+                section: text(item.section),
+                option: text(item.option),
+                change: text(item.change)
+              }))
+            }
+          };
+        }
+        if (result.job_id)
+          this.state = { ...this.state, jobId: text(result.job_id) };
+        if (["apply", "restore", "remove"].includes(request.action))
+          this.state = { ...this.state, preview: null };
+        this.state = { ...this.state, restored: result.restored === true };
+      }
+    } catch {
+      if (!this.active || generation !== this.generation) return;
+      this.state = {
+        ...this.state,
+        error: "The profile operation failed.",
+        preview: null
+      };
+    }
+    if (this.active && generation === this.generation) {
+      this.state = { ...this.state, busy: false };
+      this.render(this.state);
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderProfiles.ts
+async function command3(request) {
+  const result = await executeShellCommand({
+    command: "/usr/bin/trafira-config",
+    args: ["profile_action", JSON.stringify(request)],
+    timeout: 3e4
+  });
+  if (result.code) throw new Error("Profile command failed");
+  return JSON.parse(result.stdout);
+}
+function encode(bytes) {
+  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
+}
+function decode(value) {
+  return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+}
+var mountId2 = 0;
+var active = null;
+var profilesPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-profiles");
+    if (!host) return;
+    const generation = mountId2;
+    let last;
+    let transferring = false;
+    const name = E("input", {
+      type: "text",
+      maxLength: 64,
+      placeholder: _("Profile name")
+    });
+    const select = E("select", {});
+    const file = E("input", {
+      type: "file",
+      accept: ".json,application/json"
+    });
+    const result = E("div", {});
+    const message = E("p", {});
+    const buttons = [];
+    let apply;
+    let restore;
+    function updateButtons() {
+      const disabled = transferring || last?.busy || last?.running;
+      for (const button2 of buttons) button2.disabled = disabled;
+      apply.disabled = disabled || !last?.preview || last.preview.id !== select.value || !last.preview.applicable;
+      restore.disabled = disabled || !last?.canRestore || !last?.digest;
+      file.disabled = disabled;
+      select.disabled = disabled;
+    }
+    async function submit(request, refresh = false) {
+      await controller2.submit(request);
+      if (refresh && generation === mountId2 && !last.error)
+        await controller2.submit({ action: "list" });
+    }
+    function button(label, click) {
+      const element = E(
+        "button",
+        { class: "cbi-button cbi-button-action", click },
+        label
+      );
+      buttons.push(element);
+      return element;
+    }
+    const actions = [
+      button(_("Save current settings"), () => {
+        void submit({ action: "create", name: name.value }, true);
+      }),
+      button(_("Rename profile"), () => {
+        void submit(
+          { action: "rename", id: select.value, name: name.value },
+          true
+        );
+      }),
+      button(_("Show differences"), () => {
+        void submit({ action: "preview", id: select.value });
+      }),
+      apply = button(_("Apply profile"), () => {
+        void submit({
+          action: "apply",
+          id: select.value,
+          digest: last.preview?.digest
+        });
+      }),
+      restore = button(_("Restore previous settings"), () => {
+        void submit({ action: "restore", digest: last.digest });
+      }),
+      button(_("Delete profile"), () => {
+        if (window.confirm(
+          _(
+            "Delete the selected saved profile? Current settings will remain unchanged."
+          )
+        ))
+          void submit({ action: "remove", id: select.value }, true);
+      })
+    ];
+    async function transfer(kind) {
+      if (transferring || last.busy || last.running) return;
+      transferring = true;
+      message.textContent = _("Transferring profile");
+      updateButtons();
+      let transferId = "";
+      try {
+        if (kind === "import") {
+          const selected = file.files?.[0];
+          if (!selected || selected.size > 1048576) throw new Error("size");
+          const bytes = new Uint8Array(await selected.arrayBuffer());
+          const begin = await command3({ action: "import_begin" });
+          if (!begin.success || typeof begin.id !== "string")
+            throw new Error("begin");
+          transferId = begin.id;
+          for (let offset = 0; offset < bytes.length; offset += 12288) {
+            if (generation !== mountId2) throw new Error("closed");
+            const sent = await command3({
+              action: "import_chunk",
+              id: transferId,
+              offset,
+              data: encode(bytes.slice(offset, offset + 12288))
+            });
+            if (!sent.success) throw new Error("chunk");
+          }
+          if (generation !== mountId2) throw new Error("closed");
+          const imported = await command3({
+            action: "import_finish",
+            id: transferId
+          });
+          if (!imported.success) throw new Error("import");
+          await controller2.submit({ action: "list" });
+        } else {
+          const begin = await command3({
+            action: "export_begin",
+            id: select.value
+          });
+          if (!begin.success || typeof begin.id !== "string")
+            throw new Error("begin");
+          transferId = begin.id;
+          let offset = 0;
+          const chunks = [];
+          for (; ; ) {
+            if (generation !== mountId2) throw new Error("closed");
+            const part = await command3({
+              action: "export_read",
+              id: transferId,
+              offset
+            });
+            if (!part.success || typeof part.data !== "string")
+              throw new Error("read");
+            const bytes2 = decode(part.data);
+            chunks.push(bytes2);
+            offset += bytes2.length;
+            if (offset > 1048576 || !bytes2.length && !part.done)
+              throw new Error("size");
+            if (part.done) break;
+          }
+          if (generation !== mountId2) throw new Error("closed");
+          const bytes = new Uint8Array(offset);
+          let position = 0;
+          for (const chunk of chunks) {
+            bytes.set(chunk, position);
+            position += chunk.length;
+          }
+          const url = URL.createObjectURL(
+            new Blob([bytes], { type: "application/json" })
+          );
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "trafira-profile.json";
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+        if (generation === mountId2)
+          message.textContent = _("Profile transfer completed");
+      } catch {
+        if (generation === mountId2)
+          message.textContent = _(
+            "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+          );
+      } finally {
+        if (transferId)
+          void command3({ action: "transfer_cancel", id: transferId }).catch(
+            () => void 0
+          );
+        transferring = false;
+        if (generation === mountId2) updateButtons();
+      }
+    }
+    actions.push(
+      button(_("Import profile"), () => {
+        void transfer("import");
+      }),
+      button(_("Export profile"), () => {
+        void transfer("export");
+      })
+    );
+    select.addEventListener("change", updateButtons);
+    host.replaceChildren(
+      E("h3", {}, _("Configuration profiles")),
+      E(
+        "p",
+        {},
+        _("Save up to eight profiles. Applying a profile may restart routing.")
+      ),
+      name,
+      select,
+      E("div", {}, actions),
+      E(
+        "p",
+        {},
+        _(
+          "Exported profiles contain passwords and keys. Keep the downloaded file private."
+        )
+      ),
+      file,
+      message,
+      result
+    );
+    const controller2 = new ProfilePanelController(command3, (state) => {
+      if (generation !== mountId2) return;
+      if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
+        const chosen = select.value;
+        select.replaceChildren(
+          ...state.entries.map(
+            (entry) => E(
+              "option",
+              { value: entry.id, disabled: entry.invalid },
+              entry.name
+            )
+          )
+        );
+        if (state.entries.some((entry) => entry.id === chosen))
+          select.value = chosen;
+      }
+      last = state;
+      result.replaceChildren(
+        ...state.error ? [E("p", {}, _(state.error))] : [],
+        ...state.running ? [
+          E(
+            "p",
+            {},
+            _(
+              "Applying settings in the background. You can close this page."
+            )
+          )
+        ] : [],
+        ...state.restored ? [E("p", {}, _("Previous settings were restored."))] : [],
+        ...state.preview ? [
+          E(
+            "p",
+            {},
+            _(
+              "Only changed section and option names are shown; values are hidden."
+            )
+          ),
+          ...!state.preview.applicable ? [
+            E(
+              "p",
+              {},
+              _(
+                "The profile cannot be used with the current configuration and components."
+              )
+            )
+          ] : [],
+          ...state.preview.changes.map(
+            (change) => E(
+              "p",
+              {},
+              `${change.section}${change.option ? ` / ${change.option}` : ""}: ${{ added: _("Added"), removed: _("Removed"), changed: _("Changed") }[change.change] || _("Changed")}`
+            )
+          )
+        ] : []
+      );
+      updateButtons();
+    });
+    controller2.mount();
+    void controller2.submit({ action: "list" }).then(() => controller2.submit({ action: "status" }));
+    const timer = window.setInterval(() => {
+      if (!last.running) return;
+      void controller2.submit({ action: "status" }).then(() => {
+        if (!last.running && !last.error)
+          void controller2.submit({ action: "list" });
+      });
+    }, 2e3);
+    active = { controller: controller2, timer };
+  },
+  unmount() {
+    mountId2++;
+    if (active) {
+      active.controller.unmount();
+      window.clearInterval(active.timer);
+    }
+    active = null;
   }
 };
 
@@ -9454,7 +9858,7 @@ function renderButton({
   disabled,
   loading: loading2,
   onClick,
-  text,
+  text: text2,
   icon
 }) {
   const hasIcon = !!loading2 || !!icon;
@@ -9496,13 +9900,13 @@ function renderButton({
       disabled: getDisabled(),
       click: onClick
     },
-    [...insertIf(hasIcon, [getWrappedIcon()]), E("span", {}, text)]
+    [...insertIf(hasIcon, [getWrappedIcon()]), E("span", {}, text2)]
   );
 }
 
 // src/partials/modal/renderModal.ts
-function renderModal(text, name, options) {
-  let rawText = text ?? "";
+function renderModal(text2, name, options) {
+  let rawText = text2 ?? "";
   let currentText = "";
   let refreshInFlight = false;
   let pendingRefresh = false;
@@ -10569,9 +10973,9 @@ function formatMaskedSingBoxConfig(value) {
   }
   return JSON.stringify(maskSingBoxConfigValue(value), null, 2);
 }
-function maskGlobalCheckText(text = "") {
+function maskGlobalCheckText(text2 = "") {
   let inMaskedMultiline = false;
-  return `${text}`.split("\n").map((line) => {
+  return `${text2}`.split("\n").map((line) => {
     if (inMaskedMultiline) {
       if (line.includes("'")) {
         inMaskedMultiline = false;
@@ -10636,8 +11040,8 @@ function setDiagnosticActionLoading(action, loading2, local = false) {
     }
   });
 }
-function isDiagnosticMountActive(mountId2 = diagnosticMountId) {
-  return diagnosticMounted && diagnosticMountId === mountId2;
+function isDiagnosticMountActive(mountId3 = diagnosticMountId) {
+  return diagnosticMounted && diagnosticMountId === mountId3;
 }
 function isLocalMutatingServiceActionLoading() {
   const actions = store.get().diagnosticsActions;
@@ -10669,10 +11073,10 @@ function setDisplayedTrafiraRunning(running) {
 }
 async function refreshDiagnosticServicesInfo({
   force = false,
-  mountId: mountId2 = diagnosticMountId,
+  mountId: mountId3 = diagnosticMountId,
   allowInactive = false
 } = {}) {
-  if (!allowInactive && !isDiagnosticMountActive(mountId2)) {
+  if (!allowInactive && !isDiagnosticMountActive(mountId3)) {
     return;
   }
   if (shouldSkipServicesInfoAutoRefresh({
@@ -11439,12 +11843,13 @@ async function onPageMount2() {
   diagnosticMounted = true;
   void snapshots.mount();
   routeExplanationPanel.mount();
+  profilesPanel.mount();
   diagnosticMountId += 1;
-  const mountId2 = diagnosticMountId;
+  const mountId3 = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
   if (!hasRuntimeSnapshot) {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!diagnosticMounted || mountId2 !== diagnosticMountId) {
+    if (!diagnosticMounted || mountId3 !== diagnosticMountId) {
       return;
     }
     if (!uiState) {
@@ -11479,6 +11884,7 @@ function onPageUnmount2({
   diagnosticMounted = false;
   snapshots.unmount();
   routeExplanationPanel.unmount();
+  profilesPanel.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;
@@ -12182,7 +12588,7 @@ function applyConnectionsPayload(payload) {
     pendingConnectionsPayload = payload;
     return;
   }
-  const mountId2 = monitoringMountId;
+  const mountId3 = monitoringMountId;
   const now = Date.now();
   const incomingIds = /* @__PURE__ */ new Set();
   const rawConnections = Array.isArray(payload.connections) ? payload.connections : [];
@@ -12208,7 +12614,7 @@ function applyConnectionsPayload(payload) {
   trimClosedConnections();
   loading = false;
   failed = false;
-  if (monitoringMounted && mountId2 === monitoringMountId) {
+  if (monitoringMounted && mountId3 === monitoringMountId) {
     renderControls();
     renderConnections();
   }
@@ -12271,11 +12677,11 @@ function renderDeviceFilterOptions() {
   select.replaceChildren(...options);
   select.value = selectedDeviceFilter;
 }
-function setButtonActive(button, active) {
+function setButtonActive(button, active2) {
   if (!button) {
     return;
   }
-  button.classList.toggle("fkp_monitoring-page__tab--active", active);
+  button.classList.toggle("fkp_monitoring-page__tab--active", active2);
 }
 function renderTabButtonContent(label, count) {
   return [
@@ -12348,16 +12754,16 @@ function renderControls() {
   }
 }
 function renderValue(value, className = "") {
-  const text = value || "-";
+  const text2 = value || "-";
   const element = E(
     "span",
     {
       class: ["fkp_monitoring-page__value", className].filter(Boolean).join(" "),
-      title: text
+      title: text2
     },
-    text
+    text2
   );
-  element.setAttribute("data-copy-value", text);
+  element.setAttribute("data-copy-value", text2);
   return element;
 }
 function renderSourceValue(source) {
@@ -12436,7 +12842,7 @@ function renderConnectionRow(connection) {
     ]
   );
 }
-function renderStateRow(text, className = "") {
+function renderStateRow(text2, className = "") {
   return E("tr", { class: "fkp_monitoring-page__state-row" }, [
     E(
       "td",
@@ -12450,7 +12856,7 @@ function renderStateRow(text, className = "") {
           {
             class: ["fkp_monitoring-page__state", className].filter(Boolean).join(" ")
           },
-          text
+          text2
         )
       ]
     )
@@ -12596,15 +13002,15 @@ function getMonitoringValueTextElements(element) {
   return textElements.length > 0 ? textElements : [element];
 }
 function estimateVisibleMonitoringTextLength(element, fallbackText) {
-  const text = compactMonitoringText(getElementCopyText(element, fallbackText));
-  if (!text) {
+  const text2 = compactMonitoringText(getElementCopyText(element, fallbackText));
+  if (!text2) {
     return 0;
   }
   if (!isElementOverflowing(element)) {
-    return text.length;
+    return text2.length;
   }
   return Math.floor(
-    element.clientWidth / Math.max(element.scrollWidth, 1) * text.length
+    element.clientWidth / Math.max(element.scrollWidth, 1) * text2.length
   );
 }
 function getEstimatedVisibleMonitoringTextLength(element, fallbackText) {
@@ -12839,11 +13245,11 @@ async function pollConnectionsSnapshot() {
   if (pollingConnections || !monitoringMounted || monitoringPaused || serviceAvailability !== "running") {
     return;
   }
-  const mountId2 = monitoringMountId;
+  const mountId3 = monitoringMountId;
   pollingConnections = true;
   try {
     const response = await TrafiraShellMethods.getClashApiConnections();
-    if (!monitoringMounted || mountId2 !== monitoringMountId || serviceAvailability !== "running") {
+    if (!monitoringMounted || mountId3 !== monitoringMountId || serviceAvailability !== "running") {
       return;
     }
     if (!response.success) {
@@ -12854,7 +13260,7 @@ async function pollConnectionsSnapshot() {
     }
     applyConnectionsPayload(normalizeConnectionsPayload(response.data));
   } catch (error) {
-    if (!monitoringMounted || mountId2 !== monitoringMountId || serviceAvailability !== "running") {
+    if (!monitoringMounted || mountId3 !== monitoringMountId || serviceAvailability !== "running") {
       return;
     }
     logger.error("[MONITORING]", "connections polling failed", error);
@@ -12875,9 +13281,9 @@ function startConnectionsPolling() {
   }, CONNECTIONS_RPC_POLL_INTERVAL_MS);
 }
 async function connectToConnectionsSocket(updatesId) {
-  const mountId2 = monitoringMountId;
+  const mountId3 = monitoringMountId;
   const clashApiSecret = await getClashApiSecret2();
-  if (!monitoringMounted || mountId2 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
+  if (!monitoringMounted || mountId3 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
     return;
   }
   connectionsSocketUrl = `${getClashWsUrl()}/connections?token=${clashApiSecret}`;
@@ -12894,7 +13300,7 @@ async function connectToConnectionsSocket(updatesId) {
       }
     },
     (_err) => {
-      if (!monitoringMounted || mountId2 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
+      if (!monitoringMounted || mountId3 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
         return;
       }
       failed = true;
@@ -12992,7 +13398,7 @@ async function onPageMount3() {
   onPageUnmount3();
   monitoringMounted = true;
   monitoringMountId += 1;
-  const mountId2 = monitoringMountId;
+  const mountId3 = monitoringMountId;
   resetMonitoringState();
   bindControls();
   renderControls();
@@ -13004,7 +13410,7 @@ async function onPageMount3() {
     void refreshRuntimeUiState({ force: true });
   } else {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!monitoringMounted || mountId2 !== monitoringMountId) {
+    if (!monitoringMounted || mountId3 !== monitoringMountId) {
       return;
     }
     if (!uiState && serviceAvailability === "loading") {
@@ -14649,7 +15055,7 @@ async function onPageMount4() {
   onPageUnmount4();
   updatesMounted = true;
   updatesMountId += 1;
-  const mountId2 = updatesMountId;
+  const mountId3 = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
   const hasRuntimeSnapshot = Boolean(cachedRuntimeState);
   const needsFreshStateBeforeRender = shouldRefreshComponentStateBeforeRender(cachedRuntimeState);
@@ -14662,7 +15068,7 @@ async function onPageMount4() {
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache)
   });
-  if (!updatesMounted || mountId2 !== updatesMountId) {
+  if (!updatesMounted || mountId3 !== updatesMountId) {
     return;
   }
   applyComponentUpdateCheckCache(componentUpdateCheckCache);
@@ -14670,7 +15076,7 @@ async function onPageMount4() {
   renderUpdatesComponents();
   if (runtimeStateRefreshPromise) {
     await runtimeStateRefreshPromise;
-    if (!updatesMounted || mountId2 !== updatesMountId) {
+    if (!updatesMounted || mountId3 !== updatesMountId) {
       return;
     }
   }

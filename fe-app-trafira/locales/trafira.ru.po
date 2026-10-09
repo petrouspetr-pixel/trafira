@@ -2754,3 +2754,93 @@ msgstr "Порт назначения"
 
 msgid "Explain route"
 msgstr "Проверить маршрут"
+
+msgid "Configuration profiles"
+msgstr "Профили настроек"
+
+msgid "Profile name"
+msgstr "Название профиля"
+
+msgid "Save current settings"
+msgstr "Сохранить текущие настройки"
+
+msgid "Rename profile"
+msgstr "Переименовать профиль"
+
+msgid "Show differences"
+msgstr "Показать различия"
+
+msgid "Apply profile"
+msgstr "Применить профиль"
+
+msgid "Restore previous settings"
+msgstr "Восстановить предыдущие настройки"
+
+msgid "Delete profile"
+msgstr "Удалить профиль"
+
+msgid "Delete the selected saved profile? Current settings will remain unchanged."
+msgstr "Удалить выбранный сохранённый профиль? Текущие настройки останутся без изменений."
+
+msgid "Transferring profile"
+msgstr "Передача профиля"
+
+msgid "Profile transfer completed"
+msgstr "Передача профиля завершена"
+
+msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+msgstr "Не удалось передать профиль. Выберите корректный файл JSON размером до 1 МиБ."
+
+msgid "Import profile"
+msgstr "Импортировать профиль"
+
+msgid "Export profile"
+msgstr "Экспортировать профиль"
+
+msgid "Save up to eight profiles. Applying a profile may restart routing."
+msgstr "Можно сохранить до восьми профилей. Применение профиля может перезапустить маршрутизацию."
+
+msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
+msgstr "Экспортированные профили содержат пароли и ключи. Храните скачанный файл в защищённом месте."
+
+msgid "Applying settings in the background. You can close this page."
+msgstr "Настройки применяются в фоне. Эту страницу можно закрыть."
+
+msgid "Previous settings were restored."
+msgstr "Предыдущие настройки восстановлены."
+
+msgid "Only changed section and option names are shown; values are hidden."
+msgstr "Показаны только названия изменённых секций и параметров; значения скрыты."
+
+msgid "The profile cannot be used with the current configuration and components."
+msgstr "Профиль несовместим с текущей конфигурацией или установленными компонентами."
+
+msgid "Configuration changed. Review the differences again."
+msgstr "Конфигурация изменилась. Просмотрите различия ещё раз."
+
+msgid "Another configuration operation is already running."
+msgstr "Уже выполняется другая операция с конфигурацией."
+
+msgid "Restore the interrupted operation before continuing."
+msgstr "Перед продолжением восстановите настройки после прерванной операции."
+
+msgid "The profile format is invalid or unsupported."
+msgstr "Формат профиля некорректен или не поддерживается."
+
+msgid "A maximum of eight profiles can be saved."
+msgstr "Можно сохранить не более восьми профилей."
+
+msgid "Restoration failed. Check the service before continuing."
+msgstr "Восстановление не завершено. Перед продолжением проверьте состояние службы."
+
+msgid "The profile operation failed."
+msgstr "Не удалось выполнить операцию с профилем."
+
+msgid "Added"
+msgstr "Добавлено"
+
+msgid "Removed"
+msgstr "Удалено"
+
+msgid "Changed"
+msgstr "Изменено"
