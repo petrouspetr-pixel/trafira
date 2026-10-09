@@ -72,7 +72,7 @@ function previous(ctx) {
     }
     // A manually installed family is eligible only when its exact old assets
     // can be downloaded and verified before anything is stopped.
-    let ui=filter(installed,(item)=>item.name=="luci-app-trafira-warp")[0],version=match(ui.version,/^([0-9]+\.[0-9]+\.[0-9]+)(?:-r?[0-9]+)?$/);
+    let ui=filter(installed,(item)=>item.name=="luci-app-trafira-warp")[0],version=match(ui.version,/^([0-9]+\.[0-9]+\.[0-9]+)(-r?[0-9]+)?$/);
     if(!version)return null;
     let path=ctx.work+"/old-release.json";
     if(!sources.download("https://api.github.com/repos/petrouspetr-pixel/trafira/releases/tags/"+version[1],path,2097152,30))return null;

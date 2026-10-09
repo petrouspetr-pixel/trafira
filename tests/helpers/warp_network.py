@@ -178,7 +178,7 @@ try:
     guard=uc('print(require("service.runtime_apply").guard_script({source_network_interfaces:["lan"],router_origin_enabled:"1"},{},{}));')
     nft(guard);run(['nft','delete','table','inet','WarpTest'],router)
     curl(success=False);curl(client,source='192.0.2.2',success=False);counters_zero()
-    curl(client,address='192.0.2.1',source='192.0.2.3')
+    curl(client,address='192.0.2.1',source='192.0.2.2')
     run(['nft','delete','table','inet','TrafiraReloadGuard'],router)
     runner.kill();runner.wait(timeout=5)
     wait(lambda:ip(router,'-j','link','show').stdout.find('tfwarp0')<0,'runner cleanup before IPv4-only')
