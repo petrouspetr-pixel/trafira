@@ -41,6 +41,12 @@ function output(args) {
     let p=fs.popen("exec "+join(" ",map(args,quote))+" 2>/dev/null","re");if(!p)return null;
     let value=p.read(65537),code=p.close();return code==0 && length(value||"")<=65536?trim(value):null;
 }
+function owned(section,name) {
+    if(!section)return false;
+    let expected=network_section(name);
+    for(let key in expected)if(section[key]!=expected[key])return false;
+    return section[".type"]=="interface";
+}
 function status() {
     let c=state.load(state.DIRECTORY+"/transport.json"),runtime=state.load(state.RUNTIME+"/transport.json");
     let inactive={schema:1,owner:"trafira-warp",success:true,running:false,enabled:c?.enabled===true,generation:c?.generation||0};
@@ -55,12 +61,6 @@ function status() {
     if(int(mark)!=c.fwmark || !valid_endpoint(endpoint) || !match(port||"",/^[0-9]+$/) || int(port)<1 || int(port)>65535)return {...inactive,error:"transport_mismatch"};
     let handshake=output([ctl,"get",c.interface,"last_handshake_time_sec"]),age=handshake && int(handshake)>0?clock()[0]-int(handshake):null;
     return {...inactive,running:true,interface:c.interface,endpoint,listen_port:int(port),fwmark:c.fwmark,handshake_age:age,https_ok:runtime.https_ok===true,warp:runtime.warp===true};
-}
-function owned(section,name) {
-    if(!section)return false;
-    let expected=network_section(name);
-    for(let key in expected)if(section[key]!=expected[key])return false;
-    return section[".type"]=="interface";
 }
 function config_text(c) {
     return "[Interface]\nPrivateKey = "+c.private_key+"\nFwMark = "+c.fwmark+"\nJc = "+c.jc+"\nJmin = "+c.jmin+"\nJmax = "+c.jmax+"\nI1 = "+c.i1+

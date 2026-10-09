@@ -12,6 +12,15 @@ function resolve(name) {
     let result=[];for(let line in split(trim(text),"\n"))if(ip.valid_ip(trim(line)))push(result,trim(line));
     return length(result)?result:null;
 }
+function include_warp(result,known,status) {
+    let warp=require("integrations.warp_transport"),verified=warp.exemptions(status);
+    if(!verified)return false;
+    for(let name in verified.interfaces)known[name]=true;
+    // Audit identity only: the existing explicit SO_MARK excludes this daemon.
+    // Do not exempt other UDP clients by its public peer or local listen port.
+    result.warp={interface:status.interface,endpoint:status.endpoint,listen_port:status.listen_port,fwmark:verified.fwmark,generation:status.generation};
+    return true;
+}
 function snapshot(settings,sections) {
     let prepared=require("singbox.failure_store").read((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-bootstrap-prepared.json");
     let use_prepared=prepared && prepared.config_text==require("service.applied_config").normalized(fs.readfile(getenv("TRAFIRA_CONFIG_FILE")||"/etc/config/trafira")) && require("service.operation_lock").is_live_ancestor(prepared.worker);
@@ -72,4 +81,4 @@ function install(settings,sections,table,local4,local6,mark) {
     if(ok)require("singbox.failure_store").write((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json",{section:selected.section,...data});
     return ok;
 }
-return {snapshot,install};
+return {snapshot,install,include_warp};
