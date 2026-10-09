@@ -31,6 +31,7 @@ cd "$SDK"
 ./scripts/feeds install -a
 printf '%s\n' 'CONFIG_PACKAGE_luci-app-trafira-warp=m' 'CONFIG_PACKAGE_trafira-warp-awg=m' 'CONFIG_PACKAGE_trafira-warp-scout=m' >>.config
 make defconfig
+make -j2 package/toolchain/compile V=s NO_DEPS=1
 for package in trafira-warp-awg trafira-warp-scout luci-app-trafira-warp; do
  make -j2 "package/trafira-warp/$package/compile" V=s NO_DEPS=1 TRAFIRA_HOST_GO="$HOST_GO"
 done

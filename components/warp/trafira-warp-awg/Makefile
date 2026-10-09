@@ -24,7 +24,7 @@ define Package/trafira-warp-awg
   CATEGORY:=Network
   TITLE:=Userspace AmneziaWG backend for luci-app-trafira-warp
   URL:=https://github.com/amnezia-vpn/amneziawg-go
-  DEPENDS:=@(aarch64) +kmod-tun
+  DEPENDS:=@(aarch64) +kmod-tun +libgcc
 endef
 
 define Package/trafira-warp-awg/description

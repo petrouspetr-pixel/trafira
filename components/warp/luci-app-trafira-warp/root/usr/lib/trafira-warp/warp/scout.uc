@@ -22,7 +22,7 @@ function parse_candidate(text,account,iface,mark) {
         if(index(allowed,found[1])<0 || match(found[2],/[\r\n]/))return fail;
         values[found[1]]=trim(found[2]);
     }
-    if(values.PrivateKey!=account.private_key || values.PublicKey!=account.peer_public_key || values.AllowedIPs!="0.0.0.0/0, ::/0" || (values.Table && values.Table!="off"))return fail;
+    if(values.PrivateKey!=account.private_key || values.PublicKey!=account.peer_public_key || index(["0.0.0.0/0","0.0.0.0/0, ::/0"],values.AllowedIPs)<0 || (values.Table && values.Table!="off"))return fail;
     for(let key in ["Jc","Jmin","Jmax"])if(!match(values[key]||"",/^[0-9]+$/))return fail;
     let config={interface:iface,endpoint:values.Endpoint,fwmark:mark,mtu:1280,private_key:account.private_key,peer_public_key:account.peer_public_key,
         ipv4:account.ipv4,ipv6:account.ipv6,jc:int(values.Jc),jmin:int(values.Jmin),jmax:int(values.Jmax),i1:values.I1,enabled:false};
