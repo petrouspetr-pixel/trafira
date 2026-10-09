@@ -7734,6 +7734,74 @@ function createSectionContent(section) {
 
   o = section.taboption(
     "settings",
+    form.ListValue,
+    "failure_policy",
+    _("VPN failure policy"),
+    _(
+      "Choose what happens after confirmed connection failures. Direct fallback sends this section's traffic without its VPN. Switching interrupts existing connections; protection requires Trafira to be running.",
+    ),
+  );
+  o.value("legacy", _("Keep existing behavior"));
+  o.value("block", _("Block traffic"));
+  o.value("reserve", _("Use a reserve section, otherwise block"));
+  o.value("direct", _("Allow direct fallback without VPN"));
+  o.default = "legacy";
+  o.depends("action", "connection");
+  o.modalonly = true;
+
+  o = section.taboption(
+    "settings",
+    form.ListValue,
+    "failure_reserve_section",
+    _("Reserve section"),
+  );
+  o.depends({ action: "connection", failure_policy: "reserve" });
+  o.rmempty = false;
+  o.modalonly = true;
+  o.load = function (section_id) {
+    refreshOutboundDetourSectionOptionValues(this, section_id);
+    return Promise.resolve(
+      uci.get(UCI_PACKAGE, section_id, "failure_reserve_section") || "",
+    );
+  };
+  o.validate = function (section_id, value) {
+    return value &&
+      getOutboundDetourTargetSections(section_id).some(
+        (candidate) => getUciSectionName(candidate) === value,
+      )
+      ? true
+      : _("Select an enabled Connection section as reserve");
+  };
+  for (const item of [
+    [
+      "failure_threshold",
+      _("Consecutive failures before switching"),
+      "3",
+      "range(1,10)",
+    ],
+    [
+      "recovery_threshold",
+      _("Consecutive successes before recovery"),
+      "2",
+      "range(1,10)",
+    ],
+    [
+      "failure_hold_seconds",
+      _("Minimum time between switches (seconds)"),
+      "30",
+      "range(30,600)",
+    ],
+  ]) {
+    o = section.taboption("settings", form.Value, item[0], item[1]);
+    o.default = item[2];
+    o.datatype = item[3];
+    o.modalonly = true;
+    for (const policy of ["block", "reserve", "direct"])
+      o.depends({ action: "connection", failure_policy: policy });
+  }
+
+  o = section.taboption(
+    "settings",
     form.Flag,
     "outbound_detour_enabled",
     _("Cascade connection"),

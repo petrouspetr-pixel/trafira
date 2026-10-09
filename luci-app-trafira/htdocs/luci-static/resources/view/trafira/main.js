@@ -2531,6 +2531,7 @@ function render() {
             })
           )
         ]),
+        E("div", { id: "trafira-failure-policies", hidden: true }),
         // All outbounds
         E(
           "div",
@@ -5435,7 +5436,7 @@ var SocketManager = class _SocketManager {
   }
   resetAll() {
     const sockets = [...this.sockets.entries()];
-    for (const timer of this.reconnectTimers.values()) clearTimeout(timer);
+    for (const timer2 of this.reconnectTimers.values()) clearTimeout(timer2);
     this.sockets.clear();
     this.listeners.clear();
     this.errorListeners.clear();
@@ -5588,8 +5589,8 @@ var SocketManager = class _SocketManager {
     );
   }
   clearReconnect(url) {
-    const timer = this.reconnectTimers.get(url);
-    if (timer) clearTimeout(timer);
+    const timer2 = this.reconnectTimers.get(url);
+    if (timer2) clearTimeout(timer2);
     this.reconnectTimers.delete(url);
     this.reconnectAttempts.delete(url);
   }
@@ -5780,6 +5781,116 @@ function getServiceAvailability({
   }
   return running ? "running" : "stopped";
 }
+
+// src/trafira/tabs/dashboard/helpers/failurePolicy.ts
+function failurePolicyRows(value) {
+  if (!value || typeof value !== "object") return [];
+  const report = value;
+  if (report.enabled !== true || !Array.isArray(report.sections)) return [];
+  return report.sections.slice(0, 128).filter(
+    (item) => item && typeof item === "object" && typeof item.section === "string"
+  ).map((item) => {
+    const age = Number(item.age_seconds);
+    const validState = ["primary", "reserve", "direct", "blocked"].includes(
+      String(item.state)
+    );
+    return {
+      section: String(item.section).slice(0, 64),
+      policy: ["block", "reserve", "direct"].includes(String(item.policy)) ? String(item.policy) : "unknown",
+      state: !Number.isFinite(age) || age < 0 || age > 120 || !validState ? "unknown" : report.guarded === true || item.monitor_error === true ? "monitor-error" : item.state,
+      changedAgo: typeof item.changed_ago_seconds === "number" && Number.isFinite(item.changed_ago_seconds) && item.changed_ago_seconds >= 0 ? Math.floor(item.changed_ago_seconds) : null
+    };
+  });
+}
+
+// src/trafira/tabs/dashboard/renderFailurePolicies.ts
+var timer = 0;
+var generation = 0;
+var failurePoliciesPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-failure-policies");
+    if (!host) return;
+    const current = generation;
+    let pending = false;
+    const labels = {
+      block: _("Block traffic"),
+      primary: _("Primary connection"),
+      reserve: _("Reserve connection"),
+      direct: _("Direct connection"),
+      blocked: _("Traffic blocked"),
+      "monitor-error": _("Availability check error"),
+      unknown: _("State unavailable")
+    };
+    async function refresh() {
+      if (pending || current !== generation) return;
+      pending = true;
+      try {
+        const result = await executeShellCommand({
+          command: "/usr/bin/trafira",
+          args: ["failure_policy_status"],
+          timeout: 1e4
+        });
+        if (current !== generation) return;
+        if (result.code) throw new Error("Status unavailable");
+        const report = JSON.parse(result.stdout);
+        const rows = failurePolicyRows(report);
+        host.hidden = rows.length === 0 && !report.guarded;
+        host.replaceChildren(
+          E("h3", {}, _("VPN failure policy")),
+          ...report.guarded ? [
+            E(
+              "p",
+              { role: "alert" },
+              _(
+                "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
+              )
+            )
+          ] : [],
+          E("table", { class: "table" }, [
+            E("tr", {}, [
+              E("th", {}, _("Section")),
+              E("th", {}, _("Policy")),
+              E("th", {}, _("State")),
+              E("th", {}, _("Seconds since last switch"))
+            ]),
+            ...rows.map(
+              (row) => E("tr", {}, [
+                E("td", {}, row.section),
+                E("td", {}, labels[row.policy]),
+                E("td", {}, labels[row.state]),
+                E(
+                  "td",
+                  {},
+                  row.changedAgo === null ? "\uFFFD" : String(row.changedAgo)
+                )
+              ])
+            )
+          ]),
+          E(
+            "p",
+            {},
+            _(
+              "Switching interrupts existing connections. Protection applies while Trafira is running."
+            )
+          )
+        );
+      } catch {
+        if (current === generation && !host.hidden)
+          host.replaceChildren(E("p", {}, _("State unavailable")));
+      } finally {
+        pending = false;
+      }
+    }
+    void refresh();
+    timer = window.setInterval(() => void refresh(), 1e4);
+  },
+  unmount() {
+    generation++;
+    window.clearInterval(timer);
+    timer = 0;
+  }
+};
 
 // src/trafira/tabs/dashboard/initController.ts
 var SECTIONS_REFRESH_INTERVAL_MS = 1e4;
@@ -7160,6 +7271,7 @@ async function onStoreUpdate(next, prev, diff) {
 async function onPageMount() {
   onPageUnmount();
   dashboardMounted = true;
+  failurePoliciesPanel.mount();
   dashboardMountId += 1;
   const mountId3 = dashboardMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -7186,6 +7298,7 @@ async function onPageMount() {
   }
 }
 function onPageUnmount() {
+  failurePoliciesPanel.unmount();
   dashboardMounted = false;
   dashboardMountId += 1;
   stopDashboardDataUpdates();
@@ -8126,15 +8239,15 @@ var SnapshotController = class {
   }
   async refresh() {
     clearTimeout(this.timer);
-    const generation = this.generation;
+    const generation2 = this.generation;
     try {
       const report = await this.read();
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation2 !== this.generation) return;
       this.report = report;
       this.failures = 0;
       this.render(report, "", this.starting);
     } catch {
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation2 !== this.generation) return;
       this.failures++;
       this.render(this.report, "Could not read snapshot status", this.starting);
     }
@@ -8144,21 +8257,21 @@ var SnapshotController = class {
   }
   async prepare() {
     if (this.starting) return;
-    const generation = this.generation;
+    const generation2 = this.generation;
     this.starting = true;
     this.render(this.report, "", true);
     try {
       const result = await this.start();
       if (!result.success) throw new Error("rejected");
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation2 !== this.generation) return;
       this.starting = false;
       await this.refresh();
     } catch {
-      if (this.active && generation === this.generation) {
+      if (this.active && generation2 === this.generation) {
         this.render(this.report, "Could not start snapshot preparation", false);
       }
     } finally {
-      if (generation === this.generation) this.starting = false;
+      if (generation2 === this.generation) this.starting = false;
     }
   }
 };
@@ -8277,15 +8390,15 @@ var RouteExplanationController = class {
   }
   async submit(request) {
     if (!this.active) return;
-    const generation = ++this.generation;
+    const generation2 = ++this.generation;
     this.render(null, "", true);
     try {
       const report = await this.read(request);
       if (!report.success) throw new Error("rejected");
-      if (this.active && this.generation === generation)
+      if (this.active && this.generation === generation2)
         this.render(report, "", false);
     } catch {
-      if (this.active && this.generation === generation)
+      if (this.active && this.generation === generation2)
         this.render(null, "Could not explain route", false);
     }
   }
@@ -8375,7 +8488,7 @@ var controller = new RouteExplanationController(
 var mountId = 0;
 var routeExplanationPanel = {
   mount() {
-    const generation = ++mountId;
+    const generation2 = ++mountId;
     const container = document.getElementById("trafira-route-explanation");
     if (!container) return;
     const domain = E("input", {
@@ -8471,7 +8584,7 @@ var routeExplanationPanel = {
     );
     controller.mount();
     void command2("get_alice_devices").then((report) => {
-      if (generation !== mountId) return;
+      if (generation2 !== mountId) return;
       devices = [];
       for (const device of report.devices || [])
         for (const address of device.ips || []) {
@@ -8540,12 +8653,12 @@ var ProfilePanelController = class {
     if (!this.active || this.state.busy) return;
     if (this.state.running && !["status", "list"].includes(request.action))
       return;
-    const generation = ++this.generation;
+    const generation2 = ++this.generation;
     this.state = { ...this.state, busy: true, error: "", restored: false };
     this.render(this.state);
     try {
       const result = await this.call(request);
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation2 !== this.generation) return;
       if (typeof result.running === "boolean")
         this.state = { ...this.state, running: result.running };
       if (typeof result.digest === "string")
@@ -8593,14 +8706,14 @@ var ProfilePanelController = class {
         this.state = { ...this.state, restored: result.restored === true };
       }
     } catch {
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation2 !== this.generation) return;
       this.state = {
         ...this.state,
         error: "The profile operation failed.",
         preview: null
       };
     }
-    if (this.active && generation === this.generation) {
+    if (this.active && generation2 === this.generation) {
       this.state = { ...this.state, busy: false };
       this.render(this.state);
     }
@@ -8630,7 +8743,7 @@ var profilesPanel = {
     this.unmount();
     const host = document.getElementById("trafira-profiles");
     if (!host) return;
-    const generation = mountId2;
+    const generation2 = mountId2;
     let last;
     let transferring = false;
     const name = E("input", {
@@ -8658,7 +8771,7 @@ var profilesPanel = {
     }
     async function submit(request, refresh = false) {
       await controller2.submit(request);
-      if (refresh && generation === mountId2 && !last.error)
+      if (refresh && generation2 === mountId2 && !last.error)
         await controller2.submit({ action: "list" });
     }
     function button(label, click) {
@@ -8718,7 +8831,7 @@ var profilesPanel = {
             throw new Error("begin");
           transferId = begin.id;
           for (let offset = 0; offset < bytes.length; offset += 12288) {
-            if (generation !== mountId2) throw new Error("closed");
+            if (generation2 !== mountId2) throw new Error("closed");
             const sent = await command3({
               action: "import_chunk",
               id: transferId,
@@ -8727,7 +8840,7 @@ var profilesPanel = {
             });
             if (!sent.success) throw new Error("chunk");
           }
-          if (generation !== mountId2) throw new Error("closed");
+          if (generation2 !== mountId2) throw new Error("closed");
           const imported = await command3({
             action: "import_finish",
             id: transferId
@@ -8745,7 +8858,7 @@ var profilesPanel = {
           let offset = 0;
           const chunks = [];
           for (; ; ) {
-            if (generation !== mountId2) throw new Error("closed");
+            if (generation2 !== mountId2) throw new Error("closed");
             const part = await command3({
               action: "export_read",
               id: transferId,
@@ -8760,7 +8873,7 @@ var profilesPanel = {
               throw new Error("size");
             if (part.done) break;
           }
-          if (generation !== mountId2) throw new Error("closed");
+          if (generation2 !== mountId2) throw new Error("closed");
           const bytes = new Uint8Array(offset);
           let position = 0;
           for (const chunk of chunks) {
@@ -8776,10 +8889,10 @@ var profilesPanel = {
           link.click();
           URL.revokeObjectURL(url);
         }
-        if (generation === mountId2)
+        if (generation2 === mountId2)
           message.textContent = _("Profile transfer completed");
       } catch {
-        if (generation === mountId2)
+        if (generation2 === mountId2)
           message.textContent = _(
             "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
           );
@@ -8789,7 +8902,7 @@ var profilesPanel = {
             () => void 0
           );
         transferring = false;
-        if (generation === mountId2) updateButtons();
+        if (generation2 === mountId2) updateButtons();
       }
     }
     actions.push(
@@ -8823,7 +8936,7 @@ var profilesPanel = {
       result
     );
     const controller2 = new ProfilePanelController(command3, (state) => {
-      if (generation !== mountId2) return;
+      if (generation2 !== mountId2) return;
       if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
         const chosen = select.value;
         select.replaceChildren(
@@ -8881,14 +8994,14 @@ var profilesPanel = {
     });
     controller2.mount();
     void controller2.submit({ action: "list" }).then(() => controller2.submit({ action: "status" }));
-    const timer = window.setInterval(() => {
+    const timer2 = window.setInterval(() => {
       if (!last.running) return;
       void controller2.submit({ action: "status" }).then(() => {
         if (!last.running && !last.error)
           void controller2.submit({ action: "list" });
       });
     }, 2e3);
-    active = { controller: controller2, timer };
+    active = { controller: controller2, timer: timer2 };
   },
   unmount() {
     mountId2++;
@@ -9912,7 +10025,7 @@ function renderModal(text3, name, options) {
   let pendingRefresh = false;
   let pendingForcedRefresh = false;
   let refreshSessionId = 0;
-  let timer;
+  let timer2;
   let observer;
   let autoRefreshEnabled = options?.initialAutoRefresh ?? Boolean(options?.getText);
   let maskValuesEnabled = options?.initialMaskValues ?? true;
@@ -9932,9 +10045,9 @@ function renderModal(text3, name, options) {
     codeEl
   );
   const stopRefreshTimer = () => {
-    if (timer) {
-      clearInterval(timer);
-      timer = void 0;
+    if (timer2) {
+      clearInterval(timer2);
+      timer2 = void 0;
     }
   };
   const destroyLiveRefresh = () => {
@@ -10037,10 +10150,10 @@ function renderModal(text3, name, options) {
     void refreshText(true);
   };
   const startRefreshTimer = () => {
-    if (!options?.getText || !autoRefreshEnabled || timer || typeof document === "undefined") {
+    if (!options?.getText || !autoRefreshEnabled || timer2 || typeof document === "undefined") {
       return;
     }
-    timer = setInterval(() => {
+    timer2 = setInterval(() => {
       requestRefresh();
     }, options.refreshMs ?? 3e3);
   };
@@ -14235,7 +14348,7 @@ var CoreVersionPicker = class {
     if (!this.active || this.pending || this.state.stage === "installing" && request.action !== "status")
       return;
     this.pending = true;
-    const generation = this.generation;
+    const generation2 = this.generation;
     this.state = {
       ...this.state,
       error: "",
@@ -14244,7 +14357,7 @@ var CoreVersionPicker = class {
     this.render(this.state);
     try {
       const result = await this.call(request);
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation2 !== this.generation) return;
       if (result.success === false || result.rollback_error) {
         this.state = {
           ...this.state,
@@ -14282,14 +14395,14 @@ var CoreVersionPicker = class {
         };
       }
     } catch {
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation2 !== this.generation) return;
       this.state = {
         ...this.state,
         stage: request.action === "status" ? this.state.stage : "failed",
         error: "The sing-box version operation failed."
       };
     } finally {
-      if (this.active && generation === this.generation) {
+      if (this.active && generation2 === this.generation) {
         this.pending = false;
         this.render(this.state);
       }
@@ -14398,13 +14511,13 @@ var coreVersionsPanel = {
     );
     picker.mount();
     void picker.load().then(() => picker.poll());
-    const timer = window.setInterval(() => {
+    const timer2 = window.setInterval(() => {
       if (last.stage !== "installing") return;
       void picker.poll().then(() => {
         if (last.stage === "done") void picker.load(true);
       });
     }, 2e3);
-    active2 = { picker, timer };
+    active2 = { picker, timer: timer2 };
   },
   unmount() {
     if (active2) {

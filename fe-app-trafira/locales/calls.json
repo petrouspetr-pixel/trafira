@@ -108,6 +108,13 @@
     ]
   },
   {
+    "call": "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration.",
+    "key": "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration.",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:43"
+    ]
+  },
+  {
     "call": "Absolute path to an existing file on the router. Enter the path, not the file contents.",
     "key": "Absolute path to an existing file on the router. Enter the path, not the file contents.",
     "places": [
@@ -218,28 +225,28 @@
     "call": "Add URLs or local paths to .lst lists containing domains and subnets.",
     "key": "Add URLs or local paths to .lst lists containing domains and subnets.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8083"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8151"
     ]
   },
   {
     "call": "Add URLs or local paths to .lst lists containing domains. IP entries are ignored.",
     "key": "Add URLs or local paths to .lst lists containing domains. IP entries are ignored.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8104"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8172"
     ]
   },
   {
     "call": "Add URLs or local paths to .srs / .json lists. Only domain rules are supported.",
     "key": "Add URLs or local paths to .srs / .json lists. Only domain rules are supported.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8058"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8126"
     ]
   },
   {
     "call": "Add URLs or local paths to .srs / .json lists. Subnets are ignored by default.",
     "key": "Add URLs or local paths to .srs / .json lists. Subnets are ignored by default.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8029"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8097"
     ]
   },
   {
@@ -383,7 +390,14 @@
     "call": "All traffic from these IP addresses will be routed through the section unconditionally, ignoring all other conditions.",
     "key": "All traffic from these IP addresses will be routed through the section unconditionally, ignoring all other conditions.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8136"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8204"
+    ]
+  },
+  {
+    "call": "Allow direct fallback without VPN",
+    "key": "Allow direct fallback without VPN",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7747"
     ]
   },
   {
@@ -439,7 +453,7 @@
     "call": "Apply section rules only to the specified local IP addresses",
     "key": "Apply section rules only to the specified local IP addresses",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8127"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8195"
     ]
   },
   {
@@ -528,6 +542,13 @@
     ]
   },
   {
+    "call": "Availability check error",
+    "key": "Availability check error",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:19"
+    ]
+  },
+  {
     "call": "Available actions",
     "key": "Available actions",
     "places": [
@@ -541,6 +562,14 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5622",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6067",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6479"
+    ]
+  },
+  {
+    "call": "Block traffic",
+    "key": "Block traffic",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7745",
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:14"
     ]
   },
   {
@@ -590,7 +619,7 @@
     "call": "Built-in rule sets",
     "key": "Built-in rule sets",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8008"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8076"
     ]
   },
   {
@@ -768,7 +797,7 @@
     "call": "Cascade connection",
     "key": "Cascade connection",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7739"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7807"
     ]
   },
   {
@@ -894,6 +923,13 @@
     ]
   },
   {
+    "call": "Choose what happens after confirmed connection failures. Direct fallback sends this section's traffic without its VPN. Switching interrupts existing connections; protection requires Trafira to be running.",
+    "key": "Choose what happens after confirmed connection failures. Direct fallback sends this section's traffic without its VPN. Switching interrupts existing connections; protection requires Trafira to be running.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7740"
+    ]
+  },
+  {
     "call": "Choose whether devices in the list use Trafira or bypass it. Bypassed devices connect directly and receive real IP addresses from DNS.",
     "key": "Choose whether devices in the list use Trafira or bypass it. Bypassed devices connect directly and receive real IP addresses from DNS.",
     "places": [
@@ -956,10 +992,10 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3786",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1714",
       "src/partials/modal/renderModal.ts:263",
-      "src/trafira/tabs/dashboard/initController.ts:1061",
-      "src/trafira/tabs/dashboard/initController.ts:1329",
       "src/trafira/tabs/monitoring/initController.ts:832",
-      "src/trafira/tabs/monitoring/initController.ts:882"
+      "src/trafira/tabs/monitoring/initController.ts:882",
+      "src/trafira/tabs/dashboard/initController.ts:1061",
+      "src/trafira/tabs/dashboard/initController.ts:1329"
     ]
   },
   {
@@ -1060,7 +1096,7 @@
     "call": "Connect through",
     "key": "Connect through",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7777"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7845"
     ]
   },
   {
@@ -1089,6 +1125,20 @@
     "key": "Connectivity probe failed",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runSectionsCheck.ts:146"
+    ]
+  },
+  {
+    "call": "Consecutive failures before switching",
+    "key": "Consecutive failures before switching",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7778"
+    ]
+  },
+  {
+    "call": "Consecutive successes before recovery",
+    "key": "Consecutive successes before recovery",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7784"
     ]
   },
   {
@@ -1163,7 +1213,7 @@
     "call": "Current section cannot be used as its own transit section",
     "key": "Current section cannot be used as its own transit section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7794"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7862"
     ]
   },
   {
@@ -1291,7 +1341,7 @@
     "call": "Device filter",
     "key": "Device filter",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8126"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8194"
     ]
   },
   {
@@ -1377,7 +1427,8 @@
     "key": "Direct connection",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21",
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17"
     ]
   },
   {
@@ -1659,14 +1710,14 @@
     "call": "Domain and IP lists",
     "key": "Domain and IP lists",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8082"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8150"
     ]
   },
   {
     "call": "Domain lists",
     "key": "Domain lists",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8103"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8171"
     ]
   },
   {
@@ -1680,7 +1731,7 @@
     "call": "Domains",
     "key": "Domains",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7969"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8037"
     ]
   },
   {
@@ -1859,14 +1910,14 @@
     "call": "Enable Mixed Proxy",
     "key": "Enable Mixed Proxy",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7815"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7883"
     ]
   },
   {
     "call": "Enable Mixed Proxy Authentication",
     "key": "Enable Mixed Proxy Authentication",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7856"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7924"
     ]
   },
   {
@@ -2095,7 +2146,7 @@
     "call": "Expose this section as a local HTTP+SOCKS proxy",
     "key": "Expose this section as a local HTTP+SOCKS proxy",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7816"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7884"
     ]
   },
   {
@@ -2259,7 +2310,7 @@
     "call": "Forced device routing",
     "key": "Forced device routing",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8135"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8203"
     ]
   },
   {
@@ -2952,7 +3003,7 @@
     "call": "Invalid port number. Must be between 1 and 65535",
     "key": "Invalid port number. Must be between 1 and 65535",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7849",
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7917",
       "src/validators/validateShadowsocksUrl.ts:91"
     ]
   },
@@ -3165,7 +3216,7 @@
     "call": "IPs",
     "key": "IPs",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7998"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8066"
     ]
   },
   {
@@ -3233,6 +3284,13 @@
     "key": "JSON outbound settings",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:4143"
+    ]
+  },
+  {
+    "call": "Keep existing behavior",
+    "key": "Keep existing behavior",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7744"
     ]
   },
   {
@@ -3435,14 +3493,14 @@
     "call": "Match destination IPs or subnets",
     "key": "Match destination IPs or subnets",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7999"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8067"
     ]
   },
   {
     "call": "Match destination ports. Use a single port or a range",
     "key": "Match destination ports. Use a single port or a range",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8147"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8215"
     ]
   },
   {
@@ -3502,6 +3560,13 @@
     ]
   },
   {
+    "call": "Minimum time between switches (seconds)",
+    "key": "Minimum time between switches (seconds)",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7790"
+    ]
+  },
+  {
     "call": "Missing information",
     "key": "Missing information",
     "places": [
@@ -3512,21 +3577,21 @@
     "call": "Mixed Proxy Password",
     "key": "Mixed Proxy Password",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7907"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7975"
     ]
   },
   {
     "call": "Mixed Proxy Port",
     "key": "Mixed Proxy Port",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7830"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7898"
     ]
   },
   {
     "call": "Mixed Proxy Username",
     "key": "Mixed Proxy Username",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7871"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7939"
     ]
   },
   {
@@ -4061,7 +4126,7 @@
     "call": "Password cannot be empty",
     "key": "Password cannot be empty",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7933"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8001"
     ]
   },
   {
@@ -4138,10 +4203,17 @@
     ]
   },
   {
+    "call": "Policy",
+    "key": "Policy",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:52"
+    ]
+  },
+  {
     "call": "Port cannot be empty",
     "key": "Port cannot be empty",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7841"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7909"
     ]
   },
   {
@@ -4155,7 +4227,7 @@
     "call": "Port for the local mixed proxy of this section",
     "key": "Port for the local mixed proxy of this section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7831"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7899"
     ]
   },
   {
@@ -4177,7 +4249,7 @@
     "call": "Ports",
     "key": "Ports",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8146"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8214"
     ]
   },
   {
@@ -4276,6 +4348,13 @@
     "key": "Previous settings were restored.",
     "places": [
       "src/trafira/tabs/diagnostic/renderProfiles.ts:259"
+    ]
+  },
+  {
+    "call": "Primary connection",
+    "key": "Primary connection",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:15"
     ]
   },
   {
@@ -4515,7 +4594,7 @@
     "call": "Require a username and password for the local mixed proxy",
     "key": "Require a username and password for the local mixed proxy",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7857"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7925"
     ]
   },
   {
@@ -4526,17 +4605,31 @@
     ]
   },
   {
+    "call": "Reserve connection",
+    "key": "Reserve connection",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:16"
+    ]
+  },
+  {
+    "call": "Reserve section",
+    "key": "Reserve section",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7756"
+    ]
+  },
+  {
     "call": "Resolve domain names before routing so sing-box can use real destination IPs.",
     "key": "Resolve domain names before routing so sing-box can use real destination IPs.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7944"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8012"
     ]
   },
   {
     "call": "Resolve real IP for routing",
     "key": "Resolve real IP for routing",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7943"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8011"
     ]
   },
   {
@@ -4672,8 +4765,8 @@
     "call": "Rule sets",
     "key": "Rule sets",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8028",
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8057"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8096",
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8125"
     ]
   },
   {
@@ -4775,6 +4868,13 @@
     ]
   },
   {
+    "call": "Seconds since last switch",
+    "key": "Seconds since last switch",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:54"
+    ]
+  },
+  {
     "call": "Secret",
     "key": "Secret",
     "places": [
@@ -4792,7 +4892,8 @@
     "call": "Section",
     "key": "Section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:396"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:396",
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:51"
     ]
   },
   {
@@ -4835,7 +4936,7 @@
     "call": "Select a predefined domain list",
     "key": "Select a predefined domain list",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8009"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8077"
     ]
   },
   {
@@ -4857,7 +4958,7 @@
     "call": "Select a transit section",
     "key": "Select a transit section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7778"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7846"
     ]
   },
   {
@@ -4865,6 +4966,13 @@
     "key": "Select a version",
     "places": [
       "src/trafira/tabs/updates/renderCoreVersions.ts:63"
+    ]
+  },
+  {
+    "call": "Select an enabled Connection section as reserve",
+    "key": "Select an enabled Connection section as reserve",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7773"
     ]
   },
   {
@@ -4885,7 +4993,7 @@
     "call": "Select an intermediate section",
     "key": "Select an intermediate section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7791"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7859"
     ]
   },
   {
@@ -5087,7 +5195,7 @@
     "call": "Service list",
     "key": "Service list",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8012"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8080"
     ]
   },
   {
@@ -5314,14 +5422,14 @@
     "call": "Sort by latency",
     "key": "Sort by latency",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7803"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7871"
     ]
   },
   {
     "call": "Sorts servers in this section by lowest latency in the dashboard.",
     "key": "Sorts servers in this section by lowest latency in the dashboard.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7804"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7872"
     ]
   },
   {
@@ -5440,6 +5548,21 @@
     ]
   },
   {
+    "call": "State",
+    "key": "State",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:53"
+    ]
+  },
+  {
+    "call": "State unavailable",
+    "key": "State unavailable",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:20",
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:79"
+    ]
+  },
+  {
     "call": "Stop checking when URLTest group is not used. Use sing-box duration format like 1d, 12h or 30m.",
     "key": "Stop checking when URLTest group is not used. Use sing-box duration format like 1d, 12h or 30m.",
     "places": [
@@ -5522,6 +5645,13 @@
     "key": "Subscriptions updated",
     "places": [
       "src/trafira/tabs/dashboard/initController.ts:349"
+    ]
+  },
+  {
+    "call": "Switching interrupts existing connections. Protection applies while Trafira is running.",
+    "key": "Switching interrupts existing connections. Protection applies while Trafira is running.",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:72"
     ]
   },
   {
@@ -5686,7 +5816,7 @@
     "call": "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression.",
     "key": "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7970"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8038"
     ]
   },
   {
@@ -5844,6 +5974,13 @@
     "places": [
       "src/trafira/tabs/dashboard/initController.ts:1599",
       "src/trafira/tabs/dashboard/partials/renderSections.ts:125"
+    ]
+  },
+  {
+    "call": "Traffic blocked",
+    "key": "Traffic blocked",
+    "places": [
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:18"
     ]
   },
   {
@@ -6418,6 +6555,13 @@
     ]
   },
   {
+    "call": "Use a reserve section, otherwise block",
+    "key": "Use a reserve section, otherwise block",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7746"
+    ]
+  },
+  {
     "call": "Use an HTTP or HTTPS URL",
     "key": "Use an HTTP or HTTPS URL",
     "places": [
@@ -6443,7 +6587,7 @@
     "call": "Use another section as an intermediate hop to connect to servers in this section. Does not apply to network interfaces or JSON outbounds.",
     "key": "Use another section as an intermediate hop to connect to servers in this section. Does not apply to network interfaces or JSON outbounds.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7740"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7808"
     ]
   },
   {
@@ -6523,7 +6667,7 @@
     "call": "Username cannot be empty",
     "key": "Username cannot be empty",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7897"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7965"
     ]
   },
   {
@@ -6611,6 +6755,14 @@
     "key": "vless://, vmess://, ss://, trojan://, socks4/5://, hy2/hysteria2:// links",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7501"
+    ]
+  },
+  {
+    "call": "VPN failure policy",
+    "key": "VPN failure policy",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7739",
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:37"
     ]
   },
   {

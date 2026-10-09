@@ -10,6 +10,7 @@ function sample(response,proxies,tag) {
         if(!next)break;
         current=next;
     }
+    if(proxies[current] && proxies[current].now)return {health:"unknown",selected:""};
     if(type(response)=="object" && type(response.delay)=="int" && response.delay>=0)return {health:"up",selected:current};
     let message=type(response)=="object"?response.message:"";
     if(type(message)=="string" && match(lc(message),/(timeout|timed out|connection refused|network is unreachable|no route to host)/))

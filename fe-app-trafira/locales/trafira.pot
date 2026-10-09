@@ -3978,3 +3978,66 @@ msgstr ""
 
 msgid "Pin selected version"
 msgstr ""
+
+msgid "VPN failure policy"
+msgstr ""
+
+msgid "Choose what happens after confirmed connection failures. Direct fallback sends this section's traffic without its VPN. Switching interrupts existing connections; protection requires Trafira to be running."
+msgstr ""
+
+msgid "Keep existing behavior"
+msgstr ""
+
+msgid "Block traffic"
+msgstr ""
+
+msgid "Use a reserve section, otherwise block"
+msgstr ""
+
+msgid "Allow direct fallback without VPN"
+msgstr ""
+
+msgid "Reserve section"
+msgstr ""
+
+msgid "Select an enabled Connection section as reserve"
+msgstr ""
+
+msgid "Consecutive failures before switching"
+msgstr ""
+
+msgid "Consecutive successes before recovery"
+msgstr ""
+
+msgid "Minimum time between switches (seconds)"
+msgstr ""
+
+msgid "Primary connection"
+msgstr ""
+
+msgid "Reserve connection"
+msgstr ""
+
+msgid "Traffic blocked"
+msgstr ""
+
+msgid "Availability check error"
+msgstr ""
+
+msgid "State unavailable"
+msgstr ""
+
+msgid "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
+msgstr ""
+
+msgid "Policy"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
+msgid "Seconds since last switch"
+msgstr ""
+
+msgid "Switching interrupts existing connections. Protection applies while Trafira is running."
+msgstr ""

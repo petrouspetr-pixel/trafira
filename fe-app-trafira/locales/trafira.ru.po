@@ -2883,3 +2883,66 @@ msgstr "Версии sing-box"
 
 msgid "Pin selected version"
 msgstr "Закрепить выбранную версию"
+
+msgid "VPN failure policy"
+msgstr "Поведение при отказе VPN"
+
+msgid "Choose what happens after confirmed connection failures. Direct fallback sends this section's traffic without its VPN. Switching interrupts existing connections; protection requires Trafira to be running."
+msgstr "Выберите действие при подтверждённом отказе подключения. Прямой выход отправляет трафик секции без её VPN. Переключение прерывает текущие соединения; защита действует, пока Trafira работает."
+
+msgid "Keep existing behavior"
+msgstr "Как сейчас"
+
+msgid "Block traffic"
+msgstr "Блокировать трафик"
+
+msgid "Use a reserve section, otherwise block"
+msgstr "Использовать резерв, иначе блокировать"
+
+msgid "Allow direct fallback without VPN"
+msgstr "Разрешить прямой выход без VPN"
+
+msgid "Reserve section"
+msgstr "Резервная секция"
+
+msgid "Select an enabled Connection section as reserve"
+msgstr "Выберите включённую секцию подключения для резерва"
+
+msgid "Consecutive failures before switching"
+msgstr "Неудач подряд до переключения"
+
+msgid "Consecutive successes before recovery"
+msgstr "Успехов подряд до восстановления"
+
+msgid "Minimum time between switches (seconds)"
+msgstr "Минимальное время между переключениями (секунды)"
+
+msgid "Primary connection"
+msgstr "Основное подключение"
+
+msgid "Reserve connection"
+msgstr "Резервное подключение"
+
+msgid "Traffic blocked"
+msgstr "Трафик заблокирован"
+
+msgid "Availability check error"
+msgstr "Ошибка проверки доступности"
+
+msgid "State unavailable"
+msgstr "Состояние недоступно"
+
+msgid "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
+msgstr "После неудачного переключения сохраняется защитная блокировка трафика. Перезапустите Trafira для повторной проверки конфигурации."
+
+msgid "Policy"
+msgstr "Политика"
+
+msgid "State"
+msgstr "Состояние"
+
+msgid "Seconds since last switch"
+msgstr "Секунд с последнего переключения"
+
+msgid "Switching interrupts existing connections. Protection applies while Trafira is running."
+msgstr "Переключение прерывает текущие соединения. Защита действует, пока Trafira работает."

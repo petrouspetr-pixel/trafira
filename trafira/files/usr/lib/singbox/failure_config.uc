@@ -26,7 +26,8 @@ function apply(baseline,sections,states) {
     function dns_target(rule,item) {
         if(!item.outbound) {reject(rule);return;}
         let server=dns_servers[rule.server];
-        if(!server || index(["fakeip","hosts"],server.type)>=0)return;
+        if(!server) {reject(rule);return;}
+        if(index(["fakeip","hosts"],server.type)>=0)return;
         // Local/dhcp resolvers cannot be constrained to a protected outbound.
         // Refuse the matching DNS request rather than silently leak it.
         if(index(["udp","tcp","tls","https","quic","http3"],server.type)<0) {reject(rule);return;}

@@ -1812,6 +1812,7 @@ async function onPageMount() {
   onPageUnmount();
 
   dashboardMounted = true;
+  failurePoliciesPanel.mount();
   dashboardMountId += 1;
   const mountId = dashboardMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -1845,6 +1846,7 @@ async function onPageMount() {
 }
 
 function onPageUnmount() {
+  failurePoliciesPanel.unmount();
   dashboardMounted = false;
   dashboardMountId += 1;
 
@@ -1919,3 +1921,4 @@ export async function initController(): Promise<void> {
     }
   });
 }
+import { failurePoliciesPanel } from './renderFailurePolicies';

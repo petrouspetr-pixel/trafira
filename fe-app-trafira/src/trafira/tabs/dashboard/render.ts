@@ -62,6 +62,7 @@ export function render() {
             }),
           ),
         ]),
+        E('div', { id: 'trafira-failure-policies', hidden: true }),
         // All outbounds
         E(
           'div',

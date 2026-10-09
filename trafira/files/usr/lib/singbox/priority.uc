@@ -480,7 +480,7 @@ function failure_policy_status() {
     for(let section in base?base.sections:[]) {
         let state=base.states[section[".name"]]||{};
         push(rows,{section:section[".name"],policy:section.failure_policy,state:state.mode||"blocked",reason:state.reason||"awaiting_health",
-            changed_at:state.last_transition||0,age_seconds:state.observed_at?now-state.observed_at:0,monitor_error:guarded || state.monitor_error===true});
+            changed_at:state.last_transition||0,changed_ago_seconds:state.last_transition?now-state.last_transition:null,age_seconds:state.observed_at?now-state.observed_at:0,monitor_error:guarded || state.monitor_error===true});
     }
     write_json({enabled:!!base,guarded,sections:rows});
 }
