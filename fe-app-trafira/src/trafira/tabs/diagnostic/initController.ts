@@ -1,4 +1,5 @@
 import { onMount, preserveScrollForPage } from '../../../helpers';
+import { snapshots } from './renderSnapshots';
 import { runDnsCheck } from './checks/runDnsCheck';
 import { runSingBoxCheck } from './checks/runSingBoxCheck';
 import { runInboundsCheck } from './checks/runInboundsCheck';
@@ -1164,6 +1165,7 @@ async function onPageMount() {
   });
 
   diagnosticMounted = true;
+  void snapshots.mount();
   diagnosticMountId += 1;
   const mountId = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -1228,6 +1230,7 @@ function onPageUnmount({
   preservePersistedRun?: boolean;
 } = {}) {
   diagnosticMounted = false;
+  snapshots.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;

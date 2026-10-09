@@ -348,6 +348,23 @@ function new_section_state(section_name) {
     };
 }
 
+// Copy before selector filtering and pruning; never retain links, servers or
+// outbound configuration. The copy must not share metadata maps with state.
+function remember_filter_preview(state, tags) {
+    let preview = { tags: [], metadata: {} };
+    for (let field in [ "names", "countries", "protocols", "transports", "securities" ]) {
+        preview.metadata[field] = {};
+        for (let tag in array_or_empty(tags)) {
+            let value = object_or_empty(object_or_empty(state.outboundMetadata)[field])[tag];
+            if (type(value) == "string")
+                preview.metadata[field][tag] = value;
+        }
+    }
+    for (let tag in array_or_empty(tags))
+        push(preview.tags, tag);
+    state.filterPreviewCandidates = preview;
+}
+
 return {
     set_section_cache_dir,
     source_id,
@@ -360,5 +377,6 @@ return {
     remember_priority_group,
     source_cache_is_current,
     read_source_outbounds,
+    remember_filter_preview,
     new_section_state
 };

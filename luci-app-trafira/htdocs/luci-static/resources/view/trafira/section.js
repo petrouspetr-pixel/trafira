@@ -2,6 +2,7 @@
 "require form";
 "require baseclass";
 "require fs";
+"require dom";
 "require network";
 "require ui";
 "require uci";
@@ -3267,6 +3268,166 @@ function addDashboardGroupFilterOption(
   configureLiveDynamicListChoices(list, currentSectionGroupChoices);
 }
 
+function addSubscriptionPreviewOption(optionSection) {
+  const option = optionSection.option(
+    form.DummyValue,
+    "_subscription_preview",
+    _("Preview server filters"),
+    _(
+      "Evaluate unsaved filters against cached server candidates. Source changes and group membership are not previewed. No download, save or restart.",
+    ),
+  );
+  option.depends("action", "connection");
+  option.write = function () {};
+  option.renderWidget = function (sectionId) {
+    const result = E("div", { "aria-live": "polite" });
+    const liveValue = (key) => {
+      const field = this.map.lookupOption(key, sectionId)[0];
+      const value = field ? field.formvalue(sectionId) : undefined;
+      return value == null ? optionMapValue(this, sectionId, key) : value;
+    };
+    const reasons = {
+      included: _("Matches filters"),
+      filters_disabled: _("Filters disabled"),
+      include_not_matched: _("Does not match inclusion filters"),
+      exclude_matched: _("Matches exclusion filters"),
+    };
+    const button = E(
+      "button",
+      {
+        type: "button",
+        class: "btn cbi-button cbi-button-action",
+        click: async () => {
+          button.disabled = true;
+          dom.content(result, E("p", {}, _("Loading…")));
+          try {
+            const mode = liveValue("dashboard_filter_mode") || "disabled";
+            for (const side of ["include", "exclude"]) {
+              if (
+                (mode === side || mode === "mixed") &&
+                normalizeOptionValues(liveValue(`dashboard_${side}_groups`))
+                  .length
+              ) {
+                dom.content(
+                  result,
+                  E(
+                    "p",
+                    {},
+                    _(
+                      "Preview unavailable for group filters. Clear group selections to preview individual server filters.",
+                    ),
+                  ),
+                );
+                return;
+              }
+            }
+            const request = {
+              section: sectionId,
+              filter_mode: mode,
+              detect_server_country:
+                liveValue("dashboard_detect_server_country") || "flag_emoji",
+            };
+            for (const side of ["include", "exclude"]) {
+              request[side] = {
+                proxy_parameters:
+                  liveValue(`dashboard_${side}_proxy_parameters`) === "1",
+              };
+              for (const key of [
+                "outbounds",
+                "regex",
+                "countries",
+                "protocols",
+                "transports",
+                "securities",
+              ])
+                request[side][key] = normalizeOptionValues(
+                  liveValue(`dashboard_${side}_${key}`),
+                );
+            }
+            const response = await fs.exec("/usr/bin/trafira", [
+              "subscription_preview",
+              JSON.stringify(request),
+            ]);
+            const payload = JSON.parse(response.stdout || "{}");
+            if (response.code !== 0 || payload.status === "invalid")
+              throw new Error(_("Invalid or oversized preview request"));
+            if (payload.status !== "ok") {
+              const message =
+                payload.reason === "cached_country_data_incomplete"
+                  ? _(
+                      "Preview unavailable: cached country.is data is incomplete. No country lookup was performed.",
+                    )
+                  : payload.reason === "preview_cache_missing"
+                    ? _(
+                        "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it.",
+                      )
+                    : _(
+                        "Preview unavailable: no usable cached server candidates. Update the subscription normally first.",
+                      );
+              dom.content(result, E("p", {}, message));
+              return;
+            }
+            const children = [
+              E(
+                "p",
+                {},
+                _("Cached servers: %s; included: %s; excluded: %s").format(
+                  payload.counts.total,
+                  payload.counts.included,
+                  payload.counts.excluded,
+                ),
+              ),
+              E(
+                "p",
+                {},
+                _(
+                  "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected.",
+                ),
+              ),
+            ];
+            if ((payload.warnings || []).includes("invalid_regex_ignored"))
+              children.push(
+                E(
+                  "p",
+                  {},
+                  _(
+                    "Invalid regular expressions match no servers, as in runtime filtering.",
+                  ),
+                ),
+              );
+            const list = E("ul", { style: "max-height:24rem;overflow:auto" });
+            for (const node of payload.nodes || [])
+              list.appendChild(
+                E("li", {}, [
+                  E("strong", {}, node.name),
+                  " — ",
+                  node.status === "included" ? _("Included") : _("Excluded"),
+                  ": ",
+                  reasons[node.reason] || node.reason,
+                ]),
+              );
+            children.push(list);
+            dom.content(result, children);
+          } catch (error) {
+            dom.content(
+              result,
+              E(
+                "p",
+                {},
+                _("Preview failed: %s").format(error.message || error),
+              ),
+            );
+          } finally {
+            button.disabled = false;
+          }
+        },
+      },
+      _("Preview filters"),
+    );
+    return E("div", {}, [button, result]);
+  };
+}
+
 function addDashboardServerFilterOptions(section) {
   const optionSection = {
     option: (optionType, ...args) => {
@@ -3288,6 +3449,8 @@ function addDashboardServerFilterOptions(section) {
   );
   o.default = "disabled";
   o.depends("action", "connection");
+
+  addSubscriptionPreviewOption(optionSection);
 
   o = optionSection.option(
     form.ListValue,
