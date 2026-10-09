@@ -2491,6 +2491,21 @@ function import_subnets_from_remote_subnet_lists(section, settings) {
     return ok;
 }
 
+// Keep lock files in place: unlinking would create a second independently
+// lockable inode. Kernel locks are released automatically on process exit.
+function snapshot_file_lock(path) {
+    ensure_parent_dir(path);
+    let file = fs.open(path, "ae", 384);
+    if (!file) return null;
+    if (file.lock("xn")) return file;
+    file.close();
+    return null;
+}
+
+function snapshot_unlock(file) {
+    if (file) { file.lock("u"); file.close(); }
+}
+
 function list_update_pid_begin() {
     list_update_lock = snapshot_file_lock(LIST_UPDATE_LOCK_FILE);
     if (!list_update_lock) return false;
@@ -2512,21 +2527,6 @@ function list_update_pid_end() {
     remove_file(LIST_UPDATE_PID_FILE);
     snapshot_unlock(list_update_lock);
     list_update_lock = null;
-}
-
-// Keep lock files in place: unlinking would create a second independently
-// lockable inode. Kernel locks are released automatically on process exit.
-function snapshot_file_lock(path) {
-    ensure_parent_dir(path);
-    let file = fs.open(path, "ae", 384);
-    if (!file) return null;
-    if (file.lock("xn")) return file;
-    file.close();
-    return null;
-}
-
-function snapshot_unlock(file) {
-    if (file) { file.lock("u"); file.close(); }
 }
 
 function snapshot_job(locked) {
@@ -2559,6 +2559,10 @@ function snapshot_report_value(locked) {
 }
 
 function snapshot_prepare_worker() {
+    // Close the inherited service descriptor here: dash cannot parse the
+    // multi-digit shell redirection used by some older launchers.
+    let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
+    if (inherited_lock) inherited_lock.close();
     let job = read_json_file(SNAPSHOT_JOB_FILE);
     if (!job || !job.running) exit(1);
     job.pid = owner_pid();
@@ -2613,7 +2617,7 @@ function snapshot_prepare_async() {
     }
     // The worker inherits runtime overrides and alone records its PID/result.
     let command = command_from_args(["ucode", "-L", LIB_DIR, LIB_DIR + "/components/updates.uc", "ruleset-snapshot-prepare-worker"]);
-    let pid = trim(command_output("sh -c " + shell_quote(command + " >/dev/null 2>&1 1000>&- & echo $!")));
+    let pid = trim(command_output("sh -c " + shell_quote(command + " </dev/null >/dev/null 2>&1 & echo $!")));
     if (!job_pid_valid(pid)) {
         job.running = false;
         job.message = "Failed to start snapshot worker";

@@ -21,7 +21,7 @@ function valid_side(side) {
         return false;
     for (let key, value in side) {
         if (key == "proxy_parameters") {
-            if (type(value) != "boolean")
+            if (type(value) != "bool")
                 return false;
             continue;
         }
