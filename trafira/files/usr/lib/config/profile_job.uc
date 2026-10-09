@@ -86,12 +86,13 @@ function worker(id){
     if(state && state.job_id==id)write(STATE,{...result,job_id:id,running:false});
     cleanup(directory);locks.release(lock);return result;
 }
-function start(request,restore){
+function start(request,restore,document){
+    if(document && !require("config.profile_format").validate(document).valid)return fail("invalid_profile");
     if(status().running)return fail("busy");
     if(type(request.digest)!="string" || !match(request.digest,/^[a-f0-9]{64}$/) || hash(transaction.TARGET)!=request.digest)return fail("conflict");
     let work=new_directory();if(!work)return fail("storage_unavailable");
     let pending=transaction.status(),recovery=restore && pending.recovery_pending;
-    let source=recovery?{success:true}:restore?runtime.read_document(transaction.previous_path(),work.directory,"Previous"):profiles.export_profile(request.id);
+    let source=document?{success:true,document}:recovery?{success:true}:restore?runtime.read_document(transaction.previous_path(),work.directory,"Previous"):profiles.export_profile(request.id);
     if(!source.success){cleanup(work.directory);return source;}
     if(!write(work.directory+"/request.json",{document:source.document,digest:request.digest,recover:recovery||false}) || !write(STATE,{running:true,job_id:work.id,started_at:clock()[0]})) {
         cleanup(work.directory);return fail("storage_unavailable");
@@ -102,4 +103,5 @@ function start(request,restore){
     if(!launched){write(STATE,{running:false,success:false,error:"launch_failed",job_id:work.id});cleanup(work.directory);return fail("launch_failed");}
     return {success:true,running:true,job_id:work.id};
 }
-return {start,worker,status,new_directory,cleanup};
+function start_document(document,digest){return start({digest},false,document);}
+return {start,start_document,worker,status,new_directory,cleanup};

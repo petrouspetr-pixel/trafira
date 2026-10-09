@@ -2986,7 +2986,7 @@ function add_route_for_section(config, section) {
         for (let i=start;i<length(config[kind].rules);i++) {
             let rule = config[kind].rules[i];
             let tags = type(rule.rule_set) == "array" ? rule.rule_set : [rule.rule_set];
-            provenance.annotate(rule,{kind:"section",section:section[".name"],list_tag:tags[0] || ""});
+            provenance.annotate(rule,{kind:section.preset_owner?"gaming":"section",section:section[".name"],list_tag:tags[0] || ""});
         }
 }
 

@@ -22,6 +22,19 @@ function apply(baseline,sections,states) {
         managed[name]={section,outbound:target(section,(states||{})[name])};
         by_outbound[constants.outbound_tag(name)]=managed[name];
     }
+    // A pure selector alias has no alternate route. Preserve the referenced
+    // section policy for editable gaming routes and other alias-only consumers.
+    for(let pass=0;pass<32;pass++) {
+        let changed=false;
+        for(let outbound in array(config.outbounds)) {
+            if(by_outbound[outbound.tag] || index(["selector","urltest"],outbound.type)<0 || !length(array(outbound.outbounds)))continue;
+            let item=by_outbound[outbound.outbounds[0]];
+            if(!item || length(filter(outbound.outbounds,(tag)=>by_outbound[tag]!=item)))continue;
+            by_outbound[outbound.tag]=item;changed=true;
+            if(substr(outbound.tag,-4)=="-out")managed[substr(outbound.tag,0,length(outbound.tag)-4)]=item;
+        }
+        if(!changed)break;
+    }
     for(let server in array(config.dns.servers))dns_servers[server.tag]=server;
     function dns_target(rule,item) {
         if(!item.outbound) {reject(rule);return;}

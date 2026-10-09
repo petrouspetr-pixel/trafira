@@ -17,7 +17,7 @@ function host(value){
         if(ip.ip_in_cidr(address,range))return null;
     return {address,cidr:address+(family==4?"/32":"/128")};
 }
-function same(a,b){return ip.ip_in_cidr(a,b) && ip.ip_in_cidr(b,a);}
+function same(a,b){return ip.ip_in_cidr(split(a,"/")[0],b) && ip.ip_in_cidr(split(b,"/")[0],a);}
 function identity(device){return lc(device.mac||"")+"@"+(device.interface||"");}
 function owner_id(preset,device){
     let value=identity(device),encoded="";
@@ -60,7 +60,7 @@ function build(preset,request,current){
     sort(addresses);
     let config=clone(current.sections),settings=filter(config,(s)=>s[".type"]=="settings")[0];
     let proxy=filter(config,(s)=>s[".name"]==request.proxy_section && s[".type"]=="section")[0];
-    if(!settings || !proxy || !common.bool_option(proxy,"enabled",true) || index(["connection","proxy","vpn"],proxy.action)<0 || proxy.preset_owner)return fail("invalid_proxy");
+    if(!settings || !proxy || !common.bool_option(proxy,"enabled",true) || index(["connection","proxy","vpn","outbound"],proxy.action)<0 || proxy.preset_owner)return fail("invalid_proxy");
     let ac=alice.config(settings),conflicts=[];
     if(ac.enabled)for(let address in addresses) {
         let matched=alice.match_device(ac,{...device,ips:[split(address,"/")[0]]});
@@ -80,7 +80,7 @@ function build(preset,request,current){
     let old=filter(config,(s)=>s.preset_owner==owner);
     if(length(filter(old,(s)=>fingerprint(s)!=s.preset_original_digest)) && request.replace_edited!==true)return fail("preset_edited");
     config=filter(config,(s)=>s.preset_owner!=owner);
-    let store={".name":owner+"_store",".type":"section",enabled:"1",label:preset.id+" store / "+join(", ",addresses),action:"connection",outbound_jsons:["{\"type\":\"direct\"}"],outbound_detour_enabled:"1",outbound_detour_section:request.proxy_section,source_ip_cidr:addresses,domain:[],domain_suffix:[]};
+    let store={".name":owner+"_store",".type":"section",enabled:"1",label:preset.id+" store / "+join(", ",addresses),action:"connection",outbound_jsons:[sprintf("%J",{type:"selector",outbounds:[request.proxy_section+"-out"]})],outbound_detour_enabled:"1",outbound_detour_section:request.proxy_section,source_ip_cidr:addresses,domain:[],domain_suffix:[]};
     for(let entry in preset.domains) {
         if(!match(entry.value||"",/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/) || index(["exact","suffix"],entry.match)<0)return fail("invalid_catalog_domain");
         push(entry.match=="exact"?store.domain:store.domain_suffix,entry.value);
