@@ -2646,3 +2646,111 @@ msgstr "Предпросмотр использует последний соз�
 #: src/trafira/tabs/diagnostic/renderSnapshots.ts:58
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr "Повторно примените конфигурацию Trafira, чтобы включить сохранение копий для этого ядра"
+
+
+msgid "Matched route"
+msgstr "Найденный маршрут"
+
+
+msgid "Blocked"
+msgstr "Заблокировано"
+
+
+msgid "Insufficient information"
+msgstr "Недостаточно данных"
+
+
+msgid "Missing information"
+msgstr "Недостающие данные"
+
+
+msgid "Rule evaluation order"
+msgstr "Порядок проверки правил"
+
+
+msgid "Overridden by an earlier rule"
+msgstr "Перекрыто более ранним правилом"
+
+
+msgid "Only the first 200 rules are displayed"
+msgstr "Показаны только первые 200 правил"
+
+
+msgid "Checking route"
+msgstr "Проверка маршрута"
+
+
+msgid "Could not explain route"
+msgstr "Не удалось проверить маршрут. Проверьте введённые данные и повторите попытку."
+
+
+msgid "Analysis of the applied configuration, not a live connection capture."
+msgstr "Анализ применённой конфигурации. Фактическое соединение может зависеть от дополнительных условий."
+
+
+msgid "Connection route"
+msgstr "Маршрут соединения"
+
+
+msgid "DNS policy (A query)"
+msgstr "Правило DNS для запроса A"
+
+
+msgid "Current selected node"
+msgstr "Текущий выбранный узел"
+
+
+msgid "No DNS query was sent from the selected device."
+msgstr "DNS-запрос от выбранного устройства не отправлялся."
+
+
+msgid "Limitations"
+msgstr "Ограничения"
+
+
+msgid "Device by IP address"
+msgstr "Устройство по IP-адресу"
+
+
+msgid "This router"
+msgstr "Сам роутер"
+
+
+msgid "Device IP address"
+msgstr "IP-адрес устройства"
+
+
+msgid "Device MAC (optional)"
+msgstr "MAC устройства (необязательно)"
+
+
+msgid "Incoming interface (optional)"
+msgstr "Входящий интерфейс (необязательно)"
+
+
+msgid "Real destination IP (optional)"
+msgstr "Реальный IP назначения (необязательно)"
+
+
+msgid "TCP, unknown protocol"
+msgstr "TCP, протокол неизвестен"
+
+
+msgid "UDP, unknown protocol"
+msgstr "UDP, протокол неизвестен"
+
+
+msgid "Where will the connection go?"
+msgstr "Куда пойдёт соединение?"
+
+
+msgid "Domain"
+msgstr "Домен"
+
+
+msgid "Destination port"
+msgstr "Порт назначения"
+
+
+msgid "Explain route"
+msgstr "Проверить маршрут"

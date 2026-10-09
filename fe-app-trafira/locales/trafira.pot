@@ -3741,3 +3741,111 @@ msgstr ""
 #: src/trafira/tabs/diagnostic/renderSnapshots.ts:58
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr ""
+
+
+msgid "Matched route"
+msgstr ""
+
+
+msgid "Blocked"
+msgstr ""
+
+
+msgid "Insufficient information"
+msgstr ""
+
+
+msgid "Missing information"
+msgstr ""
+
+
+msgid "Rule evaluation order"
+msgstr ""
+
+
+msgid "Overridden by an earlier rule"
+msgstr ""
+
+
+msgid "Only the first 200 rules are displayed"
+msgstr ""
+
+
+msgid "Checking route"
+msgstr ""
+
+
+msgid "Could not explain route"
+msgstr ""
+
+
+msgid "Analysis of the applied configuration, not a live connection capture."
+msgstr ""
+
+
+msgid "Connection route"
+msgstr ""
+
+
+msgid "DNS policy (A query)"
+msgstr ""
+
+
+msgid "Current selected node"
+msgstr ""
+
+
+msgid "No DNS query was sent from the selected device."
+msgstr ""
+
+
+msgid "Limitations"
+msgstr ""
+
+
+msgid "Device by IP address"
+msgstr ""
+
+
+msgid "This router"
+msgstr ""
+
+
+msgid "Device IP address"
+msgstr ""
+
+
+msgid "Device MAC (optional)"
+msgstr ""
+
+
+msgid "Incoming interface (optional)"
+msgstr ""
+
+
+msgid "Real destination IP (optional)"
+msgstr ""
+
+
+msgid "TCP, unknown protocol"
+msgstr ""
+
+
+msgid "UDP, unknown protocol"
+msgstr ""
+
+
+msgid "Where will the connection go?"
+msgstr ""
+
+
+msgid "Domain"
+msgstr ""
+
+
+msgid "Destination port"
+msgstr ""
+
+
+msgid "Explain route"
+msgstr ""
