@@ -36,6 +36,14 @@ for _ in $(seq 1 50); do
 done
 test -f "$WORK_DIR/ready"
 ucode -L "$TRAFIRA_LIB" -e 'let l=require("service.operation_lock"); assert(!l.acquire("competitor"),"unrelated worker must be busy");'
+for entry in 'service/lifecycle.uc start' 'service/initd.uc start-service' 'components/action.uc component-action'; do
+  read -r module action <<<"$entry"
+  if ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/$module" "$action" >"$WORK_DIR/entry.log" 2>&1; then
+    echo "mutation accepted while configuration operation is locked: $entry" >&2
+    exit 1
+  fi
+  grep -q 'configuration operation is already running' "$WORK_DIR/entry.log"
+done
 inode=$(stat -c %i "$TRAFIRA_RUNTIME_STATE_DIR/operation.lock")
 kill -KILL "$owner_pid"
 wait "$owner_pid" 2>/dev/null || true
