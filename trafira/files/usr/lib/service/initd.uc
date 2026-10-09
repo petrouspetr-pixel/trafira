@@ -505,7 +505,7 @@ function handle_wan_up(owner_pid) {
         running,
         service_is_enabled() ? "1" : "0",
         start_retry_pending(START_RETRY_FILE) ? "1" : "0",
-        badwan_interface_monitored(settings, "wan") ? "1" : "0"
+        (badwan_interface_monitored(settings, "wan") || option(settings, "router_origin_enabled", "0") == "1") ? "1" : "0"
     );
 
     if (action == "reload") {
@@ -720,6 +720,8 @@ function trigger_plan(settings) {
     print("config\tconfig.change\t", CONFIG_NAME, "\t", SERVICE_INIT, "\treload\t", CONFIG_CHANGE_REASON, "\n");
     print("interface\tinterface.*.up\twan\t", SERVICE_INIT, "\thandle_wan_up\t\n");
 
+    if (option(settings, "router_origin_enabled", "0") == "1")
+        print("interface\tinterface.*.up\t*\t", SERVICE_INIT, "\treload\trouter_origin_network_change\n");
     if (badwan_enabled) {
         for (let iface in badwan_interfaces) {
             iface = trim(iface);
@@ -731,6 +733,18 @@ function trigger_plan(settings) {
 }
 
 let mode = ARGV[0] || "";
+let operation_lock=null;
+if(index(["start-service","stop-service","reload-service","retry-start-on-wan-up","handle-wan-up"],mode)>=0) {
+    operation_lock=require("service.operation_lock").acquire("initd");
+    if(!operation_lock) {
+        warn("Another configuration operation is already running\n");
+        exit(1);
+    }
+    if(mode!="stop-service" && !require("service.config_transaction").before_start().success) {
+        warn("Configuration recovery failed; startup stopped\n");
+        exit(1);
+    }
+}
 
 if (mode == "restore-dnsmasq-failsafe")
     exit(restore_dnsmasq_failsafe());

@@ -595,6 +595,38 @@ function createSettingsContent(section, capabilities) {
 
   o = section.option(
     form.Flag,
+    "router_origin_enabled",
+    _("Route router applications"),
+    _(
+      "Route remaining traffic from this router through a Connection section. LAN routing is unchanged. Local management, configured bootstrap DNS/NTP, marked service traffic and active WG/AWG transports are excluded. Other native VPN interfaces are not supported.",
+    ),
+  );
+  o.default = "0";
+  o.rmempty = false;
+  o = section.option(
+    form.ListValue,
+    "router_origin_section",
+    _("Router traffic section"),
+  );
+  o.depends("router_origin_enabled", "1");
+  configureDownloadSectionOption(o, "router_origin_section", {});
+  o.load = function (section_id) {
+    this.keylist = [];
+    this.vallist = [];
+    for (const [name, candidate] of Object.entries(
+      this.map?.data?.state?.values?.[UCI_PACKAGE] ?? {},
+    ))
+      if (
+        candidate[".type"] === "section" &&
+        candidate.enabled !== "0" &&
+        ["connection", "proxy", "outbound", "vpn"].includes(candidate.action)
+      )
+        this.value(name, candidate.label || name);
+    return this.cfgvalue(section_id);
+  };
+
+  o = section.option(
+    form.Flag,
     "component_update_check_enabled",
     _("Automatic component update checks"),
     _("Automatically check installed components for new versions"),

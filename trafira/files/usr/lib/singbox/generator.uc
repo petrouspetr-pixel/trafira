@@ -2,6 +2,7 @@
 
 let fs = require("fs");
 let common = require("core.common");
+let provenance = require("singbox.provenance");
 let uci_core = require("core.uci");
 let runtime_constants = require("singbox.constants");
 let runtime_country = require("singbox.country");
@@ -2976,10 +2977,17 @@ function reserve_section_outbound_tags(sections, taken) {
 }
 
 function add_route_for_section(config, section) {
+    let route_start = length(config.route.rules), dns_start = length(config.dns.rules);
     if (option(section, "action", "") == "dns")
         add_dns_action_rules_for_section(config, section);
     else
         add_combined_route_for_section(config, section);
+    for (let kind, start in {route:route_start,dns:dns_start})
+        for (let i=start;i<length(config[kind].rules);i++) {
+            let rule = config[kind].rules[i];
+            let tags = type(rule.rule_set) == "array" ? rule.rule_set : [rule.rule_set];
+            provenance.annotate(rule,{kind:section.preset_owner?"gaming":"section",section:section[".name"],list_tag:tags[0] || ""});
+        }
 }
 
 function add_service_route_rules(config, sections) {
@@ -3052,6 +3060,7 @@ function section_by_name(sections, name) {
 
 function add_server_routes(config, servers, sections) {
     for (let server in servers) {
+        let start = length(config.route.rules);
         runtime_servers.add_sniff_rule(config, server);
 
         let inbound = runtime_constants.server_inbound_tag(server[".name"]);
@@ -3093,6 +3102,9 @@ function add_server_routes(config, servers, sections) {
         else {
             runtime_generate_unsupported("unsupported server routing_mode " + routing_mode);
         }
+        for (let i=start;i<length(config.route.rules);i++)
+            if (!config.route.rules[i].__trafira_origin)
+                provenance.annotate(config.route.rules[i],{kind:"server",section:server[".name"]});
     }
 }
 
@@ -3137,6 +3149,7 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
     for (let section in sections)
         add_mixed_proxy_for_section(config, section, service_address);
 
+    require("config.router_origin").attach(config, settings, sections);
     apply_ruleset_http_clients(config);
     let startup_cache = require("singbox.ruleset_cache");
     startup_cache.apply(config, runtime_sing_box_version);
@@ -3147,11 +3160,23 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
         if (!atomic_write_json_file(runtime_subscription.section_cache_path(section_name), state))
             runtime_generate_unsupported("failed to write section cache for " + section_name);
     }
+    let failure_store = require("singbox.failure_store");
+    let failure_sections = failure_store.descriptors(sections), failure_base = null;
+    if (length(failure_sections)) {
+        failure_base = json(sprintf("%J", config));
+        // A new generation starts blocked until this runtime proves health.
+        config = require("singbox.failure_config").apply(config, failure_sections, {});
+    }
+    let origins = provenance.extract(config);
     strip_internal_fields(config);
     if (!write_json_file(output_path, config)) {
         warn("failed to write ", output_path, "\n");
         exit(1);
     }
+    if (!provenance.save(output_path,origins))
+        warn("Routing provenance could not be saved; route diagnostics will report missing origins\n");
+    if (!failure_store.save_base(output_path, failure_base, failure_sections))
+        runtime_generate_unsupported("failed to save private failure-policy baseline");
 }
 
 function generate_config_fixture(fixture_path, output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version) {

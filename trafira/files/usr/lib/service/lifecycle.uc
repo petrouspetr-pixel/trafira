@@ -738,6 +738,11 @@ function start_main() {
         return status;
     }
 
+    if (command_success_from_args(["nft","list","table","inet","TrafiraFailureGuard"]) &&
+        !command_success_from_args(["nft","delete","table","inet","TrafiraFailureGuard"])) {
+        log_message("Verified runtime started but the failure-policy guard could not be cleared", "fatal");
+        return 1;
+    }
     status = module_status(PRIORITY_UC, [ "start-runtime" ]);
     if (status != 0) {
         log_message("Failed to start Priority runtime. Aborted.", "fatal");
@@ -815,6 +820,8 @@ function stop_main() {
 
     if (command_success_from_args([ "nft", "list", "table", "inet", NFT_TABLE_NAME ]))
         command_success_from_args([ "nft", "delete", "table", "inet", NFT_TABLE_NAME ]);
+    if (command_success_from_args(["nft","list","table","inet","TrafiraFailureGuard"]) &&
+        !command_success_from_args(["nft","delete","table","inet","TrafiraFailureGuard"])) status=1;
 
     if (module_success(NFT_UC, [ "tproxy-marking-rule4-present", RT_TABLE_NAME, NFT_FAKEIP_MARK ]))
         command_success_from_args([ "ip", "-4", "rule", "del", "fwmark", NFT_FAKEIP_MARK + "/" + NFT_FAKEIP_MARK, "table", RT_TABLE_NAME, "priority", "105" ]);
@@ -1099,6 +1106,7 @@ function dns_failover_apply(candidate_state_path) {
         }
     }
 
+    if(status==0)require("service.applied_config").refresh(uci_core.get(CONFIG_NAME+".settings.config_path"));
     if (backup_path != "")
         remove_file(backup_path);
     release_reload_lock();
@@ -1254,6 +1262,8 @@ function reload(reason) {
             cleanup_failed_runtime();
             return status;
         }
+        if (command_success_from_args(["nft","list","table","inet","TrafiraFailureGuard"]) &&
+            !command_success_from_args(["nft","delete","table","inet","TrafiraFailureGuard"])) return 1;
         status = module_status(PRIORITY_UC, [ "start-runtime" ]);
         if (status != 0) {
             log_message("Failed to start Priority runtime after sing-box reload", "fatal");
@@ -1313,15 +1323,49 @@ function reload(reason) {
     ]), reload_config_fingerprint);
 }
 
+function reload_guarded(reason) {
+    let applied=require("service.applied_config"),protection=require("service.runtime_apply");
+    let previous=applied.read(),settings=uci_core.get_all(CONFIG_NAME,"settings")||{},sections=uci_core.section_objects(CONFIG_NAME,"section");
+    let next=applied.capture(settings,sections);
+    let protected=next && (next.protected || setting_bool("router_origin_enabled",false)) || previous && (previous.protected || previous.settings.router_origin_enabled=="1");
+    if(!protected)return reload(reason);
+    if(!previous || !next) {
+        log_message("Last applied configuration checkpoint is unavailable; reload refused without changing runtime", "error");
+        return 1;
+    }
+    let prior_bootstrap=require("singbox.failure_store").read(RUNTIME_STATE_DIR+"/router-origin.json")||{};
+    let bootstrap=setting_bool("router_origin_enabled",false)?require("nft.router_origin").snapshot(settings,sections):{};
+    let prepared=bootstrap && protection.prepare_bootstrap(bootstrap);
+    let guarded_snapshot={dns:[],ntp:[],vpn_ports:[]};
+    for(let key in keys(guarded_snapshot))guarded_snapshot[key]=[...(prior_bootstrap[key]||[]),...((bootstrap||{})[key]||[])];
+    let result=protection.apply(previous,settings,{
+        // UCI is already committed by LuCI; reload performs its normal validation
+        // before touching runtime. The journal retains the last applied UCI.
+        validate:()=>true,
+        capture:()=>({running:true,enabled:command_success_from_args([SERVICE_INIT,"enabled"])}),
+        guard:()=>protection.guard(settings,previous.settings,guarded_snapshot),
+        clear:protection.clear,
+        activate:()=>prepared && reload(reason)==0,
+        restore:()=> {
+            release_start_subscription_update_lock();
+            if(!protection.prepare_bootstrap(prior_bootstrap))return false;
+            // A new process reads the restored UCI instead of a cached cursor.
+            return module_status(LIB_DIR+"/service/lifecycle.uc",["restart"])==0;
+        }
+    });
+    if(!result.success)log_message("Runtime reload failed"+(result.restored?"; previous configuration restored":"; recovery or guard remains active"),"error");
+    return result.success?0:1;
+}
+
 function reload_tracked(reason) {
     if (as_string(getenv("TRAFIRA_UI_ACTION_TRACKED") || "0") == "1")
-        return reload(reason);
+        return reload_guarded(reason);
 
     let job_id = trim(module_output(UI_UC, [ "service-action-begin-if-idle", "reload", "runtime_reload" ]));
     if (job_id != "")
         module_success(UI_UC, [ "service-action-update-pid", job_id, owner_pid() ]);
 
-    let status = reload(reason);
+    let status = reload_guarded(reason);
     if (job_id != "")
         module_success(UI_UC, [ "service-action-finish-after-command", "reload", job_id, as_string(status) ]);
 
@@ -1398,6 +1442,7 @@ function uninstall() {
     command_success_from_args([ "rm", "-rf", LUCI_VIEW_DIR ]);
     remove_file(SERVICE_INIT);
     remove_file(BIN_PATH);
+    remove_file("/usr/bin/trafira-config");
     remove_file("/usr/share/luci/menu.d/luci-app-trafira.json");
     remove_file("/usr/share/rpcd/acl.d/luci-app-trafira.json");
     remove_file("/etc/uci-defaults/50_luci-trafira");
@@ -1422,6 +1467,22 @@ function disable_service() {
 
 let mode = ARGV[0] || "";
 let status = 1;
+let operation_lock=null;
+if(index(["main","start","stop","reload","dns-failover-apply","restart","enable","disable","dnsmasq-restore","restore-dnsmasq","uninstall"],mode)>=0) {
+    operation_lock=require("service.operation_lock").acquire("lifecycle");
+    if(!operation_lock) {
+        warn("Another configuration operation is already running\n");
+        exit(1);
+    }
+    if(index(["main","start","restart","reload"],mode)>=0 && !require("service.config_transaction").before_start().success) {
+        warn("Configuration recovery failed; startup stopped\n");
+        exit(1);
+    }
+}
+
+let checkpoint=null;
+if(index(["main","start","restart","reload"],mode)>=0)
+    checkpoint=require("service.applied_config").capture(uci_core.get_all(CONFIG_NAME,"settings")||{},uci_core.section_objects(CONFIG_NAME,"section"));
 
 if (mode == "main")
     status = start_main();
@@ -1456,5 +1517,13 @@ else {
     status = 1;
 }
 
+if(status==0 && index(["main","start","restart","reload"],mode)>=0) {
+    if(!require("service.applied_config").save(checkpoint))
+        log_message("Applied configuration checkpoint unavailable; diagnostics will report incomplete state", "warn");
+    if(!require("service.config_transaction").status().recovery_pending && !require("service.runtime_apply").clear())status=1;
+}
+if(mode=="stop" && !require("service.config_transaction").status().recovery_pending)
+    require("service.runtime_apply").clear();
 release_start_subscription_update_lock();
+require("service.operation_lock").release(operation_lock);
 exit(status);

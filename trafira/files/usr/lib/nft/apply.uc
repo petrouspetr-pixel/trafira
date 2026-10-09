@@ -1551,6 +1551,10 @@ function nft_runtime_signature_from_settings_and_sections(settings, sections) {
     body = signature_add_value(body, "settings.source_network_interfaces", option(settings, "source_network_interfaces", "br-lan"));
     body = signature_add_value(body, "settings.exclude_ntp", bool_option(settings, "exclude_ntp", false) ? "1" : "0");
     body = alice_config.signature_body(settings, signature_add_value, body);
+    if (bool_option(settings, "router_origin_enabled", false)) {
+        body = signature_add_value(body, "settings.router_origin_enabled", "1");
+        body = signature_add_value(body, "settings.router_origin_section", option(settings, "router_origin_section", ""));
+    }
 
     for (let section in sections)
         body = nft_rule_signature_body(body, object_or_empty(section));
@@ -1614,7 +1618,8 @@ function nft_create_full_runtime_from_uci(rt_table, table, localv4_set, common_s
         nft_add_section_priority_rules_from_sections(uci_sections("section"), table, interface_set, localv4_set, localv6_set, fakeip_mark, fakeip_range, fakeip6_range) &&
         nft_create_provider_output_rules_from_uci(table, "zapret", zapret_bin, zapret_route_mark_base, zapret_queue_base, zapret_desync_mark, zapret_desync_mark_postnat) &&
         nft_create_provider_output_rules_from_uci(table, "zapret2", zapret2_bin, zapret2_route_mark_base, zapret2_queue_base, zapret2_desync_mark, zapret2_desync_mark_postnat) &&
-        nft_create_runtime_output_rules(table, localv4_set, common_set, port_set, ip_port_set, fakeip_mark, fakeip_range, localv6_set, common6_set, ip_port6_set, fakeip6_range);
+        nft_create_runtime_output_rules(table, localv4_set, common_set, port_set, ip_port_set, fakeip_mark, fakeip_range, localv6_set, common6_set, ip_port6_set, fakeip6_range) &&
+        require("nft.router_origin").install(uci_settings(), uci_sections("section"), table, localv4_set, localv6_set, fakeip_mark);
 }
 
 function nft_table_present(table) {

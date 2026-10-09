@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "presets": [
+    {
+      "id": "steam",
+      "revision": 1,
+      "checked_at": "2026-10-09",
+      "sources": [
+        "https://store.steampowered.com/",
+        "https://steamcommunity.com/login/home/"
+      ],
+      "domains": [
+        {
+          "value": "store.steampowered.com",
+          "match": "exact",
+          "purpose": "store",
+          "source": "https://store.steampowered.com/"
+        },
+        {
+          "value": "steamcommunity.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://steamcommunity.com/login/home/"
+        }
+      ],
+      "limitations": [
+        "shared_services",
+        "incomplete_platform_coverage",
+        "address_changes_require_review",
+        "remaining_device_traffic_direct"
+      ]
+    },
+    {
+      "id": "playstation",
+      "revision": 1,
+      "checked_at": "2026-10-09",
+      "sources": [
+        "https://store.playstation.com/",
+        "https://www.playstation.com/en-us/support/account/sign-in/"
+      ],
+      "domains": [
+        {
+          "value": "store.playstation.com",
+          "match": "exact",
+          "purpose": "store",
+          "source": "https://store.playstation.com/"
+        },
+        {
+          "value": "id.sonyentertainmentnetwork.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://www.playstation.com/en-us/support/account/sign-in/"
+        }
+      ],
+      "limitations": [
+        "shared_services",
+        "incomplete_platform_coverage",
+        "address_changes_require_review",
+        "remaining_device_traffic_direct"
+      ]
+    },
+    {
+      "id": "xbox",
+      "revision": 1,
+      "checked_at": "2026-10-09",
+      "sources": [
+        "https://www.xbox.com/en-US/games",
+        "https://account.microsoft.com/account",
+        "https://login.live.com/"
+      ],
+      "domains": [
+        {
+          "value": "www.xbox.com",
+          "match": "exact",
+          "purpose": "store",
+          "source": "https://www.xbox.com/en-US/games"
+        },
+        {
+          "value": "account.microsoft.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://account.microsoft.com/account"
+        },
+        {
+          "value": "login.live.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://login.live.com/"
+        }
+      ],
+      "limitations": [
+        "shared_services",
+        "incomplete_platform_coverage",
+        "address_changes_require_review",
+        "remaining_device_traffic_direct"
+      ]
+    },
+    {
+      "id": "epic",
+      "revision": 1,
+      "checked_at": "2026-10-09",
+      "sources": [
+        "https://www.epicgames.com/help/c-36624475/c-35761596/which-domains-need-to-be-whitelisted-to-reach-the-epic-servers-a15422130?lang=en-US"
+      ],
+      "domains": [
+        {
+          "value": "store.epicgames.com",
+          "match": "exact",
+          "purpose": "store",
+          "source": "https://www.epicgames.com/help/c-36624475/c-35761596/which-domains-need-to-be-whitelisted-to-reach-the-epic-servers-a15422130?lang=en-US"
+        },
+        {
+          "value": "accounts.epicgames.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://www.epicgames.com/help/c-36624475/c-35761596/which-domains-need-to-be-whitelisted-to-reach-the-epic-servers-a15422130?lang=en-US"
+        },
+        {
+          "value": "account-public-service-prod03.ol.epicgames.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://www.epicgames.com/help/c-36624475/c-35761596/which-domains-need-to-be-whitelisted-to-reach-the-epic-servers-a15422130?lang=en-US"
+        },
+        {
+          "value": "catalog-public-service-prod06.ol.epicgames.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://www.epicgames.com/help/c-36624475/c-35761596/which-domains-need-to-be-whitelisted-to-reach-the-epic-servers-a15422130?lang=en-US"
+        },
+        {
+          "value": "orderprocessor-public-service-ecomprod01.ol.epicgames.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://www.epicgames.com/help/c-36624475/c-35761596/which-domains-need-to-be-whitelisted-to-reach-the-epic-servers-a15422130?lang=en-US"
+        },
+        {
+          "value": "launcher.store.epicgames.com",
+          "match": "exact",
+          "purpose": "shared",
+          "source": "https://www.epicgames.com/help/c-36624475/c-35761596/which-domains-need-to-be-whitelisted-to-reach-the-epic-servers-a15422130?lang=en-US"
+        }
+      ],
+      "limitations": [
+        "shared_services",
+        "incomplete_platform_coverage",
+        "address_changes_require_review",
+        "remaining_device_traffic_direct"
+      ]
+    }
+  ]
+}

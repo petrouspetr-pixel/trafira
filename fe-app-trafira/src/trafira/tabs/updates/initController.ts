@@ -45,6 +45,7 @@ import {
   subscribeRuntimeUiState,
 } from '../../services/runtimeUiState.service';
 import { Trafira } from '../../types';
+import { coreVersionsPanel } from './renderCoreVersions';
 
 type UpdateStatus = StoreType['updatesChecks'][Trafira.ComponentName]['status'];
 
@@ -1254,6 +1255,7 @@ async function onPageMount() {
   onPageUnmount();
 
   updatesMounted = true;
+  coreVersionsPanel.mount();
   updatesMountId += 1;
   const mountId = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
@@ -1302,6 +1304,7 @@ async function onPageMount() {
 }
 
 function onPageUnmount() {
+  coreVersionsPanel.unmount();
   updatesMounted = false;
   updatesMountId += 1;
   stopComponentActionStateWatcher();

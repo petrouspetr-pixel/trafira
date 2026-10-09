@@ -1,0 +1,42 @@
+name: Failure Policy Network
+on:
+  pull_request:
+    paths:
+      - 'trafira/files/**'
+      - 'tests/failure_policy*'
+      - 'tests/router_origin*'
+      - 'tests/helpers/failure_policy_servers.py'
+      - '.github/workflows/failure-policy-network.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'trafira/files/**'
+      - 'tests/failure_policy*'
+      - 'tests/router_origin*'
+      - 'tests/helpers/failure_policy_servers.py'
+      - '.github/workflows/failure-policy-network.yml'
+jobs:
+  network:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - name: Prepare isolated test tools
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libjson-c-dev pkg-config nftables iproute2 curl python3
+          git clone --depth 1 --branch v0.0.20250529 https://github.com/jow-/ucode.git /tmp/ucode
+          cmake -S /tmp/ucode -B /tmp/ucode/build -DUBUS_SUPPORT=OFF -DUCI_SUPPORT=OFF -DULOOP_SUPPORT=OFF
+          cmake --build /tmp/ucode/build --parallel
+          sudo cmake --install /tmp/ucode/build
+          sudo ldconfig
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 90 https://github.com/SagerNet/sing-box/releases/download/v1.12.12/sing-box-1.12.12-linux-amd64.tar.gz -o /tmp/sing-box.tar.gz
+          echo '7c103cb2f9a7dc54cb82962043596718ed27989a478d6405f0939a9b775f889f  /tmp/sing-box.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/sing-box.tar.gz -C /tmp
+          sudo install -m 0755 /tmp/sing-box-1.12.12-linux-amd64/sing-box /usr/local/bin/sing-box
+      - name: Verify packet paths and crash guards
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/failure_policy_network.sh
+
+      - name: Verify router-origin packet paths
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/router_origin_network.sh

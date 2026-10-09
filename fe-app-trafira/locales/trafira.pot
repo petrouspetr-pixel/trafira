@@ -3741,3 +3741,390 @@ msgstr ""
 #: src/trafira/tabs/diagnostic/renderSnapshots.ts:58
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr ""
+
+
+msgid "Matched route"
+msgstr ""
+
+
+msgid "Blocked"
+msgstr ""
+
+
+msgid "Insufficient information"
+msgstr ""
+
+
+msgid "Missing information"
+msgstr ""
+
+
+msgid "Rule evaluation order"
+msgstr ""
+
+
+msgid "Overridden by an earlier rule"
+msgstr ""
+
+
+msgid "Only the first 200 rules are displayed"
+msgstr ""
+
+
+msgid "Checking route"
+msgstr ""
+
+
+msgid "Could not explain route"
+msgstr ""
+
+
+msgid "Analysis of the applied configuration, not a live connection capture."
+msgstr ""
+
+
+msgid "Connection route"
+msgstr ""
+
+
+msgid "DNS policy (A query)"
+msgstr ""
+
+
+msgid "Current selected node"
+msgstr ""
+
+
+msgid "No DNS query was sent from the selected device."
+msgstr ""
+
+
+msgid "Limitations"
+msgstr ""
+
+
+msgid "Device by IP address"
+msgstr ""
+
+
+msgid "This router"
+msgstr ""
+
+
+msgid "Device IP address"
+msgstr ""
+
+
+msgid "Device MAC (optional)"
+msgstr ""
+
+
+msgid "Incoming interface (optional)"
+msgstr ""
+
+
+msgid "Real destination IP (optional)"
+msgstr ""
+
+
+msgid "TCP, unknown protocol"
+msgstr ""
+
+
+msgid "UDP, unknown protocol"
+msgstr ""
+
+
+msgid "Where will the connection go?"
+msgstr ""
+
+
+msgid "Domain"
+msgstr ""
+
+
+msgid "Destination port"
+msgstr ""
+
+
+msgid "Explain route"
+msgstr ""
+
+msgid "Configuration profiles"
+msgstr ""
+
+msgid "Profile name"
+msgstr ""
+
+msgid "Save current settings"
+msgstr ""
+
+msgid "Rename profile"
+msgstr ""
+
+msgid "Show differences"
+msgstr ""
+
+msgid "Apply profile"
+msgstr ""
+
+msgid "Restore previous settings"
+msgstr ""
+
+msgid "Delete profile"
+msgstr ""
+
+msgid "Delete the selected saved profile? Current settings will remain unchanged."
+msgstr ""
+
+msgid "Transferring profile"
+msgstr ""
+
+msgid "Profile transfer completed"
+msgstr ""
+
+msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+msgstr ""
+
+msgid "Import profile"
+msgstr ""
+
+msgid "Export profile"
+msgstr ""
+
+msgid "Save up to eight profiles. Applying a profile may restart routing."
+msgstr ""
+
+msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
+msgstr ""
+
+msgid "Applying settings in the background. You can close this page."
+msgstr ""
+
+msgid "Previous settings were restored."
+msgstr ""
+
+msgid "Only changed section and option names are shown; values are hidden."
+msgstr ""
+
+msgid "The profile cannot be used with the current configuration and components."
+msgstr ""
+
+msgid "Configuration changed. Review the differences again."
+msgstr ""
+
+msgid "Another configuration operation is already running."
+msgstr ""
+
+msgid "Restore the interrupted operation before continuing."
+msgstr ""
+
+msgid "The profile format is invalid or unsupported."
+msgstr ""
+
+msgid "A maximum of eight profiles can be saved."
+msgstr ""
+
+msgid "Restoration failed. Check the service before continuing."
+msgstr ""
+
+msgid "The profile operation failed."
+msgstr ""
+
+msgid "Added"
+msgstr ""
+
+msgid "Removed"
+msgstr ""
+
+msgid "Changed"
+msgstr ""
+
+msgid "Refresh available versions"
+msgstr ""
+
+msgid "Install selected version"
+msgstr ""
+
+msgid "Unpin version"
+msgstr ""
+
+msgid "Select a version"
+msgstr ""
+
+msgid "Unavailable for this installation"
+msgstr ""
+
+msgid "Installed version"
+msgstr ""
+
+msgid "Pinned version"
+msgstr ""
+
+msgid "Catalog checked"
+msgstr ""
+
+msgid "The sing-box version operation failed."
+msgstr ""
+
+msgid "Installing in the background. You may close this page."
+msgstr ""
+
+msgid "The previous version was restored."
+msgstr ""
+
+msgid "Sing-box versions"
+msgstr ""
+
+msgid "Pin selected version"
+msgstr ""
+
+msgid "VPN failure policy"
+msgstr ""
+
+msgid "Choose what happens after confirmed connection failures. Direct fallback sends this section's traffic without its VPN. Switching interrupts existing connections; protection requires Trafira to be running."
+msgstr ""
+
+msgid "Keep existing behavior"
+msgstr ""
+
+msgid "Block traffic"
+msgstr ""
+
+msgid "Use a reserve section, otherwise block"
+msgstr ""
+
+msgid "Allow direct fallback without VPN"
+msgstr ""
+
+msgid "Reserve section"
+msgstr ""
+
+msgid "Select an enabled Connection section as reserve"
+msgstr ""
+
+msgid "Consecutive failures before switching"
+msgstr ""
+
+msgid "Consecutive successes before recovery"
+msgstr ""
+
+msgid "Minimum time between switches (seconds)"
+msgstr ""
+
+msgid "Primary connection"
+msgstr ""
+
+msgid "Reserve connection"
+msgstr ""
+
+msgid "Traffic blocked"
+msgstr ""
+
+msgid "Availability check error"
+msgstr ""
+
+msgid "State unavailable"
+msgstr ""
+
+msgid "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
+msgstr ""
+
+msgid "Policy"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
+msgid "Seconds since last switch"
+msgstr ""
+
+msgid "Switching interrupts existing connections. Protection applies while Trafira is running."
+msgstr ""
+
+msgid "Route router applications"
+msgstr ""
+
+msgid "Router traffic section"
+msgstr ""
+
+msgid "Route remaining traffic from this router through a Connection section. LAN routing is unchanged. Local management, configured bootstrap DNS/NTP, marked service traffic and active WG/AWG transports are excluded. Other native VPN interfaces are not supported."
+msgstr ""
+
+msgid "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
+msgstr ""
+
+msgid "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
+msgstr ""
+
+msgid "These rules were edited. Confirm replacement or keep them as ordinary rules."
+msgstr ""
+
+msgid "The selected address is no longer known. Refresh the device list."
+msgstr ""
+
+msgid "Select an enabled connection rule."
+msgstr ""
+
+msgid "The generated configuration did not pass validation."
+msgstr ""
+
+msgid "The operation failed. Refresh the page and review the settings."
+msgstr ""
+
+msgid "Choose rule priority"
+msgstr ""
+
+msgid "Before existing device rules"
+msgstr ""
+
+msgid "After existing device rules"
+msgstr ""
+
+msgid "Applying configuration. You can reconnect to this page."
+msgstr ""
+
+msgid "Configuration validation passed. Review the changes below."
+msgstr ""
+
+msgid "Select a known device"
+msgstr ""
+
+msgid "Select a connection"
+msgstr ""
+
+msgid "Edited"
+msgstr ""
+
+msgid "Keep as ordinary rules"
+msgstr ""
+
+msgid "Preview deletion"
+msgstr ""
+
+msgid "Delete the edited preset rules? The next step shows the changes."
+msgstr ""
+
+msgid "Gaming presets"
+msgstr ""
+
+msgid "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
+msgstr ""
+
+msgid "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
+msgstr ""
+
+msgid "Enable only these addresses in Alice Mode if required"
+msgstr ""
+
+msgid "Replace my edits to this preset after preview"
+msgstr ""
+
+msgid "Refresh devices"
+msgstr ""
+
+msgid "Preview gaming rules"
+msgstr ""
+
+msgid "Apply reviewed changes"
+msgstr ""

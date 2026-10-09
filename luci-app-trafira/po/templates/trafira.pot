@@ -3741,3 +3741,240 @@ msgstr ""
 #: src/trafira/tabs/diagnostic/renderSnapshots.ts:58
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr ""
+
+
+msgid "Matched route"
+msgstr ""
+
+
+msgid "Blocked"
+msgstr ""
+
+
+msgid "Insufficient information"
+msgstr ""
+
+
+msgid "Missing information"
+msgstr ""
+
+
+msgid "Rule evaluation order"
+msgstr ""
+
+
+msgid "Overridden by an earlier rule"
+msgstr ""
+
+
+msgid "Only the first 200 rules are displayed"
+msgstr ""
+
+
+msgid "Checking route"
+msgstr ""
+
+
+msgid "Could not explain route"
+msgstr ""
+
+
+msgid "Analysis of the applied configuration, not a live connection capture."
+msgstr ""
+
+
+msgid "Connection route"
+msgstr ""
+
+
+msgid "DNS policy (A query)"
+msgstr ""
+
+
+msgid "Current selected node"
+msgstr ""
+
+
+msgid "No DNS query was sent from the selected device."
+msgstr ""
+
+
+msgid "Limitations"
+msgstr ""
+
+
+msgid "Device by IP address"
+msgstr ""
+
+
+msgid "This router"
+msgstr ""
+
+
+msgid "Device IP address"
+msgstr ""
+
+
+msgid "Device MAC (optional)"
+msgstr ""
+
+
+msgid "Incoming interface (optional)"
+msgstr ""
+
+
+msgid "Real destination IP (optional)"
+msgstr ""
+
+
+msgid "TCP, unknown protocol"
+msgstr ""
+
+
+msgid "UDP, unknown protocol"
+msgstr ""
+
+
+msgid "Where will the connection go?"
+msgstr ""
+
+
+msgid "Domain"
+msgstr ""
+
+
+msgid "Destination port"
+msgstr ""
+
+
+msgid "Explain route"
+msgstr ""
+
+msgid "Configuration profiles"
+msgstr ""
+
+msgid "Profile name"
+msgstr ""
+
+msgid "Save current settings"
+msgstr ""
+
+msgid "Rename profile"
+msgstr ""
+
+msgid "Show differences"
+msgstr ""
+
+msgid "Apply profile"
+msgstr ""
+
+msgid "Restore previous settings"
+msgstr ""
+
+msgid "Delete profile"
+msgstr ""
+
+msgid "Delete the selected saved profile? Current settings will remain unchanged."
+msgstr ""
+
+msgid "Transferring profile"
+msgstr ""
+
+msgid "Profile transfer completed"
+msgstr ""
+
+msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+msgstr ""
+
+msgid "Import profile"
+msgstr ""
+
+msgid "Export profile"
+msgstr ""
+
+msgid "Save up to eight profiles. Applying a profile may restart routing."
+msgstr ""
+
+msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
+msgstr ""
+
+msgid "Applying settings in the background. You can close this page."
+msgstr ""
+
+msgid "Previous settings were restored."
+msgstr ""
+
+msgid "Only changed section and option names are shown; values are hidden."
+msgstr ""
+
+msgid "The profile cannot be used with the current configuration and components."
+msgstr ""
+
+msgid "Configuration changed. Review the differences again."
+msgstr ""
+
+msgid "Another configuration operation is already running."
+msgstr ""
+
+msgid "Restore the interrupted operation before continuing."
+msgstr ""
+
+msgid "The profile format is invalid or unsupported."
+msgstr ""
+
+msgid "A maximum of eight profiles can be saved."
+msgstr ""
+
+msgid "Restoration failed. Check the service before continuing."
+msgstr ""
+
+msgid "The profile operation failed."
+msgstr ""
+
+msgid "Added"
+msgstr ""
+
+msgid "Removed"
+msgstr ""
+
+msgid "Changed"
+msgstr ""
+
+msgid "Refresh available versions"
+msgstr ""
+
+msgid "Install selected version"
+msgstr ""
+
+msgid "Unpin version"
+msgstr ""
+
+msgid "Select a version"
+msgstr ""
+
+msgid "Unavailable for this installation"
+msgstr ""
+
+msgid "Installed version"
+msgstr ""
+
+msgid "Pinned version"
+msgstr ""
+
+msgid "Catalog checked"
+msgstr ""
+
+msgid "The sing-box version operation failed."
+msgstr ""
+
+msgid "Installing in the background. You may close this page."
+msgstr ""
+
+msgid "The previous version was restored."
+msgstr ""
+
+msgid "Sing-box versions"
+msgstr ""
+
+msgid "Pin selected version"
+msgstr ""

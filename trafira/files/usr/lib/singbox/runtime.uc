@@ -685,10 +685,23 @@ function save_config_file(temp_file_path, config_path) {
         log_message("sing-box configuration changed; updating " + config_path, "info");
         if (!ensure_parent_dir(config_path))
             return false;
-        return command_success_from_args([ "mv", "-f", temp_file_path, config_path ]);
+        if (!command_success_from_args([ "mv", "-f", temp_file_path, config_path ]))
+            return false;
+        if (file_exists(temp_file_path + ".failure-policy.json")) {
+            if (!command_success_from_args(["mv","-f",temp_file_path + ".failure-policy.json",config_path + ".failure-policy.json"])) return false;
+        } else if (file_exists(config_path + ".failure-policy.json") && !fs.unlink(config_path + ".failure-policy.json")) return false;
+        // The reader validates the digest, including during a two-file transition.
+        if (file_exists(temp_file_path + ".provenance.json"))
+            command_success_from_args(["mv","-f",temp_file_path + ".provenance.json",config_path + ".provenance.json"]);
+        return true;
     }
 
     log_message("sing-box configuration is unchanged", "info");
+    if (file_exists(temp_file_path + ".failure-policy.json")) {
+        if (!command_success_from_args(["mv","-f",temp_file_path + ".failure-policy.json",config_path + ".failure-policy.json"])) return false;
+    } else if (file_exists(config_path + ".failure-policy.json") && !fs.unlink(config_path + ".failure-policy.json")) return false;
+    if (file_exists(temp_file_path + ".provenance.json"))
+        command_success_from_args(["mv","-f",temp_file_path + ".provenance.json",config_path + ".provenance.json"]);
     remove_file(temp_file_path);
     return true;
 }

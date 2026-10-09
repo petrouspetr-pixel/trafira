@@ -895,6 +895,11 @@ function nft_runtime_signature_body(settings, sections) {
     if (bool_option(settings, "exclude_wifi_calling", false))
         body = signature_add_value(body, "settings.exclude_wifi_calling", "1");
     body = alice_config.signature_body(settings, signature_add_value, body);
+    if (bool_option(settings, "router_origin_enabled", false)) {
+        body = signature_add_value(body, "settings.router_origin_enabled", "1");
+        body = signature_add_value(body, "settings.router_origin_section", option(settings, "router_origin_section", ""));
+    }
+
 
     for (let section in sections) {
         section = object_or_empty(section);
@@ -1250,6 +1255,9 @@ function append_sing_box_rule_signature_body(body, section, sections) {
         return body;
 
     let prefix = "rule." + name;
+    if (connections.is_connections_action(action) && option(section, "failure_policy", "legacy") != "legacy")
+        for (let key in ["failure_policy","failure_reserve_section","failure_threshold","recovery_threshold","failure_hold_seconds"])
+            body = signature_add_value(body, prefix + "." + key, option(section, key, ""));
     body = signature_add_value(body, prefix + ".action", action);
 
     if (connections.is_connections_action(action)) {
@@ -1401,6 +1409,10 @@ function sing_box_signature_body(settings, sections, servers, mwan3_active) {
     if (bool_option(settings, "alice_mode_enabled", false))
         body = signature_add_value(body, "settings.alice_mode_enabled", "1");
 
+    if (bool_option(settings, "router_origin_enabled", false)) {
+        body = signature_add_value(body, "settings.router_origin_enabled", "1");
+        body = signature_add_value(body, "settings.router_origin_section", option(settings, "router_origin_section", ""));
+    }
     body = signature_add_value(body, "settings.dns_type", option(settings, "dns_type", "doh"));
     body = signature_add_value(body, "settings.dns_strategy", option(settings, "dns_strategy", "prefer_ipv4"));
     if (bool_option_value(settings, "dns_mtls_enabled", false) == "1") {

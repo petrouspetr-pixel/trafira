@@ -340,8 +340,9 @@ function wireguard_peer_sections(dump) {
     return result;
 }
 
-function runtime_data() {
+function runtime_data(known) {
     let settings = object_or_empty(uci_core.get_all(CONFIG_NAME, "settings"));
+    if (known)settings={...settings,alice_mode_enabled:"1"};
     if (!common.bool_option(settings, "alice_mode_enabled", false))
         return { settings };
 
@@ -362,6 +363,8 @@ let mode = ARGV[0] || "";
 
 if (mode == "get-alice-devices")
     common.write_json(build_report(runtime_data()));
+else if (mode == "get-known-devices")
+    common.write_json(build_report(runtime_data(true)));
 else if (mode == "get-alice-devices-fixture")
     common.write_json(build_report(common.read_json_file(ARGV[1])));
 else {

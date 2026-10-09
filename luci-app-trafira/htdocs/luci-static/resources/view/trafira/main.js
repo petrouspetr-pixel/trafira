@@ -252,8 +252,8 @@ var SERVER_OUTBOUND_TYPES = /* @__PURE__ */ new Set([
   "hysteria2",
   "hysteria"
 ]);
-function invalid(message) {
-  return { valid: false, message };
+function invalid(message2) {
+  return { valid: false, message: message2 };
 }
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -974,8 +974,8 @@ function renderWarning(warning) {
     ),
     dhcp_source_partial: _("Some DHCP lease entries were invalid and skipped.")
   };
-  const text = messages[warning.code];
-  return E("div", { class: `${BLOCK}__warning`, role: "alert" }, text);
+  const text3 = messages[warning.code];
+  return E("div", { class: `${BLOCK}__warning`, role: "alert" }, text3);
 }
 function renderHandshake(device, nowSeconds) {
   const handshake = device.kind === "wireguard" ? formatHandshakeAge(device.last_handshake, nowSeconds) : "";
@@ -1127,8 +1127,8 @@ function renderFlagEmojis(value) {
 }
 
 // src/helpers/downloadAsTxt.ts
-function downloadAsTxt(text, filename) {
-  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+function downloadAsTxt(text3, filename) {
+  const blob = new Blob([text3], { type: "text/plain;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   const safeName = filename.endsWith(".txt") ? filename : `${filename}.txt`;
@@ -1150,20 +1150,20 @@ var Logger = class {
   }
   push(level, ...args) {
     if (!this.levels.includes(level)) level = "info";
-    const message = this.format(level, ...args);
-    this.logs.push(message);
+    const message2 = this.format(level, ...args);
+    this.logs.push(message2);
     switch (level) {
       case "error":
-        console.error(message);
+        console.error(message2);
         break;
       case "warn":
-        console.warn(message);
+        console.warn(message2);
         break;
       case "info":
-        console.info(message);
+        console.info(message2);
         break;
       default:
-        console.log(message);
+        console.log(message2);
     }
   }
   debug(...args) {
@@ -1274,15 +1274,15 @@ var COMMAND_TIMEOUT = 1e4;
 
 // src/helpers/executeShellCommand.ts
 async function executeShellCommand({
-  command: command2,
+  command: command5,
   args,
   timeout = COMMAND_TIMEOUT
 }) {
   try {
     return await withTimeout(
-      fs.exec(command2, args),
+      fs.exec(command5, args),
       timeout,
-      [command2, ...args].join(" ")
+      [command5, ...args].join(" ")
     );
   } catch (err) {
     const error = err;
@@ -2531,6 +2531,7 @@ function render() {
             })
           )
         ]),
+        E("div", { id: "trafira-failure-policies", hidden: true }),
         // All outbounds
         E(
           "div",
@@ -2583,7 +2584,7 @@ function render() {
 }
 
 // src/helpers/showToast.ts
-function showToast(message, type, duration = 3e3) {
+function showToast(message2, type, duration = 3e3) {
   let container = document.querySelector(".toast-container");
   if (!container) {
     container = document.createElement("div");
@@ -2592,7 +2593,7 @@ function showToast(message, type, duration = 3e3) {
   }
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.textContent = message;
+  toast.textContent = message2;
   container.appendChild(toast);
   setTimeout(() => toast.classList.add("visible"), 100);
   setTimeout(() => {
@@ -2602,9 +2603,9 @@ function showToast(message, type, duration = 3e3) {
 }
 
 // src/helpers/copyToClipboard.ts
-function copyToClipboard(text) {
+function copyToClipboard(text3) {
   const textarea = document.createElement("textarea");
-  textarea.value = text;
+  textarea.value = text3;
   document.body.appendChild(textarea);
   textarea.select();
   try {
@@ -2651,10 +2652,10 @@ function getOutboundTagBySection(sectionName) {
 }
 
 // src/trafira/methods/shell/callBaseMethod.ts
-async function callBaseMethod(method, args = [], command2 = "/usr/bin/trafira", options = {}) {
+async function callBaseMethod(method, args = [], command5 = "/usr/bin/trafira", options = {}) {
   try {
     const response = await executeShellCommand({
-      command: command2,
+      command: command5,
       args: [method, ...args],
       timeout: options.timeout ?? 15e3
     });
@@ -2753,11 +2754,11 @@ var TRANSIENT_RPC_ERROR_PATTERNS = [
   "request aborted",
   "operation was aborted"
 ];
-function isTransientRpcError(message) {
-  if (!message) {
+function isTransientRpcError(message2) {
+  if (!message2) {
     return false;
   }
-  const normalized = message.toLowerCase();
+  const normalized = message2.toLowerCase();
   return TRANSIENT_RPC_ERROR_PATTERNS.some(
     (pattern) => normalized.includes(pattern)
   );
@@ -2782,8 +2783,8 @@ var GET_UI_STATE_RPC_TIMEOUT_MS = 3e3;
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-function translate(message) {
-  return typeof _ === "function" ? _(message) : message;
+function translate(message2) {
+  return typeof _ === "function" ? _(message2) : message2;
 }
 function parseJsonObjectOutput(output) {
   if (!output) {
@@ -3351,15 +3352,15 @@ function canFetchClashApiDirectly() {
 async function getClashApiProxies(configSections) {
   if (canFetchClashApiDirectly()) {
     const secret = getClashApiSecret(configSections);
-    const controller = new AbortController();
+    const controller2 = new AbortController();
     const timeoutId = setTimeout(
-      () => controller.abort(),
+      () => controller2.abort(),
       CLASH_API_FETCH_TIMEOUT_MS
     );
     try {
       const response = await fetch(`${getClashHttpUrl()}/proxies`, {
         headers: secret ? { Authorization: `Bearer ${secret}` } : void 0,
-        signal: controller.signal
+        signal: controller2.signal
       });
       if (response.ok) {
         return {
@@ -4433,10 +4434,10 @@ var TabService = class _TabService {
     }));
   }
   getActiveTabId() {
-    const active = document.querySelector(
+    const active3 = document.querySelector(
       ".cbi-tab:not(.cbi-tab-disabled)"
     );
-    return active?.dataset.tab || null;
+    return active3?.dataset.tab || null;
   }
   notify() {
     const tabs = this.getTabsInfo();
@@ -4656,10 +4657,10 @@ function jsonEqual(a, b) {
   }
 }
 var StoreService = class {
-  constructor(initial) {
+  constructor(initial3) {
     this.listeners = /* @__PURE__ */ new Set();
-    this.value = initial;
-    this.initial = structuredClone(initial);
+    this.value = initial3;
+    this.initial = structuredClone(initial3);
   }
   get() {
     return this.value;
@@ -5031,29 +5032,29 @@ var componentActions = /* @__PURE__ */ new Set();
 var subscriptionSections = /* @__PURE__ */ new Set();
 var latencySections = /* @__PURE__ */ new Set();
 var serviceActions = /* @__PURE__ */ new Set();
-function setMembership(set, value, active) {
-  if (active) {
+function setMembership(set, value, active3) {
+  if (active3) {
     set.add(value);
   } else {
     set.delete(value);
   }
 }
-function setLocalComponentAction(action, active) {
-  setMembership(componentActions, action, active);
+function setLocalComponentAction(action, active3) {
+  setMembership(componentActions, action, active3);
 }
-function setLocalSubscriptionAction(section, active) {
+function setLocalSubscriptionAction(section, active3) {
   if (section) {
-    setMembership(subscriptionSections, section, active);
+    setMembership(subscriptionSections, section, active3);
   }
 }
-function setLocalLatencyAction(section, active) {
+function setLocalLatencyAction(section, active3) {
   if (section) {
-    setMembership(latencySections, section, active);
+    setMembership(latencySections, section, active3);
   }
 }
-function setLocalServiceAction(action, active) {
+function setLocalServiceAction(action, active3) {
   if (action === "restart" || action === "start" || action === "stop") {
-    setMembership(serviceActions, action, active);
+    setMembership(serviceActions, action, active3);
   }
 }
 function getLocalActionOverlay() {
@@ -5351,10 +5352,10 @@ function componentDisplayName(component) {
 }
 function showLogNotification(notification) {
   if (notification.kind === "component-update") {
-    const message = _("New version %s is available for %s").replace("%s", notification.version).replace("%s", componentDisplayName(notification.component));
+    const message2 = _("New version %s is available for %s").replace("%s", notification.version).replace("%s", componentDisplayName(notification.component));
     ui.addNotification(
       _("Component update available"),
-      E("div", {}, message),
+      E("div", {}, message2),
       "warning",
       "fkp-component-update-notification"
     );
@@ -5435,7 +5436,7 @@ var SocketManager = class _SocketManager {
   }
   resetAll() {
     const sockets = [...this.sockets.entries()];
-    for (const timer of this.reconnectTimers.values()) clearTimeout(timer);
+    for (const timer2 of this.reconnectTimers.values()) clearTimeout(timer2);
     this.sockets.clear();
     this.listeners.clear();
     this.errorListeners.clear();
@@ -5588,8 +5589,8 @@ var SocketManager = class _SocketManager {
     );
   }
   clearReconnect(url) {
-    const timer = this.reconnectTimers.get(url);
-    if (timer) clearTimeout(timer);
+    const timer2 = this.reconnectTimers.get(url);
+    if (timer2) clearTimeout(timer2);
     this.reconnectTimers.delete(url);
     this.reconnectAttempts.delete(url);
   }
@@ -5781,6 +5782,116 @@ function getServiceAvailability({
   return running ? "running" : "stopped";
 }
 
+// src/trafira/tabs/dashboard/helpers/failurePolicy.ts
+function failurePolicyRows(value) {
+  if (!value || typeof value !== "object") return [];
+  const report = value;
+  if (report.enabled !== true || !Array.isArray(report.sections)) return [];
+  return report.sections.slice(0, 128).filter(
+    (item) => item && typeof item === "object" && typeof item.section === "string"
+  ).map((item) => {
+    const age = Number(item.age_seconds);
+    const validState = ["primary", "reserve", "direct", "blocked"].includes(
+      String(item.state)
+    );
+    return {
+      section: String(item.section).slice(0, 64),
+      policy: ["block", "reserve", "direct"].includes(String(item.policy)) ? String(item.policy) : "unknown",
+      state: !Number.isFinite(age) || age < 0 || age > 120 || !validState ? "unknown" : report.guarded === true || item.monitor_error === true ? "monitor-error" : item.state,
+      changedAgo: typeof item.changed_ago_seconds === "number" && Number.isFinite(item.changed_ago_seconds) && item.changed_ago_seconds >= 0 ? Math.floor(item.changed_ago_seconds) : null
+    };
+  });
+}
+
+// src/trafira/tabs/dashboard/renderFailurePolicies.ts
+var timer = 0;
+var generation = 0;
+var failurePoliciesPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-failure-policies");
+    if (!host) return;
+    const current = generation;
+    let pending = false;
+    const labels = {
+      block: _("Block traffic"),
+      primary: _("Primary connection"),
+      reserve: _("Reserve connection"),
+      direct: _("Direct connection"),
+      blocked: _("Traffic blocked"),
+      "monitor-error": _("Availability check error"),
+      unknown: _("State unavailable")
+    };
+    async function refresh() {
+      if (pending || current !== generation) return;
+      pending = true;
+      try {
+        const result = await executeShellCommand({
+          command: "/usr/bin/trafira",
+          args: ["failure_policy_status"],
+          timeout: 1e4
+        });
+        if (current !== generation) return;
+        if (result.code) throw new Error("Status unavailable");
+        const report = JSON.parse(result.stdout);
+        const rows = failurePolicyRows(report);
+        host.hidden = rows.length === 0 && !report.guarded;
+        host.replaceChildren(
+          E("h3", {}, _("VPN failure policy")),
+          ...report.guarded ? [
+            E(
+              "p",
+              { role: "alert" },
+              _(
+                "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
+              )
+            )
+          ] : [],
+          E("table", { class: "table" }, [
+            E("tr", {}, [
+              E("th", {}, _("Section")),
+              E("th", {}, _("Policy")),
+              E("th", {}, _("State")),
+              E("th", {}, _("Seconds since last switch"))
+            ]),
+            ...rows.map(
+              (row) => E("tr", {}, [
+                E("td", {}, row.section),
+                E("td", {}, labels[row.policy]),
+                E("td", {}, labels[row.state]),
+                E(
+                  "td",
+                  {},
+                  row.changedAgo === null ? "\u2014" : String(row.changedAgo)
+                )
+              ])
+            )
+          ]),
+          E(
+            "p",
+            {},
+            _(
+              "Switching interrupts existing connections. Protection applies while Trafira is running."
+            )
+          )
+        );
+      } catch {
+        if (current === generation && !host.hidden)
+          host.replaceChildren(E("p", {}, _("State unavailable")));
+      } finally {
+        pending = false;
+      }
+    }
+    void refresh();
+    timer = window.setInterval(() => void refresh(), 1e4);
+  },
+  unmount() {
+    generation++;
+    window.clearInterval(timer);
+    timer = 0;
+  }
+};
+
 // src/trafira/tabs/dashboard/initController.ts
 var SECTIONS_REFRESH_INTERVAL_MS = 1e4;
 var LATENCY_TEST_BUTTON_CLASS = "dashboard-sections-grid-item-test-latency";
@@ -5806,7 +5917,7 @@ if (typeof window !== "undefined") {
     pageUnloading = false;
   });
 }
-async function fetchDashboardSectionsOnce(mountId) {
+async function fetchDashboardSectionsOnce(mountId3) {
   if (getDashboardServiceAvailability() === "stopped") {
     return false;
   }
@@ -5821,7 +5932,7 @@ async function fetchDashboardSectionsOnce(mountId) {
   });
   try {
     const { data, success } = await CustomTrafiraMethods.getDashboardSections();
-    if (!dashboardMounted || mountId !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
+    if (!dashboardMounted || mountId3 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
       return false;
     }
     if (!success) {
@@ -5839,7 +5950,7 @@ async function fetchDashboardSectionsOnce(mountId) {
     return true;
   } catch (error) {
     logger.error("[DASHBOARD]", "fetchDashboardSections: failed", error);
-    if (!dashboardMounted || mountId !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
+    if (!dashboardMounted || mountId3 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
       return false;
     }
     const current = store.get().sectionsWidget;
@@ -5854,10 +5965,10 @@ async function fetchDashboardSectionsOnce(mountId) {
     return false;
   }
 }
-async function fetchAliceDevices(mountId) {
+async function fetchAliceDevices(mountId3) {
   try {
     const response = await TrafiraShellMethods.getAliceDevices();
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (!dashboardMounted || mountId3 !== dashboardMountId) {
       return;
     }
     if (!response.success || !response.data || typeof response.data !== "object") {
@@ -5872,7 +5983,7 @@ async function fetchAliceDevices(mountId) {
     });
   } catch (error) {
     logger.error("[DASHBOARD]", "fetchAliceDevices: failed", error);
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (!dashboardMounted || mountId3 !== dashboardMountId) {
       return;
     }
     const current = store.get().aliceDevicesWidget;
@@ -5892,13 +6003,13 @@ async function fetchDashboardSections(options = {}) {
     }
     return sectionsRefreshPromise;
   }
-  const mountId = dashboardMountId;
+  const mountId3 = dashboardMountId;
   const promise = (async () => {
     let success = false;
     do {
       sectionsRefreshQueued = false;
-      success = await fetchDashboardSectionsOnce(mountId);
-    } while (sectionsRefreshQueued && dashboardMounted && mountId === dashboardMountId);
+      success = await fetchDashboardSectionsOnce(mountId3);
+    } while (sectionsRefreshQueued && dashboardMounted && mountId3 === dashboardMountId);
     return success;
   })();
   sectionsRefreshPromise = promise;
@@ -5986,8 +6097,8 @@ async function completeSubscriptionUpdateJob(jobId, sectionName, response) {
   }
   const shouldNotify = jobId ? shouldNotifyOwnedUiAction("subscription", jobId) : false;
   const failed2 = !response.success || response.data.success === false;
-  const message = response.success ? response.data.message || _("Failed to update subscriptions") : response.error || _("Failed to update subscriptions");
-  if (failed2 && isTransientRpcError(message)) {
+  const message2 = response.success ? response.data.message || _("Failed to update subscriptions") : response.error || _("Failed to update subscriptions");
+  if (failed2 && isTransientRpcError(message2)) {
     void refreshRuntimeUiState({ force: true });
     return;
   }
@@ -6032,9 +6143,9 @@ async function followSubscriptionUpdateState(state) {
   } catch (error) {
     logger.error("[DASHBOARD]", "followSubscriptionUpdateState failed", error);
     if (!pageUnloading) {
-      const message = error instanceof Error ? error.message : _("Failed to update subscriptions");
+      const message2 = error instanceof Error ? error.message : _("Failed to update subscriptions");
       setSubscriptionUpdating(sectionName, false);
-      if (!isTransientRpcError(message)) {
+      if (!isTransientRpcError(message2)) {
         showToast(_("Failed to update subscriptions"), "error");
       }
     }
@@ -6121,9 +6232,9 @@ function stopActionStateWatcher() {
   actionStateUnsubscribe = null;
 }
 async function connectToClashSockets(dataUpdatesId) {
-  const mountId = dashboardMountId;
+  const mountId3 = dashboardMountId;
   const clashApiSecret = await getClashApiSecret2();
-  if (!dashboardMounted || mountId !== dashboardMountId || dataUpdatesId !== dashboardDataUpdatesId || getDashboardServiceAvailability() === "stopped") {
+  if (!dashboardMounted || mountId3 !== dashboardMountId || dataUpdatesId !== dashboardDataUpdatesId || getDashboardServiceAvailability() === "stopped") {
     return;
   }
   socket.subscribe(
@@ -6346,8 +6457,8 @@ function formatUrlTestModalValue(value) {
   if (typeof value === "boolean") {
     return value ? _("Yes") : _("No");
   }
-  const text = `${value ?? ""}`.trim();
-  return text || _("No");
+  const text3 = `${value ?? ""}`.trim();
+  return text3 || _("No");
 }
 function getUrlTestLatencyClass(latency) {
   if (!latency) {
@@ -6823,9 +6934,9 @@ async function handleUpdateSubscription(section) {
   } catch (error) {
     logger.error("[DASHBOARD]", "handleUpdateSubscription: failed", error);
     if (!pageUnloading) {
-      const message = error instanceof Error ? error.message : _("Failed to update subscriptions");
+      const message2 = error instanceof Error ? error.message : _("Failed to update subscriptions");
       setSubscriptionUpdating(section.sectionName, false);
-      if (!isTransientRpcError(message)) {
+      if (!isTransientRpcError(message2)) {
         showToast(_("Failed to update subscriptions"), "error");
       }
     }
@@ -6878,11 +6989,11 @@ function updateLatencyProgressInline(sectionsWidget) {
     if (!label) {
       return false;
     }
-    const text = getLatencyTestLabel(
+    const text3 = getLatencyTestLabel(
       sectionsWidget.latencyProgressSections[section.sectionName]
     );
-    if (label.textContent !== text) {
-      label.textContent = text;
+    if (label.textContent !== text3) {
+      label.textContent = text3;
     }
   }
   return true;
@@ -7124,8 +7235,8 @@ async function renderAliceDevicesWidget() {
       report: aliceDevicesWidget.data,
       nowSeconds: Math.floor(Date.now() / 1e3),
       expandedOffline: aliceExpandedOffline,
-      onToggleOffline: (status, open) => {
-        aliceExpandedOffline[status] = open;
+      onToggleOffline: (status2, open) => {
+        aliceExpandedOffline[status2] = open;
       }
     })
   );
@@ -7160,12 +7271,13 @@ async function onStoreUpdate(next, prev, diff) {
 async function onPageMount() {
   onPageUnmount();
   dashboardMounted = true;
+  failurePoliciesPanel.mount();
   dashboardMountId += 1;
-  const mountId = dashboardMountId;
+  const mountId3 = dashboardMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
   if (!hasRuntimeSnapshot) {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (!dashboardMounted || mountId3 !== dashboardMountId) {
       return;
     }
     if (!uiState) {
@@ -7186,6 +7298,7 @@ async function onPageMount() {
   }
 }
 function onPageUnmount() {
+  failurePoliciesPanel.unmount();
   dashboardMounted = false;
   dashboardMountId += 1;
   stopDashboardDataUpdates();
@@ -8083,6 +8196,7 @@ var DashboardTab = {
 function render2() {
   return E("div", { id: "diagnostic-status", class: "fkp_diagnostic-page" }, [
     E("div", { class: "fkp_diagnostic-page__left-bar" }, [
+      E("div", { id: "trafira-route-explanation" }),
       E("div", { id: "fkp_diagnostic-page-run-check" }),
       E("div", {
         class: "fkp_diagnostic-page__checks",
@@ -8093,17 +8207,19 @@ function render2() {
       E("div", { id: "fkp_diagnostic-page-wiki" }),
       E("div", { id: "fkp_diagnostic-page-actions" }),
       E("div", { id: "fkp_diagnostic-page-system-info" }),
-      E("div", { id: "fkp_diagnostic-page-snapshots" })
+      E("div", { id: "fkp_diagnostic-page-snapshots" }),
+      E("div", { id: "trafira-profiles" }),
+      E("div", { id: "trafira-gaming-presets" })
     ])
   ]);
 }
 
 // src/trafira/tabs/diagnostic/snapshotPanel.ts
 var SnapshotController = class {
-  constructor(read, start, render6) {
+  constructor(read, start, render7) {
     this.read = read;
     this.start = start;
-    this.render = render6;
+    this.render = render7;
     this.active = false;
     this.generation = 0;
     this.failures = 0;
@@ -8124,15 +8240,15 @@ var SnapshotController = class {
   }
   async refresh() {
     clearTimeout(this.timer);
-    const generation = this.generation;
+    const generation3 = this.generation;
     try {
       const report = await this.read();
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.report = report;
       this.failures = 0;
       this.render(report, "", this.starting);
     } catch {
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.failures++;
       this.render(this.report, "Could not read snapshot status", this.starting);
     }
@@ -8142,21 +8258,21 @@ var SnapshotController = class {
   }
   async prepare() {
     if (this.starting) return;
-    const generation = this.generation;
+    const generation3 = this.generation;
     this.starting = true;
     this.render(this.report, "", true);
     try {
       const result = await this.start();
       if (!result.success) throw new Error("rejected");
-      if (!this.active || generation !== this.generation) return;
+      if (!this.active || generation3 !== this.generation) return;
       this.starting = false;
       await this.refresh();
     } catch {
-      if (this.active && generation === this.generation) {
+      if (this.active && generation3 === this.generation) {
         this.render(this.report, "Could not start snapshot preparation", false);
       }
     } finally {
-      if (generation === this.generation) this.starting = false;
+      if (generation3 === this.generation) this.starting = false;
     }
   }
 };
@@ -8255,6 +8371,1041 @@ var snapshots = new SnapshotController(
   () => command("ruleset_snapshot_prepare_async"),
   render3
 );
+
+// src/trafira/tabs/diagnostic/routeExplanation.ts
+var RouteExplanationController = class {
+  constructor(read, render7) {
+    this.read = read;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.render(null, "", false);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  async submit(request) {
+    if (!this.active) return;
+    const generation3 = ++this.generation;
+    this.render(null, "", true);
+    try {
+      const report = await this.read(request);
+      if (!report.success) throw new Error("rejected");
+      if (this.active && this.generation === generation3)
+        this.render(report, "", false);
+    } catch {
+      if (this.active && this.generation === generation3)
+        this.render(null, "Could not explain route", false);
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderRouteExplanation.ts
+async function command2(name, args = []) {
+  const result = await executeShellCommand({
+    command: "/usr/bin/trafira",
+    args: [name, ...args],
+    timeout: 15e3
+  });
+  if (result.code) throw new Error("Route command failed");
+  return JSON.parse(result.stdout);
+}
+function status(value) {
+  return {
+    matched: _("Matched route"),
+    direct: _("Direct connection"),
+    blocked: _("Blocked"),
+    indeterminate: _("Insufficient information")
+  }[value];
+}
+function decisionView(title, decision) {
+  return E("div", {}, [
+    E("b", {}, title),
+    E(
+      "p",
+      {},
+      `${status(decision.status)}${decision.outbound ? `: ${decision.outbound}` : ""}`
+    ),
+    ...decision.missing.map(
+      (reason) => E("p", {}, `${_("Missing information")}: ${reason}`)
+    ),
+    E("details", {}, [
+      E("summary", {}, _("Rule evaluation order")),
+      ...decision.trace.map(
+        (row) => E(
+          "p",
+          {},
+          `#${row.index + 1}: ${row.match} \xB7 ${row.action} \xB7 ${row.origin?.section || row.origin?.kind || "\u2014"}${row.shadowed ? ` (${_("Overridden by an earlier rule")})` : ""}`
+        )
+      ),
+      ...decision.trace_truncated ? [E("p", {}, _("Only the first 200 rules are displayed"))] : []
+    ])
+  ]);
+}
+function render4(report, error, busy) {
+  const result = document.getElementById("trafira-route-explanation-result");
+  if (!result) return;
+  result.replaceChildren(
+    ...busy ? [E("p", {}, _("Checking route"))] : error ? [E("p", {}, _("Could not explain route"))] : report ? [
+      E(
+        "p",
+        {},
+        _(
+          "Analysis of the applied configuration, not a live connection capture."
+        )
+      ),
+      ...report.generated_at ? [
+        E(
+          "p",
+          {},
+          new Date(report.generated_at * 1e3).toLocaleString()
+        )
+      ] : [],
+      decisionView(_("Connection route"), report.decision),
+      ...report.dns_policy ? [decisionView(_("DNS policy (A query)"), report.dns_policy)] : [],
+      ...report.selector ? [
+        E(
+          "p",
+          {},
+          `${_("Current selected node")}: ${report.selector.current}`
+        )
+      ] : [],
+      E("p", {}, _("No DNS query was sent from the selected device.")),
+      ...report.limitations.map(
+        (reason) => E("p", {}, `${_("Limitations")}: ${reason}`)
+      )
+    ] : []
+  );
+}
+var controller = new RouteExplanationController(
+  (request) => command2("route_explain", [JSON.stringify(request)]),
+  render4
+);
+var mountId = 0;
+var routeExplanationPanel = {
+  mount() {
+    const generation3 = ++mountId;
+    const container = document.getElementById("trafira-route-explanation");
+    if (!container) return;
+    const domain = E("input", {
+      type: "text",
+      placeholder: "example.com",
+      maxLength: 253
+    });
+    const source = E("select", {}, [
+      E("option", { value: "device" }, _("Device by IP address")),
+      E("option", { value: "router" }, _("This router"))
+    ]);
+    const ip = E("input", {
+      type: "text",
+      placeholder: _("Device IP address")
+    });
+    const mac = E("input", {
+      type: "text",
+      placeholder: _("Device MAC (optional)")
+    });
+    const iface = E("input", {
+      type: "text",
+      placeholder: _("Incoming interface (optional)")
+    });
+    const destination = E("input", {
+      type: "text",
+      placeholder: _("Real destination IP (optional)")
+    });
+    const port = E("input", {
+      type: "number",
+      min: "1",
+      max: "65535",
+      value: "443"
+    });
+    const protocol = E("select", {}, [
+      E("option", { value: "tls" }, "TLS / TCP"),
+      E("option", { value: "http" }, "HTTP / TCP"),
+      E("option", { value: "quic" }, "QUIC / UDP"),
+      E("option", { value: "tcp" }, _("TCP, unknown protocol")),
+      E("option", { value: "udp" }, _("UDP, unknown protocol"))
+    ]);
+    let devices = [];
+    source.addEventListener("change", () => {
+      const device = devices[Number(source.value)];
+      if (device) {
+        ip.value = device.ip;
+        mac.value = device.mac || "";
+        iface.value = device.interface || "";
+      }
+      const router = source.value === "router";
+      ip.disabled = router;
+      mac.disabled = router;
+      iface.disabled = router;
+    });
+    const form = E("form", {}, [
+      E("h3", {}, _("Where will the connection go?")),
+      E("label", {}, [_("Domain"), domain]),
+      E("label", {}, [_("Source"), source]),
+      ip,
+      mac,
+      iface,
+      destination,
+      E("label", {}, [_("Destination port"), port]),
+      E("label", {}, [_("Protocol"), protocol]),
+      E(
+        "button",
+        { type: "submit", class: "cbi-button cbi-button-action" },
+        _("Explain route")
+      )
+    ]);
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const kind = source.value === "router" ? "router" : "device";
+      const request = {
+        domain: domain.value.trim(),
+        source: { kind },
+        port: Number(port.value),
+        network: protocol.value === "quic" || protocol.value === "udp" ? "udp" : "tcp"
+      };
+      if (kind === "device") {
+        request.source.ip = ip.value.trim();
+        if (mac.value.trim()) request.source.mac = mac.value.trim();
+        if (iface.value.trim()) request.source.interface = iface.value.trim();
+      }
+      if (destination.value.trim())
+        request.destination_ip = destination.value.trim();
+      if (["tls", "http", "quic"].includes(protocol.value))
+        request.protocol = protocol.value;
+      void controller.submit(request);
+    });
+    container.replaceChildren(
+      form,
+      E("div", { id: "trafira-route-explanation-result" })
+    );
+    controller.mount();
+    void command2("get_alice_devices").then((report) => {
+      if (generation3 !== mountId) return;
+      devices = [];
+      for (const device of report.devices || [])
+        for (const address of device.ips || []) {
+          const index = devices.push({
+            ip: address,
+            mac: device.mac,
+            interface: device.interface
+          }) - 1;
+          source.append(
+            E(
+              "option",
+              { value: String(index) },
+              `${device.name || address} \u2014 ${address}`
+            )
+          );
+        }
+    }).catch(() => {
+    });
+  },
+  unmount() {
+    mountId++;
+    controller.unmount();
+  }
+};
+
+// src/trafira/tabs/diagnostic/profilePanel.ts
+var initial = () => ({
+  busy: false,
+  running: false,
+  digest: "",
+  canRestore: false,
+  entries: [],
+  preview: null,
+  jobId: "",
+  error: "",
+  restored: false
+});
+var text = (value) => typeof value === "string" ? value : "";
+var errors = {
+  conflict: "Configuration changed. Review the differences again.",
+  busy: "Another configuration operation is already running.",
+  recovery_required: "Restore the interrupted operation before continuing.",
+  candidate_check_failed: "The profile cannot be used with the current configuration and components.",
+  invalid_profile: "The profile format is invalid or unsupported.",
+  profile_limit: "A maximum of eight profiles can be saved."
+};
+var ProfilePanelController = class {
+  constructor(call, render7) {
+    this.call = call;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+    this.state = initial();
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.state = initial();
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  async submit(request) {
+    if (!this.active || this.state.busy) return;
+    if (this.state.running && !["status", "list"].includes(request.action))
+      return;
+    const generation3 = ++this.generation;
+    this.state = { ...this.state, busy: true, error: "", restored: false };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (!this.active || generation3 !== this.generation) return;
+      if (typeof result.running === "boolean")
+        this.state = { ...this.state, running: result.running };
+      if (typeof result.digest === "string")
+        this.state = { ...this.state, digest: result.digest };
+      if (typeof result.can_restore === "boolean")
+        this.state = { ...this.state, canRestore: result.can_restore };
+      if (result.success === false || result.rollback_error) {
+        this.state = {
+          ...this.state,
+          preview: null,
+          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : errors[text(result.error)] || "The profile operation failed.",
+          restored: result.restored === true
+        };
+      } else {
+        if (Array.isArray(result.entries)) {
+          this.state = {
+            ...this.state,
+            entries: result.entries.filter((item) => item && typeof item === "object").map((item) => ({
+              id: text(item.id),
+              name: text(item.name),
+              invalid: item.invalid === true
+            }))
+          };
+        }
+        if (request.action === "preview") {
+          const changes = Array.isArray(result.changes) ? result.changes : [];
+          this.state = {
+            ...this.state,
+            preview: {
+              id: request.id || "",
+              applicable: result.applicable !== false,
+              digest: text(result.digest),
+              changes: changes.filter((item) => item && typeof item === "object").map((item) => ({
+                section: text(item.section),
+                option: text(item.option),
+                change: text(item.change)
+              }))
+            }
+          };
+        }
+        if (result.job_id)
+          this.state = { ...this.state, jobId: text(result.job_id) };
+        if (["apply", "restore", "remove"].includes(request.action))
+          this.state = { ...this.state, preview: null };
+        this.state = { ...this.state, restored: result.restored === true };
+      }
+    } catch {
+      if (!this.active || generation3 !== this.generation) return;
+      this.state = {
+        ...this.state,
+        error: "The profile operation failed.",
+        preview: null
+      };
+    }
+    if (this.active && generation3 === this.generation) {
+      this.state = { ...this.state, busy: false };
+      this.render(this.state);
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderProfiles.ts
+async function command3(request) {
+  const result = await executeShellCommand({
+    command: "/usr/bin/trafira-config",
+    args: ["profile_action", JSON.stringify(request)],
+    timeout: 3e4
+  });
+  if (result.code) throw new Error("Profile command failed");
+  return JSON.parse(result.stdout);
+}
+function encode(bytes) {
+  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
+}
+function decode(value) {
+  return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+}
+var mountId2 = 0;
+var active = null;
+var profilesPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-profiles");
+    if (!host) return;
+    const generation3 = mountId2;
+    let last;
+    let transferring = false;
+    const name = E("input", {
+      type: "text",
+      maxLength: 64,
+      placeholder: _("Profile name")
+    });
+    const select = E("select", {});
+    const file = E("input", {
+      type: "file",
+      accept: ".json,application/json"
+    });
+    const result = E("div", {});
+    const message2 = E("p", {});
+    const buttons = [];
+    let apply;
+    let restore;
+    function updateButtons() {
+      const disabled = transferring || last?.busy || last?.running;
+      for (const button2 of buttons) button2.disabled = disabled;
+      apply.disabled = disabled || !last?.preview || last.preview.id !== select.value || !last.preview.applicable;
+      restore.disabled = disabled || !last?.canRestore || !last?.digest;
+      file.disabled = disabled;
+      select.disabled = disabled;
+    }
+    async function submit(request, refresh = false) {
+      await controller2.submit(request);
+      if (refresh && generation3 === mountId2 && !last.error)
+        await controller2.submit({ action: "list" });
+    }
+    function button(label, click) {
+      const element = E(
+        "button",
+        { class: "cbi-button cbi-button-action", click },
+        label
+      );
+      buttons.push(element);
+      return element;
+    }
+    const actions = [
+      button(_("Save current settings"), () => {
+        void submit({ action: "create", name: name.value }, true);
+      }),
+      button(_("Rename profile"), () => {
+        void submit(
+          { action: "rename", id: select.value, name: name.value },
+          true
+        );
+      }),
+      button(_("Show differences"), () => {
+        void submit({ action: "preview", id: select.value });
+      }),
+      apply = button(_("Apply profile"), () => {
+        void submit({
+          action: "apply",
+          id: select.value,
+          digest: last.preview?.digest
+        });
+      }),
+      restore = button(_("Restore previous settings"), () => {
+        void submit({ action: "restore", digest: last.digest });
+      }),
+      button(_("Delete profile"), () => {
+        if (window.confirm(
+          _(
+            "Delete the selected saved profile? Current settings will remain unchanged."
+          )
+        ))
+          void submit({ action: "remove", id: select.value }, true);
+      })
+    ];
+    async function transfer(kind) {
+      if (transferring || last.busy || last.running) return;
+      transferring = true;
+      message2.textContent = _("Transferring profile");
+      updateButtons();
+      let transferId = "";
+      try {
+        if (kind === "import") {
+          const selected = file.files?.[0];
+          if (!selected || selected.size > 1048576) throw new Error("size");
+          const bytes = new Uint8Array(await selected.arrayBuffer());
+          const begin = await command3({ action: "import_begin" });
+          if (!begin.success || typeof begin.id !== "string")
+            throw new Error("begin");
+          transferId = begin.id;
+          for (let offset = 0; offset < bytes.length; offset += 12288) {
+            if (generation3 !== mountId2) throw new Error("closed");
+            const sent = await command3({
+              action: "import_chunk",
+              id: transferId,
+              offset,
+              data: encode(bytes.slice(offset, offset + 12288))
+            });
+            if (!sent.success) throw new Error("chunk");
+          }
+          if (generation3 !== mountId2) throw new Error("closed");
+          const imported = await command3({
+            action: "import_finish",
+            id: transferId
+          });
+          if (!imported.success) throw new Error("import");
+          await controller2.submit({ action: "list" });
+        } else {
+          const begin = await command3({
+            action: "export_begin",
+            id: select.value
+          });
+          if (!begin.success || typeof begin.id !== "string")
+            throw new Error("begin");
+          transferId = begin.id;
+          let offset = 0;
+          const chunks = [];
+          for (; ; ) {
+            if (generation3 !== mountId2) throw new Error("closed");
+            const part = await command3({
+              action: "export_read",
+              id: transferId,
+              offset
+            });
+            if (!part.success || typeof part.data !== "string")
+              throw new Error("read");
+            const bytes2 = decode(part.data);
+            chunks.push(bytes2);
+            offset += bytes2.length;
+            if (offset > 1048576 || !bytes2.length && !part.done)
+              throw new Error("size");
+            if (part.done) break;
+          }
+          if (generation3 !== mountId2) throw new Error("closed");
+          const bytes = new Uint8Array(offset);
+          let position = 0;
+          for (const chunk of chunks) {
+            bytes.set(chunk, position);
+            position += chunk.length;
+          }
+          const url = URL.createObjectURL(
+            new Blob([bytes], { type: "application/json" })
+          );
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "trafira-profile.json";
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+        if (generation3 === mountId2)
+          message2.textContent = _("Profile transfer completed");
+      } catch {
+        if (generation3 === mountId2)
+          message2.textContent = _(
+            "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+          );
+      } finally {
+        if (transferId)
+          void command3({ action: "transfer_cancel", id: transferId }).catch(
+            () => void 0
+          );
+        transferring = false;
+        if (generation3 === mountId2) updateButtons();
+      }
+    }
+    actions.push(
+      button(_("Import profile"), () => {
+        void transfer("import");
+      }),
+      button(_("Export profile"), () => {
+        void transfer("export");
+      })
+    );
+    select.addEventListener("change", updateButtons);
+    host.replaceChildren(
+      E("h3", {}, _("Configuration profiles")),
+      E(
+        "p",
+        {},
+        _("Save up to eight profiles. Applying a profile may restart routing.")
+      ),
+      name,
+      select,
+      E("div", {}, actions),
+      E(
+        "p",
+        {},
+        _(
+          "Exported profiles contain passwords and keys. Keep the downloaded file private."
+        )
+      ),
+      file,
+      message2,
+      result
+    );
+    const controller2 = new ProfilePanelController(command3, (state) => {
+      if (generation3 !== mountId2) return;
+      if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
+        const chosen = select.value;
+        select.replaceChildren(
+          ...state.entries.map(
+            (entry) => E(
+              "option",
+              { value: entry.id, disabled: entry.invalid },
+              entry.name
+            )
+          )
+        );
+        if (state.entries.some((entry) => entry.id === chosen))
+          select.value = chosen;
+      }
+      last = state;
+      result.replaceChildren(
+        ...state.error ? [E("p", {}, _(state.error))] : [],
+        ...state.running ? [
+          E(
+            "p",
+            {},
+            _(
+              "Applying settings in the background. You can close this page."
+            )
+          )
+        ] : [],
+        ...state.restored ? [E("p", {}, _("Previous settings were restored."))] : [],
+        ...state.preview ? [
+          E(
+            "p",
+            {},
+            _(
+              "Only changed section and option names are shown; values are hidden."
+            )
+          ),
+          ...!state.preview.applicable ? [
+            E(
+              "p",
+              {},
+              _(
+                "The profile cannot be used with the current configuration and components."
+              )
+            )
+          ] : [],
+          ...state.preview.changes.map(
+            (change) => E(
+              "p",
+              {},
+              `${change.section}${change.option ? ` / ${change.option}` : ""}: ${{ added: _("Added"), removed: _("Removed"), changed: _("Changed") }[change.change] || _("Changed")}`
+            )
+          )
+        ] : []
+      );
+      updateButtons();
+    });
+    controller2.mount();
+    void controller2.submit({ action: "list" }).then(() => controller2.submit({ action: "status" }));
+    const timer2 = window.setInterval(() => {
+      if (!last.running) return;
+      void controller2.submit({ action: "status" }).then(() => {
+        if (!last.running && !last.error)
+          void controller2.submit({ action: "list" });
+      });
+    }, 2e3);
+    active = { controller: controller2, timer: timer2 };
+  },
+  unmount() {
+    mountId2++;
+    if (active) {
+      active.controller.unmount();
+      window.clearInterval(active.timer);
+    }
+    active = null;
+  }
+};
+
+// src/trafira/tabs/diagnostic/gamingPresetPanel.ts
+var GamingPresetController = class {
+  constructor(call, render7) {
+    this.call = call;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+    this.reviewed = null;
+    this.state = {
+      busy: false,
+      running: false,
+      jobId: "",
+      error: "",
+      preview: null
+    };
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  invalidate() {
+    this.reviewed = null;
+    this.state.preview = null;
+    this.render({ ...this.state });
+  }
+  async preview(selection, digest) {
+    if (!selection.owner && (!selection.preset || !selection.device_ips?.length || !selection.proxy_section || !["before-device-routes", "after-device-routes"].includes(
+      selection.placement || ""
+    )))
+      return;
+    if (!digest) return;
+    await this.submit({
+      ...selection,
+      action: selection.owner ? "preview_remove" : "preview",
+      expected_digest: digest
+    });
+  }
+  async apply() {
+    if (!this.reviewed || !this.state.preview?.applicable) return;
+    await this.submit({
+      ...this.reviewed,
+      action: this.reviewed.owner ? "remove" : "apply"
+    });
+  }
+  async poll() {
+    await this.submit({ action: "status" });
+  }
+  async submit(request) {
+    if (!this.active || this.state.busy || this.state.running && request.action !== "status")
+      return;
+    const generation3 = ++this.generation;
+    this.state = { ...this.state, busy: true, error: "" };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (!this.active || generation3 !== this.generation) return;
+      if (typeof result.running === "boolean")
+        this.state.running = result.running;
+      if (typeof result.job_id === "string") this.state.jobId = result.job_id;
+      if (result.success === false || result.rollback_error) {
+        this.reviewed = null;
+        this.state.preview = null;
+        this.state.error = result.rollback_error ? "rollback_failed" : String(result.error || "operation_failed");
+      } else if (request.action === "preview" || request.action === "preview_remove") {
+        this.state.preview = result;
+        this.reviewed = result.applicable === true ? {
+          ...request,
+          device_ips: Array.isArray(request.device_ips) ? [...request.device_ips] : void 0
+        } : null;
+      } else if (request.action !== "status") {
+        this.reviewed = null;
+        this.state.preview = null;
+      }
+    } catch {
+      if (this.active && generation3 === this.generation) {
+        this.state.error = "request_failed";
+        this.reviewed = null;
+        this.state.preview = null;
+      }
+    } finally {
+      if (this.active && generation3 === this.generation) {
+        this.state = { ...this.state, busy: false };
+        this.render(this.state);
+      }
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderGamingPresets.ts
+async function command4(request) {
+  const response = await executeShellCommand({
+    command: "/usr/bin/trafira-config",
+    args: ["gaming_preset_action", JSON.stringify(request)],
+    timeout: 3e4
+  });
+  if (response.code) throw new Error("Gaming preset request failed");
+  return JSON.parse(response.stdout);
+}
+function message(code) {
+  const messages = {
+    conflict: _("Configuration changed. Review the differences again."),
+    alice_bypass: _(
+      "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
+    ),
+    alice_broad_bypass: _(
+      "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
+    ),
+    preset_edited: _(
+      "These rules were edited. Confirm replacement or keep them as ordinary rules."
+    ),
+    unknown_device: _(
+      "The selected address is no longer known. Refresh the device list."
+    ),
+    invalid_proxy: _("Select an enabled connection rule."),
+    candidate_check_failed: _(
+      "The generated configuration did not pass validation."
+    ),
+    busy: _("Another configuration operation is already running."),
+    rollback_failed: _(
+      "Restoration failed. Check the service before continuing."
+    )
+  };
+  return messages[code] || _("The operation failed. Refresh the page and review the settings.") + " (" + code + ")";
+}
+var mounted = null;
+var generation2 = 0;
+var gamingPresetsPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-gaming-presets");
+    if (!host) return;
+    const mine = generation2;
+    let catalog = null;
+    let state;
+    let loading2 = false;
+    const platform = E("select", {}), device = E("select", {}), proxy = E("select", {});
+    const placement = E("select", {}, [
+      E("option", { value: "" }, _("Choose rule priority")),
+      E(
+        "option",
+        { value: "before-device-routes" },
+        _("Before existing device rules")
+      ),
+      E(
+        "option",
+        { value: "after-device-routes" },
+        _("After existing device rules")
+      )
+    ]);
+    const addresses = E("div", {}), output = E("div", {}), status2 = E("p", {}), existing = E("div", {});
+    const enable = E("input", { type: "checkbox" }), replace = E("input", { type: "checkbox" });
+    const buttons = [];
+    let apply;
+    function button(label, click) {
+      const b = E(
+        "button",
+        { class: "cbi-button cbi-button-action", click },
+        label
+      );
+      buttons.push(b);
+      return b;
+    }
+    function update() {
+      const busy = loading2 || state?.busy || state?.running;
+      for (const b of buttons) b.disabled = !!busy;
+      for (const input of [platform, device, proxy, placement, enable, replace])
+        input.disabled = !!busy;
+      for (const input of Array.from(addresses.querySelectorAll("input")))
+        input.disabled = !!busy;
+      if (apply) apply.disabled = !!busy || state?.preview?.applicable !== true;
+    }
+    const controller2 = new GamingPresetController(command4, (next) => {
+      const wasRunning = state?.running;
+      state = next;
+      status2.textContent = state.error ? message(state.error) : state.running ? _("Applying configuration. You can reconnect to this page.") : "";
+      output.replaceChildren();
+      if (state.preview) {
+        const p = state.preview;
+        output.append(
+          E(
+            "p",
+            {},
+            p.applicable ? _("Configuration validation passed. Review the changes below.") : _("The generated configuration did not pass validation.")
+          )
+        );
+        output.append(
+          E(
+            "pre",
+            {
+              style: "white-space:pre-wrap;overflow-wrap:anywhere;max-height:24em;overflow:auto"
+            },
+            JSON.stringify(
+              {
+                routes: p.routes,
+                changes: p.changes,
+                conflicts: p.conflicts,
+                checks: p.checks
+              },
+              null,
+              2
+            )
+          )
+        );
+      }
+      update();
+      if (wasRunning && !state.running && !state.error) void refresh();
+    });
+    function showAddresses() {
+      controller2.invalidate();
+      addresses.replaceChildren();
+      const selected = catalog?.devices[Number(device.value)];
+      if (!selected) return;
+      const candidates = catalog.devices.filter(
+        (d) => d.mac === selected.mac && d.interface === selected.interface
+      );
+      const values = [...new Set(candidates.flatMap((d) => d.ips))];
+      for (const address of values) {
+        const input = E("input", {
+          type: "checkbox",
+          value: address
+        });
+        input.addEventListener("change", () => controller2.invalidate());
+        addresses.append(
+          E("label", { style: "display:block" }, [input, " " + address])
+        );
+      }
+    }
+    async function refresh() {
+      if (loading2 || state?.busy || state?.running) return;
+      loading2 = true;
+      controller2.invalidate();
+      update();
+      try {
+        const result = await command4({ action: "catalog" });
+        if (mine !== generation2) return;
+        if (result.success !== true)
+          throw new Error(String(result.error || "catalog_unavailable"));
+        catalog = result;
+        platform.replaceChildren(
+          ...catalog.presets.map(
+            (p) => E(
+              "option",
+              { value: p.id },
+              `${p.id} \xB7 ${p.checked_at} \xB7 v${p.revision}`
+            )
+          )
+        );
+        device.replaceChildren(
+          E("option", { value: "" }, _("Select a known device")),
+          ...catalog.devices.map(
+            (d, i) => E(
+              "option",
+              { value: String(i) },
+              `${d.name || d.mac} \xB7 ${d.interface} \xB7 ${d.ips.join(", ")}`
+            )
+          )
+        );
+        proxy.replaceChildren(
+          E("option", { value: "" }, _("Select a connection")),
+          ...catalog.proxies.map(
+            (p) => E("option", { value: p.id }, p.label || p.id)
+          )
+        );
+        addresses.replaceChildren();
+        existing.replaceChildren();
+        for (const owner of catalog.owners) {
+          existing.append(
+            E(
+              "p",
+              {},
+              owner.platform + " \xB7 " + owner.owner + (owner.edited ? " \xB7 " + _("Edited") : "")
+            )
+          );
+          existing.append(
+            button(_("Keep as ordinary rules"), () => {
+              void controller2.preview(
+                { owner: owner.owner, mode: "keep" },
+                catalog.digest
+              );
+            })
+          );
+          existing.append(
+            button(_("Preview deletion"), () => {
+              if (owner.edited && !window.confirm(
+                _(
+                  "Delete the edited preset rules? The next step shows the changes."
+                )
+              ))
+                return;
+              void controller2.preview(
+                { owner: owner.owner, mode: "delete", confirm: owner.edited },
+                catalog.digest
+              );
+            })
+          );
+        }
+        status2.textContent = "";
+      } catch (error) {
+        if (mine === generation2)
+          status2.textContent = message(
+            error instanceof Error ? error.message : "catalog_unavailable"
+          );
+      } finally {
+        if (mine === generation2) {
+          loading2 = false;
+          update();
+        }
+      }
+    }
+    for (const input of [platform, proxy, placement, enable, replace])
+      input.addEventListener("change", () => controller2.invalidate());
+    device.addEventListener("change", showAddresses);
+    host.replaceChildren(
+      E("h3", {}, _("Gaming presets")),
+      E(
+        "p",
+        {},
+        _(
+          "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
+        )
+      ),
+      E(
+        "p",
+        {},
+        _(
+          "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
+        )
+      ),
+      platform,
+      device,
+      addresses,
+      proxy,
+      placement,
+      E("label", { style: "display:block" }, [
+        enable,
+        " " + _("Enable only these addresses in Alice Mode if required")
+      ]),
+      E("label", { style: "display:block" }, [
+        replace,
+        " " + _("Replace my edits to this preset after preview")
+      ]),
+      E("div", {}, [
+        button(_("Refresh devices"), () => {
+          void refresh();
+        }),
+        button(_("Preview gaming rules"), () => {
+          if (!catalog || device.value === "") return;
+          void controller2.preview(
+            {
+              preset: platform.value,
+              device_ips: Array.from(
+                addresses.querySelectorAll("input:checked")
+              ).map((i) => i.value),
+              proxy_section: proxy.value,
+              placement: placement.value,
+              enable_device: enable.checked,
+              replace_edited: replace.checked
+            },
+            catalog.digest
+          );
+        }),
+        apply = button(_("Apply reviewed changes"), () => {
+          void controller2.apply();
+        })
+      ]),
+      status2,
+      output,
+      existing
+    );
+    controller2.mount();
+    mounted = {
+      controller: controller2,
+      timer: window.setInterval(() => {
+        void controller2.poll();
+      }, 2e3)
+    };
+    void controller2.poll().then(() => refresh());
+  },
+  unmount() {
+    generation2++;
+    if (mounted) {
+      mounted.controller.unmount();
+      window.clearInterval(mounted.timer);
+    }
+    mounted = null;
+  }
+};
 
 // src/trafira/tabs/diagnostic/checks/updateCheckStore.ts
 function updateCheckStore(check, minified) {
@@ -9214,7 +10365,7 @@ function renderButton({
   disabled,
   loading: loading2,
   onClick,
-  text,
+  text: text3,
   icon
 }) {
   const hasIcon = !!loading2 || !!icon;
@@ -9256,19 +10407,19 @@ function renderButton({
       disabled: getDisabled(),
       click: onClick
     },
-    [...insertIf(hasIcon, [getWrappedIcon()]), E("span", {}, text)]
+    [...insertIf(hasIcon, [getWrappedIcon()]), E("span", {}, text3)]
   );
 }
 
 // src/partials/modal/renderModal.ts
-function renderModal(text, name, options) {
-  let rawText = text ?? "";
+function renderModal(text3, name, options) {
+  let rawText = text3 ?? "";
   let currentText = "";
   let refreshInFlight = false;
   let pendingRefresh = false;
   let pendingForcedRefresh = false;
   let refreshSessionId = 0;
-  let timer;
+  let timer2;
   let observer;
   let autoRefreshEnabled = options?.initialAutoRefresh ?? Boolean(options?.getText);
   let maskValuesEnabled = options?.initialMaskValues ?? true;
@@ -9288,9 +10439,9 @@ function renderModal(text, name, options) {
     codeEl
   );
   const stopRefreshTimer = () => {
-    if (timer) {
-      clearInterval(timer);
-      timer = void 0;
+    if (timer2) {
+      clearInterval(timer2);
+      timer2 = void 0;
     }
   };
   const destroyLiveRefresh = () => {
@@ -9393,10 +10544,10 @@ function renderModal(text, name, options) {
     void refreshText(true);
   };
   const startRefreshTimer = () => {
-    if (!options?.getText || !autoRefreshEnabled || timer || typeof document === "undefined") {
+    if (!options?.getText || !autoRefreshEnabled || timer2 || typeof document === "undefined") {
       return;
     }
-    timer = setInterval(() => {
+    timer2 = setInterval(() => {
       requestRefresh();
     }, options.refreshMs ?? 3e3);
   };
@@ -10000,14 +11151,14 @@ async function runSectionsCheck() {
 }
 
 // src/trafira/tabs/diagnostic/serviceTransition.ts
-function isServiceTransitionStatus(status) {
-  return ["starting", "stopping", "restarting", "reloading"].includes(status);
+function isServiceTransitionStatus(status2) {
+  return ["starting", "stopping", "restarting", "reloading"].includes(status2);
 }
-function getServiceTransition(status) {
+function getServiceTransition(status2) {
   return {
-    starting: status === "starting",
-    stopping: status === "stopping",
-    restarting: status === "restarting" || status === "reloading"
+    starting: status2 === "starting",
+    stopping: status2 === "stopping",
+    restarting: status2 === "restarting" || status2 === "reloading"
   };
 }
 function hasLocalMutatingServiceActionLoading(actions) {
@@ -10329,9 +11480,9 @@ function formatMaskedSingBoxConfig(value) {
   }
   return JSON.stringify(maskSingBoxConfigValue(value), null, 2);
 }
-function maskGlobalCheckText(text = "") {
+function maskGlobalCheckText(text3 = "") {
   let inMaskedMultiline = false;
-  return `${text}`.split("\n").map((line) => {
+  return `${text3}`.split("\n").map((line) => {
     if (inMaskedMultiline) {
       if (line.includes("'")) {
         inMaskedMultiline = false;
@@ -10396,8 +11547,8 @@ function setDiagnosticActionLoading(action, loading2, local = false) {
     }
   });
 }
-function isDiagnosticMountActive(mountId = diagnosticMountId) {
-  return diagnosticMounted && diagnosticMountId === mountId;
+function isDiagnosticMountActive(mountId3 = diagnosticMountId) {
+  return diagnosticMounted && diagnosticMountId === mountId3;
 }
 function isLocalMutatingServiceActionLoading() {
   const actions = store.get().diagnosticsActions;
@@ -10429,10 +11580,10 @@ function setDisplayedTrafiraRunning(running) {
 }
 async function refreshDiagnosticServicesInfo({
   force = false,
-  mountId = diagnosticMountId,
+  mountId: mountId3 = diagnosticMountId,
   allowInactive = false
 } = {}) {
-  if (!allowInactive && !isDiagnosticMountActive(mountId)) {
+  if (!allowInactive && !isDiagnosticMountActive(mountId3)) {
     return;
   }
   if (shouldSkipServicesInfoAutoRefresh({
@@ -11198,12 +12349,15 @@ async function onPageMount2() {
   });
   diagnosticMounted = true;
   void snapshots.mount();
+  routeExplanationPanel.mount();
+  profilesPanel.mount();
+  gamingPresetsPanel.mount();
   diagnosticMountId += 1;
-  const mountId = diagnosticMountId;
+  const mountId3 = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
   if (!hasRuntimeSnapshot) {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!diagnosticMounted || mountId !== diagnosticMountId) {
+    if (!diagnosticMounted || mountId3 !== diagnosticMountId) {
       return;
     }
     if (!uiState) {
@@ -11237,6 +12391,9 @@ function onPageUnmount2({
 } = {}) {
   diagnosticMounted = false;
   snapshots.unmount();
+  routeExplanationPanel.unmount();
+  profilesPanel.unmount();
+  gamingPresetsPanel.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;
@@ -11506,7 +12663,7 @@ var DiagnosticTab = {
 };
 
 // src/trafira/tabs/monitoring/render.ts
-function render4() {
+function render5() {
   return E(
     "div",
     {
@@ -11940,7 +13097,7 @@ function applyConnectionsPayload(payload) {
     pendingConnectionsPayload = payload;
     return;
   }
-  const mountId = monitoringMountId;
+  const mountId3 = monitoringMountId;
   const now = Date.now();
   const incomingIds = /* @__PURE__ */ new Set();
   const rawConnections = Array.isArray(payload.connections) ? payload.connections : [];
@@ -11966,7 +13123,7 @@ function applyConnectionsPayload(payload) {
   trimClosedConnections();
   loading = false;
   failed = false;
-  if (monitoringMounted && mountId === monitoringMountId) {
+  if (monitoringMounted && mountId3 === monitoringMountId) {
     renderControls();
     renderConnections();
   }
@@ -12029,11 +13186,11 @@ function renderDeviceFilterOptions() {
   select.replaceChildren(...options);
   select.value = selectedDeviceFilter;
 }
-function setButtonActive(button, active) {
+function setButtonActive(button, active3) {
   if (!button) {
     return;
   }
-  button.classList.toggle("fkp_monitoring-page__tab--active", active);
+  button.classList.toggle("fkp_monitoring-page__tab--active", active3);
 }
 function renderTabButtonContent(label, count) {
   return [
@@ -12106,16 +13263,16 @@ function renderControls() {
   }
 }
 function renderValue(value, className = "") {
-  const text = value || "-";
+  const text3 = value || "-";
   const element = E(
     "span",
     {
       class: ["fkp_monitoring-page__value", className].filter(Boolean).join(" "),
-      title: text
+      title: text3
     },
-    text
+    text3
   );
-  element.setAttribute("data-copy-value", text);
+  element.setAttribute("data-copy-value", text3);
   return element;
 }
 function renderSourceValue(source) {
@@ -12194,7 +13351,7 @@ function renderConnectionRow(connection) {
     ]
   );
 }
-function renderStateRow(text, className = "") {
+function renderStateRow(text3, className = "") {
   return E("tr", { class: "fkp_monitoring-page__state-row" }, [
     E(
       "td",
@@ -12208,7 +13365,7 @@ function renderStateRow(text, className = "") {
           {
             class: ["fkp_monitoring-page__state", className].filter(Boolean).join(" ")
           },
-          text
+          text3
         )
       ]
     )
@@ -12354,15 +13511,15 @@ function getMonitoringValueTextElements(element) {
   return textElements.length > 0 ? textElements : [element];
 }
 function estimateVisibleMonitoringTextLength(element, fallbackText) {
-  const text = compactMonitoringText(getElementCopyText(element, fallbackText));
-  if (!text) {
+  const text3 = compactMonitoringText(getElementCopyText(element, fallbackText));
+  if (!text3) {
     return 0;
   }
   if (!isElementOverflowing(element)) {
-    return text.length;
+    return text3.length;
   }
   return Math.floor(
-    element.clientWidth / Math.max(element.scrollWidth, 1) * text.length
+    element.clientWidth / Math.max(element.scrollWidth, 1) * text3.length
   );
 }
 function getEstimatedVisibleMonitoringTextLength(element, fallbackText) {
@@ -12597,11 +13754,11 @@ async function pollConnectionsSnapshot() {
   if (pollingConnections || !monitoringMounted || monitoringPaused || serviceAvailability !== "running") {
     return;
   }
-  const mountId = monitoringMountId;
+  const mountId3 = monitoringMountId;
   pollingConnections = true;
   try {
     const response = await TrafiraShellMethods.getClashApiConnections();
-    if (!monitoringMounted || mountId !== monitoringMountId || serviceAvailability !== "running") {
+    if (!monitoringMounted || mountId3 !== monitoringMountId || serviceAvailability !== "running") {
       return;
     }
     if (!response.success) {
@@ -12612,7 +13769,7 @@ async function pollConnectionsSnapshot() {
     }
     applyConnectionsPayload(normalizeConnectionsPayload(response.data));
   } catch (error) {
-    if (!monitoringMounted || mountId !== monitoringMountId || serviceAvailability !== "running") {
+    if (!monitoringMounted || mountId3 !== monitoringMountId || serviceAvailability !== "running") {
       return;
     }
     logger.error("[MONITORING]", "connections polling failed", error);
@@ -12633,9 +13790,9 @@ function startConnectionsPolling() {
   }, CONNECTIONS_RPC_POLL_INTERVAL_MS);
 }
 async function connectToConnectionsSocket(updatesId) {
-  const mountId = monitoringMountId;
+  const mountId3 = monitoringMountId;
   const clashApiSecret = await getClashApiSecret2();
-  if (!monitoringMounted || mountId !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
+  if (!monitoringMounted || mountId3 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
     return;
   }
   connectionsSocketUrl = `${getClashWsUrl()}/connections?token=${clashApiSecret}`;
@@ -12652,7 +13809,7 @@ async function connectToConnectionsSocket(updatesId) {
       }
     },
     (_err) => {
-      if (!monitoringMounted || mountId !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
+      if (!monitoringMounted || mountId3 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
         return;
       }
       failed = true;
@@ -12750,7 +13907,7 @@ async function onPageMount3() {
   onPageUnmount3();
   monitoringMounted = true;
   monitoringMountId += 1;
-  const mountId = monitoringMountId;
+  const mountId3 = monitoringMountId;
   resetMonitoringState();
   bindControls();
   renderControls();
@@ -12762,7 +13919,7 @@ async function onPageMount3() {
     void refreshRuntimeUiState({ force: true });
   } else {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!monitoringMounted || mountId !== monitoringMountId) {
+    if (!monitoringMounted || mountId3 !== monitoringMountId) {
       return;
     }
     if (!uiState && serviceAvailability === "loading") {
@@ -13462,18 +14619,19 @@ var styles5 = `
 
 // src/trafira/tabs/monitoring/index.ts
 var MonitoringTab = {
-  render: render4,
+  render: render5,
   initController: initController3,
   styles: styles5
 };
 
 // src/trafira/tabs/updates/render.ts
-function render5() {
+function render6() {
   return E("div", { id: "updates-status", class: "fkp_updates-page" }, [
     E("div", {
       id: "fkp_updates-components",
       class: "fkp_updates-page__components"
-    })
+    }),
+    E("div", { id: "trafira-core-versions" })
   ]);
 }
 
@@ -13485,9 +14643,9 @@ function shouldApplyCompletedComponentActionResult(result, notify) {
 // src/trafira/tabs/updates/checkResultLifecycle.ts
 function shouldPreserveCompletedCheckResultOnNextMount({
   action,
-  mounted
+  mounted: mounted2
 }) {
-  return action === "check_update" && !mounted;
+  return action === "check_update" && !mounted2;
 }
 function shouldResetCheckResultsOnMount({
   anyActionLoading,
@@ -13502,11 +14660,269 @@ function shouldRefreshComponentStateBeforeRender(uiState) {
   );
 }
 function shouldExposeCheckResults({
-  mounted,
+  mounted: mounted2,
   cacheResolved
 }) {
-  return mounted && cacheResolved;
+  return mounted2 && cacheResolved;
 }
+
+// src/trafira/tabs/updates/coreVersionPicker.ts
+var text2 = (value) => typeof value === "string" ? value : "";
+var initial2 = () => ({
+  stage: "idle",
+  entries: [],
+  currentVersion: "",
+  cachedAt: 0,
+  pinnedVersion: "",
+  selected: "",
+  jobId: "",
+  restored: false,
+  error: ""
+});
+var CoreVersionPicker = class {
+  constructor(call, render7) {
+    this.call = call;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+    this.pending = false;
+    this.state = initial2();
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.pending = false;
+    this.state = initial2();
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  select(id) {
+    if (!this.active || this.pending || this.state.stage === "installing")
+      return;
+    if (!this.state.entries.some((entry) => entry.id === id && entry.available))
+      return;
+    this.state = {
+      ...this.state,
+      selected: id,
+      stage: "selected",
+      error: "",
+      restored: false
+    };
+    this.render(this.state);
+  }
+  async load(refresh = false) {
+    await this.request({ action: "catalog", refresh });
+  }
+  async install(pin) {
+    if (!this.state.selected || !this.state.entries.some(
+      (entry) => entry.id === this.state.selected && entry.available
+    ))
+      return;
+    await this.request({
+      action: "install",
+      candidate_id: this.state.selected,
+      expected_current_version: this.state.currentVersion,
+      pin
+    });
+  }
+  async unpin() {
+    await this.request({
+      action: "unpin",
+      expected_current_version: this.state.currentVersion
+    });
+  }
+  async poll() {
+    await this.request({
+      action: "status",
+      ...this.state.jobId ? { job_id: this.state.jobId } : {}
+    });
+  }
+  async request(request) {
+    if (!this.active || this.pending || this.state.stage === "installing" && request.action !== "status")
+      return;
+    this.pending = true;
+    const generation3 = this.generation;
+    this.state = {
+      ...this.state,
+      error: "",
+      stage: request.action === "catalog" ? "loading" : request.action === "status" ? this.state.stage : "installing"
+    };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (!this.active || generation3 !== this.generation) return;
+      if (result.success === false || result.rollback_error) {
+        this.state = {
+          ...this.state,
+          stage: "failed",
+          restored: result.restored === true,
+          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : result.error === "conflict" ? "The installed version changed. Refresh the version list." : "The sing-box version operation failed."
+        };
+      } else if (request.action === "catalog") {
+        this.state = {
+          ...this.state,
+          stage: "idle",
+          selected: "",
+          currentVersion: text2(result.current_version),
+          cachedAt: Number(result.cached_at) || 0,
+          pinnedVersion: result.pin && typeof result.pin === "object" ? text2(result.pin.version) : "",
+          entries: Array.isArray(result.entries) ? result.entries.filter((entry) => entry && typeof entry === "object").map((entry) => ({
+            id: text2(entry.id),
+            version: text2(entry.version),
+            available: entry.available === true,
+            reason: text2(entry.reason)
+          })) : []
+        };
+      } else if (result.running === true) {
+        this.state = {
+          ...this.state,
+          stage: "installing",
+          jobId: text2(result.job_id),
+          restored: false
+        };
+      } else {
+        this.state = {
+          ...this.state,
+          stage: "done",
+          restored: result.restored === true
+        };
+      }
+    } catch {
+      if (!this.active || generation3 !== this.generation) return;
+      this.state = {
+        ...this.state,
+        stage: request.action === "status" ? this.state.stage : "failed",
+        error: "The sing-box version operation failed."
+      };
+    } finally {
+      if (this.active && generation3 === this.generation) {
+        this.pending = false;
+        this.render(this.state);
+      }
+    }
+  }
+};
+
+// src/trafira/tabs/updates/renderCoreVersions.ts
+var active2 = null;
+var coreVersionsPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-core-versions");
+    if (!host) return;
+    let last;
+    const select = E("select", {});
+    const pin = E("input", {
+      type: "checkbox",
+      checked: true
+    });
+    const info = E("p", {});
+    const message2 = E("p", { role: "status" });
+    const refresh = E(
+      "button",
+      { class: "cbi-button", click: () => void picker.load(true) },
+      _("Refresh available versions")
+    );
+    const install = E(
+      "button",
+      {
+        class: "cbi-button cbi-button-action",
+        click: () => void picker.install(pin.checked)
+      },
+      _("Install selected version")
+    );
+    const unpin = E(
+      "button",
+      {
+        class: "cbi-button",
+        click: () => void picker.unpin().then(() => picker.load())
+      },
+      _("Unpin version")
+    );
+    const errors2 = {
+      "Restoration failed. Check the service before continuing.": _(
+        "Restoration failed. Check the service before continuing."
+      ),
+      "The installed version changed. Refresh the version list.": _(
+        "The installed version changed. Refresh the version list."
+      ),
+      "The sing-box version operation failed.": _(
+        "The sing-box version operation failed."
+      )
+    };
+    const picker = new CoreVersionPicker(
+      async (request) => {
+        const result = await executeShellCommand({
+          command: "/usr/bin/trafira-config",
+          args: ["core_action", JSON.stringify(request)],
+          timeout: 45e3
+        });
+        if (result.code) throw new Error("Core version request failed");
+        return JSON.parse(result.stdout);
+      },
+      (state) => {
+        last = state;
+        select.replaceChildren(
+          E("option", { value: "" }, _("Select a version")),
+          ...state.entries.map(
+            (entry) => E(
+              "option",
+              { value: entry.id, disabled: !entry.available },
+              entry.version + (entry.available ? "" : ` \u2014 ${_("Unavailable for this installation")}`)
+            )
+          )
+        );
+        select.value = state.selected;
+        const busy = state.stage === "installing" || state.stage === "loading";
+        select.disabled = pin.disabled = refresh.disabled = busy;
+        install.disabled = busy || !state.selected;
+        unpin.disabled = busy || !state.pinnedVersion;
+        info.textContent = `${_("Installed version")}: ${state.currentVersion || "\u2014"} \xB7 ${_("Pinned version")}: ${state.pinnedVersion || "\u2014"}${state.cachedAt ? ` \xB7 ${_("Catalog checked")}: ${new Date(state.cachedAt * 1e3).toLocaleString()}` : ""}`;
+        message2.textContent = [
+          state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : "",
+          state.restored ? _("The previous version was restored.") : ""
+        ].filter(Boolean).join(" ");
+      }
+    );
+    select.addEventListener("change", () => picker.select(select.value));
+    host.replaceChildren(
+      E("details", {}, [
+        E("summary", {}, _("Sing-box versions")),
+        E(
+          "p",
+          {},
+          _(
+            "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
+          )
+        ),
+        info,
+        select,
+        E("label", {}, [pin, _("Pin selected version")]),
+        E("div", {}, [refresh, install, unpin]),
+        message2
+      ])
+    );
+    picker.mount();
+    void picker.load().then(() => picker.poll());
+    const timer2 = window.setInterval(() => {
+      if (last.stage !== "installing") return;
+      void picker.poll().then(() => {
+        if (last.stage === "done") void picker.load(true);
+      });
+    }, 2e3);
+    active2 = { picker, timer: timer2 };
+  },
+  unmount() {
+    if (active2) {
+      active2.picker.unmount();
+      window.clearInterval(active2.timer);
+    }
+    active2 = null;
+  }
+};
 
 // src/trafira/tabs/updates/initController.ts
 var updatesLifecycleRegistered = false;
@@ -13534,8 +14950,8 @@ function isNotInstalled(version) {
   return !version || version === "not installed";
 }
 function shouldShowInstallAfterCheck(component) {
-  const status = getVisibleCheckResult(component)?.status;
-  return status === "outdated" || status === "dev";
+  const status2 = getVisibleCheckResult(component)?.status;
+  return status2 === "outdated" || status2 === "dev";
 }
 function getVisibleCheckResult(component) {
   if (!shouldExposeCheckResults({
@@ -13590,13 +15006,13 @@ function beginComponentAction(button) {
   setActionLoading(button.key, true, true);
   return true;
 }
-function setCheckResult(component, status, latestVersion, releaseUrl = "") {
+function setCheckResult(component, status2, latestVersion, releaseUrl = "") {
   const updatesChecks = store.get().updatesChecks;
   store.set({
     updatesChecks: {
       ...updatesChecks,
       [component]: {
-        status,
+        status: status2,
         latest_version: latestVersion,
         release_url: releaseUrl
       }
@@ -13608,11 +15024,11 @@ function resetCheckResult(component) {
 }
 function applyCachedCheckResults(results) {
   results.forEach((result) => {
-    const status = result.status || null;
-    if (status === "latest" || status === "outdated" || status === "dev") {
+    const status2 = result.status || null;
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
       setCheckResult(
         result.component,
-        status,
+        status2,
         result.latest_version || "",
         result.release_url || ""
       );
@@ -13661,11 +15077,11 @@ function getExpectedLatestVersionForAction(button) {
   }
   return store.get().updatesChecks[button.component].latest_version || void 0;
 }
-function getCheckToastMessage(status) {
-  if (status === "outdated") {
+function getCheckToastMessage(status2) {
+  if (status2 === "outdated") {
     return _("Update is available");
   }
-  if (status === "dev") {
+  if (status2 === "dev") {
     return _("Installed version is newer than release");
   }
   return _("Latest version is installed");
@@ -13780,17 +15196,17 @@ async function applyCompletedComponentAction({
     })) {
       preserveCheckResultsOnNextMount = true;
     }
-    const status = result.status || null;
-    if (status === "latest" || status === "outdated" || status === "dev") {
+    const status2 = result.status || null;
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
       setCheckResult(
         result.component,
-        status,
+        status2,
         result.latest_version || "",
         result.release_url || ""
       );
     }
     if (notify) {
-      showToast(getCheckToastMessage(status), "success");
+      showToast(getCheckToastMessage(status2), "success");
     }
     return;
   }
@@ -13827,8 +15243,8 @@ async function completeComponentActionJob(key, jobId, response) {
   }
   const shouldNotify = shouldNotifyOwnedUiAction("component", jobId);
   if (!response.success || response.data.success === false) {
-    const message = response.success ? response.data.message || _("Failed to execute") : response.error || _("Failed to execute");
-    if (isTransientRpcError(message)) {
+    const message2 = response.success ? response.data.message || _("Failed to execute") : response.error || _("Failed to execute");
+    if (isTransientRpcError(message2)) {
       setActionLoading(key, false);
       void refreshComponentActionState();
       return;
@@ -13836,7 +15252,7 @@ async function completeComponentActionJob(key, jobId, response) {
     handledComponentJobs.add(jobId);
     setActionLoading(key, false);
     if (shouldNotify) {
-      showToast(message, "error");
+      showToast(message2, "error");
     }
     await ackComponentActionJob(jobId);
     return;
@@ -13876,10 +15292,10 @@ async function followComponentActionState(state) {
   } catch (error) {
     logger.error("[UPDATES]", "followComponentActionState failed", error);
     if (!pageUnloading2) {
-      const message = getErrorMessage(error, _("Failed to execute"));
+      const message2 = getErrorMessage(error, _("Failed to execute"));
       setActionLoading(key, false);
-      if (!isTransientRpcError(message)) {
-        showToast(message, "error");
+      if (!isTransientRpcError(message2)) {
+        showToast(message2, "error");
       }
     }
   } finally {
@@ -13903,9 +15319,9 @@ async function followAlreadyRunningComponentAction(button) {
   await followComponentActionState(state);
   return true;
 }
-function isComponentActionAlreadyRunningError(message) {
+function isComponentActionAlreadyRunningError(message2) {
   return Boolean(
-    message && message.includes("Another component action is already running")
+    message2 && message2.includes("Another component action is already running")
   );
 }
 function handleComponentUiState(uiState) {
@@ -13993,10 +15409,10 @@ async function handleComponentAction(button) {
   } catch (error) {
     logger.error("[UPDATES]", "handleComponentAction failed", error);
     if (!pageUnloading2) {
-      const message = getErrorMessage(error, _("Failed to execute"));
+      const message2 = getErrorMessage(error, _("Failed to execute"));
       setActionLoading(button.key, false);
-      if (!isTransientRpcError(message)) {
-        showToast(message, "error");
+      if (!isTransientRpcError(message2)) {
+        showToast(message2, "error");
       }
       void refreshComponentActionState();
     }
@@ -14406,8 +15822,9 @@ function applyComponentUpdateCheckCache(componentUpdateCheckCache) {
 async function onPageMount4() {
   onPageUnmount4();
   updatesMounted = true;
+  coreVersionsPanel.mount();
   updatesMountId += 1;
-  const mountId = updatesMountId;
+  const mountId3 = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
   const hasRuntimeSnapshot = Boolean(cachedRuntimeState);
   const needsFreshStateBeforeRender = shouldRefreshComponentStateBeforeRender(cachedRuntimeState);
@@ -14420,7 +15837,7 @@ async function onPageMount4() {
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache)
   });
-  if (!updatesMounted || mountId !== updatesMountId) {
+  if (!updatesMounted || mountId3 !== updatesMountId) {
     return;
   }
   applyComponentUpdateCheckCache(componentUpdateCheckCache);
@@ -14428,7 +15845,7 @@ async function onPageMount4() {
   renderUpdatesComponents();
   if (runtimeStateRefreshPromise) {
     await runtimeStateRefreshPromise;
-    if (!updatesMounted || mountId !== updatesMountId) {
+    if (!updatesMounted || mountId3 !== updatesMountId) {
       return;
     }
   }
@@ -14441,6 +15858,7 @@ async function onPageMount4() {
   }
 }
 function onPageUnmount4() {
+  coreVersionsPanel.unmount();
   updatesMounted = false;
   updatesMountId += 1;
   stopComponentActionStateWatcher();
@@ -14641,7 +16059,7 @@ var styles6 = `
 
 // src/trafira/tabs/updates/index.ts
 var UpdatesTab = {
-  render: render5,
+  render: render6,
   initController: initController4,
   styles: styles6
 };
