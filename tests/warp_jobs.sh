@@ -45,7 +45,7 @@ let state=require("warp.state"),job=require("warp.job");
 function hooks(){return {
  snapshot:()=>({original:true}),
  perform:(request,id)=>{for(let n=0;n<100;n++){if(job.cancelled(id))return {success:false,error:"cancelled"};system("sleep 0.1");}return {success:true};},
- restore:(snapshot)=>snapshot.original===true
+ restore:(snapshot)=>state.save(state.RUNTIME+"/recovered.json",{original:snapshot.original})
 };}
 return {hooks};
 UCODE
@@ -78,3 +78,39 @@ v=json.load(open(sys.argv[1]));assert not v['running'] and v['error']=='cancelle
 PYTEST
 [ ! -e "$TRAFIRA_WARP_STATE/active.json" ]
 echo 'WARP detached coordinator, busy lock and cancellation checks passed'
+
+# A killed coordinator leaves its durable journal; the next action recovers it.
+cli '{"action":"enable"}' >"$WORK/second.json"
+for _ in $(seq 1 40); do
+ [ -s "$TRAFIRA_WARP_STATE/active.json" ] && break
+ sleep 0.1
+done
+worker="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["worker"]["pid"])' "$TRAFIRA_WARP_RUNTIME/job.json")"
+kill -KILL "$worker"
+for _ in $(seq 1 40); do
+ cli '{"action":"job_status"}' >"$WORK/interrupted.json"
+ python3 -c 'import json,sys;sys.exit(json.load(open(sys.argv[1])).get("error")!="worker_interrupted")' "$WORK/interrupted.json" && break
+ sleep 0.1
+done
+[ -s "$TRAFIRA_WARP_STATE/active.json" ]
+cli '{"action":"enable"}' >"$WORK/restarted.json"
+python3 - "$WORK/restarted.json" <<'PYTEST'
+import json,sys
+v=json.load(open(sys.argv[1]));assert v['success'],v
+PYTEST
+for _ in $(seq 1 80); do
+ [ -s "$TRAFIRA_WARP_RUNTIME/recovered.json" ] && break
+ sleep 0.1
+done
+id="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["job_id"])' "$WORK/restarted.json")"
+cli "{\"action\":\"cancel\",\"job_id\":\"$id\"}" >"$WORK/cancel-restarted.json"
+for _ in $(seq 1 80); do
+ cli '{"action":"job_status"}' >"$WORK/recovered-status.json"
+ python3 -c 'import json,sys;sys.exit(bool(json.load(open(sys.argv[1]))["running"]))' "$WORK/recovered-status.json" && break
+ sleep 0.1
+done
+python3 - "$WORK/recovered-status.json" <<'PYTEST'
+import json,sys
+v=json.load(open(sys.argv[1]));assert not v['running'] and v['restored'],v
+PYTEST
+echo 'WARP SIGKILL recovery checks passed'

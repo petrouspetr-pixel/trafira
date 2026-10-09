@@ -11,6 +11,9 @@ assert(t.valid_endpoint("162.159.192.1:2408"),"IPv4 endpoint accepted");
 assert(!t.valid_endpoint("127.0.0.1:2408") && !t.valid_endpoint("198.18.0.1:2408"),"reject local/FakeIP endpoint");
 assert(!t.valid_endpoint("example.org:2408") && !t.valid_endpoint("162.159.192.1:0"),"numeric validated endpoint only");
 assert(!t.valid_config({endpoint:"162.159.192.1:2408",fwmark:67108864}),"capture mark rejected");
+assert(!t.owned({proto:"none",device:"tfwarp0"},"tfwarp0"),"foreign section not owned");
+assert(t.owned({".type":"interface",...t.network_section("tfwarp0")},"tfwarp0"),"exact owned section");
+assert(!t.owned({".type":"interface",...t.network_section("tfwarp0"),delegate:"1"},"tfwarp0"),"manual changes protected");
 let config={interface:"tfwarp0",endpoint:"162.159.192.1:2408",fwmark:134217728,mtu:1280,
  ipv4:"172.16.0.2",ipv6:"2606:4700:110:8::2",private_key:"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",peer_public_key:"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBA=",jc:5,jmin:10,jmax:50,i1:"<b 0x01>"};
 assert(t.valid_config(config),"valid owned candidate");
