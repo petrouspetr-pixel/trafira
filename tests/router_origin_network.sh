@@ -58,7 +58,7 @@ PY
 ip netns exec "$server" python3 "$WORK_DIR/udp.py" >"$WORK_DIR/udp.log" 2>&1 &
 ucode -L "$LIB" -e '
 let r=require("config.router_origin"),fs=require("fs");
-let c={log:{level:"error"},inbounds:[],outbounds:[{type:"socks",tag:"vpn-out",server:"198.51.100.2",server_port:1080,version:"5"}],route:{rules:[{action:"sniff",inbound:["unused"]},{action:"hijack-dns",protocol:"dns"}],default_mark:0x08000000,final:"vpn-out"},dns:{servers:[{type:"udp",tag:"dns-server",server:"198.51.100.2"}],rules:[]}};
+let c={log:{level:"info"},inbounds:[],outbounds:[{type:"socks",tag:"vpn-out",server:"198.51.100.2",server_port:1080,version:"5"}],route:{rules:[{action:"sniff",inbound:["unused"]},{action:"hijack-dns",protocol:"dns"}],default_mark:0x08000000,final:"vpn-out"},dns:{servers:[{type:"udp",tag:"dns-server",server:"198.51.100.2"}],rules:[]}};
 r.attach(c,{router_origin_enabled:"1",router_origin_section:"vpn"},[{".name":"vpn",action:"connection"}]);
 require("core.common").strip_internal_fields(c);
 fs.writefile(ARGV[0],sprintf("%J",c));
@@ -93,6 +93,7 @@ request() { ip netns exec "$router" curl --noproxy '*' --max-time 3 -fsS "http:/
 working() { request 198.51.100.2; request '[2001:db8:1::2]'; }
 # Disabled preserves direct behavior, enabled changes only router output.
 working
+sleep 1
 ip netns exec "$router" nft reset counters table inet Audit >/dev/null
 ip netns exec "$router" nft -f "$WORK_DIR/router.nft"
 working
@@ -102,6 +103,8 @@ for family,host in [(socket.AF_INET,'198.51.100.2'),(socket.AF_INET6,'2001:db8:1
  s=socket.socket(family,socket.SOCK_DGRAM);s.settimeout(3)
  s.sendto(b'router-origin', (host,18081));assert s.recv(64)==b'router-origin';s.close()
 PY
+ip netns exec "$router" nft list table inet RouterTest
+cat "$WORK_DIR/router.log"
 ip netns exec "$router" nft -j list counters table inet Audit | python3 -c 'import json,sys; cs=[x["counter"] for x in json.load(sys.stdin)["nftables"] if "counter" in x]; assert len(cs)==2 and all(c["packets"]==0 for c in cs),cs'
 ip netns exec "$client" curl --noproxy '*' --max-time 3 -fsS http://198.51.100.2:18080/ >/dev/null
 ip netns exec "$client" curl --noproxy '*' --max-time 3 -fsS http://192.0.2.1:18080/ >/dev/null
