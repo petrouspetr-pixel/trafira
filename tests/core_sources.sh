@@ -26,6 +26,15 @@ cp "$CORE_SOURCE_TEST/releases.json" "$target"
 SH
 cat >"$WORK_DIR/bin/apk" <<'SH'
 #!/bin/sh
+if [ "$1" = fetch ]; then
+  printf '%s|%s\n' "$http_proxy" "$no_proxy" >"$CORE_SOURCE_TEST/package-proxy"
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = --output ]; then shift; destination=$1; fi
+    shift
+  done
+  printf package >"$destination/sing-box-1.14.2-r1.apk"
+  exit 0
+fi
 [ "$1" = query ] || exit 1
 printf '%s' '[{"name":"sing-box","version":"1.14.2-r1","arch":"aarch64"}]'
 SH
@@ -45,5 +54,9 @@ assert(s.fetch(env)==null,"failed proxy is not bypassed");
 assert(length(filter(split(fs.readfile(root+"/requests"),"\n"),(line)=>length(line)>0))==1,"no implicit direct retry");
 let packages=s.fetch({...env,variant:"stable"});
 assert(length(packages)==1 && packages[0].version=="1.14.2-r1","repository versions queried");
+fs.mkdir(root+"/package",448);
+let downloaded=s.download_repository(packages[0],root+"/package");
+assert(downloaded && fs.readfile(downloaded)=="package","exact repository package staged");
+assert(fs.readfile(root+"/package-proxy")=="http://127.0.0.1:4535|\n","repository download receives selected proxy without inherited bypass");
 print("core version source transport checks passed\n");
 '
