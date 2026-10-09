@@ -1514,6 +1514,7 @@ function remove_component_job_state(path) {
     remove_file(path);
     remove_file(output_path);
     remove_file(output_path + ".json");
+    remove_file(path + ".core-request");
 }
 
 function component_job_running_is(path, expected) {
@@ -1729,12 +1730,14 @@ function component_worker_env() {
 
 function launch_component_worker(args) {
     let command_args = [ "ucode", "-L", LIB_DIR, LIB_DIR + "/components/updates.uc" ];
+    if (args[0] == "component-version-worker")
+        unshift(command_args, "setsid");
     for (let arg in args)
         push(command_args, arg);
 
     let command = command_env(component_worker_env()) + " " +
         command_from_args(command_args) +
-        " >/dev/null 2>&1 1000>&- & echo $!";
+        " </dev/null >/dev/null 2>&1 1000>&- & echo $!";
     return trim(command_output("sh -c " + shell_quote(command)));
 }
 
@@ -1809,6 +1812,95 @@ function component_action_status(job_id) {
 
     refresh_component_running_job_state(state_file);
     print(as_string(fs.readfile(state_file)));
+}
+
+function core_private_state(path, value) {
+    let text = json_text(value);
+    let temporary = path + sprintf(".%x-%x.stage", clock()[0], clock()[1]);
+    let file = fs.open(temporary, "wex", 384);
+    if (!file) return false;
+    let ok = file.write(text) == length(text);
+    file.close();
+    if (!ok || fs.readfile(temporary) != text || !fs.rename(temporary, path)) {
+        remove_file(temporary);
+        return false;
+    }
+    return true;
+}
+
+function component_version_state() {
+    let pointer = COMPONENT_JOB_DIR + "/core-version-latest";
+    let stat = fs.lstat(pointer);
+    if (!stat) return { success: true, running: false };
+    if (stat.type != "file" || stat.size > 1024) return { success: false, error: "invalid_job" };
+    let last = read_json_file(pointer);
+    if (!last || !valid_component_job_id(last.job_id)) return { success: false, error: "invalid_job" };
+    let path = component_job_state_path_value(last.job_id);
+    if (!fs.lstat(path)) return { success: true, running: false };
+    refresh_component_running_job_state(path);
+    let state = read_json_file(path);
+    return type(state) == "object" ? { ...state, job_id: last.job_id } : { success: false, error: "invalid_job" };
+}
+
+function component_version_start_locked(request) {
+    if (!ensure_component_runtime_dirs()) return { success: false, error: "storage_unavailable" };
+    component_cleanup_jobs();
+    if (component_version_state().running) return { success: false, error: "busy" };
+    let job_id = component_job_id(), state_file = component_job_state_path_value(job_id);
+    let request_file = state_file + ".core-request";
+    if (!core_private_state(request_file, request) ||
+        !core_private_state(state_file, component_running_job_state_value("sing_box", "install", now_seconds())) ||
+        !core_private_state(COMPONENT_JOB_DIR + "/core-version-latest", { job_id })) {
+        remove_component_job_state(state_file);
+        return { success: false, error: "storage_unavailable" };
+    }
+    let pid = launch_component_worker([ "component-version-worker", state_file, component_job_output_path(job_id) ]);
+    if (!job_pid_valid(pid)) {
+        core_private_state(state_file, { success: false, running: false, error: "launch_failed" });
+        remove_file(request_file);
+        return { success: false, error: "launch_failed" };
+    }
+    return { success: true, running: true, job_id };
+}
+
+function component_version_async(text) {
+    if (length(as_string(text)) > 8192) return { success: false, error: "invalid_request" };
+    let request;
+    try { request = json(text); } catch (e) { return { success: false, error: "invalid_request" }; }
+    if (!require("components.core_pin").request_valid(request) || request.action != "install")
+        return { success: false, error: "invalid_request" };
+    let locks = require("service.operation_lock"), lock = locks.acquire("core-version-launch");
+    if (!lock) return { success: false, error: "busy" };
+    let result;
+    try { result = component_version_start_locked(request); }
+    catch (e) { result = { success: false, error: "launch_failed" }; }
+    locks.release(lock);
+    return result;
+}
+
+function component_version_worker(state_file, output_file) {
+    let job_id = path_basename_without_suffix(state_file, ".json");
+    if (component_job_state_path_value(job_id) != state_file || component_job_output_path(job_id) != output_file)
+        exit(1);
+    let locks = require("service.operation_lock"), lock = null;
+    for (let n = 0; n < 5 && !lock; n++) {
+        lock = locks.acquire("core-version-worker", false);
+        if (!lock) system("sleep 1");
+    }
+    let request_file = state_file + ".core-request";
+    if (!lock || !set_component_running_job_pid(state_file, owner_pid())) {
+        core_private_state(state_file, { success: false, running: false, error: lock ? "storage_unavailable" : "busy" });
+        remove_file(request_file);
+        if (lock) locks.release(lock);
+        return;
+    }
+    let command = command_env(component_worker_env()) + " " + command_from_args([
+        "ucode", "-L", LIB_DIR, LIB_DIR + "/components/action.uc", "component-version-action", request_file
+    ]) + " >" + shell_quote(output_file) + " 2>&1";
+    let status = command_status(command);
+    finish_component_job(state_file, "sing_box", "install", status, output_file);
+    remove_file(request_file);
+    locks.release(lock);
 }
 
 function automatic_component_check_names() {
@@ -3157,6 +3249,12 @@ else if (mode == "subscription-update-async")
     subscription_update_async(ARGV[1], ARGV[2]);
 else if (mode == "subscription-update-status")
     subscription_update_status(ARGV[1]);
+else if (mode == "component-version-async")
+    write_json(component_version_async(ARGV[1]));
+else if (mode == "component-version-status")
+    write_json(component_version_state());
+else if (mode == "component-version-worker")
+    component_version_worker(ARGV[1], ARGV[2]);
 else if (mode == "component-action-worker")
     component_action_worker(ARGV[1], ARGV[2], ARGV[3], ARGV[4]);
 else if (mode == "component-action-async")
