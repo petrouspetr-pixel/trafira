@@ -1,10 +1,17 @@
 let common=require("core.common");
 const TYPES=["settings","section","server","subscription_url","section_interface","urltest","priority_group","priority_level"];
 function name_valid(name) {
-    if(type(name)!="string" || !length(trim(name)) || length(name)>64) return false;
-    for(let i=0;i<length(name);i++) {
+    if(type(name)!="string" || !length(trim(name)) || length(name)>256) return false;
+    let characters=0;
+    for(let i=0;i<length(name);) {
         let byte=ord(name,i);
         if(byte<32 || byte==127) return false;
+        let width=byte<128?1:byte>=194 && byte<=223?2:byte>=224 && byte<=239?3:byte>=240 && byte<=244?4:0;
+        if(!width || i+width>length(name) || ++characters>64)return false;
+        for(let n=1;n<width;n++)if(ord(name,i+n)<128 || ord(name,i+n)>191)return false;
+        let next=ord(name,i+1);
+        if((byte==224 && next<160) || (byte==237 && next>=160) || (byte==240 && next<144) || (byte==244 && next>=144))return false;
+        i+=width;
     }
     return true;
 }
