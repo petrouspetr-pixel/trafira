@@ -24,6 +24,8 @@ function download(url,path) {
  let root=getenv("FIXTURE");
  assert(!fs.stat(root+"/offline"),"unexpected network access");
  let source=index(url,"api.github.com")>=0?"release.json":substr(url,rindex(url,"/")+1);
+ let tag=match(url,/releases\/tags\/([0-9.]+)$/);if(tag)source="release-"+tag[1]+".json";
+ let manifest=match(url,/download\/([0-9.]+)\/warp-manifest.json$/);if(manifest)source="manifest-"+manifest[1]+".json";
  let text=fs.readfile(root+"/assets/"+source);if(text==null)return false;
  return fs.writefile(path,text)==length(text);
 }

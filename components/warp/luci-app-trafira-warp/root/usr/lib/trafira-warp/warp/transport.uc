@@ -122,8 +122,8 @@ function mark_available(mark) {
     for(let family in ["-4","-6"]) {
         let rules=output(["ip",family,"rule","show"]);if(rules==null)return false;
         for(let line in split(rules,"\n")) {
-            let found=match(line,/fwmark (0x[0-9a-fA-F]+|[0-9]+)(?:\/(0x[0-9a-fA-F]+|[0-9]+))?/);
-            if(found && (mark & (found[2]?number(found[2]):4294967295))==(number(found[1]) & (found[2]?number(found[2]):4294967295)))return false;
+            let found=match(line,/fwmark (0x[0-9a-fA-F]+|[0-9]+)(\/(0x[0-9a-fA-F]+|[0-9]+))?/);
+            if(found && (mark & (found[3]?number(found[3]):4294967295))==(number(found[1]) & (found[3]?number(found[3]):4294967295)))return false;
         }
     }
     return true;

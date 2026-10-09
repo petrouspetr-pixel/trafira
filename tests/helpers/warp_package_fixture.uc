@@ -10,9 +10,9 @@ function manifest(manager,version) {
   push(packages,{name,version,arch:"aarch64_cortex-a53",manager,file,size:length(text),installed_size:length(text),sha256:digest(assets+"/"+file)});
  }
  let m={schema:1,family_version:version,minimum_trafira_version:"2.0.0",packages};
- fs.writefile(assets+"/warp-manifest.json",sprintf("%J",m));
+ fs.writefile(assets+"/warp-manifest.json",sprintf("%J",m));fs.writefile(assets+"/manifest-"+version+".json",sprintf("%J",m));
  let list=[];for(let name in ["warp-manifest.json",...map(packages,(p)=>p.file)])push(list,{name,size:fs.stat(assets+"/"+name).size,browser_download_url:"https://github.com/petrouspetr-pixel/trafira/releases/download/"+version+"/"+name});
- fs.writefile(assets+"/release.json",sprintf("%J",{tag_name:version,assets:list}));return m;
+ let release=sprintf("%J",{tag_name:version,assets:list});fs.writefile(assets+"/release.json",release);fs.writefile(assets+"/release-"+version+".json",release);return m;
 }
 let ctx={work:root+"/work",manager:"apk",arch:"aarch64_cortex-a53",trafira_version:"2.1.0",
  version:(name)=>installed[name]||"",inspect:(path,name,version)=>{
@@ -28,7 +28,12 @@ for(let manager in ["apk","opkg"]) {
  ctx.manager=manager;installed={};fs.unlink(root+"/offline");manifest(manager,"1.0.0");
  let first=runtime.execute("install",ctx);assert(first.success,sprintf("first install %J",first));
  assert(!fs.stat(root+"/service.calls"),"first install remains inactive");
- fs.unlink(root+"/state-operation");manifest(manager,"2.0.0");space=false;
+ fs.unlink(root+"/state-operation");manifest(manager,"2.0.0");
+ fs.unlink(cache+"/current/manifest.json");
+ let oldfile=assets+"/trafira-warp-awg-1.0.0"+(manager=="apk"?".apk":".ipk");
+ fs.rename(oldfile,oldfile+".missing");
+ assert(runtime.execute("install",ctx).error=="rollback_unavailable" && !fs.stat(root+"/service.calls"),"manual install requires downloadable exact previous family before stop");
+ fs.rename(oldfile+".missing",oldfile);space=false;
  assert(!runtime.execute("install",ctx).success && !fs.stat(root+"/service.calls"),"space failure never stops old family");
  space=true;simulated=false;assert(!runtime.execute("install",ctx).success && !fs.stat(root+"/service.calls"),"dependency preflight never stops old family");simulated=true;
  failed=true;let result=runtime.execute("install",ctx);
