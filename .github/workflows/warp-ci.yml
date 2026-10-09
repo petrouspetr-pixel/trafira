@@ -1,0 +1,42 @@
+name: WARP Component CI
+on:
+  pull_request:
+    paths: ['components/warp/**', 'scripts/build-warp.sh', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
+  push:
+    branches: [main]
+    paths: ['components/warp/**', 'scripts/build-warp.sh', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
+permissions:
+  contents: read
+jobs:
+  package-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - run: python3 -m unittest discover -s tests/warp -p 'test_*.py'
+  packages:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        manager: [opkg, apk]
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - name: Host build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget zstd patch
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/trafira-warp-sdk
+          key: warp-sdk-${{ matrix.manager }}-24.10.6-25.12.3
+      - name: Build optional packages without release
+        run: bash scripts/build-warp.sh 0.0.0 ${{ matrix.manager }} aarch64_cortex-a53 dist/warp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: warp-${{ matrix.manager }}
+          path: dist/warp/*

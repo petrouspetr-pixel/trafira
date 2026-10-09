@@ -1,0 +1,18 @@
+{
+  "integration": {
+    "url": "https://github.com/moz9/cloudflare-warp-openwrt-podkop",
+    "commit": "72cfeef7f1838ad991ed6242188621df2691e86a",
+    "license": "Apache-2.0"
+  },
+  "awg": {
+    "url": "https://github.com/amnezia-vpn/amneziawg-go",
+    "version": "3.1.20260828",
+    "sha256": "24c656cfb80ff6855702710eaf2e3729fa710bf6bfdbbbdfba01984ccd17de95"
+  },
+  "scout": {
+    "url": "https://github.com/vernette/warpscout",
+    "version": "0.16.0",
+    "commit": "db4ac9ebae8d942191b8e8351f2c3a37a375bd66",
+    "sha256": "c21c777239856401f6529e4e2503d9f6ebd9071f78988fe86e35aaefc65a1c20"
+  }
+}
