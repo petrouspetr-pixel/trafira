@@ -1,6 +1,13 @@
 let common=require("core.common");
 const TYPES=["settings","section","server","subscription_url","section_interface","urltest","priority_group","priority_level"];
-function name_valid(name) { return type(name)=="string" && length(trim(name))>0 && length(name)<=128 && !match(name,/[\x00-\x1f]/); }
+function name_valid(name) {
+    if(type(name)!="string" || !length(trim(name)) || length(name)>64) return false;
+    for(let i=0;i<length(name);i++) {
+        let byte=ord(name,i);
+        if(byte<32 || byte==127) return false;
+    }
+    return true;
+}
 function validate(document) {
     let errors=[];
     if(type(document)!="object" || document.schema!=1) return {valid:false,errors:["unsupported_schema"]};
