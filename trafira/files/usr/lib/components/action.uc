@@ -2366,6 +2366,14 @@ function component_action(component, action) {
 }
 
 let mode = ARGV[0] || "";
+let operation_lock=null;
+if(mode=="component-action" && ARGV[2]!="check_update") {
+    operation_lock=require("service.operation_lock").acquire("component");
+    if(!operation_lock) {
+        write_json({success:false,message:"Another configuration operation is already running",error:"busy"});
+        exit(1);
+    }
+}
 
 if (mode == "component-action")
     component_action(ARGV[1], ARGV[2]);

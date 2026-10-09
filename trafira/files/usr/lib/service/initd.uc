@@ -731,6 +731,14 @@ function trigger_plan(settings) {
 }
 
 let mode = ARGV[0] || "";
+let operation_lock=null;
+if(index(["start-service","stop-service","reload-service","retry-start-on-wan-up","handle-wan-up"],mode)>=0) {
+    operation_lock=require("service.operation_lock").acquire("initd");
+    if(!operation_lock) {
+        warn("Another configuration operation is already running\n");
+        exit(1);
+    }
+}
 
 if (mode == "restore-dnsmasq-failsafe")
     exit(restore_dnsmasq_failsafe());

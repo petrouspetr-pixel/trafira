@@ -1422,6 +1422,14 @@ function disable_service() {
 
 let mode = ARGV[0] || "";
 let status = 1;
+let operation_lock=null;
+if(index(["main","start","stop","reload","dns-failover-apply","restart","enable","disable","dnsmasq-restore","restore-dnsmasq","uninstall"],mode)>=0) {
+    operation_lock=require("service.operation_lock").acquire("lifecycle");
+    if(!operation_lock) {
+        warn("Another configuration operation is already running\n");
+        exit(1);
+    }
+}
 
 if (mode == "main")
     status = start_main();
@@ -1457,4 +1465,5 @@ else {
 }
 
 release_start_subscription_update_lock();
+require("service.operation_lock").release(operation_lock);
 exit(status);
