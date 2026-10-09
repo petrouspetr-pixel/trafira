@@ -733,9 +733,8 @@ function start_main() {
     ]);
     if (status != 0) {
         let startup_reason = startup_diagnostics.read(startup_marker);
-        if (startup_reason != "")
-            log_message("sing-box startup failed: " + startup_reason, "error");
-        log_message("sing-box did not reach a stable running state after start. Aborted.", "fatal");
+        log_message("sing-box did not reach a stable running state after start. Aborted." +
+            (startup_reason != "" ? " Cause: " + startup_reason : ""), "fatal");
         return status;
     }
 
