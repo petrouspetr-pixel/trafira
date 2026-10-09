@@ -4,6 +4,9 @@ package main
 import (
     "net"
     "context"
+    "net/http"
+    "strings"
+    "io"
     "errors"
     "syscall"
     "testing"
@@ -53,4 +56,20 @@ func TestMarkedRegistrationAndDNS(t *testing.T) {
  if err=socketMarkControl(rejectedRaw{},uint32(trafiraMark));err==nil{t.Fatal("mark failure ignored")}
  client:=regTransport(nil);defer client.CloseIdleConnections()
  if c,e:=client.DialContext(context.Background(),"tcp4","127.0.0.1:443");e==nil{c.Close();t.Fatal("private registration destination accepted")}
+}
+
+type fixtureRoundTrip func(*http.Request)(*http.Response,error)
+func(f fixtureRoundTrip) RoundTrip(r *http.Request)(*http.Response,error){return f(r)}
+func TestMarkedRegistrationCreatesOnlyOneWGAccount(t *testing.T) {
+ old:=trafiraMark;trafiraMark=0x08000000;defer func(){trafiraMark=old}()
+ calls:=0
+ client:=&http.Client{Transport:fixtureRoundTrip(func(r *http.Request)(*http.Response,error){
+  calls++
+  body:=`{"id":"fixture-account","token":"fixture-token","config":{"peers":[{"public_key":"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBA="}],"interface":{"addresses":{"v4":"172.16.0.2","v6":"2606:4700:110::2"}}}}`
+  return &http.Response{StatusCode:200,Header:make(http.Header),Body:io.NopCloser(strings.NewReader(body)),Request:r},nil
+ })}
+ a,err:=mintAccount(context.Background(),client,account{})
+ if err!=nil {t.Fatal(err)}
+ if a.Masque!=nil || a.Outer!=nil || calls!=2 {t.Fatalf("registration created unsupported extra accounts: requests=%d masque=%v outer=%v",calls,a.Masque!=nil,a.Outer!=nil)}
+ if a.ID!="fixture-account" || a.PrivateKey=="" {t.Fatal("missing owned registration")}
 }
