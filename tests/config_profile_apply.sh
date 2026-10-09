@@ -7,7 +7,13 @@ export TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime"
 export TRAFIRA_TRANSACTION_DIR="$WORK_DIR/transactions"
 export TRAFIRA_CONFIG_FILE="$WORK_DIR/config"
 export PROFILE_APPLY_FIXTURE_DIR="$WORK_DIR"
+export TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 mkdir -p "$TRAFIRA_RUNTIME_STATE_DIR"
+cat >"$WORK_DIR/normal-start.uc" <<'UC'
+let fs=require("fs"),t=require("service.config_transaction");
+assert(t.before_start().success,"normal nested startup allowed");
+assert(fs.readfile(getenv("TRAFIRA_CONFIG_FILE"))=="candidate","live apply must not be undone during normal startup");
+UC
 mkdir -p "$WORK_DIR/debug-lib/service"
 # Expose exceptions only inside the synthetic test, never in production reports.
 sed 's/let recovery=recover_locked(hooks);/warn(sprintf("transaction fixture exception: %J\\n",e)); let recovery=recover_locked(hooks);/' \
@@ -29,6 +35,6 @@ status=$?
 set -e
 test "$status" = 79
 test "$(cat "$TRAFIRA_CONFIG_FILE")" = candidate
-ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e 'let t=require("service.config_transaction");assert(t.recover().success,"unfinished transaction recovers on next process");'
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e 'let t=require("service.config_transaction");assert(t.before_start().success,"unfinished transaction recovers before next startup");'
 test "$(cat "$TRAFIRA_CONFIG_FILE")" = original
 printf 'configuration transaction checks passed\n'

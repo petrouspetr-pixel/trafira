@@ -21,7 +21,7 @@ hooks.restore=()=>false;
 failed=t.apply(candidate,digest,"test",hooks);
 assert(!failed.success && failed.rollback_error && fs.readfile(target)=="original","restore failure explicit");
 assert(t.recover().success,"recover outstanding restoration journal");
-hooks.restore=()=>true;hooks.activate=()=>true;
+hooks.restore=()=>true;hooks.activate=()=>system("ucode -L \"$TRAFIRA_LIB\" \"$PROFILE_APPLY_FIXTURE_DIR/normal-start.uc\"")==0;
 assert(t.apply(candidate,digest,"test",hooks).success && fs.readfile(target)=="candidate","successful replacement");
 assert(fs.readfile(t.previous_path())=="original","previous original retained separately");
 assert(!t.status().running,"successful transaction terminal");
