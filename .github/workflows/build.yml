@@ -148,7 +148,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2.4.0
         with:
-          files: ./filtered-bin/release/*.*
+          files: ./filtered-bin/release/*
           draft: false
           prerelease: false
           make_latest: true
