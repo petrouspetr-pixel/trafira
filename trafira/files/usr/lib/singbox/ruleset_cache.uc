@@ -8,7 +8,7 @@ const MAX_TOTAL = 8 * 1024 * 1024;
 const RESERVE = 4 * 1024 * 1024;
 
 function quote(value) { return "'" + replace("" + value, /'/g, "'\\''") + "'"; }
-function command(args) { return join(map(args, quote), " "); }
+function command(args) { return join(" ", map(args, quote)); }
 function output(cmd) {
     let pipe = fs.popen(cmd, "r");
     if (!pipe) return "";
@@ -72,9 +72,29 @@ function save(rule, file) {
     return !!ok;
 }
 function refresh(config, proxy) {
+    let rules = filter(common.array_or_empty(config.route && config.route.rule_set),
+        (rule) => rule.type == "remote" && rule.http_client != null);
+    // Legacy configurations cannot use initial_path; do not download unused copies.
+    if (length(rules) == 0) return true;
+    let active = {};
+    for (let rule in rules) {
+        let target = path(rule);
+        if (target) active[target] = true;
+        if (rule.initial_path) active[rule.initial_path] = true;
+    }
+    // Called under the list-update worker's serialization. Never prune a file
+    // referenced by the active config; leave recent staging files alone.
+    for (let name in fs.lsdir(CACHE_DIR) || []) {
+        let target = CACHE_DIR + "/" + name;
+        let info = fs.lstat(target);
+        if (!info || info.type != "file" || active[target]) continue;
+        if (match(name, /^[a-f0-9]{64}[.]snapshot$/) ||
+            (match(name, /^[.]stage[.][A-Za-z0-9]+$/) && time() - info.mtime > 3600))
+            fs.unlink(target);
+    }
     let seen = {};
     let ok = true;
-    for (let rule in common.array_or_empty(config.route && config.route.rule_set)) {
+    for (let rule in rules) {
         let target = path(rule);
         if (!target || seen[target]) continue;
         seen[target] = true;
