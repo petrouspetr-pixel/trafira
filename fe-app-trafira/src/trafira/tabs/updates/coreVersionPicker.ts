@@ -15,6 +15,7 @@ export interface VersionState {
   }>;
   currentVersion: string;
   cachedAt: number;
+  pinnedVersion: string;
   selected: string;
   jobId: string;
   restored: boolean;
@@ -26,6 +27,7 @@ export interface VersionRequest {
   candidate_id?: string;
   expected_current_version?: string;
   pin?: boolean;
+  job_id?: string;
 }
 const text = (value: unknown) => (typeof value === 'string' ? value : '');
 const initial = (): VersionState => ({
@@ -33,6 +35,7 @@ const initial = (): VersionState => ({
   entries: [],
   currentVersion: '',
   cachedAt: 0,
+  pinnedVersion: '',
   selected: '',
   jobId: '',
   restored: false,
@@ -97,7 +100,10 @@ export class CoreVersionPicker {
     });
   }
   async poll() {
-    await this.request({ action: 'status' });
+    await this.request({
+      action: 'status',
+      ...(this.state.jobId ? { job_id: this.state.jobId } : {}),
+    });
   }
   private async request(request: VersionRequest) {
     if (
@@ -140,6 +146,10 @@ export class CoreVersionPicker {
           selected: '',
           currentVersion: text(result.current_version),
           cachedAt: Number(result.cached_at) || 0,
+          pinnedVersion:
+            result.pin && typeof result.pin === 'object'
+              ? text((result.pin as Record<string, unknown>).version)
+              : '',
           entries: Array.isArray(result.entries)
             ? result.entries
                 .filter((entry) => entry && typeof entry === 'object')

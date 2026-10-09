@@ -772,6 +772,13 @@
     ]
   },
   {
+    "call": "Catalog checked",
+    "key": "Catalog checked",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:80"
+    ]
+  },
+  {
     "call": "Certificate path",
     "key": "Certificate path",
     "places": [
@@ -813,7 +820,7 @@
     "call": "Check update",
     "key": "Check update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:742"
+      "src/trafira/tabs/updates/initController.ts:743"
     ]
   },
   {
@@ -859,17 +866,17 @@
     "call": "Checks failed",
     "key": "Checks failed",
     "places": [
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26",
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10"
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10",
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26"
     ]
   },
   {
     "call": "Checks passed",
     "key": "Checks passed",
     "places": [
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13",
       "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:23",
-      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43"
+      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43",
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13"
     ]
   },
   {
@@ -877,6 +884,13 @@
     "key": "Checks passed with manual DHCP",
     "places": [
       "src/trafira/tabs/diagnostic/checks/getDnsCheckPresentation.ts:27"
+    ]
+  },
+  {
+    "call": "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only.",
+    "key": "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:100"
     ]
   },
   {
@@ -2134,12 +2148,12 @@
     "call": "Failed to execute",
     "key": "Failed to execute",
     "places": [
-      "src/trafira/methods/shell/index.ts:170",
-      "src/trafira/methods/shell/index.ts:177",
-      "src/trafira/tabs/updates/initController.ts:508",
       "src/trafira/tabs/updates/initController.ts:509",
-      "src/trafira/tabs/updates/initController.ts:571",
-      "src/trafira/tabs/updates/initController.ts:721"
+      "src/trafira/tabs/updates/initController.ts:510",
+      "src/trafira/tabs/updates/initController.ts:572",
+      "src/trafira/tabs/updates/initController.ts:722",
+      "src/trafira/methods/shell/index.ts:170",
+      "src/trafira/methods/shell/index.ts:177"
     ]
   },
   {
@@ -2615,22 +2629,43 @@
     "call": "Install",
     "key": "Install",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:756"
+      "src/trafira/tabs/updates/initController.ts:757"
     ]
   },
   {
     "call": "Install another build:",
     "key": "Install another build:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1161"
+      "src/trafira/tabs/updates/initController.ts:1162"
+    ]
+  },
+  {
+    "call": "Install selected version",
+    "key": "Install selected version",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:29"
+    ]
+  },
+  {
+    "call": "Installed version",
+    "key": "Installed version",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:80"
     ]
   },
   {
     "call": "Installed version is newer than release",
     "key": "Installed version is newer than release",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:291",
-      "src/trafira/tabs/updates/initController.ts:1019"
+      "src/trafira/tabs/updates/initController.ts:292",
+      "src/trafira/tabs/updates/initController.ts:1020"
+    ]
+  },
+  {
+    "call": "Installing in the background. You may close this page.",
+    "key": "Installing in the background. You may close this page.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:85"
     ]
   },
   {
@@ -3151,8 +3186,8 @@
     "call": "Issues detected",
     "key": "Issues detected",
     "places": [
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20",
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17"
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17",
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20"
     ]
   },
   {
@@ -3261,15 +3296,15 @@
     "call": "Latest version is installed",
     "key": "Latest version is installed",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:294",
-      "src/trafira/tabs/updates/initController.ts:1017"
+      "src/trafira/tabs/updates/initController.ts:295",
+      "src/trafira/tabs/updates/initController.ts:1018"
     ]
   },
   {
     "call": "Latest version:",
     "key": "Latest version:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1019"
+      "src/trafira/tabs/updates/initController.ts:1020"
     ]
   },
   {
@@ -3354,11 +3389,11 @@
     "call": "Loading...",
     "key": "Loading...",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:907",
-      "src/trafira/tabs/updates/initController.ts:918",
-      "src/trafira/tabs/updates/initController.ts:929",
-      "src/trafira/tabs/updates/initController.ts:942",
-      "src/trafira/tabs/updates/initController.ts:955"
+      "src/trafira/tabs/updates/initController.ts:908",
+      "src/trafira/tabs/updates/initController.ts:919",
+      "src/trafira/tabs/updates/initController.ts:930",
+      "src/trafira/tabs/updates/initController.ts:943",
+      "src/trafira/tabs/updates/initController.ts:956"
     ]
   },
   {
@@ -3773,9 +3808,9 @@
     "places": [
       "src/trafira/helpers/singBoxVariant.ts:29",
       "src/trafira/helpers/singBoxVariant.ts:37",
-      "src/trafira/tabs/updates/initController.ts:932",
-      "src/trafira/tabs/updates/initController.ts:945",
-      "src/trafira/tabs/updates/initController.ts:958"
+      "src/trafira/tabs/updates/initController.ts:933",
+      "src/trafira/tabs/updates/initController.ts:946",
+      "src/trafira/tabs/updates/initController.ts:959"
     ]
   },
   {
@@ -3924,8 +3959,8 @@
     "call": "Open",
     "key": "Open",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1010",
-      "src/trafira/tabs/updates/initController.ts:1032"
+      "src/trafira/tabs/updates/initController.ts:1011",
+      "src/trafira/tabs/updates/initController.ts:1033"
     ]
   },
   {
@@ -4086,6 +4121,20 @@
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2631",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3155"
+    ]
+  },
+  {
+    "call": "Pin selected version",
+    "key": "Pin selected version",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:106"
+    ]
+  },
+  {
+    "call": "Pinned version",
+    "key": "Pinned version",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:80"
     ]
   },
   {
@@ -4400,6 +4449,13 @@
     ]
   },
   {
+    "call": "Refresh available versions",
+    "key": "Refresh available versions",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:21"
+    ]
+  },
+  {
     "call": "Refresh status",
     "key": "Refresh status",
     "places": [
@@ -4417,7 +4473,7 @@
     "call": "Remove",
     "key": "Remove",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:801"
+      "src/trafira/tabs/updates/initController.ts:802"
     ]
   },
   {
@@ -4516,6 +4572,13 @@
     "key": "Restart Trafira",
     "places": [
       "src/trafira/tabs/diagnostic/partials/renderAvailableActions.ts:49"
+    ]
+  },
+  {
+    "call": "Restoration failed. Check the service before continuing.",
+    "key": "Restoration failed. Check the service before continuing.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:40"
     ]
   },
   {
@@ -4798,6 +4861,13 @@
     ]
   },
   {
+    "call": "Select a version",
+    "key": "Select a version",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:63"
+    ]
+  },
+  {
     "call": "Select an existing network interface",
     "key": "Select an existing network interface",
     "places": [
@@ -5008,9 +5078,9 @@
     "call": "Service action failed",
     "key": "Service action failed",
     "places": [
+      "src/trafira/tabs/diagnostic/initController.ts:597",
       "src/trafira/methods/shell/index.ts:376",
-      "src/trafira/methods/shell/index.ts:397",
-      "src/trafira/tabs/diagnostic/initController.ts:597"
+      "src/trafira/methods/shell/index.ts:397"
     ]
   },
   {
@@ -5185,6 +5255,13 @@
     ]
   },
   {
+    "call": "Sing-box versions",
+    "key": "Sing-box versions",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:96"
+    ]
+  },
+  {
     "call": "Snapshot preparation completed",
     "key": "Snapshot preparation completed",
     "places": [
@@ -5251,9 +5328,9 @@
     "call": "Source",
     "key": "Source",
     "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:164",
       "src/trafira/tabs/monitoring/initController.ts:831",
-      "src/trafira/tabs/monitoring/initController.ts:881",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:164"
+      "src/trafira/tabs/monitoring/initController.ts:881"
     ]
   },
   {
@@ -5577,11 +5654,25 @@
     ]
   },
   {
+    "call": "The installed version changed. Refresh the version list.",
+    "key": "The installed version changed. Refresh the version list.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:43"
+    ]
+  },
+  {
     "call": "The NFQUEUE number is assigned by Trafira for each rule and must not be overridden here.",
     "key": "The NFQUEUE number is assigned by Trafira for each rule and must not be overridden here.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5695",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6140"
+    ]
+  },
+  {
+    "call": "The previous version was restored.",
+    "key": "The previous version was restored.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:87"
     ]
   },
   {
@@ -5596,6 +5687,14 @@
     "key": "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7970"
+    ]
+  },
+  {
+    "call": "The sing-box version operation failed.",
+    "key": "The sing-box version operation failed.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:46",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:83"
     ]
   },
   {
@@ -6028,6 +6127,13 @@
     ]
   },
   {
+    "call": "Unavailable for this installation",
+    "key": "Unavailable for this installation",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:71"
+    ]
+  },
+  {
     "call": "Unexpected ByeDPI strategy argument: %s",
     "key": "Unexpected ByeDPI strategy argument: %s",
     "places": [
@@ -6085,7 +6191,7 @@
       "src/trafira/services/systemInfo.service.ts:22",
       "src/trafira/services/systemInfo.service.ts:25",
       "src/trafira/services/systemInfo.service.ts:26",
-      "src/trafira/tabs/updates/initController.ts:329",
+      "src/trafira/tabs/updates/initController.ts:330",
       "src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25"
     ]
   },
@@ -6127,6 +6233,13 @@
     ]
   },
   {
+    "call": "Unpin version",
+    "key": "Unpin version",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:37"
+    ]
+  },
+  {
     "call": "Unspecified IP address is not allowed",
     "key": "Unspecified IP address is not allowed",
     "places": [
@@ -6144,21 +6257,21 @@
     "call": "Update",
     "key": "Update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:756"
+      "src/trafira/tabs/updates/initController.ts:757"
     ]
   },
   {
     "call": "Update is available",
     "key": "Update is available",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:287"
+      "src/trafira/tabs/updates/initController.ts:288"
     ]
   },
   {
     "call": "Update is available:",
     "key": "Update is available:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:996"
+      "src/trafira/tabs/updates/initController.ts:997"
     ]
   },
   {

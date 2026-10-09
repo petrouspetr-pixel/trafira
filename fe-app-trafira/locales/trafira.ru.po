@@ -2844,3 +2844,42 @@ msgstr "Удалено"
 
 msgid "Changed"
 msgstr "Изменено"
+
+msgid "Refresh available versions"
+msgstr "Обновить список версий"
+
+msgid "Install selected version"
+msgstr "Установить выбранную версию"
+
+msgid "Unpin version"
+msgstr "Снять закрепление версии"
+
+msgid "Select a version"
+msgstr "Выберите версию"
+
+msgid "Unavailable for this installation"
+msgstr "Недоступно для этой установки"
+
+msgid "Installed version"
+msgstr "Установленная версия"
+
+msgid "Pinned version"
+msgstr "Закреплённая версия"
+
+msgid "Catalog checked"
+msgstr "Список проверен"
+
+msgid "The sing-box version operation failed."
+msgstr "Операция с версией sing-box не выполнена."
+
+msgid "Installing in the background. You may close this page."
+msgstr "Установка выполняется в фоне. Можно закрыть эту страницу."
+
+msgid "The previous version was restored."
+msgstr "Предыдущая версия восстановлена."
+
+msgid "Sing-box versions"
+msgstr "Версии sing-box"
+
+msgid "Pin selected version"
+msgstr "Закрепить выбранную версию"

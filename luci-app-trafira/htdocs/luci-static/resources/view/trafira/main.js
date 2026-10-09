@@ -974,8 +974,8 @@ function renderWarning(warning) {
     ),
     dhcp_source_partial: _("Some DHCP lease entries were invalid and skipped.")
   };
-  const text2 = messages[warning.code];
-  return E("div", { class: `${BLOCK}__warning`, role: "alert" }, text2);
+  const text3 = messages[warning.code];
+  return E("div", { class: `${BLOCK}__warning`, role: "alert" }, text3);
 }
 function renderHandshake(device, nowSeconds) {
   const handshake = device.kind === "wireguard" ? formatHandshakeAge(device.last_handshake, nowSeconds) : "";
@@ -1127,8 +1127,8 @@ function renderFlagEmojis(value) {
 }
 
 // src/helpers/downloadAsTxt.ts
-function downloadAsTxt(text2, filename) {
-  const blob = new Blob([text2], { type: "text/plain;charset=utf-8" });
+function downloadAsTxt(text3, filename) {
+  const blob = new Blob([text3], { type: "text/plain;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   const safeName = filename.endsWith(".txt") ? filename : `${filename}.txt`;
@@ -2602,9 +2602,9 @@ function showToast(message, type, duration = 3e3) {
 }
 
 // src/helpers/copyToClipboard.ts
-function copyToClipboard(text2) {
+function copyToClipboard(text3) {
   const textarea = document.createElement("textarea");
-  textarea.value = text2;
+  textarea.value = text3;
   document.body.appendChild(textarea);
   textarea.select();
   try {
@@ -4433,10 +4433,10 @@ var TabService = class _TabService {
     }));
   }
   getActiveTabId() {
-    const active2 = document.querySelector(
+    const active3 = document.querySelector(
       ".cbi-tab:not(.cbi-tab-disabled)"
     );
-    return active2?.dataset.tab || null;
+    return active3?.dataset.tab || null;
   }
   notify() {
     const tabs = this.getTabsInfo();
@@ -4656,10 +4656,10 @@ function jsonEqual(a, b) {
   }
 }
 var StoreService = class {
-  constructor(initial2) {
+  constructor(initial3) {
     this.listeners = /* @__PURE__ */ new Set();
-    this.value = initial2;
-    this.initial = structuredClone(initial2);
+    this.value = initial3;
+    this.initial = structuredClone(initial3);
   }
   get() {
     return this.value;
@@ -5031,29 +5031,29 @@ var componentActions = /* @__PURE__ */ new Set();
 var subscriptionSections = /* @__PURE__ */ new Set();
 var latencySections = /* @__PURE__ */ new Set();
 var serviceActions = /* @__PURE__ */ new Set();
-function setMembership(set, value, active2) {
-  if (active2) {
+function setMembership(set, value, active3) {
+  if (active3) {
     set.add(value);
   } else {
     set.delete(value);
   }
 }
-function setLocalComponentAction(action, active2) {
-  setMembership(componentActions, action, active2);
+function setLocalComponentAction(action, active3) {
+  setMembership(componentActions, action, active3);
 }
-function setLocalSubscriptionAction(section, active2) {
+function setLocalSubscriptionAction(section, active3) {
   if (section) {
-    setMembership(subscriptionSections, section, active2);
+    setMembership(subscriptionSections, section, active3);
   }
 }
-function setLocalLatencyAction(section, active2) {
+function setLocalLatencyAction(section, active3) {
   if (section) {
-    setMembership(latencySections, section, active2);
+    setMembership(latencySections, section, active3);
   }
 }
-function setLocalServiceAction(action, active2) {
+function setLocalServiceAction(action, active3) {
   if (action === "restart" || action === "start" || action === "stop") {
-    setMembership(serviceActions, action, active2);
+    setMembership(serviceActions, action, active3);
   }
 }
 function getLocalActionOverlay() {
@@ -6346,8 +6346,8 @@ function formatUrlTestModalValue(value) {
   if (typeof value === "boolean") {
     return value ? _("Yes") : _("No");
   }
-  const text2 = `${value ?? ""}`.trim();
-  return text2 || _("No");
+  const text3 = `${value ?? ""}`.trim();
+  return text3 || _("No");
 }
 function getUrlTestLatencyClass(latency) {
   if (!latency) {
@@ -6878,11 +6878,11 @@ function updateLatencyProgressInline(sectionsWidget) {
     if (!label) {
       return false;
     }
-    const text2 = getLatencyTestLabel(
+    const text3 = getLatencyTestLabel(
       sectionsWidget.latencyProgressSections[section.sectionName]
     );
-    if (label.textContent !== text2) {
-      label.textContent = text2;
+    if (label.textContent !== text3) {
+      label.textContent = text3;
     }
   }
   return true;
@@ -9858,7 +9858,7 @@ function renderButton({
   disabled,
   loading: loading2,
   onClick,
-  text: text2,
+  text: text3,
   icon
 }) {
   const hasIcon = !!loading2 || !!icon;
@@ -9900,13 +9900,13 @@ function renderButton({
       disabled: getDisabled(),
       click: onClick
     },
-    [...insertIf(hasIcon, [getWrappedIcon()]), E("span", {}, text2)]
+    [...insertIf(hasIcon, [getWrappedIcon()]), E("span", {}, text3)]
   );
 }
 
 // src/partials/modal/renderModal.ts
-function renderModal(text2, name, options) {
-  let rawText = text2 ?? "";
+function renderModal(text3, name, options) {
+  let rawText = text3 ?? "";
   let currentText = "";
   let refreshInFlight = false;
   let pendingRefresh = false;
@@ -10973,9 +10973,9 @@ function formatMaskedSingBoxConfig(value) {
   }
   return JSON.stringify(maskSingBoxConfigValue(value), null, 2);
 }
-function maskGlobalCheckText(text2 = "") {
+function maskGlobalCheckText(text3 = "") {
   let inMaskedMultiline = false;
-  return `${text2}`.split("\n").map((line) => {
+  return `${text3}`.split("\n").map((line) => {
     if (inMaskedMultiline) {
       if (line.includes("'")) {
         inMaskedMultiline = false;
@@ -12677,11 +12677,11 @@ function renderDeviceFilterOptions() {
   select.replaceChildren(...options);
   select.value = selectedDeviceFilter;
 }
-function setButtonActive(button, active2) {
+function setButtonActive(button, active3) {
   if (!button) {
     return;
   }
-  button.classList.toggle("fkp_monitoring-page__tab--active", active2);
+  button.classList.toggle("fkp_monitoring-page__tab--active", active3);
 }
 function renderTabButtonContent(label, count) {
   return [
@@ -12754,16 +12754,16 @@ function renderControls() {
   }
 }
 function renderValue(value, className = "") {
-  const text2 = value || "-";
+  const text3 = value || "-";
   const element = E(
     "span",
     {
       class: ["fkp_monitoring-page__value", className].filter(Boolean).join(" "),
-      title: text2
+      title: text3
     },
-    text2
+    text3
   );
-  element.setAttribute("data-copy-value", text2);
+  element.setAttribute("data-copy-value", text3);
   return element;
 }
 function renderSourceValue(source) {
@@ -12842,7 +12842,7 @@ function renderConnectionRow(connection) {
     ]
   );
 }
-function renderStateRow(text2, className = "") {
+function renderStateRow(text3, className = "") {
   return E("tr", { class: "fkp_monitoring-page__state-row" }, [
     E(
       "td",
@@ -12856,7 +12856,7 @@ function renderStateRow(text2, className = "") {
           {
             class: ["fkp_monitoring-page__state", className].filter(Boolean).join(" ")
           },
-          text2
+          text3
         )
       ]
     )
@@ -13002,15 +13002,15 @@ function getMonitoringValueTextElements(element) {
   return textElements.length > 0 ? textElements : [element];
 }
 function estimateVisibleMonitoringTextLength(element, fallbackText) {
-  const text2 = compactMonitoringText(getElementCopyText(element, fallbackText));
-  if (!text2) {
+  const text3 = compactMonitoringText(getElementCopyText(element, fallbackText));
+  if (!text3) {
     return 0;
   }
   if (!isElementOverflowing(element)) {
-    return text2.length;
+    return text3.length;
   }
   return Math.floor(
-    element.clientWidth / Math.max(element.scrollWidth, 1) * text2.length
+    element.clientWidth / Math.max(element.scrollWidth, 1) * text3.length
   );
 }
 function getEstimatedVisibleMonitoringTextLength(element, fallbackText) {
@@ -14121,7 +14121,8 @@ function render6() {
     E("div", {
       id: "fkp_updates-components",
       class: "fkp_updates-page__components"
-    })
+    }),
+    E("div", { id: "trafira-core-versions" })
   ]);
 }
 
@@ -14155,6 +14156,264 @@ function shouldExposeCheckResults({
 }) {
   return mounted && cacheResolved;
 }
+
+// src/trafira/tabs/updates/coreVersionPicker.ts
+var text2 = (value) => typeof value === "string" ? value : "";
+var initial2 = () => ({
+  stage: "idle",
+  entries: [],
+  currentVersion: "",
+  cachedAt: 0,
+  pinnedVersion: "",
+  selected: "",
+  jobId: "",
+  restored: false,
+  error: ""
+});
+var CoreVersionPicker = class {
+  constructor(call, render7) {
+    this.call = call;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+    this.pending = false;
+    this.state = initial2();
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.pending = false;
+    this.state = initial2();
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  select(id) {
+    if (!this.active || this.pending || this.state.stage === "installing")
+      return;
+    if (!this.state.entries.some((entry) => entry.id === id && entry.available))
+      return;
+    this.state = {
+      ...this.state,
+      selected: id,
+      stage: "selected",
+      error: "",
+      restored: false
+    };
+    this.render(this.state);
+  }
+  async load(refresh = false) {
+    await this.request({ action: "catalog", refresh });
+  }
+  async install(pin) {
+    if (!this.state.selected || !this.state.entries.some(
+      (entry) => entry.id === this.state.selected && entry.available
+    ))
+      return;
+    await this.request({
+      action: "install",
+      candidate_id: this.state.selected,
+      expected_current_version: this.state.currentVersion,
+      pin
+    });
+  }
+  async unpin() {
+    await this.request({
+      action: "unpin",
+      expected_current_version: this.state.currentVersion
+    });
+  }
+  async poll() {
+    await this.request({
+      action: "status",
+      ...this.state.jobId ? { job_id: this.state.jobId } : {}
+    });
+  }
+  async request(request) {
+    if (!this.active || this.pending || this.state.stage === "installing" && request.action !== "status")
+      return;
+    this.pending = true;
+    const generation = this.generation;
+    this.state = {
+      ...this.state,
+      error: "",
+      stage: request.action === "catalog" ? "loading" : request.action === "status" ? this.state.stage : "installing"
+    };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (!this.active || generation !== this.generation) return;
+      if (result.success === false || result.rollback_error) {
+        this.state = {
+          ...this.state,
+          stage: "failed",
+          restored: result.restored === true,
+          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : result.error === "conflict" ? "The installed version changed. Refresh the version list." : "The sing-box version operation failed."
+        };
+      } else if (request.action === "catalog") {
+        this.state = {
+          ...this.state,
+          stage: "idle",
+          selected: "",
+          currentVersion: text2(result.current_version),
+          cachedAt: Number(result.cached_at) || 0,
+          pinnedVersion: result.pin && typeof result.pin === "object" ? text2(result.pin.version) : "",
+          entries: Array.isArray(result.entries) ? result.entries.filter((entry) => entry && typeof entry === "object").map((entry) => ({
+            id: text2(entry.id),
+            version: text2(entry.version),
+            available: entry.available === true,
+            reason: text2(entry.reason)
+          })) : []
+        };
+      } else if (result.running === true) {
+        this.state = {
+          ...this.state,
+          stage: "installing",
+          jobId: text2(result.job_id),
+          restored: false
+        };
+      } else {
+        this.state = {
+          ...this.state,
+          stage: "done",
+          restored: result.restored === true
+        };
+      }
+    } catch {
+      if (!this.active || generation !== this.generation) return;
+      this.state = {
+        ...this.state,
+        stage: request.action === "status" ? this.state.stage : "failed",
+        error: "The sing-box version operation failed."
+      };
+    } finally {
+      if (this.active && generation === this.generation) {
+        this.pending = false;
+        this.render(this.state);
+      }
+    }
+  }
+};
+
+// src/trafira/tabs/updates/renderCoreVersions.ts
+var active2 = null;
+var coreVersionsPanel = {
+  mount() {
+    this.unmount();
+    const host = document.getElementById("trafira-core-versions");
+    if (!host) return;
+    let last;
+    const select = E("select", {});
+    const pin = E("input", {
+      type: "checkbox",
+      checked: true
+    });
+    const info = E("p", {});
+    const message = E("p", { role: "status" });
+    const refresh = E(
+      "button",
+      { class: "cbi-button", click: () => void picker.load(true) },
+      _("Refresh available versions")
+    );
+    const install = E(
+      "button",
+      {
+        class: "cbi-button cbi-button-action",
+        click: () => void picker.install(pin.checked)
+      },
+      _("Install selected version")
+    );
+    const unpin = E(
+      "button",
+      {
+        class: "cbi-button",
+        click: () => void picker.unpin().then(() => picker.load())
+      },
+      _("Unpin version")
+    );
+    const errors2 = {
+      "Restoration failed. Check the service before continuing.": _(
+        "Restoration failed. Check the service before continuing."
+      ),
+      "The installed version changed. Refresh the version list.": _(
+        "The installed version changed. Refresh the version list."
+      ),
+      "The sing-box version operation failed.": _(
+        "The sing-box version operation failed."
+      )
+    };
+    const picker = new CoreVersionPicker(
+      async (request) => {
+        const result = await executeShellCommand({
+          command: "/usr/bin/trafira-config",
+          args: ["core_action", JSON.stringify(request)],
+          timeout: 45e3
+        });
+        if (result.code) throw new Error("Core version request failed");
+        return JSON.parse(result.stdout);
+      },
+      (state) => {
+        last = state;
+        select.replaceChildren(
+          E("option", { value: "" }, _("Select a version")),
+          ...state.entries.map(
+            (entry) => E(
+              "option",
+              { value: entry.id, disabled: !entry.available },
+              entry.version + (entry.available ? "" : ` \u2014 ${_("Unavailable for this installation")}`)
+            )
+          )
+        );
+        select.value = state.selected;
+        const busy = state.stage === "installing" || state.stage === "loading";
+        select.disabled = pin.disabled = refresh.disabled = busy;
+        install.disabled = busy || !state.selected;
+        unpin.disabled = busy || !state.pinnedVersion;
+        info.textContent = `${_("Installed version")}: ${state.currentVersion || "\u2014"} \xB7 ${_("Pinned version")}: ${state.pinnedVersion || "\u2014"}${state.cachedAt ? ` \xB7 ${_("Catalog checked")}: ${new Date(state.cachedAt * 1e3).toLocaleString()}` : ""}`;
+        message.textContent = [
+          state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : "",
+          state.restored ? _("The previous version was restored.") : ""
+        ].filter(Boolean).join(" ");
+      }
+    );
+    select.addEventListener("change", () => picker.select(select.value));
+    host.replaceChildren(
+      E("details", {}, [
+        E("summary", {}, _("Sing-box versions")),
+        E(
+          "p",
+          {},
+          _(
+            "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
+          )
+        ),
+        info,
+        select,
+        E("label", {}, [pin, _("Pin selected version")]),
+        E("div", {}, [refresh, install, unpin]),
+        message
+      ])
+    );
+    picker.mount();
+    void picker.load().then(() => picker.poll());
+    const timer = window.setInterval(() => {
+      if (last.stage !== "installing") return;
+      void picker.poll().then(() => {
+        if (last.stage === "done") void picker.load(true);
+      });
+    }, 2e3);
+    active2 = { picker, timer };
+  },
+  unmount() {
+    if (active2) {
+      active2.picker.unmount();
+      window.clearInterval(active2.timer);
+    }
+    active2 = null;
+  }
+};
 
 // src/trafira/tabs/updates/initController.ts
 var updatesLifecycleRegistered = false;
@@ -15054,6 +15313,7 @@ function applyComponentUpdateCheckCache(componentUpdateCheckCache) {
 async function onPageMount4() {
   onPageUnmount4();
   updatesMounted = true;
+  coreVersionsPanel.mount();
   updatesMountId += 1;
   const mountId3 = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
@@ -15089,6 +15349,7 @@ async function onPageMount4() {
   }
 }
 function onPageUnmount4() {
+  coreVersionsPanel.unmount();
   updatesMounted = false;
   updatesMountId += 1;
   stopComponentActionStateWatcher();

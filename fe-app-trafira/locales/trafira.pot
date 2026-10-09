@@ -3939,3 +3939,42 @@ msgstr ""
 
 msgid "Changed"
 msgstr ""
+
+msgid "Refresh available versions"
+msgstr ""
+
+msgid "Install selected version"
+msgstr ""
+
+msgid "Unpin version"
+msgstr ""
+
+msgid "Select a version"
+msgstr ""
+
+msgid "Unavailable for this installation"
+msgstr ""
+
+msgid "Installed version"
+msgstr ""
+
+msgid "Pinned version"
+msgstr ""
+
+msgid "Catalog checked"
+msgstr ""
+
+msgid "The sing-box version operation failed."
+msgstr ""
+
+msgid "Installing in the background. You may close this page."
+msgstr ""
+
+msgid "The previous version was restored."
+msgstr ""
+
+msgid "Sing-box versions"
+msgstr ""
+
+msgid "Pin selected version"
+msgstr ""

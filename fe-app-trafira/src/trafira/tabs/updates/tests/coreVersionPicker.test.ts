@@ -73,6 +73,7 @@ it('reports a failed install and successful rollback without raw worker output',
   picker.select('older');
   await picker.install(false);
   await picker.poll();
+  expect(call.mock.lastCall?.[0]).toEqual({ action: 'status', job_id: 'j1' });
   const state = render.mock.lastCall?.[0];
   expect(state.stage).toBe('failed');
   expect(state.restored).toBe(true);
