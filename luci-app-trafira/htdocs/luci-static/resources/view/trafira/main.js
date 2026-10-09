@@ -4621,6 +4621,9 @@ var initialDiagnosticStore = {
     zapret2Check: { loading: false },
     zapret2Install: { loading: false },
     zapret2Remove: { loading: false },
+    warpCheck: { loading: false },
+    warpInstall: { loading: false },
+    warpRemove: { loading: false },
     byedpiCheck: { loading: false },
     byedpiInstall: { loading: false },
     byedpiRemove: { loading: false }
@@ -4630,6 +4633,7 @@ var initialDiagnosticStore = {
     sing_box: { status: null, latest_version: "", release_url: "" },
     zapret: { status: null, latest_version: "", release_url: "" },
     zapret2: { status: null, latest_version: "", release_url: "" },
+    warp: { status: null, latest_version: "", release_url: "" },
     byedpi: { status: null, latest_version: "", release_url: "" }
   }
 };
@@ -4979,6 +4983,9 @@ var componentActionKeyMap = {
   "zapret2:check_update": "zapret2Check",
   "zapret2:install": "zapret2Install",
   "zapret2:remove": "zapret2Remove",
+  "warp:check_update": "warpCheck",
+  "warp:install": "warpInstall",
+  "warp:remove": "warpRemove",
   "byedpi:check_update": "byedpiCheck",
   "byedpi:install": "byedpiInstall",
   "byedpi:remove": "byedpiRemove"
@@ -5086,6 +5093,9 @@ function getEmptyUpdatesActions() {
     zapret2Check: { loading: false },
     zapret2Install: { loading: false },
     zapret2Remove: { loading: false },
+    warpCheck: { loading: false },
+    warpInstall: { loading: false },
+    warpRemove: { loading: false },
     byedpiCheck: { loading: false },
     byedpiInstall: { loading: false },
     byedpiRemove: { loading: false }
@@ -14666,6 +14676,14 @@ function shouldExposeCheckResults({
   return mounted2 && cacheResolved;
 }
 
+// src/trafira/tabs/updates/warpComponent.ts
+function warpActions(installed, status2) {
+  const actions = ["check_update"];
+  if (status2 === "outdated") actions.push("install");
+  if (installed) actions.push("remove");
+  return actions;
+}
+
 // src/trafira/tabs/updates/coreVersionPicker.ts
 var text2 = (value) => typeof value === "string" ? value : "";
 var initial2 = () => ({
@@ -15025,7 +15043,7 @@ function resetCheckResult(component) {
 function applyCachedCheckResults(results) {
   results.forEach((result) => {
     const status2 = result.status || null;
-    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev" || status2 === "unavailable") {
       setCheckResult(
         result.component,
         status2,
@@ -15172,6 +15190,10 @@ function patchSystemInfoAfterMutation(result) {
       nextSystemInfo.byedpi_version = version;
     }
   }
+  if (result.component === "warp") {
+    nextSystemInfo.warp_installed = result.action === "remove" ? 0 : 1;
+    nextSystemInfo.warp_version = result.action === "remove" ? "not installed" : version;
+  }
   const normalizedSystemInfo = normalizeSingBoxVariantFields(nextSystemInfo);
   store.set({
     diagnosticsSystemInfo: normalizedSystemInfo
@@ -15197,7 +15219,7 @@ async function applyCompletedComponentAction({
       preserveCheckResultsOnNextMount = true;
     }
     const status2 = result.status || null;
-    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev" || status2 === "unavailable") {
       setCheckResult(
         result.component,
         status2,
@@ -15479,6 +15501,7 @@ function getComponentCards() {
   const zapretInstalled = Boolean(systemInfo.zapret_installed);
   const zapret2Installed = Boolean(systemInfo.zapret2_installed);
   const byedpiInstalled = Boolean(systemInfo.byedpi_installed);
+  const warpInstalled = Boolean(systemInfo.warp_installed);
   const singBoxInstalled = !isNotInstalled(systemInfo.sing_box_version);
   const singBoxStable = singBoxInstalled && !systemInfo.sing_box_extended && !systemInfo.sing_box_tiny;
   const singBoxExtended = Boolean(systemInfo.sing_box_extended) && !systemInfo.sing_box_compressed;
@@ -15552,7 +15575,32 @@ function getComponentCards() {
     installKey: "byedpiInstall",
     removeKey: "byedpiRemove"
   });
+  const warpComponentActions = warpActions(
+    warpInstalled,
+    getVisibleCheckResult("warp")?.status || null
+  ).map((action) => {
+    if (action === "check_update") return getCheckAction("warp", "warpCheck");
+    if (action === "install")
+      return getInstallAction("warp", "warpInstall", warpInstalled);
+    return {
+      key: "warpRemove",
+      text: _("Remove"),
+      icon: renderXIcon24,
+      component: "warp",
+      action: "remove"
+    };
+  });
   return [
+    {
+      component: "warp",
+      column: 1,
+      title: "WARP",
+      version: warpInstalled ? systemInfo.warp_version || _("Installed") : _("Not installed"),
+      latestVersion: getLatestVersion("warp"),
+      releaseUrl: getGitHubReleaseUrl("warp"),
+      managementUrl: warpInstalled ? "/cgi-bin/luci/admin/services/trafira-warp" : void 0,
+      actions: warpComponentActions
+    },
     {
       component: "trafira",
       column: 0,
@@ -15620,10 +15668,16 @@ function renderComponentCard(card) {
   );
   const detailsChildren = [];
   const checkResult = getVisibleCheckResult(card.component);
+  if (card.managementUrl)
+    detailsChildren.push(
+      E("a", { href: card.managementUrl }, [_("Open WARP settings")])
+    );
   if (checkResult && checkResult.status) {
     let labelText = "";
     const latestValueNodes = [];
-    if (checkResult.status === "outdated") {
+    if (checkResult.status === "unavailable") {
+      labelText = _("No compatible WARP release is available yet");
+    } else if (checkResult.status === "outdated") {
       labelText = _("Update is available:");
       const versionToShow = checkResult.latest_version || card.latestVersion || card.version;
       if (checkResult.release_url) {

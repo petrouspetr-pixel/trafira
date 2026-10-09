@@ -2453,7 +2453,7 @@ function dispatch_warp(action) {
     if(!command_success_from_args(["mkdir","-m","700",work]))action_fail("warp",action,"WARP staging directory is unavailable");
     let offline=work+"/offline.conf",empty=work+"/empty";
     command_success_from_args(["mkdir","-m","700",empty]);
-    let architectures=replace(command_output_from_args(["opkg","print-architecture"]),/^arch /gm,"arch ");
+    let architectures=command_output_from_args(["opkg","print-architecture"]);
     if(!is_apk())write_file(offline,"dest root /\nlists_dir ext "+empty+"\noption overlay_root /overlay\n"+architectures);
     function package_command(files,simulate) {
         let args=is_apk()?["apk","add","--no-network","--allow-untrusted"]:["opkg","-f",offline,"install","--force-reinstall","--force-downgrade"];
