@@ -19,7 +19,7 @@
 - Удаление/отключение выбранной секции не должно молча вернуть direct.
 - Перезапуск сети и смена WAN не должны оставить старые пути/метки.
 
-## Task 1: Настройки, исключения и генерация
+### Task 1: Настройки, исключения и генерация
 
 **Files:** Create `LIB/config/router_origin.uc`, `tests/router_origin.sh`; modify `LIB/core/constants.uc`, `LIB/singbox/constants.uc`, `LIB/singbox/generator.uc`, `LIB/singbox/route.uc`, `LIB/nft/apply.uc`, `LIB/config/validator.uc`, `LIB/service/state.uc`, `LUCI/settings.js`.
 
@@ -44,7 +44,7 @@
 - [ ] Ответные пакеты уже существующих входящих SSH/LuCI соединений исключить по направлению conntrack; не использовать безусловный `ct state established return`, иначе последующие пакеты нового проксируемого соединения уйдут напрямую. В prerouting выделить помеченный локальный повторный вход до общего LAN TPROXY; исходящий транспорт ядра не попадает в него повторно.
 - [ ] Проверить совпадение масок `ip rule` с комбинированной меткой, резервирование port 1605 и конфликты marks. PASS → commit `feat: generate router-origin routing safely`.
 
-## Task 2: Сетевые сценарии и диагностика
+### Task 2: Сетевые сценарии и диагностика
 
 **Files:** Create `tests/router_origin_network.sh`; modify `LIB/diagnostics/route_explain.uc`, `LIB/service/lifecycle.uc`, `LUCI/settings.js`, `README.md`, CI workflow для Linux network tests.
 

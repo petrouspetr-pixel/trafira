@@ -19,7 +19,7 @@
 - Повторное применение дублирует правила или уничтожает пользовательские изменения.
 - Неизвестное имя устройства/платформы не должно создавать wildcard для LAN.
 
-## Task 1: Проверенный каталог и чистый builder
+### Task 1: Проверенный каталог и чистый builder
 
 **Files:** Create `trafira/files/usr/share/trafira/gaming-presets.json`, `LIB/config/gaming_presets.uc`, `tests/gaming_presets.sh`, `docs/gaming-presets-sources.md`; modify `LIB/config/validator.uc`, `LIB/singbox/generator.uc` для метаданных происхождения пресета.
 
@@ -47,7 +47,7 @@ assert(!g.build(preset,{device_ips:[],proxy_section:"vpn",placement:"before-devi
 - [ ] Запустить `bash tests/gaming_presets.sh` до реализации. Builder ограничивает адреса отдельными host /32 и /128, не принимает 0.0.0.0/0, ::/0, multicast, unspecified. UI выбирает известное устройство, затем явно показывает адреса; MAC не выдаётся за вечную привязку IP. При смене DHCP/IPv6 адреса подсказка требует обновления профиля устройства, без расширения на весь subnet.
 - [ ] Первая часть — domain AND device source через proxy; вторая — остаток source напрямую. DNS-сопоставление учитывает тот же источник и порядок. Добавить fixtures с магазином/игрой на одном домене, чужим устройством, ошибочным source OR domain, IPv6, FakeIP и disabled proxy section. Commit `feat: define editable device gaming presets`.
 
-## Task 2: Предпросмотр, конфликты и транзакционное применение
+### Task 2: Предпросмотр, конфликты и транзакционное применение
 
 **Files:** Create `LIB/config/gaming_cli.uc`, `tests/gaming_preset_apply.sh`, `FE/tabs/diagnostic/gamingPresetPanel.ts`, `FE/tabs/diagnostic/renderGamingPresets.ts`, `FE/tabs/diagnostic/tests/gamingPresetPanel.test.ts`; modify CLI, `FE/tabs/diagnostic/renderDiagnostic.ts`, controller, RPC ACL, README и переводы.
 

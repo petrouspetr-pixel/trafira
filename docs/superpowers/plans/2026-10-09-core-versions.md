@@ -19,7 +19,7 @@
 - Более старое ядро не поддерживает текущую конфигурацию.
 - Новая версия не должна сохраняться как выбранная после неудачной установки.
 
-## Task 1: Каталог и закрепление
+### Task 1: Каталог и закрепление
 
 **Files:** Create `LIB/components/core_versions.uc`, `tests/core_versions.sh`; modify `LIB/components/action.uc`, `LIB/components/updater.uc`, `LIB/components/updates.uc`, `LIB/config/validator.uc`, default UCI config при необходимости.
 
@@ -40,7 +40,7 @@
 - [ ] Кэш метаданных 15 минут, до 100 кандидатов и 2 МиБ ответа. UI видит время кэша, ошибку сети и возможность обновить; перед установкой кандидат разрешается заново. Отображение `available` означает найденный артефакт, не успешную runtime-проверку.
 - [ ] Проверить pin: latest новее, но обычное обновление удерживает pin; отсутствующая pinned версия не заменяется другой; удаление pin возвращает штатное поведение. Отдельная команда смены варианта не смешивается с выбором версии. Commit `feat: list and pin available sing-box versions`.
 
-## Task 2: Проверка кандидата, установка и откат
+### Task 2: Проверка кандидата, установка и откат
 
 **Files:** Modify `LIB/components/action.uc` (resolve/install/rollback functions), `LIB/components/updates.uc` (async worker), CLI, `FE/methods/shell/index.ts`, `FE/tabs/updates/render.ts`, `FE/tabs/updates/initController.ts`; create `tests/core_version_install.sh`, `FE/tabs/updates/coreVersionPicker.ts`, `FE/tabs/updates/tests/coreVersionPicker.test.ts`.
 

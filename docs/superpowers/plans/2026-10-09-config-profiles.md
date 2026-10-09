@@ -19,7 +19,7 @@
 - Отсутствуют ключевой файл, сетевой интерфейс или установленный компонент.
 - Параллельны обновление пакета, reload и применение профиля.
 
-## Task 1: Формат, хранение и маскированное сравнение
+### Task 1: Формат, хранение и маскированное сравнение
 
 **Files:** Create `LIB/config/profiles.uc`, `LIB/config/profile_format.uc`, `tests/config_profiles.sh`; modify `LIB/config/validator.uc` для проверки изолированного кандидата без сохранения глобальной UCI.
 
@@ -38,7 +38,7 @@ assert(!p.validate({schema:1,name:"",config:[]}).valid);
 - [ ] Добавить записи temp → flush/close → rename на том же разделе, запрет симлинков и чужих файлов, расчёт квоты до записи. Импорт JSON проверяет размер до разбора. Тесты: девятый профиль, 1 МиБ+1, сбой rename/write, нехватка места, скрытые секреты в diff и отсутствие сети в экспорте.
 - [ ] Проверить внешние пути и интерфейсы существующим валидатором в режиме кандидата, не раскрывая содержимое ключей. Прогнать тесты до PASS; commit `feat: store bounded Trafira configuration profiles`.
 
-## Task 2: Транзакционное применение и UI
+### Task 2: Транзакционное применение и UI
 
 **Files:** Create `LIB/service/config_transaction.uc`, `LIB/service/operation_lock.uc`, `LIB/config/profile_cli.uc`, `tests/config_profile_apply.sh`, `FE/tabs/diagnostic/profilePanel.ts`, `FE/tabs/diagnostic/renderProfiles.ts`, `FE/tabs/diagnostic/tests/profilePanel.test.ts`; modify `LIB/service/lifecycle.uc`, `LIB/components/action.uc`, `LIB/components/updates.uc`, CLI, diagnostic render/controller и RPC ACL.
 

@@ -1,5 +1,6 @@
 import { onMount, preserveScrollForPage } from '../../../helpers';
 import { snapshots } from './renderSnapshots';
+import { routeExplanationPanel } from './renderRouteExplanation';
 import { runDnsCheck } from './checks/runDnsCheck';
 import { runSingBoxCheck } from './checks/runSingBoxCheck';
 import { runInboundsCheck } from './checks/runInboundsCheck';
@@ -1166,6 +1167,7 @@ async function onPageMount() {
 
   diagnosticMounted = true;
   void snapshots.mount();
+  routeExplanationPanel.mount();
   diagnosticMountId += 1;
   const mountId = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -1231,6 +1233,7 @@ function onPageUnmount({
 } = {}) {
   diagnosticMounted = false;
   snapshots.unmount();
+  routeExplanationPanel.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;

@@ -19,7 +19,7 @@
 - Ручной выбор и автоматический контроллер одновременно меняют группу.
 - Старые соединения продолжают использовать предыдущий выход.
 
-## Task 1: Модель состояния и расширение priority worker
+### Task 1: Модель состояния и расширение priority worker
 
 **Files:** Create `LIB/singbox/failure_policy.uc`, `tests/failure_policy.sh`; modify `LIB/singbox/priority.uc`, `LIB/config/validator.uc`, `LIB/config/connections.uc`, `LUCI/section.js`.
 
@@ -44,7 +44,7 @@ assert(unknown.transition == null);
 - [ ] Добавить тесты recovery, удержания, изменения времени, restart со старым observed_at, отказа резерва, исчезновения узла из подписки и отрицательных/слишком больших значений. Валидатор отклоняет отсутствующий reserve, disabled секцию, self reference и любой цикл, включая detour/cascade.
 - [ ] Встроить одну машину состояния на секцию в priority worker: существующие проверки доступности переиспользуются; владение selector не дублируется. Для управляемой секции ручной выбор основного узла обновляет primary target и сбрасывает счётчики, не отключая политику. Отчёт `{section,policy,state,reason,changed_at,monitor_error}` без адресов/секретов. Commit `feat: model explicit VPN failure policies`.
 
-## Task 2: Безопасное применение, дашборд и интеграционный стенд
+### Task 2: Безопасное применение, дашборд и интеграционный стенд
 
 **Files:** Modify `LIB/singbox/generator.uc`, `LIB/service/lifecycle.uc`, `LIB/nft/apply.uc`, `LIB/service/state.uc`, `FE/tabs/dashboard/render.ts`, `FE/tabs/dashboard/partials/renderSections.ts`, CLI; create `LIB/service/failure_policy_apply.uc`, `tests/failure_policy_apply.sh`, `tests/failure_policy_network.sh`, `FE/tabs/dashboard/helpers/failurePolicy.ts`, `FE/tabs/dashboard/helpers/tests/failurePolicy.test.ts`.
 

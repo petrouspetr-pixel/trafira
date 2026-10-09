@@ -19,7 +19,7 @@
 - FakeIP не используется как реальный IP при проверке geo/CIDR.
 - Список содержит отрицание, логические правила или неподдержанное поле.
 
-## Task 1: Чистый анализатор и карта происхождения
+### Task 1: Чистый анализатор и карта происхождения
 
 **Files:** Create `LIB/diagnostics/route_match.uc`, `LIB/singbox/provenance.uc`, `tests/route_explanation.sh`; modify `LIB/singbox/generator.uc`, `LIB/singbox/servers.uc`, `LIB/service/lifecycle.uc`.
 
@@ -48,7 +48,7 @@ assert(m.explain(config, req, {}, {}).status == "indeterminate");
 - [ ] Помечать правила при создании системных, секционных, серверных и DNS-правил. После prune извлечь provenance, сериализовать чистый JSON и связать карту с SHA256 именно этих байтов. При lifecycle commit/rollback переносить JSON и карту; несовпадающий digest запрещает показ чужого происхождения. Вложенные правила проверять рекурсивно; sing-box check не должен видеть внутренних полей.
 - [ ] Проверить fixtures с одинаковыми правилами разных секций, prune, rollback, ошибкой записи карты и изменением конфигурации между чтениями; commit `feat: explain generated route decisions`.
 
-## Task 2: Read-only CLI и форма диагностики
+### Task 2: Read-only CLI и форма диагностики
 
 **Files:** Create `LIB/diagnostics/route_explain.uc`, `FE/tabs/diagnostic/routeExplanation.ts`, `FE/tabs/diagnostic/renderRouteExplanation.ts`, `FE/tabs/diagnostic/tests/routeExplanation.test.ts`, `tests/route_explanation_runtime.sh`; modify `trafira/files/usr/bin/trafira`, `FE/tabs/diagnostic/renderDiagnostic.ts`, `FE/tabs/diagnostic/initController.ts`, `FE/methods/shell/index.ts`, RPC ACL.
 

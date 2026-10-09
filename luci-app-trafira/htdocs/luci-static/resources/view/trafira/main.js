@@ -1274,15 +1274,15 @@ var COMMAND_TIMEOUT = 1e4;
 
 // src/helpers/executeShellCommand.ts
 async function executeShellCommand({
-  command: command2,
+  command: command3,
   args,
   timeout = COMMAND_TIMEOUT
 }) {
   try {
     return await withTimeout(
-      fs.exec(command2, args),
+      fs.exec(command3, args),
       timeout,
-      [command2, ...args].join(" ")
+      [command3, ...args].join(" ")
     );
   } catch (err) {
     const error = err;
@@ -2651,10 +2651,10 @@ function getOutboundTagBySection(sectionName) {
 }
 
 // src/trafira/methods/shell/callBaseMethod.ts
-async function callBaseMethod(method, args = [], command2 = "/usr/bin/trafira", options = {}) {
+async function callBaseMethod(method, args = [], command3 = "/usr/bin/trafira", options = {}) {
   try {
     const response = await executeShellCommand({
-      command: command2,
+      command: command3,
       args: [method, ...args],
       timeout: options.timeout ?? 15e3
     });
@@ -3351,15 +3351,15 @@ function canFetchClashApiDirectly() {
 async function getClashApiProxies(configSections) {
   if (canFetchClashApiDirectly()) {
     const secret = getClashApiSecret(configSections);
-    const controller = new AbortController();
+    const controller2 = new AbortController();
     const timeoutId = setTimeout(
-      () => controller.abort(),
+      () => controller2.abort(),
       CLASH_API_FETCH_TIMEOUT_MS
     );
     try {
       const response = await fetch(`${getClashHttpUrl()}/proxies`, {
         headers: secret ? { Authorization: `Bearer ${secret}` } : void 0,
-        signal: controller.signal
+        signal: controller2.signal
       });
       if (response.ok) {
         return {
@@ -5806,7 +5806,7 @@ if (typeof window !== "undefined") {
     pageUnloading = false;
   });
 }
-async function fetchDashboardSectionsOnce(mountId) {
+async function fetchDashboardSectionsOnce(mountId2) {
   if (getDashboardServiceAvailability() === "stopped") {
     return false;
   }
@@ -5821,7 +5821,7 @@ async function fetchDashboardSectionsOnce(mountId) {
   });
   try {
     const { data, success } = await CustomTrafiraMethods.getDashboardSections();
-    if (!dashboardMounted || mountId !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
+    if (!dashboardMounted || mountId2 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
       return false;
     }
     if (!success) {
@@ -5839,7 +5839,7 @@ async function fetchDashboardSectionsOnce(mountId) {
     return true;
   } catch (error) {
     logger.error("[DASHBOARD]", "fetchDashboardSections: failed", error);
-    if (!dashboardMounted || mountId !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
+    if (!dashboardMounted || mountId2 !== dashboardMountId || getDashboardServiceAvailability() === "stopped") {
       return false;
     }
     const current = store.get().sectionsWidget;
@@ -5854,10 +5854,10 @@ async function fetchDashboardSectionsOnce(mountId) {
     return false;
   }
 }
-async function fetchAliceDevices(mountId) {
+async function fetchAliceDevices(mountId2) {
   try {
     const response = await TrafiraShellMethods.getAliceDevices();
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (!dashboardMounted || mountId2 !== dashboardMountId) {
       return;
     }
     if (!response.success || !response.data || typeof response.data !== "object") {
@@ -5872,7 +5872,7 @@ async function fetchAliceDevices(mountId) {
     });
   } catch (error) {
     logger.error("[DASHBOARD]", "fetchAliceDevices: failed", error);
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (!dashboardMounted || mountId2 !== dashboardMountId) {
       return;
     }
     const current = store.get().aliceDevicesWidget;
@@ -5892,13 +5892,13 @@ async function fetchDashboardSections(options = {}) {
     }
     return sectionsRefreshPromise;
   }
-  const mountId = dashboardMountId;
+  const mountId2 = dashboardMountId;
   const promise = (async () => {
     let success = false;
     do {
       sectionsRefreshQueued = false;
-      success = await fetchDashboardSectionsOnce(mountId);
-    } while (sectionsRefreshQueued && dashboardMounted && mountId === dashboardMountId);
+      success = await fetchDashboardSectionsOnce(mountId2);
+    } while (sectionsRefreshQueued && dashboardMounted && mountId2 === dashboardMountId);
     return success;
   })();
   sectionsRefreshPromise = promise;
@@ -6121,9 +6121,9 @@ function stopActionStateWatcher() {
   actionStateUnsubscribe = null;
 }
 async function connectToClashSockets(dataUpdatesId) {
-  const mountId = dashboardMountId;
+  const mountId2 = dashboardMountId;
   const clashApiSecret = await getClashApiSecret2();
-  if (!dashboardMounted || mountId !== dashboardMountId || dataUpdatesId !== dashboardDataUpdatesId || getDashboardServiceAvailability() === "stopped") {
+  if (!dashboardMounted || mountId2 !== dashboardMountId || dataUpdatesId !== dashboardDataUpdatesId || getDashboardServiceAvailability() === "stopped") {
     return;
   }
   socket.subscribe(
@@ -7124,8 +7124,8 @@ async function renderAliceDevicesWidget() {
       report: aliceDevicesWidget.data,
       nowSeconds: Math.floor(Date.now() / 1e3),
       expandedOffline: aliceExpandedOffline,
-      onToggleOffline: (status, open) => {
-        aliceExpandedOffline[status] = open;
+      onToggleOffline: (status2, open) => {
+        aliceExpandedOffline[status2] = open;
       }
     })
   );
@@ -7161,11 +7161,11 @@ async function onPageMount() {
   onPageUnmount();
   dashboardMounted = true;
   dashboardMountId += 1;
-  const mountId = dashboardMountId;
+  const mountId2 = dashboardMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
   if (!hasRuntimeSnapshot) {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (!dashboardMounted || mountId2 !== dashboardMountId) {
       return;
     }
     if (!uiState) {
@@ -8083,6 +8083,7 @@ var DashboardTab = {
 function render2() {
   return E("div", { id: "diagnostic-status", class: "fkp_diagnostic-page" }, [
     E("div", { class: "fkp_diagnostic-page__left-bar" }, [
+      E("div", { id: "trafira-route-explanation" }),
       E("div", { id: "fkp_diagnostic-page-run-check" }),
       E("div", {
         class: "fkp_diagnostic-page__checks",
@@ -8100,10 +8101,10 @@ function render2() {
 
 // src/trafira/tabs/diagnostic/snapshotPanel.ts
 var SnapshotController = class {
-  constructor(read, start, render6) {
+  constructor(read, start, render7) {
     this.read = read;
     this.start = start;
-    this.render = render6;
+    this.render = render7;
     this.active = false;
     this.generation = 0;
     this.failures = 0;
@@ -8255,6 +8256,245 @@ var snapshots = new SnapshotController(
   () => command("ruleset_snapshot_prepare_async"),
   render3
 );
+
+// src/trafira/tabs/diagnostic/routeExplanation.ts
+var RouteExplanationController = class {
+  constructor(read, render7) {
+    this.read = read;
+    this.render = render7;
+    this.active = false;
+    this.generation = 0;
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.render(null, "", false);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  async submit(request) {
+    if (!this.active) return;
+    const generation = ++this.generation;
+    this.render(null, "", true);
+    try {
+      const report = await this.read(request);
+      if (!report.success) throw new Error("rejected");
+      if (this.active && this.generation === generation)
+        this.render(report, "", false);
+    } catch {
+      if (this.active && this.generation === generation)
+        this.render(null, "Could not explain route", false);
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderRouteExplanation.ts
+async function command2(name, args = []) {
+  const result = await executeShellCommand({
+    command: "/usr/bin/trafira",
+    args: [name, ...args],
+    timeout: 15e3
+  });
+  if (result.code) throw new Error("Route command failed");
+  return JSON.parse(result.stdout);
+}
+function status(value) {
+  return {
+    matched: _("Matched route"),
+    direct: _("Direct connection"),
+    blocked: _("Blocked"),
+    indeterminate: _("Insufficient information")
+  }[value];
+}
+function decisionView(title, decision) {
+  return E("div", {}, [
+    E("b", {}, title),
+    E(
+      "p",
+      {},
+      `${status(decision.status)}${decision.outbound ? `: ${decision.outbound}` : ""}`
+    ),
+    ...decision.missing.map(
+      (reason) => E("p", {}, `${_("Missing information")}: ${reason}`)
+    ),
+    E("details", {}, [
+      E("summary", {}, _("Rule evaluation order")),
+      ...decision.trace.map(
+        (row) => E(
+          "p",
+          {},
+          `#${row.index + 1}: ${row.match} \xB7 ${row.action} \xB7 ${row.origin?.section || row.origin?.kind || "\u2014"}${row.shadowed ? ` (${_("Overridden by an earlier rule")})` : ""}`
+        )
+      ),
+      ...decision.trace_truncated ? [E("p", {}, _("Only the first 200 rules are displayed"))] : []
+    ])
+  ]);
+}
+function render4(report, error, busy) {
+  const result = document.getElementById("trafira-route-explanation-result");
+  if (!result) return;
+  result.replaceChildren(
+    ...busy ? [E("p", {}, _("Checking route"))] : error ? [E("p", {}, _("Could not explain route"))] : report ? [
+      E(
+        "p",
+        {},
+        _(
+          "Analysis of the applied configuration, not a live connection capture."
+        )
+      ),
+      ...report.generated_at ? [
+        E(
+          "p",
+          {},
+          new Date(report.generated_at * 1e3).toLocaleString()
+        )
+      ] : [],
+      decisionView(_("Connection route"), report.decision),
+      ...report.dns_policy ? [decisionView(_("DNS policy (A query)"), report.dns_policy)] : [],
+      ...report.selector ? [
+        E(
+          "p",
+          {},
+          `${_("Current selected node")}: ${report.selector.current}`
+        )
+      ] : [],
+      E("p", {}, _("No DNS query was sent from the selected device.")),
+      ...report.limitations.map(
+        (reason) => E("p", {}, `${_("Limitations")}: ${reason}`)
+      )
+    ] : []
+  );
+}
+var controller = new RouteExplanationController(
+  (request) => command2("route_explain", [JSON.stringify(request)]),
+  render4
+);
+var mountId = 0;
+var routeExplanationPanel = {
+  mount() {
+    const generation = ++mountId;
+    const container = document.getElementById("trafira-route-explanation");
+    if (!container) return;
+    const domain = E("input", {
+      type: "text",
+      placeholder: "example.com",
+      maxLength: 253
+    });
+    const source = E("select", {}, [
+      E("option", { value: "device" }, _("Device by IP address")),
+      E("option", { value: "router" }, _("This router"))
+    ]);
+    const ip = E("input", {
+      type: "text",
+      placeholder: _("Device IP address")
+    });
+    const mac = E("input", {
+      type: "text",
+      placeholder: _("Device MAC (optional)")
+    });
+    const iface = E("input", {
+      type: "text",
+      placeholder: _("Incoming interface (optional)")
+    });
+    const destination = E("input", {
+      type: "text",
+      placeholder: _("Real destination IP (optional)")
+    });
+    const port = E("input", {
+      type: "number",
+      min: "1",
+      max: "65535",
+      value: "443"
+    });
+    const protocol = E("select", {}, [
+      E("option", { value: "tls" }, "TLS / TCP"),
+      E("option", { value: "http" }, "HTTP / TCP"),
+      E("option", { value: "quic" }, "QUIC / UDP"),
+      E("option", { value: "tcp" }, _("TCP, unknown protocol")),
+      E("option", { value: "udp" }, _("UDP, unknown protocol"))
+    ]);
+    let devices = [];
+    source.addEventListener("change", () => {
+      const device = devices[Number(source.value)];
+      if (device) {
+        ip.value = device.ip;
+        mac.value = device.mac || "";
+        iface.value = device.interface || "";
+      }
+      const router = source.value === "router";
+      ip.disabled = router;
+      mac.disabled = router;
+      iface.disabled = router;
+    });
+    const form = E("form", {}, [
+      E("h3", {}, _("Where will the connection go?")),
+      E("label", {}, [_("Domain"), domain]),
+      E("label", {}, [_("Source"), source]),
+      ip,
+      mac,
+      iface,
+      destination,
+      E("label", {}, [_("Destination port"), port]),
+      E("label", {}, [_("Protocol"), protocol]),
+      E(
+        "button",
+        { type: "submit", class: "cbi-button cbi-button-action" },
+        _("Explain route")
+      )
+    ]);
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const kind = source.value === "router" ? "router" : "device";
+      const request = {
+        domain: domain.value.trim(),
+        source: { kind },
+        port: Number(port.value),
+        network: protocol.value === "quic" || protocol.value === "udp" ? "udp" : "tcp"
+      };
+      if (kind === "device") {
+        request.source.ip = ip.value.trim();
+        if (mac.value.trim()) request.source.mac = mac.value.trim();
+        if (iface.value.trim()) request.source.interface = iface.value.trim();
+      }
+      if (destination.value.trim())
+        request.destination_ip = destination.value.trim();
+      if (["tls", "http", "quic"].includes(protocol.value))
+        request.protocol = protocol.value;
+      void controller.submit(request);
+    });
+    container.replaceChildren(
+      form,
+      E("div", { id: "trafira-route-explanation-result" })
+    );
+    controller.mount();
+    void command2("get_alice_devices").then((report) => {
+      if (generation !== mountId) return;
+      devices = [];
+      for (const device of report.devices || [])
+        for (const address of device.ips || []) {
+          const index = devices.push({
+            ip: address,
+            mac: device.mac,
+            interface: device.interface
+          }) - 1;
+          source.append(
+            E(
+              "option",
+              { value: String(index) },
+              `${device.name || address} \u2014 ${address}`
+            )
+          );
+        }
+    }).catch(() => {
+    });
+  },
+  unmount() {
+    mountId++;
+    controller.unmount();
+  }
+};
 
 // src/trafira/tabs/diagnostic/checks/updateCheckStore.ts
 function updateCheckStore(check, minified) {
@@ -10000,14 +10240,14 @@ async function runSectionsCheck() {
 }
 
 // src/trafira/tabs/diagnostic/serviceTransition.ts
-function isServiceTransitionStatus(status) {
-  return ["starting", "stopping", "restarting", "reloading"].includes(status);
+function isServiceTransitionStatus(status2) {
+  return ["starting", "stopping", "restarting", "reloading"].includes(status2);
 }
-function getServiceTransition(status) {
+function getServiceTransition(status2) {
   return {
-    starting: status === "starting",
-    stopping: status === "stopping",
-    restarting: status === "restarting" || status === "reloading"
+    starting: status2 === "starting",
+    stopping: status2 === "stopping",
+    restarting: status2 === "restarting" || status2 === "reloading"
   };
 }
 function hasLocalMutatingServiceActionLoading(actions) {
@@ -10396,8 +10636,8 @@ function setDiagnosticActionLoading(action, loading2, local = false) {
     }
   });
 }
-function isDiagnosticMountActive(mountId = diagnosticMountId) {
-  return diagnosticMounted && diagnosticMountId === mountId;
+function isDiagnosticMountActive(mountId2 = diagnosticMountId) {
+  return diagnosticMounted && diagnosticMountId === mountId2;
 }
 function isLocalMutatingServiceActionLoading() {
   const actions = store.get().diagnosticsActions;
@@ -10429,10 +10669,10 @@ function setDisplayedTrafiraRunning(running) {
 }
 async function refreshDiagnosticServicesInfo({
   force = false,
-  mountId = diagnosticMountId,
+  mountId: mountId2 = diagnosticMountId,
   allowInactive = false
 } = {}) {
-  if (!allowInactive && !isDiagnosticMountActive(mountId)) {
+  if (!allowInactive && !isDiagnosticMountActive(mountId2)) {
     return;
   }
   if (shouldSkipServicesInfoAutoRefresh({
@@ -11198,12 +11438,13 @@ async function onPageMount2() {
   });
   diagnosticMounted = true;
   void snapshots.mount();
+  routeExplanationPanel.mount();
   diagnosticMountId += 1;
-  const mountId = diagnosticMountId;
+  const mountId2 = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
   if (!hasRuntimeSnapshot) {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!diagnosticMounted || mountId !== diagnosticMountId) {
+    if (!diagnosticMounted || mountId2 !== diagnosticMountId) {
       return;
     }
     if (!uiState) {
@@ -11237,6 +11478,7 @@ function onPageUnmount2({
 } = {}) {
   diagnosticMounted = false;
   snapshots.unmount();
+  routeExplanationPanel.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;
@@ -11506,7 +11748,7 @@ var DiagnosticTab = {
 };
 
 // src/trafira/tabs/monitoring/render.ts
-function render4() {
+function render5() {
   return E(
     "div",
     {
@@ -11940,7 +12182,7 @@ function applyConnectionsPayload(payload) {
     pendingConnectionsPayload = payload;
     return;
   }
-  const mountId = monitoringMountId;
+  const mountId2 = monitoringMountId;
   const now = Date.now();
   const incomingIds = /* @__PURE__ */ new Set();
   const rawConnections = Array.isArray(payload.connections) ? payload.connections : [];
@@ -11966,7 +12208,7 @@ function applyConnectionsPayload(payload) {
   trimClosedConnections();
   loading = false;
   failed = false;
-  if (monitoringMounted && mountId === monitoringMountId) {
+  if (monitoringMounted && mountId2 === monitoringMountId) {
     renderControls();
     renderConnections();
   }
@@ -12597,11 +12839,11 @@ async function pollConnectionsSnapshot() {
   if (pollingConnections || !monitoringMounted || monitoringPaused || serviceAvailability !== "running") {
     return;
   }
-  const mountId = monitoringMountId;
+  const mountId2 = monitoringMountId;
   pollingConnections = true;
   try {
     const response = await TrafiraShellMethods.getClashApiConnections();
-    if (!monitoringMounted || mountId !== monitoringMountId || serviceAvailability !== "running") {
+    if (!monitoringMounted || mountId2 !== monitoringMountId || serviceAvailability !== "running") {
       return;
     }
     if (!response.success) {
@@ -12612,7 +12854,7 @@ async function pollConnectionsSnapshot() {
     }
     applyConnectionsPayload(normalizeConnectionsPayload(response.data));
   } catch (error) {
-    if (!monitoringMounted || mountId !== monitoringMountId || serviceAvailability !== "running") {
+    if (!monitoringMounted || mountId2 !== monitoringMountId || serviceAvailability !== "running") {
       return;
     }
     logger.error("[MONITORING]", "connections polling failed", error);
@@ -12633,9 +12875,9 @@ function startConnectionsPolling() {
   }, CONNECTIONS_RPC_POLL_INTERVAL_MS);
 }
 async function connectToConnectionsSocket(updatesId) {
-  const mountId = monitoringMountId;
+  const mountId2 = monitoringMountId;
   const clashApiSecret = await getClashApiSecret2();
-  if (!monitoringMounted || mountId !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
+  if (!monitoringMounted || mountId2 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
     return;
   }
   connectionsSocketUrl = `${getClashWsUrl()}/connections?token=${clashApiSecret}`;
@@ -12652,7 +12894,7 @@ async function connectToConnectionsSocket(updatesId) {
       }
     },
     (_err) => {
-      if (!monitoringMounted || mountId !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
+      if (!monitoringMounted || mountId2 !== monitoringMountId || updatesId !== connectionsUpdatesId || serviceAvailability !== "running") {
         return;
       }
       failed = true;
@@ -12750,7 +12992,7 @@ async function onPageMount3() {
   onPageUnmount3();
   monitoringMounted = true;
   monitoringMountId += 1;
-  const mountId = monitoringMountId;
+  const mountId2 = monitoringMountId;
   resetMonitoringState();
   bindControls();
   renderControls();
@@ -12762,7 +13004,7 @@ async function onPageMount3() {
     void refreshRuntimeUiState({ force: true });
   } else {
     const uiState = await refreshRuntimeUiState({ force: true });
-    if (!monitoringMounted || mountId !== monitoringMountId) {
+    if (!monitoringMounted || mountId2 !== monitoringMountId) {
       return;
     }
     if (!uiState && serviceAvailability === "loading") {
@@ -13462,13 +13704,13 @@ var styles5 = `
 
 // src/trafira/tabs/monitoring/index.ts
 var MonitoringTab = {
-  render: render4,
+  render: render5,
   initController: initController3,
   styles: styles5
 };
 
 // src/trafira/tabs/updates/render.ts
-function render5() {
+function render6() {
   return E("div", { id: "updates-status", class: "fkp_updates-page" }, [
     E("div", {
       id: "fkp_updates-components",
@@ -13534,8 +13776,8 @@ function isNotInstalled(version) {
   return !version || version === "not installed";
 }
 function shouldShowInstallAfterCheck(component) {
-  const status = getVisibleCheckResult(component)?.status;
-  return status === "outdated" || status === "dev";
+  const status2 = getVisibleCheckResult(component)?.status;
+  return status2 === "outdated" || status2 === "dev";
 }
 function getVisibleCheckResult(component) {
   if (!shouldExposeCheckResults({
@@ -13590,13 +13832,13 @@ function beginComponentAction(button) {
   setActionLoading(button.key, true, true);
   return true;
 }
-function setCheckResult(component, status, latestVersion, releaseUrl = "") {
+function setCheckResult(component, status2, latestVersion, releaseUrl = "") {
   const updatesChecks = store.get().updatesChecks;
   store.set({
     updatesChecks: {
       ...updatesChecks,
       [component]: {
-        status,
+        status: status2,
         latest_version: latestVersion,
         release_url: releaseUrl
       }
@@ -13608,11 +13850,11 @@ function resetCheckResult(component) {
 }
 function applyCachedCheckResults(results) {
   results.forEach((result) => {
-    const status = result.status || null;
-    if (status === "latest" || status === "outdated" || status === "dev") {
+    const status2 = result.status || null;
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
       setCheckResult(
         result.component,
-        status,
+        status2,
         result.latest_version || "",
         result.release_url || ""
       );
@@ -13661,11 +13903,11 @@ function getExpectedLatestVersionForAction(button) {
   }
   return store.get().updatesChecks[button.component].latest_version || void 0;
 }
-function getCheckToastMessage(status) {
-  if (status === "outdated") {
+function getCheckToastMessage(status2) {
+  if (status2 === "outdated") {
     return _("Update is available");
   }
-  if (status === "dev") {
+  if (status2 === "dev") {
     return _("Installed version is newer than release");
   }
   return _("Latest version is installed");
@@ -13780,17 +14022,17 @@ async function applyCompletedComponentAction({
     })) {
       preserveCheckResultsOnNextMount = true;
     }
-    const status = result.status || null;
-    if (status === "latest" || status === "outdated" || status === "dev") {
+    const status2 = result.status || null;
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
       setCheckResult(
         result.component,
-        status,
+        status2,
         result.latest_version || "",
         result.release_url || ""
       );
     }
     if (notify) {
-      showToast(getCheckToastMessage(status), "success");
+      showToast(getCheckToastMessage(status2), "success");
     }
     return;
   }
@@ -14407,7 +14649,7 @@ async function onPageMount4() {
   onPageUnmount4();
   updatesMounted = true;
   updatesMountId += 1;
-  const mountId = updatesMountId;
+  const mountId2 = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
   const hasRuntimeSnapshot = Boolean(cachedRuntimeState);
   const needsFreshStateBeforeRender = shouldRefreshComponentStateBeforeRender(cachedRuntimeState);
@@ -14420,7 +14662,7 @@ async function onPageMount4() {
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache)
   });
-  if (!updatesMounted || mountId !== updatesMountId) {
+  if (!updatesMounted || mountId2 !== updatesMountId) {
     return;
   }
   applyComponentUpdateCheckCache(componentUpdateCheckCache);
@@ -14428,7 +14670,7 @@ async function onPageMount4() {
   renderUpdatesComponents();
   if (runtimeStateRefreshPromise) {
     await runtimeStateRefreshPromise;
-    if (!updatesMounted || mountId !== updatesMountId) {
+    if (!updatesMounted || mountId2 !== updatesMountId) {
       return;
     }
   }
@@ -14641,7 +14883,7 @@ var styles6 = `
 
 // src/trafira/tabs/updates/index.ts
 var UpdatesTab = {
-  render: render5,
+  render: render6,
   initController: initController4,
   styles: styles6
 };
