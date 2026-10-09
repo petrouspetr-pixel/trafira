@@ -415,18 +415,92 @@ function tick_group(state, group) {
     }
 }
 
+function failure_base() {
+    return require("singbox.failure_store").load(require("service.failure_policy_apply").config_path());
+}
+
+function failure_query(base,tag) {
+    let api=object_or_empty(object_or_empty(base.config.experimental).clash_api);
+    let controller=match(api.external_controller||"",/^(\[[0-9a-fA-F:]+\]|[0-9.]+):([0-9]{1,5})$/);
+    if(!controller || int(controller[2])<1 || int(controller[2])>65535)return null;
+    let host=controller[1];
+    if(!require("core.ip").valid_ip(replace(replace(host,/^\[/,""),/\]$/,"")))return null;
+    if(host=="0.0.0.0")host="127.0.0.1";
+    if(host=="[::]")host="[::1]";
+    let url="http://"+host+":"+controller[2]+"/proxies",encoded="";
+    let args=["curl","--noproxy","*","--connect-timeout","1","--max-time","4","--max-filesize","524288","-sS"];
+    if(api.secret)push(args,"--header","Authorization: Bearer "+api.secret);
+    if(tag) {
+        for(let i=0;i<length(tag);i++)encoded+=sprintf("%%%02X",ord(tag,i));
+        url+="/"+encoded+"/delay";
+        push(args,"-G","--data-urlencode","timeout=2000","--data-urlencode","url="+(require("core.uci").get("trafira.settings.latency_test_url")||"https://www.gstatic.com/generate_204"));
+    }
+    let path=RUNTIME_STATE_DIR+sprintf("/failure-query-%x-%x",clock()[0],clock()[1]);
+    let file=fs.open(path,"wex",384);if(!file)return null;file.close();
+    push(args,url,"-o",path);
+    let status=system("exec "+command_from_args(args)+" </dev/null >/dev/null 2>&1",5000),result=null;
+    let info=fs.lstat(path);
+    if(status==0 && info && info.type=="file" && info.size<=524288)
+        try {result=json(fs.readfile(path));}catch(e){}
+    fs.unlink(path);return result;
+}
+
+function failure_policy_tick() {
+    let base=failure_base();if(!base)return true;
+    let monitor=require("singbox.failure_monitor"),store=require("singbox.failure_store"),applier=require("service.failure_policy_apply"),locks=require("service.operation_lock");
+    let snapshot=failure_query(base,null),proxies=snapshot? snapshot.proxies:null,responses={},states={},changed=false;
+    for(let section in base.sections) {
+        for(let name in [section[".name"],section.failure_reserve_section]) {
+            if(!name)continue;
+            let tag=require("singbox.constants").outbound_tag(name);
+            if(!(tag in responses))responses[tag]=type(proxies)=="object" && proxies[tag]?failure_query(base,tag):null;
+        }
+    }
+    let after=failure_query(base,null),current=after?after.proxies:null;
+    function sample(tag) {
+        let value=monitor.sample(responses[tag],proxies,tag),latest=monitor.sample(null,current,tag);
+        if(type(current)!="object" || latest.selected!=value.selected)return {health:"unknown",selected:latest.selected};
+        return value;
+    }
+    for(let section in base.sections) {
+        let tag=require("singbox.constants").outbound_tag(section[".name"]),reserve_tag=require("singbox.constants").outbound_tag(section.failure_reserve_section||"");
+        let observation=monitor.observe(section,base.states[section[".name"]],sample(tag),sample(reserve_tag),now_seconds());
+        states[section[".name"]]=observation.state;
+        if(observation.changed)changed=true;
+    }
+    if(changed)return applier.apply_states(base.generation,states).success;
+    let lock=locks.acquire("failure-observation",false);if(!lock)return false;
+    let fresh=failure_base(),ok=fresh && fresh.generation==base.generation && fresh.applied_digest==base.applied_digest && store.publish(base.generation,applier.config_path(),states);
+    locks.release(lock);return !!ok;
+}
+
+function failure_policy_status() {
+    let base=failure_base(),guarded=command_success_from_args(["nft","list","table","inet","TrafiraFailureGuard"]),rows=[];
+    let now=now_seconds();
+    for(let section in base?base.sections:[]) {
+        let state=base.states[section[".name"]]||{};
+        push(rows,{section:section[".name"],policy:section.failure_policy,state:state.mode||"blocked",reason:state.reason||"awaiting_health",
+            changed_at:state.last_transition||0,age_seconds:state.observed_at?now-state.observed_at:0,monitor_error:guarded || state.monitor_error===true});
+    }
+    write_json({enabled:!!base,guarded,sections:rows});
+}
+
 function worker() {
     let groups = priority_groups_from_cache();
-    if (length(groups) == 0)
+    if (length(groups) == 0 && !failure_base())
         return 0;
 
     let states = {};
     for (let group in groups)
         states[group.tag] = init_group_state(group);
-
+    let next_failure_check=0;
     while (true) {
         for (let group in groups)
             tick_group(states[group.tag], group);
+        if(now_seconds()>=next_failure_check) {
+            failure_policy_tick();
+            next_failure_check=now_seconds()+5;
+        }
         system("sleep 1");
     }
 }
@@ -447,7 +521,7 @@ function stop_runtime() {
 function start_runtime() {
     let groups = priority_groups_from_cache();
     stop_runtime();
-    if (length(groups) == 0)
+    if (length(groups) == 0 && !failure_base())
         return 0;
 
     if (!ensure_dir(RUNTIME_STATE_DIR))
@@ -484,6 +558,10 @@ else if (mode == "stop-runtime")
     exit(stop_runtime());
 else if (mode == "worker")
     exit(worker());
+else if (mode == "failure-policy-tick")
+    exit(failure_policy_tick()?0:1);
+else if (mode == "failure-policy-status")
+    failure_policy_status();
 else if (mode == "select-fixture")
     select_fixture(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5]);
 else if (mode == "select-faster-fixture")

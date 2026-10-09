@@ -738,6 +738,11 @@ function start_main() {
         return status;
     }
 
+    if (command_success_from_args(["nft","list","table","inet","TrafiraFailureGuard"]) &&
+        !command_success_from_args(["nft","delete","table","inet","TrafiraFailureGuard"])) {
+        log_message("Verified runtime started but the failure-policy guard could not be cleared", "fatal");
+        return 1;
+    }
     status = module_status(PRIORITY_UC, [ "start-runtime" ]);
     if (status != 0) {
         log_message("Failed to start Priority runtime. Aborted.", "fatal");
@@ -815,6 +820,8 @@ function stop_main() {
 
     if (command_success_from_args([ "nft", "list", "table", "inet", NFT_TABLE_NAME ]))
         command_success_from_args([ "nft", "delete", "table", "inet", NFT_TABLE_NAME ]);
+    if (command_success_from_args(["nft","list","table","inet","TrafiraFailureGuard"]) &&
+        !command_success_from_args(["nft","delete","table","inet","TrafiraFailureGuard"])) status=1;
 
     if (module_success(NFT_UC, [ "tproxy-marking-rule4-present", RT_TABLE_NAME, NFT_FAKEIP_MARK ]))
         command_success_from_args([ "ip", "-4", "rule", "del", "fwmark", NFT_FAKEIP_MARK + "/" + NFT_FAKEIP_MARK, "table", RT_TABLE_NAME, "priority", "105" ]);
@@ -1254,6 +1261,8 @@ function reload(reason) {
             cleanup_failed_runtime();
             return status;
         }
+        if (command_success_from_args(["nft","list","table","inet","TrafiraFailureGuard"]) &&
+            !command_success_from_args(["nft","delete","table","inet","TrafiraFailureGuard"])) return 1;
         status = module_status(PRIORITY_UC, [ "start-runtime" ]);
         if (status != 0) {
             log_message("Failed to start Priority runtime after sing-box reload", "fatal");
