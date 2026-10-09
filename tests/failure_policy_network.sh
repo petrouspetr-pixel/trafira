@@ -124,9 +124,12 @@ blocked
 no_direct
 for stage in guard install reload healthy publish; do
   run unguard
-  run init block
+  run init direct
   service reload-sing-box-runtime
   service wait-trafira-stable-start
+  run apply direct
+  working
+  ip netns exec "$router" nft reset counters table inet audit >/dev/null
   if run crash "$stage"; then echo "Crash hook did not fire: $stage" >&2; exit 1; fi
   ip netns exec "$router" nft list table inet TrafiraFailureGuard >/dev/null
   blocked
