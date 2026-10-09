@@ -20,8 +20,8 @@ assert(j.valid_request({action:"test_start",duration:15,services:["google"]}),"a
 assert(!j.live({pid:j.identity().pid,ticks:"0"}),"reused PID rejected");
 assert(!j.cancel("absent").success,"cancel cannot target a foreign process");
 let performed=false,captured=false;
-let checked=j.execute({action:"attach",preview_id:"p-stale",expected_digest:join(map([1,2,3,4,5,6,7,8],()=>"aaaaaaaa"),"")},{validate:()=>({success:false,error:"conflict"}),snapshot:()=>{captured=true;return {};},perform:()=>{performed=true;return {success:true};},restore:()=>true});
-assert(!checked.success && checked.error=="conflict" && !performed && !captured,"stale preview rejected before backup or restore");
+let checked=j.execute({action:"attach",preview_id:"p-stale",expected_digest:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},{validate:()=>({success:false,error:"conflict"}),snapshot:()=>{captured=true;return {};},perform:()=>{performed=true;return {success:true};},restore:()=>true});
+assert(!checked.success && checked.error=="conflict" && !performed && !captured,"stale preview rejected before backup or restore: "+sprintf("%J",checked));
 let restored=false;
 let hooks={snapshot:()=>({old:true}),perform:()=>({success:false,error:"test_failure"}),restore:(snapshot)=>{restored=snapshot.old;return true;}};
 let r=j.execute({action:"enable"},hooks);

@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ucode -L "$ROOT/trafira/files/usr/lib" -e '
 let p=require("components.warp_packages");
-let digest=join(map([1,2,3,4,5,6,7,8],()=>"aaaaaaaa"),"");
+let digest="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 let packages=map(["luci-app-trafira-warp","trafira-warp-awg","trafira-warp-scout"],(name)=>({name,version:"1.0.0-r1",arch:"aarch64_cortex-a53",manager:"apk",file:name+"-1.0.0-r1.apk",sha256:digest,installed_size:1000,size:500}));
 let manifest={schema:1,family_version:"1.0.0",minimum_trafira_version:"2.0.0",packages};
 let selected=p.select(manifest,"aarch64_cortex-a53","apk","2.1.0");assert(selected.success,"valid complete family");
