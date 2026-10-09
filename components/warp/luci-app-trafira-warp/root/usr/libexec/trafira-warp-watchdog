@@ -1,0 +1,24 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+set -u
+child=
+cleanup() {
+    if [ -n "$child" ]; then
+        kill -TERM "$child" 2>/dev/null || true
+        wait "$child" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+trap 'exit 0' HUP INT TERM
+while :; do
+    sleep 30 &
+    child=$!
+    wait "$child" || exit 0
+    child=
+    status=$(ucode -L /usr/lib/trafira -L /usr/lib/trafira-warp /usr/lib/trafira/integrations/warp_cli.uc action '{"action":"status"}' 2>/dev/null) || continue
+    enabled=$(printf '%s' "$status" | jsonfilter -e '@.enabled')
+    running=$(printf '%s' "$status" | jsonfilter -e '@.running')
+    if [ "$enabled" = true ] && [ "$running" = false ]; then
+        /usr/bin/trafira-config warp_action '{"action":"reconnect"}' >/dev/null 2>&1 || true
+    fi
+done

@@ -20,21 +20,22 @@ function worker(id) {
         if(!request || request.job_id!=id || !current || current.job_id!=id || !current.running)result=fail("invalid_job");
         else {
             let runtime=require("warp.runtime");
-            result=m.job.execute(request.request,runtime.hooks(),id);
+            result=m.job.execute(request.request,runtime.hooks({mark:int(require("core.constants").NFT_OUTBOUND_MARK)}),id);
         }
     }catch(e){result=fail("worker_failed");}
     let current=m.state.load(m.state.RUNTIME+"/job.json");
     if(current?.job_id==id)m.state.save(m.state.RUNTIME+"/job.json",{...m.state.public_status(result),job_id:id,running:false});
     locks.release(lock);return result;
 }
-function action(text) {
+function action(text,recovery) {
     if(type(text)!="string" || length(text)>16384)return fail("invalid_request");
     let request;try {request=json(text);}catch(e){return fail("invalid_request");}
+    if(recovery)request={action:"status"};
     let m=modules();if(!m)return fail("component_not_installed");
     if(!m.job.valid_request(request))return fail("invalid_request");
     if(request.action=="job_status")return m.job.status();
     if(request.action=="cancel")return m.job.cancel(request.job_id);
-    if(request.action=="status") {
+    if(request.action=="status" && !recovery) {
         try {return require("warp.runtime").status();}catch(e){return fail("component_unavailable");}
     }
     let lock=locks.acquire("warp-start",false);if(!lock)return fail("busy");
@@ -55,4 +56,9 @@ function action(text) {
     }catch(e){result=fail("operation_failed");}
     locks.release(lock);return result;
 }
-print(sprintf("%J\n",ARGV[0]=="worker"?worker(ARGV[1]):ARGV[0]=="action"?action(ARGV[1]):fail("invalid_request")));
+if(ARGV[0]=="permit-start") {
+    let owner;
+    try {owner=json(fs.readfile((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/operation-owner.json"));}catch(e){}
+    exit(locks.is_live_ancestor(owner)?0:1);
+}
+print(sprintf("%J\n",ARGV[0]=="recover"?action("{}",true):ARGV[0]=="worker"?worker(ARGV[1]):ARGV[0]=="action"?action(ARGV[1]):fail("invalid_request")));

@@ -32,10 +32,15 @@ function candidate_current(candidate,account_digest,generation,now) {
     return type(candidate)=="object" && candidate.account_digest==account_digest && candidate.generation==generation && candidate.expires_at>now;
 }
 function register(id,mark) {
-    let existing=state.load(ACCOUNT);if(existing)return account_valid(existing)?{success:true,registered:true}:{success:false,error:"invalid_account"};
+    let existing=state.load(ACCOUNT);if(fs.lstat(ACCOUNT) && !existing)return {success:false,error:"invalid_account"};
+    if(existing)return account_valid(existing)?{success:true,registered:true}:{success:false,error:"invalid_account"};
     if(mark!=134217728 || !state.ensure(state.DIRECTORY))return {success:false,error:"invalid_transport"};
     let target=state.DIRECTORY+"/registration.json";
-    if(!state.remove(target))return {success:false,error:"storage_unavailable"};
+    if(fs.lstat(target)) {
+        let pending=state.load(target);
+        if(!account_valid(pending) || !state.save(ACCOUNT,pending))return {success:false,error:"registration_incomplete"};
+        state.remove(target);return {success:true,registered:true};
+    }
     let result=process.run(["env","GOMAXPROCS=1","GOMEMLIMIT=24MiB","NO_COLOR=1",SCOUT,"register","--fwmark",""+mark,"--plain","--relay","none","--account",target,"--gen-i1","quic","--i1-sni","www.google.com"],120,id);
     // A completed remote registration is retained even if later discovery fails.
     let account=state.load(target);
