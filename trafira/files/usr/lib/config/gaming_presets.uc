@@ -80,7 +80,7 @@ function build(preset,request,current){
     let old=filter(config,(s)=>s.preset_owner==owner);
     if(length(filter(old,(s)=>fingerprint(s)!=s.preset_original_digest)) && request.replace_edited!==true)return fail("preset_edited");
     config=filter(config,(s)=>s.preset_owner!=owner);
-    let store={".name":owner+"_store",".type":"section",enabled:"1",label:preset.id+" store / "+join(", ",addresses),action:"connection",outbound_jsons:[sprintf("%J",{type:"selector",outbounds:[request.proxy_section+"-out"]})],outbound_detour_enabled:"1",outbound_detour_section:request.proxy_section,source_ip_cidr:addresses,domain:[],domain_suffix:[]};
+    let store={".name":owner+"_store",".type":"section",enabled:"1",label:preset.id+" store / "+join(", ",addresses),action:"connection",outbound_jsons:[sprintf("%J",{type:"selector",tag:owner+"_target",outbounds:[request.proxy_section+"-out"]})],outbound_detour_enabled:"1",outbound_detour_section:request.proxy_section,source_ip_cidr:addresses,domain:[],domain_suffix:[]};
     for(let entry in preset.domains) {
         if(!match(entry.value||"",/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/) || index(["exact","suffix"],entry.match)<0)return fail("invalid_catalog_domain");
         push(entry.match=="exact"?store.domain:store.domain_suffix,entry.value);

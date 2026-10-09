@@ -48,7 +48,7 @@ assert(candidate_hooks.validate(prepared.path) && index(fs.readfile(getenv("PROF
 fs.writefile(getenv("PROFILE_TEST_DIR")+"/reject-candidate","1");
 assert(!candidate_hooks.validate(prepared.path),"candidate failure cannot fall back to installed core");
 let g=require("config.gaming_presets"),matcher=require("diagnostics.route_match");
-let built=g.build({id:"steam",revision:1,domains:[{value:"store.example",match:"exact"}]},{device_ips:["192.0.2.5/32","2001:db8::5/128"],proxy_section:"vpn",placement:"before-device-routes",expected_digest:"test"},{digest:"test",devices:[{interface:"br-lan",mac:"02:00:00:00:00:01",ips:["192.0.2.5","2001:db8::5"]}],sections:[document.config[0],{".name":"vpn",".type":"section",enabled:"1",action:"connection",outbound_jsons:["{\"type\":\"socks\",\"server\":\"192.0.2.9\",\"server_port\":1080}"]}]});
+let built=g.build({id:"steam",revision:1,domains:[{value:"store.example",match:"exact"}]},{device_ips:["192.0.2.5/32","2001:db8::5/128"],proxy_section:"vpn",placement:"before-device-routes",expected_digest:"test"},{digest:"test",devices:[{interface:"br-lan",mac:"02:00:00:00:00:01",ips:["192.0.2.5","2001:db8::5"]}],sections:[document.config[0],{".name":"vpn",".type":"section",enabled:"1",action:"connection",outbound_jsons:["{\"type\":\"socks\",\"tag\":\"vpn-leaf\",\"server\":\"192.0.2.9\",\"server_port\":1080}"]}]});
 assert(built.valid,"gaming builder");
 let gaming={schema:1,name:"Gaming",config:built.config},stage=r.prepare(gaming,directory);
 assert(stage.success && r.hooks(gaming,directory).validate(stage.path),"gaming candidate validated and generated");
