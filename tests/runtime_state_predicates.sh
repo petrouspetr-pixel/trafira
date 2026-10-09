@@ -1596,3 +1596,8 @@ if state_ucode has-remote-sing-box-ruleset-sources-fixture "$WORK_DIR/disabled-o
 fi
 
 printf 'runtime state predicate checks passed\n'
+cat >"$WORK_DIR/remote-ruleset-only.json" <<'JSON'
+{"section":[{".name":"only-ruleset","enabled":"1","rule_set":["https://example.org/rules.srs"]}]}
+JSON
+state_ucode has-list-update-sources-fixture "$WORK_DIR/remote-ruleset-only.json" >/dev/null ||
+  fail "remote rulesets need periodic startup snapshot refresh"

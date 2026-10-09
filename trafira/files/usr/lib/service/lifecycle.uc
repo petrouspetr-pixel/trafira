@@ -716,6 +716,8 @@ function start_main() {
 
     module_success(BYEDPI_UC, [ "start-runtime" ]);
 
+    let startup_diagnostics = require("singbox.startup_diagnostics");
+    let startup_marker = startup_diagnostics.begin();
     if (!command_success_from_args([ "/etc/init.d/sing-box", "start" ])) {
         log_message("Failed to start sing-box. Aborted.", "fatal");
         return 1;
@@ -730,7 +732,9 @@ function start_main() {
         as_string(SING_BOX_START_VERIFY_TIMEOUT)
     ]);
     if (status != 0) {
-        log_message("sing-box did not reach a stable running state after start. Aborted.", "fatal");
+        let startup_reason = startup_diagnostics.read(startup_marker);
+        log_message("sing-box did not reach a stable running state after start. Aborted." +
+            (startup_reason != "" ? " Cause: " + startup_reason : ""), "fatal");
         return status;
     }
 
