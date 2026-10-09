@@ -23,7 +23,7 @@ let fs=require("fs");
 if(ARGV[0]=="component-version-async") {
   fs.writefile(getenv("CORE_CLI_TEST")+"/launched",ARGV[1]);
   print("{\"success\":true,\"job_id\":\"100-200\"}\n");
-} else if(ARGV[0]=="component-action-status")print("{\"success\":false,\"running\":false,\"restored\":true,\"job_id\":\"100-200\"}\n");
+} else if(ARGV[0]=="component-action-status" || ARGV[0]=="component-version-status")print("{\"success\":false,\"running\":false,\"restored\":true,\"job_id\":\"100-200\"}\n");
 else exit(1);
 UC
 call() { ucode -L "$TRAFIRA_LIB" "$ROOT_DIR/trafira/files/usr/bin/trafira-config" core_action "$1"; }

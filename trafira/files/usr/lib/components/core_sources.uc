@@ -71,4 +71,5 @@ function fetch(env) {
     } else return null;
     return versions.from_packages(packages,env);
 }
-return {fetch,environment,transport,download};
+function current_version(){return module_output("singbox/runtime.uc",["version"])||"not-installed";}
+return {fetch,environment,transport,download,current_version};
