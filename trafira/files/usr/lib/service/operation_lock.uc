@@ -14,11 +14,7 @@ function process(pid) {
 
 // Only synchronous descendants of the live owner may reuse its operation.
 // No CLI flag or environment variable can grant an unrelated worker access.
-function owned_by_ancestor() {
-    let info=fs.lstat(OWNER);
-    if(!info || info.type!="file" || info.size>1024) return false;
-    let owner;
-    try {owner=json(fs.readfile(OWNER));}catch(e){return false;}
+function is_live_ancestor(owner) {
     if(type(owner)!="object") return false;
     let alive=process(owner.pid),current=process("self");
     if(!alive || alive.ticks!=owner.ticks || alive.state=="Z") return false;
@@ -28,6 +24,14 @@ function owned_by_ancestor() {
         current=process(current.parent);
     }
     return false;
+}
+function identity(){return process("self");}
+function owned_by_ancestor() {
+    let info=fs.lstat(OWNER);
+    if(!info || info.type!="file" || info.size>1024) return false;
+    let owner;
+    try {owner=json(fs.readfile(OWNER));}catch(e){return false;}
+    return is_live_ancestor(owner);
 }
 
 function acquire(operation,allow_borrow) {
@@ -66,4 +70,4 @@ function release(handle) {
     handle.file.close();
     handle.file=null;
 }
-return {acquire,release};
+return {acquire,release,identity,is_live_ancestor};

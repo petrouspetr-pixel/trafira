@@ -1429,6 +1429,10 @@ if(index(["main","start","stop","reload","dns-failover-apply","restart","enable"
         warn("Another configuration operation is already running\n");
         exit(1);
     }
+    if(index(["main","start","restart","reload"],mode)>=0 && !require("service.config_transaction").before_start().success) {
+        warn("Configuration recovery failed; startup stopped\n");
+        exit(1);
+    }
 }
 
 if (mode == "main")

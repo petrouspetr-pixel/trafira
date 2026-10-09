@@ -80,7 +80,7 @@ function apply_locked(candidate_path,expected_digest,reason,hooks) {
     if(hash(TARGET)!=expected_digest)return failure("conflict");
     let service=hooks.capture();
     if(type(service)!="object" || type(service.running)!="bool" || type(service.enabled)!="bool")return failure("service_state_unavailable");
-    let state={schema:1,job_id:sprintf("c-%x-%x",clock()[0],clock()[1]),original_digest:expected_digest,service,stage:"prepared"};
+    let state={schema:1,job_id:sprintf("c-%x-%x",clock()[0],clock()[1]),worker:locks.identity(),original_digest:expected_digest,service,stage:"prepared"};
     if(!durable_write(BACKUP,original) || hash(BACKUP)!=expected_digest || !journal(state))return failure("backup_failed");
     // A crash after this point must restore BACKUP before the next startup.
     if(hash(TARGET)!=expected_digest) {finish(failure("conflict"));return failure("conflict");}
@@ -108,4 +108,10 @@ function status() {
     return object(RESULT)||{running:false};
 }
 function previous_path() {return PREVIOUS;}
-return {TARGET,apply,recover,status,previous_path};
+function before_start() {
+    if(!fs.lstat(JOURNAL))return {success:true};
+    let state=object(JOURNAL);
+    if(state && locks.is_live_ancestor(state.worker))return {success:true,active_transaction:true};
+    return recover();
+}
+return {TARGET,apply,recover,status,previous_path,before_start};
