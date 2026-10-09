@@ -75,6 +75,7 @@ function worker(id){
         else {
             state.worker=locks.identity();
             if(!write(STATE,state))result=fail("storage_unavailable");
+            else if(hash(transaction.TARGET)!=request.digest)result=fail("conflict");
             else if(request.recover)result=transaction.recover(runtime.hooks(null,directory));
             else {
                 let prepared=runtime.prepare(request.document,directory);

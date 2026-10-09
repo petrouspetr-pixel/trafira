@@ -52,7 +52,8 @@ function validate(document,directory,path){
     let variant=output(module_args("singbox/runtime.uc",["variant"]));
     let address=fixture.settings.service_listen_address||output(module_args("singbox/runtime.uc",["service-listen-address"]));
     if(!address)return false;
-    if(!run(module_args("singbox/generator.uc",["generate-config-fixture",fixture_path,generated,address,"0",index(variant,"extended")>=0?"1":"0","",version])))return false;
+    let mwan3=run(module_args("config/validator.uc",["mwan3-is-active"]))?"1":"0";
+    if(!run(module_args("singbox/generator.uc",["generate-config-fixture",fixture_path,generated,address,mwan3,index(variant,"extended")>=0?"1":"0","",version])))return false;
     let config;
     try {config=json(fs.readfile(generated));}catch(e){return false;}
     if(!dependencies(config))return false;
@@ -60,7 +61,7 @@ function validate(document,directory,path){
     return run(["sing-box","-c",generated,"check"]);
 }
 function running(){return run(module_args("service/state.uc",["trafira-running",constants.RT_TABLE_NAME,constants.NFT_TABLE_NAME,constants.NFT_FAKEIP_MARK]));}
-function capture(){return {running:running(),enabled:run([INIT,"enabled"])};}
+function capture(){return {running:run(module_args("service/state.uc",["sing-box-service-running"])),enabled:run([INIT,"enabled"])};}
 function activate(state){return run([INIT,"restart"]) && running();}
 function restore(state){
     if(type(state)!="object")return false;
