@@ -14,7 +14,7 @@ function transport() {
     let enabled=uci.get("trafira.settings.download_components_via_proxy");
     if(index(["1","true","on","yes"],""+enabled)<0)return {proxy:""};
     let proxy=module_output("singbox/runtime.uc",["service-proxy-address","components"]);
-    return proxy && match(proxy,/^[A-Za-z0-9.\[\]:-]+:[0-9]{1,5}$/)?{proxy}:null;
+    return proxy && match(proxy,/^([A-Za-z0-9.-]+|\[[0-9a-fA-F:]+\]):[0-9]{1,5}$/)?{proxy}:null;
 }
 function download(url,destination,maximum,timeout) {
     let selected=transport();if(!selected)return false;
