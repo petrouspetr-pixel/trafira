@@ -185,9 +185,9 @@ try:
     run(['sysctl','-qw','net.ipv6.conf.all.disable_ipv6=1','net.ipv6.conf.default.disable_ipv6=1'],router)
     runner=start(['ucode','-L',LIB,'-L',work/'addon',work/'addon/warp/runner.uc'],router,'awg-ipv4-only')
     wait(lambda:json.loads(uc('print(sprintf("%J",require("warp.transport").status()));')).get('running'),'IPv4-only runner')
-    assert not json.loads(ip(router,'-j','-6','addr','show','dev','tfwarp0').stdout)[0].get('addr_info'),'no IPv6 address when globally disabled'
+    assert all(not link.get('addr_info') for link in json.loads(ip(router,'-j','-6','addr','show','dev','tfwarp0').stdout)),'no IPv6 address when globally disabled'
     run(['curl','--noproxy','*','--interface','tfwarp0','--max-time','3','-fsS','http://198.51.100.2:18080/'],router);counters_zero()
-    print('WARP actual runner/UAPI, IPv4/IPv6 LAN, router-origin, peer UDP isolation, SIGKILL and fail-closed WAN counters passed')
+    print('WARP actual runner/UAPI, verified HTTPS, DNS/FakeIP, IPv4/IPv6 LAN, router-origin, peer UDP isolation, SIGKILL/watchdog, cold restart, endpoint change, IPv4-only and fail-closed WAN counters passed')
 except Exception:
     for file in work.glob('*.log'):
         print(file.name+': '+file.read_text(errors='replace')[-2000:])
