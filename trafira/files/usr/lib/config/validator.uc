@@ -1782,6 +1782,8 @@ function validate_runtime_config(context) {
     }
 
     validate_outbound_detours_rows(detour_rows_from_sections(sections));
+    for (let error in require("singbox.failure_policy").validate_sections(sections))
+        fail_validation(error);
     validate_subscription_download_sections(sections, context);
     validate_server_routing_sections(sections);
 
