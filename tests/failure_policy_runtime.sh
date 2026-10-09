@@ -29,11 +29,12 @@ export PATH="$WORK_DIR/bin:$PATH"
 ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
 let fs=require("fs"),store=require("singbox.failure_store"),a=require("service.failure_policy_apply"),transform=require("singbox.failure_config");
 let root=getenv("FAILURE_RUNTIME_TEST"),path=root+"/config.json",sections=[{".name":"vpn",action:"connection",failure_policy:"block"}];
-let base={inbounds:[{tag:"protected",type:"mixed",listen_port:18000}],outbounds:[{type:"direct",tag:"vpn-out"}],route:{rules:[{action:"route",inbound:"protected",outbound:"vpn-out"}]},dns:{servers:[],rules:[]}};
+let base={inbounds:[{tag:"protected",type:"mixed",listen_port:18000}],outbounds:[{type:"direct",tag:"vpn-out",__trafira_allow_group:true}],route:{rules:[{action:"route",inbound:"protected",outbound:"vpn-out"}]},dns:{servers:[],rules:[]}};
 assert(store.write(path,transform.apply(base,sections,{})) && store.save_base(path,base,sections));
 let generation=store.load(path).generation;
 assert(a.apply("vpn",generation,"primary").success,"actual adapter applies checked config");
 assert(json(fs.readfile(path)).route.rules[0].outbound=="vpn-out","primary installed");
+assert(json(fs.readfile(path)).outbounds[0].__trafira_allow_group==null,"internal generator markers stripped before runtime install");
 let events=fs.readfile(root+"/events");
 assert(index(events,"guard\n")<index(events,"reload-sing-box-runtime") && index(events,"wait-trafira-stable-start")<index(events,"unguard\n"),"real command ordering");
 fs.writefile(root+"/fail-health","1");fs.writefile(root+"/events","");
