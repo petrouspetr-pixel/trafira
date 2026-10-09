@@ -33,7 +33,10 @@ function execute(action,path) {
     if(action=="restore") {
         for(let name in ["account.json","registration.json"])
             if(saved.files[name]!=null && !state.save_text(state.DIRECTORY+"/"+name,saved.files[name]))return {success:false,error:"restore_failed"};
-        return {success:transport.restore(saved.transport,"package-restore")};
+        if(!transport.restore(saved.transport,"package-restore"))return {success:false,error:"restore_failed"};
+        if(!saved.transport.running)return {success:true};
+        let health=require("warp.runtime").refresh_health("package-restore");
+        return {success:health.running && health.https_ok && health.warp};
     }
     if(action=="remove") {
         let config=state.load(state.DIRECTORY+"/transport.json");

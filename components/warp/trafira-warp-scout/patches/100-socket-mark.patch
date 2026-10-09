@@ -130,6 +130,14 @@
  	}
 --- a/register.go
 +++ b/register.go
+@@ -211,6 +211,7 @@
+ 	if err != nil {
+ 		return account{}, err
+ 	}
++	if trafiraMark != 0 { return a, nil } // Trafira owns only this WG account.
+ 	a.Masque = mintMasque(ctx, client, existing.Masque)
+ 	a.Outer = mintOuter(ctx, client, existing.Outer)
+ 	return a, nil
 @@ -301,10 +301,10 @@
  }
  
