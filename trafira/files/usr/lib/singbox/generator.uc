@@ -3149,6 +3149,7 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
     for (let section in sections)
         add_mixed_proxy_for_section(config, section, service_address);
 
+    require("config.router_origin").attach(config, settings, sections);
     apply_ruleset_http_clients(config);
     let startup_cache = require("singbox.ruleset_cache");
     startup_cache.apply(config, runtime_sing_box_version);

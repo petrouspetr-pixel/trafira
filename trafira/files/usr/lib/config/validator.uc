@@ -1781,6 +1781,12 @@ function validate_runtime_config(context) {
         );
     }
 
+    let router_origin = require("config.router_origin").config(settings, sections, {
+        fakeip_mark: context.nft_fakeip_mark, outbound_mark: context.nft_outbound_mark,
+        zapret_mark: context.zapret_route_mark_base, zapret2_mark: context.zapret2_route_mark_base,
+        mwan3_mask: uci_core().get("mwan3.globals.mmx_mask")
+    });
+    if (router_origin.error) fail_validation(router_origin.error);
     validate_outbound_detours_rows(detour_rows_from_sections(sections));
     for (let error in require("singbox.failure_policy").validate_sections(sections))
         fail_validation(error);
