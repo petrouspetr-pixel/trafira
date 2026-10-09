@@ -13,7 +13,7 @@ function hooks(){return {
  activate:()=>{fs.writefile(root+"/activated","");return false;},
  restore:(service)=>{fs.writefile(root+"/restored",sprintf("%J",service));return true;}
 };}
-return {prepare,hooks};
+return {prepare,hooks,read_document:(path)=>({success:true,document:{text:fs.readfile(path)}})};
 UC
 cat >"$WORK/lib/integrations/warp_transport.uc" <<'UC'
 return {read:()=>({running:true,https_ok:true,warp:true})};
@@ -34,6 +34,12 @@ assert(fs.readfile(target)==original && !t.status().recovery_pending,"original U
 assert(json(fs.readfile(root+"/restored")).running===true,"original service supplied to restore");
 fs.unlink(root+"/running");fs.unlink(root+"/activated");result=a.apply(request,s);
 assert(result.success && !fs.stat(root+"/activated"),"stopped Trafira stays stopped; no nested lock deadlock");
-assert(fs.readfile(target)==preview.document.text,"reviewed candidate committed");l.release(lock);
+assert(fs.readfile(target)==preview.document.text,"reviewed candidate committed");
+let saved={text:original,digest,applied_digest:hash(target),service:{running:false,enabled:false}};
+fs.writefile(target,"config settings newer_profile\n");
+assert(!a.restore(saved),"interrupted outer journal must not overwrite newer profile");
+assert(fs.readfile(target)=="config settings newer_profile\n","new profile survives old WARP recovery");
+fs.writefile(target,preview.document.text);assert(a.restore(saved),"owned applied candidate can still roll back");
+assert(fs.readfile(target)==original,"owned rollback restores exact original");l.release(lock);
 print("WARP real attachment transaction: stale preview, generation, late failure and stopped state passed\n");
 '

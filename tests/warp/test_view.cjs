@@ -40,3 +40,9 @@ test('RPC errors are visible and timing seconds are displayed as milliseconds',a
  await h.page.act({action:'reconnect'});assert.equal(h.notifications.length,1);
  assert.equal(h.page.pending,false);
 });
+
+test('service breakdown and exhausted recovery are visible',()=>{
+ const h=harness();h.page.render({success:true,job:{running:false},watchdog:{exhausted:true,attempts:3},test:{summary:{services:{chatgpt:{samples:4,dns_errors:1,connection_errors:1,http_errors:2,http_restricted:0}}}}});
+ const text=JSON.stringify(h.page.panel);
+ assert.match(text,/ChatGPT/);assert.match(text,/DNS errors: 1/);assert.match(text,/HTTP errors: 2/);assert.match(text,/Automatic recovery paused/);
+});

@@ -11,5 +11,9 @@ assert(summary.http_restricted==2 && summary.median==0.2 && summary.p95==0.3,"su
 assert(!s.valid_request(10,["google"]) && !s.valid_request(15,["http://localhost/"]),"bounded catalogue only");
 assert(s.valid_request(15,["google","chatgpt"]),"supported duration andservices");
 assert(!s.valid_request(15,["google","google"]),"duplicate probes rejected");
+let detailed=s.summarize([{service:"chatgpt",success:false,error:"dns_empty",code:0},{service:"google",success:false,error:"timeout",code:0},{service:"grok",success:true,code:500,total:0.2},{service:"gemini",success:true,code:403,total:0.1}]);
+assert(detailed.services.chatgpt.dns_errors==1 && detailed.services.google.connection_errors==1,"per service DNS versus connection");
+assert(detailed.services.grok.http_errors==1 && detailed.services.grok.ok==0,"HTTP500 is not successful service");
+assert(detailed.services.gemini.http_restricted==1,"service restrictions remain distinct");
 print("WARP stability checks passed\n");
 '
