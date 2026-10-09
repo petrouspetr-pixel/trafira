@@ -42,10 +42,12 @@ define Build/Compile
 	$(TARGET_CC) $(TARGET_CPPFLAGS) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) \
 		-std=c11 -Wall -Wextra -Werror -o $(PKG_BUILD_DIR)/trafira-warp-awgctl \
 		$(CURDIR)/files/warp-awgctl.c
+	$(TARGET_CC) $(TARGET_CPPFLAGS) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) -std=c11 -Wall -Wextra -Werror -o $(PKG_BUILD_DIR)/trafira-warp-exec $(CURDIR)/files/warp-exec.c
 endef
 
 define Package/trafira-warp-awg/install
 	$(INSTALL_DIR) $(1)/usr/libexec
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/trafira-warp-exec $(1)/usr/libexec/trafira-warp-exec
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/trafira-warp-amneziawg-go $(1)/usr/libexec/trafira-warp-amneziawg-go
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/trafira-warp-awgctl $(1)/usr/libexec/trafira-warp-awgctl
 	$(INSTALL_DIR) $(1)/usr/share/licenses/trafira-warp-awg

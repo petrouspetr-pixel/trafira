@@ -7,7 +7,7 @@ function fail(error){return {success:false,error};}
 function quote(value){return "'"+replace(""+value,/'/g,"'\\''")+"'";}
 function modules() {
     if(!fs.stat(ADDON+"/warp/job.uc"))return null;
-    return {state:require(ADDON+"/warp/state.uc"),job:require(ADDON+"/warp/job.uc")};
+    return {state:require("warp.state"),job:require("warp.job")};
 }
 function worker(id) {
     let m=modules();if(!m || !m.job.valid_id(id))return fail("invalid_job");
@@ -19,7 +19,7 @@ function worker(id) {
         let request=m.state.load(m.state.RUNTIME+"/request.json"),current=m.state.load(m.state.RUNTIME+"/job.json");
         if(!request || request.job_id!=id || !current || current.job_id!=id || !current.running)result=fail("invalid_job");
         else {
-            let runtime=require(ADDON+"/warp/runtime.uc");
+            let runtime=require("warp.runtime");
             result=m.job.execute(request.request,runtime.hooks(),id);
         }
     }catch(e){result=fail("worker_failed");}
@@ -35,7 +35,7 @@ function action(text) {
     if(request.action=="job_status")return m.job.status();
     if(request.action=="cancel")return m.job.cancel(request.job_id);
     if(request.action=="status") {
-        try {return require(ADDON+"/warp/runtime.uc").status();}catch(e){return fail("component_unavailable");}
+        try {return require("warp.runtime").status();}catch(e){return fail("component_unavailable");}
     }
     let lock=locks.acquire("warp-start",false);if(!lock)return fail("busy");
     let result;
