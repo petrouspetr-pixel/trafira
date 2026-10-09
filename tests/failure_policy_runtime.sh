@@ -42,3 +42,29 @@ assert(!result.success && result.guarded && index(fs.readfile(root+"/events"),"u
 assert(json(fs.readfile(path)).route.rules[0].outbound=="vpn-out","exact previous config restored behind guard");
 print("failure policy runtime adapter checks passed\n");
 '
+rm -f "$WORK_DIR/fail-health"
+cat >"$WORK_DIR/bin/curl" <<'SH'
+#!/bin/sh
+target=
+kind=delay
+for arg in "$@"; do case "$arg" in */proxies) kind=proxies;; esac; done
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = -o ]; then shift; target=$1; fi
+  shift
+done
+if [ "$kind" = proxies ]; then printf '%s' '{"proxies":{"vpn-out":{"now":"node"},"node":{"type":"Socks"}}}' >"$target"
+else printf '%s' '{"delay":10}' >"$target"; fi
+SH
+chmod +x "$WORK_DIR/bin/curl"
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
+let s=require("singbox.failure_store"),t=require("singbox.failure_config"),path=getenv("FAILURE_RUNTIME_TEST")+"/config.json";
+let base=s.load(path);base.config.experimental={clash_api:{external_controller:"127.0.0.1:9090"}};
+assert(s.write(path,t.apply(base.config,base.sections,{})) && s.save_base(path,base.config,base.sections));
+'
+for round in 1 2; do
+  ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$ROOT_DIR/trafira/files/usr/lib/singbox/priority.uc" failure-policy-tick
+done
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
+let s=require("singbox.failure_store"),base=s.load(getenv("FAILURE_RUNTIME_TEST")+"/config.json");
+assert(base.states.vpn.mode=="primary","priority worker opens primary only after health threshold");
+'
