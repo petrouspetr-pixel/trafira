@@ -1,4 +1,5 @@
 let fs=require("fs"),locks=require("service.operation_lock"),hash=require("singbox.provenance").hash_file;
+let storage=require("core.storage");
 const DIRECTORY=getenv("TRAFIRA_TRANSACTION_DIR")||"/etc/trafira/transactions";
 const TARGET=getenv("TRAFIRA_CONFIG_FILE")||"/etc/config/trafira";
 const JOURNAL=DIRECTORY+"/active.json",BACKUP=DIRECTORY+"/original.uci";
@@ -78,6 +79,12 @@ function apply_locked(candidate_path,expected_digest,reason,hooks) {
     if(!hooks.validate(candidate_path))return failure("candidate_check_failed");
     if(read(candidate_path,MAX_FILE)!=candidate)return failure("candidate_changed");
     if(hash(TARGET)!=expected_digest)return failure("conflict");
+    // Keep space for both backup copies, candidate staging and rollback staging.
+    // Do not count bytes that deleting an old backup might eventually reclaim.
+    let required=3*length(original)+length(candidate)+65536;
+    let target_parent=substr(TARGET,0,rindex(TARGET,"/"));
+    if(storage.available_bytes(DIRECTORY)<required || storage.available_bytes(target_parent)<required)
+        return failure("insufficient_space");
     let service=hooks.capture();
     if(type(service)!="object" || type(service.running)!="bool" || type(service.enabled)!="bool")return failure("service_state_unavailable");
     let state={schema:1,job_id:sprintf("c-%x-%x",clock()[0],clock()[1]),worker:locks.identity(),original_digest:expected_digest,service,stage:"prepared"};
