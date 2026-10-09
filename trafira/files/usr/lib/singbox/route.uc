@@ -40,6 +40,11 @@ function config(settings, runtime) {
         default_mark: runtime_constants.OUTBOUND_MARK
     };
 
+    if (type(runtime) == "object" && bool_value(runtime.alice_mode))
+        // The Alice listener accepts DNS redirects only. Reject other payloads
+        // instead of sending them through final=direct back to port 1604.
+        push(result.rules, { action: "reject", inbound: [ runtime_constants.ALICE_DNS_INBOUND_TAG ] });
+
     if (output_network_interface != "")
         result.default_interface = output_network_interface;
     if (bool_option(settings, "disable_quic", false))

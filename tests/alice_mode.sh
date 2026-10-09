@@ -78,6 +78,11 @@ const assert = require('assert/strict');
 const config = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 assert(config.inbounds.some((inbound) => inbound.tag === 'alice-dns-in' && inbound.listen_port === 1604));
 assert(config.route.rules[0].inbound.includes('alice-dns-in'));
+const dnsHijackIndex = config.route.rules.findIndex((rule) => rule.action === 'hijack-dns');
+const aliceRejectIndex = config.route.rules.findIndex((rule) =>
+  rule.action === 'reject' && rule.inbound?.includes('alice-dns-in'));
+assert(dnsHijackIndex >= 0, 'DNS must be hijacked before the Alice inbound guard');
+assert(aliceRejectIndex > dnsHijackIndex, 'non-DNS Alice inbound traffic must be rejected before final routing');
 assert(config.dns.rules.some((rule) => rule.inbound === 'alice-dns-in' && rule.server === 'dns-server'));
 const aliceDnsIndex = config.dns.rules.findIndex((rule) => rule.inbound === 'alice-dns-in');
 const fakeDnsIndex = config.dns.rules.findIndex((rule) => rule.domain?.includes('ip.podkop.fyi'));
