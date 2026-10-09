@@ -28,6 +28,7 @@ let lock=l.acquire("warp-test");assert(lock,"outer coordinator lock");
 fs.writefile(target,original+"# user edit\n");assert(a.apply(request,s).error=="conflict","stale preview never overwrites a manual edit");
 assert(fs.readfile(target)==original+"# user edit\n","manual edit remains");fs.writefile(target,original);
 s.save(s.DIRECTORY+"/transport.json",{generation:2});assert(a.apply(request,s).error=="conflict","changed transport rejected");s.save(s.DIRECTORY+"/transport.json",{generation:1});
+let captured=a.capture();
 fs.writefile(root+"/running","");let result=a.apply(request,s);
 assert(!result.success && result.restored,sprintf("late core failure rolls back %J",result));
 assert(fs.readfile(target)==original && !t.status().recovery_pending,"original UCI and journal restored");
@@ -35,7 +36,7 @@ assert(json(fs.readfile(root+"/restored")).running===true,"original service supp
 fs.unlink(root+"/running");fs.unlink(root+"/activated");result=a.apply(request,s);
 assert(result.success && !fs.stat(root+"/activated"),"stopped Trafira stays stopped; no nested lock deadlock");
 assert(fs.readfile(target)==preview.document.text,"reviewed candidate committed");
-let saved={text:original,digest,applied_digest:hash(target),service:{running:false,enabled:false}};
+let saved=captured;assert(saved.applied_digest==hash(target),"outer snapshot persists exact prepared candidate digest");
 fs.writefile(target,"config settings newer_profile\n");
 assert(!a.restore(saved),"interrupted outer journal must not overwrite newer profile");
 assert(fs.readfile(target)=="config settings newer_profile\n","new profile survives old WARP recovery");
