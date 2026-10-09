@@ -43,6 +43,7 @@ define Build/Compile
 		-std=c11 -Wall -Wextra -Werror -o $(PKG_BUILD_DIR)/trafira-warp-awgctl \
 		$(CURDIR)/files/warp-awgctl.c
 	$(TARGET_CC) $(TARGET_CPPFLAGS) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) -std=c11 -Wall -Wextra -Werror -o $(PKG_BUILD_DIR)/trafira-warp-exec $(CURDIR)/files/warp-exec.c
+	python3 $(CURDIR)/../dependency_notices.py "$(TRAFIRA_HOST_GO)" "$(PKG_BUILD_DIR)" "$(PKG_BUILD_DIR)/dependency-licenses"
 endef
 
 define Package/trafira-warp-awg/install
@@ -52,6 +53,7 @@ define Package/trafira-warp-awg/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/trafira-warp-awgctl $(1)/usr/libexec/trafira-warp-awgctl
 	$(INSTALL_DIR) $(1)/usr/share/licenses/trafira-warp-awg
 	$(INSTALL_DATA) $(CURDIR)/LICENSE $(1)/usr/share/licenses/trafira-warp-awg/LICENSE
+	$(CP) $(PKG_BUILD_DIR)/dependency-licenses $(1)/usr/share/licenses/trafira-warp-awg/
 endef
 
 define Package/trafira-warp-awg/conffiles

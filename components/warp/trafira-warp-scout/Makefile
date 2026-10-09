@@ -34,6 +34,7 @@ endef
 
 define Build/Compile
 	cd $(PKG_BUILD_DIR) && GOOS=linux GOARCH=arm64 CGO_ENABLED=0 GOTOOLCHAIN=local $(TRAFIRA_HOST_GO) build -trimpath -ldflags "-s -w" -o $(PKG_BUILD_DIR)/trafira-warp-scout .
+	python3 $(CURDIR)/../dependency_notices.py "$(TRAFIRA_HOST_GO)" "$(PKG_BUILD_DIR)" "$(PKG_BUILD_DIR)/dependency-licenses"
 endef
 
 define Package/trafira-warp-scout/install
@@ -41,6 +42,7 @@ define Package/trafira-warp-scout/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/trafira-warp-scout $(1)/usr/libexec/trafira-warp-scout
 	$(INSTALL_DIR) $(1)/usr/share/licenses/trafira-warp-scout
 	$(INSTALL_DATA) $(CURDIR)/LICENSE $(1)/usr/share/licenses/trafira-warp-scout/LICENSE
+	$(CP) $(PKG_BUILD_DIR)/dependency-licenses $(1)/usr/share/licenses/trafira-warp-scout/
 endef
 
 define Package/trafira-warp-scout/conffiles

@@ -37,7 +37,23 @@ done
 for package in luci-app-trafira-warp trafira-warp-awg trafira-warp-scout; do
  mapfile -t matches < <(find bin/packages -type f -name "${package}_*.$EXT" -o -type f -name "${package}-[0-9]*.$EXT")
  [[ ${#matches[@]} == 1 ]] || { echo "Expected one artifact for $package, got ${#matches[@]}" >&2; exit 1; }
- cp "${matches[0]}" "$OUTPUT/"
+ artifact="${matches[0]}"
+ if [[ "$KIND" == apk ]]; then
+  "$SDK/staging_dir/host/bin/apk" adbdump "$artifact" >"$OUTPUT/$package.metadata.txt"
+  grep -q "^  name: $package$" "$OUTPUT/$package.metadata.txt"
+  grep -q "^  arch: aarch64_cortex-a53$" "$OUTPUT/$package.metadata.txt"
+ else
+  mkdir -p "$WORK/inspect-$package"
+  tar -xf "$artifact" -C "$WORK/inspect-$package"
+  tar -xOf "$WORK/inspect-$package/control.tar.gz" ./control >"$OUTPUT/$package.metadata.txt"
+  grep -q "^Package: $package$" "$OUTPUT/$package.metadata.txt"
+  grep -q '^Architecture: aarch64_cortex-a53$' "$OUTPUT/$package.metadata.txt"
+ fi
+ if [[ "$package" == luci-app-trafira-warp ]]; then
+  grep -q trafira-warp-awg "$OUTPUT/$package.metadata.txt"
+  grep -q trafira-warp-scout "$OUTPUT/$package.metadata.txt"
+ fi
+ cp "$artifact" "$OUTPUT/"
 done
 cd "$OUTPUT"
 sha256sum -- *.$EXT >SHA256SUMS
