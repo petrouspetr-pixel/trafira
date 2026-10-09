@@ -73,13 +73,11 @@ describe('configuration profiles controller', () => {
   it('does not hide rollback failure or expose raw messages', async () => {
     const render = vi.fn();
     const controller = new ProfilePanelController(
-      vi
-        .fn()
-        .mockResolvedValue({
-          success: false,
-          rollback_error: 'restore_service_failed',
-          message: 'password=secret',
-        }),
+      vi.fn().mockResolvedValue({
+        success: false,
+        rollback_error: 'restore_service_failed',
+        message: 'password=secret',
+      }),
       render,
     );
     controller.mount();

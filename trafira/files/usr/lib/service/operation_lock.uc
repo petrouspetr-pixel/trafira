@@ -30,7 +30,7 @@ function owned_by_ancestor() {
     return false;
 }
 
-function acquire(operation) {
+function acquire(operation,allow_borrow) {
     let directory=fs.lstat(DIRECTORY);
     if(directory && directory.type!="directory") return null;
     if(!directory && !fs.mkdir(DIRECTORY,448)) return null;
@@ -41,7 +41,7 @@ function acquire(operation) {
     if(!file) return null;
     if(!file.lock("xn")) {
         file.close();
-        return owned_by_ancestor()?{borrowed:true}:null;
+        return allow_borrow!==false && owned_by_ancestor()?{borrowed:true}:null;
     }
     // Stale metadata may remain after SIGKILL. It is replaced only while locked.
     let previous=fs.lstat(OWNER);
