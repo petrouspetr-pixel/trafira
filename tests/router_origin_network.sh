@@ -136,4 +136,19 @@ ip netns exec "$router" nft -f "$WORK_DIR/router.nft"
 working
 base_rules
 working
+# Keep management available, but fail closed while the old capture table is gone.
+ucode -L "$LIB" -e 'print(require("service.runtime_apply").guard_script({source_network_interfaces:["ro-lan"],router_origin_enabled:"1"},{},{dns:["198.51.100.2"]}));' >"$WORK_DIR/reload-guard.nft"
+ip netns exec "$router" nft -f "$WORK_DIR/reload-guard.nft"
+ip netns exec "$router" nft delete table inet RouterTest
+ip netns exec "$router" nft reset counters table inet Audit >/dev/null
+for address in 198.51.100.2 '[2001:db8:1::2]'; do
+ if request "$address" 2>/dev/null; then echo 'Router escaped interrupted rebuild' >&2; exit 1; fi
+done
+if ip netns exec "$client" curl --noproxy '*' --max-time 1 -fsS http://198.51.100.2:18080/ >/dev/null 2>&1; then echo 'LAN escaped interrupted rebuild' >&2; exit 1; fi
+ip netns exec "$client" curl --noproxy '*' --max-time 3 -fsS http://192.0.2.1:18080/ >/dev/null
+ip netns exec "$router" nft -j list counters table inet Audit | python3 -c 'import json,sys; cs=[x["counter"] for x in json.load(sys.stdin)["nftables"] if "counter" in x]; assert all(c["packets"]==0 for c in cs),cs'
+base_rules
+ip netns exec "$router" nft -f "$WORK_DIR/router.nft"
+ip netns exec "$router" nft delete table inet TrafiraReloadGuard
+working
 printf 'Router-origin TCP/UDP IPv4/IPv6, LAN, management, rebuild and disable passed\n'
