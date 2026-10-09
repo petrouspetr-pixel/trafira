@@ -13,7 +13,8 @@ return {cursor:(configdir,savedir)=>{
  assert(savedir==configdir+"/saved","isolated pending UCI changes");
  assert(fs.readfile(configdir+"/trafira")==fs.readfile(getenv("PROFILE_READER_TEST")+"/current"),"exact saved file copied");
  return {load:(name)=>name=="trafira",foreach:(name,kind,cb)=>{
-  if(kind=="settings")cb({".name":"settings",".type":"settings",password:"private"});
+  assert(kind==null,"all section types must be checked rather than silently dropped");
+  cb({".name":"settings",".type":"settings",password:"private"});
  },unload:()=>true};
 }};
 UC

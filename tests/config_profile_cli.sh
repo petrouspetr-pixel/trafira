@@ -9,7 +9,14 @@ export TRAFIRA_PROFILES_DIR="$WORK_DIR/profiles"
 export TRAFIRA_TRANSACTION_DIR="$WORK_DIR/transactions"
 export TRAFIRA_CONFIG_FILE="$WORK_DIR/config"
 mkdir -p "$TRAFIRA_RUNTIME_STATE_DIR"
-call() { ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/config/profile_cli.uc" action "$1"; }
+printf current >"$TRAFIRA_CONFIG_FILE"
+mkdir -p "$WORK_DIR/shim"
+cat >"$WORK_DIR/shim/uci.uc" <<'UC'
+return {cursor:()=>({load:()=>true,unload:()=>true,foreach:(package,kind,callback)=>{
+ if(kind==null || kind=="settings")callback({".name":"settings",".type":"settings",password:"current-secret"});
+}})};
+UC
+call() { ucode -L "$WORK_DIR/shim" -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/config/profile_cli.uc" action "$1"; }
 call '{"action":"list"}' >"$WORK_DIR/list.json"
 call '{"action":"import_begin"}' >"$WORK_DIR/upload.json"
 id=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1])).id)' "$WORK_DIR/upload.json")
@@ -29,6 +36,13 @@ if (read('list').entries[0].name!=='Imported') throw Error('metadata absent');
 for (const n of ['list','status','imported']) if (JSON.stringify(read(n)).includes('secret')) throw Error('secret exposed');
 JS
 profile=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1])).id)' "$WORK_DIR/imported.json")
+call '{"action":"create","name":"Saved"}' >"$WORK_DIR/created.json"
+call "{\"action\":\"preview\",\"id\":\"$profile\"}" >"$WORK_DIR/preview.json"
+node - "$WORK_DIR" <<'JS'
+const fs=require('fs'),p=process.argv[2],read=n=>JSON.parse(fs.readFileSync(`${p}/${n}.json`));
+if (!read('created').success || !read('preview').success || !read('preview').digest || !read('preview').changes.length) throw Error('create/preview failed');
+if (JSON.stringify(read('preview')).includes('secret')) throw Error('preview leaked credentials');
+JS
 call "{\"action\":\"export_begin\",\"id\":\"$profile\"}" >"$WORK_DIR/export.json"
 export_id=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1])).id)' "$WORK_DIR/export.json")
 call "{\"action\":\"export_read\",\"id\":\"$export_id\",\"offset\":0}" >"$WORK_DIR/data.json"
