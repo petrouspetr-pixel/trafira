@@ -32,5 +32,5 @@ rc=0
 ucode -L "$WORK/lib" "$WORK/runner.uc" >"$WORK/result" 2>&1 || rc=$?
 [ "$rc" = 1 ]
 cat "$WORK/result"
-! grep -q 'UNSAFE PID SIGNAL' "$WORK/result"
+if grep -q 'UNSAFE PID SIGNAL' "$WORK/result"; then exit 1; fi
 echo 'WARP runner failure delegates cleanup without PID-based signal'
