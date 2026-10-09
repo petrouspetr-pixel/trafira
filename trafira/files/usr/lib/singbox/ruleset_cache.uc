@@ -63,8 +63,9 @@ function save(rule, file) {
     if (success(["cmp", "-s", file, target])) return true;
     if (!success(["mkdir", "-p", CACHE_DIR]) || !success(["chmod", "700", CACHE_DIR])) return false;
     let bytes = size(file);
-    // Count both old and staged copies: atomic replacement temporarily needs both.
-    if (usage() + bytes > MAX_TOTAL || !space_ok(bytes)) return false;
+    // Bound the final cache, but reserve physical space for the entire staged
+    // copy while the old file still exists. Full caches must remain updatable.
+    if (usage() - size(target) + bytes > MAX_TOTAL || !space_ok(bytes)) return false;
     let staged = output(command(["mktemp", CACHE_DIR + "/.stage.XXXXXX"]));
     if (!staged) return false;
     let ok = success(["cp", file, staged]) && success(["chmod", "600", staged]) && fs.rename(staged, target);

@@ -39,9 +39,10 @@ chmod +x "$WORK_DIR/bin/df" "$WORK_DIR/bin/curl"
 node - "$WORK_DIR" <<'NODE'
 const fs = require('fs');
 const dir = process.argv[2];
-for (const [name, size] of [['oversized', 4194305], ['quota-input', 3145728], ['filler', 6291456]]) {
+for (const [name, size] of [['oversized', 4194305], ['quota-input', 3145728], ['quota-replacement', 3145728], ['filler', 6291456], ['active-filler', 4194304]]) {
   const data = Buffer.alloc(size, 32);
   data.write('valid-rules');
+  if (name === 'quota-replacement') data[100] = 65;
   fs.writeFileSync(`${dir}/${name}`, data);
 }
 NODE
@@ -76,8 +77,14 @@ check(!cache.save(rule, file) && fs.readfile(saved) == "valid-rules-v2", "reserv
 fs.unlink(ARGV[0] + "/low-space");
 check(!cache.save(rule, ARGV[0] + "/oversized"), "bound individual snapshot size");
 fs.rename(ARGV[0] + "/filler", getenv("TRAFIRA_RULESET_CACHE_DIR") + "/filler");
-check(!cache.save(rule, ARGV[0] + "/quota-input"), "bound total including staging space");
+check(!cache.save(rule, ARGV[0] + "/quota-input"), "bound final persistent cache size");
 fs.unlink(getenv("TRAFIRA_RULESET_CACHE_DIR") + "/filler");
+check(cache.save(rule, ARGV[0] + "/quota-input"), "seed a larger snapshot");
+fs.rename(ARGV[0] + "/active-filler", getenv("TRAFIRA_RULESET_CACHE_DIR") + "/filler");
+check(cache.save(rule, ARGV[0] + "/quota-replacement"), "replace near-full cache with physical staging reserve");
+fs.unlink(getenv("TRAFIRA_RULESET_CACHE_DIR") + "/filler");
+fs.writefile(file, "valid-rules-v2");
+check(cache.save(rule, file), "restore small snapshot");
 let source = {type: "remote", tag: "json", url: "https://example.org/rules.json", format: "source"};
 check(cache.save(source, file), "source-format snapshot validated with compile");
 cache.apply({route:{rule_set:[source]}}, "1.14.2");
