@@ -40,4 +40,7 @@ assert(length(v.from_github(github,env))==0,"off-source release asset rejected")
 let packages=v.from_packages([{name:"sing-box",version:"1.14.2-r1",arch:"aarch64"},{name:"sing-box-tiny",version:"1.14.2-r1",arch:"aarch64"}],{...env,variant:"stable"});
 assert(length(packages)==1 && packages[0].repository_package=="sing-box","repository package variant exact");
 assert(v.catalog(packages,{...env,variant:"stable"}).entries[0].available,"real repository version selectable");
+let compressed_name="sing-box-1.14.2-extended-2.7.2-linux-arm64-compressed.tar.gz";
+let compressed=v.from_github([{tag_name:"v1.14.2-extended-2.7.2",assets:[{name:compressed_name,size:200,browser_download_url:"https://github.com/shtorm-7/sing-box-extended/releases/download/v1.14.2-extended-2.7.2/"+compressed_name}]}],{...env,variant:"extended-compressed",package_type:"tar.gz",binary_architecture:"arm64"});
+assert(length(compressed)==1,"compressed releases use sing-box-version asset prefix");
 print("core version source adapter checks passed\n");
