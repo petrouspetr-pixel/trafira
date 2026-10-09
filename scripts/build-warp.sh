@@ -32,7 +32,7 @@ cd "$SDK"
 printf '%s\n' 'CONFIG_PACKAGE_luci-app-trafira-warp=m' 'CONFIG_PACKAGE_trafira-warp-awg=m' 'CONFIG_PACKAGE_trafira-warp-scout=m' >>.config
 make defconfig
 for package in trafira-warp-awg trafira-warp-scout luci-app-trafira-warp; do
- make -j2 "package/trafira-warp/$package/compile" V=s TRAFIRA_HOST_GO="$HOST_GO"
+ make -j2 "package/trafira-warp/$package/compile" V=s NO_DEPS=1 TRAFIRA_HOST_GO="$HOST_GO"
 done
 for package in luci-app-trafira-warp trafira-warp-awg trafira-warp-scout; do
  mapfile -t matches < <(find bin/packages -type f -name "${package}_*.$EXT" -o -type f -name "${package}-[0-9]*.$EXT")
