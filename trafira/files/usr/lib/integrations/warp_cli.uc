@@ -20,7 +20,13 @@ function worker(id) {
         if(!request || request.job_id!=id || !current || current.job_id!=id || !current.running)result=fail("invalid_job");
         else {
             let runtime=require("warp.runtime");
-            result=m.job.execute(request.request,runtime.hooks({mark:int(require("core.constants").NFT_OUTBOUND_MARK)}),id);
+            let integration={mark:int(require("core.constants").NFT_OUTBOUND_MARK)};
+            if(index(["attach","detach"],request.request.action)>=0) {
+                let adapter=require("integrations.warp_attach");
+                integration.capture=adapter.capture;integration.restore=adapter.restore;
+                integration.apply=(input)=>adapter.apply(input,m.state);
+            }
+            result=m.job.execute(request.request,runtime.hooks(integration),id);
         }
     }catch(e){result=fail("worker_failed");}
     let current=m.state.load(m.state.RUNTIME+"/job.json");
@@ -42,6 +48,7 @@ function action(text,recovery) {
     let result;
     try {
         if(m.job.status().running)result=fail("busy");
+        else if(index(["preview_attach","preview_detach"],request.action)>=0)result=require("integrations.warp_attach").preview(request,m.state);
         else {
             let id=sprintf("w-%x-%x",clock()[0],clock()[1]),root=m.state.RUNTIME;
             if(!m.state.save(root+"/request.json",{job_id:id,request}) || !m.state.save(root+"/job.json",{job_id:id,running:true,started_at:clock()[0]}))result=fail("storage_unavailable");

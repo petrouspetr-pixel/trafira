@@ -8,7 +8,7 @@ if(!transport.owned(cursor.get_all("network",c.interface),c.interface) || fs.sta
 // whole AWG group even when procd has to kill this runner.
 let metadata=state.RUNTIME+"/daemon.json";
 if(!state.ensure(state.RUNTIME) || !state.remove(metadata))exit(1);
-let command="TRAFIRA_WARP_PIDFILE="+transport.quote(metadata)+" exec /usr/libexec/trafira-warp-exec 0 "+transport.quote(state.RUNTIME+"/daemon-cancel.json")+" daemon /usr/libexec/trafira-warp-amneziawg-go -f "+transport.quote(c.interface)+" 2>/dev/null";
+let command="TRAFIRA_WARP_PIDFILE="+transport.quote(metadata)+" exec /usr/libexec/trafira-warp-exec 0 "+transport.quote(state.RUNTIME+"/daemon-cancel.json")+" daemon /usr/libexec/trafira-warp-amneziawg-go -f "+transport.quote(c.interface)+" >/dev/null 2>&1";
 let pipe=fs.popen(command,"re");if(!pipe)exit(1);
 let identity=null;
 for(let n=0;n<20;n++) {

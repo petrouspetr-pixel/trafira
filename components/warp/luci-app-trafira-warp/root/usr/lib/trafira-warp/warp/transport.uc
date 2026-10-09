@@ -154,7 +154,8 @@ function restore(saved,id) {
         let result=apply({...saved.config,enabled:saved.running===true},id);
         if(!result.success)return false;
         // Preserve desired boot state independently of current service activity.
-        return state.save(state.DIRECTORY+"/transport.json",saved.config);
+        let restored=state.load(state.DIRECTORY+"/transport.json");
+        return restored && state.save(state.DIRECTORY+"/transport.json",{...restored,enabled:saved.config.enabled===true});
     }
     if(current) {
         let existing=cursor.get_all("network",current.interface);
