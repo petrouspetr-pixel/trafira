@@ -2323,12 +2323,23 @@ function install_trafira() {
         (release.i18n_url != "" && !download_with_retry(release.i18n_url, i18n_file, release.i18n_name)))
         action_fail("trafira", "install", "Failed to download Trafira release packages", TRAFIRA_VERSION, latest_version);
 
-    if (!run_logged_install("Installing LuCI app package " + release.app_name, pkg_install_files_command([ app_file ])))
-        action_fail("trafira", "install", package_failure_message("Failed to install LuCI app package"), TRAFIRA_VERSION, latest_version);
-    if (i18n_file != "" && !run_logged_install("Installing LuCI Russian i18n package " + release.i18n_name, pkg_install_files_command([ i18n_file ])))
-        action_fail("trafira", "install", package_failure_message("Failed to install LuCI Russian i18n package"), TRAFIRA_VERSION, latest_version);
-    if (!run_logged_install("Installing Trafira package " + release.backend_name, pkg_install_files_command([ backend_file ])))
-        action_fail("trafira", "install", package_failure_message("Failed to install Trafira package"), TRAFIRA_VERSION, latest_version);
+    if (is_apk()) {
+        // APK includes broken-script status from unchanged installed packages
+        // in its exit code. A separate UI transaction can therefore fail before
+        // the backend upgrade gets a chance to repair its previous script error.
+        let files = [ backend_file, app_file ];
+        if (i18n_file != "")
+            push(files, i18n_file);
+        if (!run_logged_install("Installing Trafira release " + latest_version + " packages", pkg_install_files_command(files)))
+            action_fail("trafira", "install", package_failure_message("Failed to install Trafira release packages"), TRAFIRA_VERSION, latest_version);
+    } else {
+        if (!run_logged_install("Installing LuCI app package " + release.app_name, pkg_install_files_command([ app_file ])))
+            action_fail("trafira", "install", package_failure_message("Failed to install LuCI app package"), TRAFIRA_VERSION, latest_version);
+        if (i18n_file != "" && !run_logged_install("Installing LuCI Russian i18n package " + release.i18n_name, pkg_install_files_command([ i18n_file ])))
+            action_fail("trafira", "install", package_failure_message("Failed to install LuCI Russian i18n package"), TRAFIRA_VERSION, latest_version);
+        if (!run_logged_install("Installing Trafira package " + release.backend_name, pkg_install_files_command([ backend_file ])))
+            action_fail("trafira", "install", package_failure_message("Failed to install Trafira package"), TRAFIRA_VERSION, latest_version);
+    }
 
     remove_file("/var/luci-indexcache");
     command_success("rm -f /var/luci-indexcache* /tmp/luci-indexcache* 2>/dev/null");
