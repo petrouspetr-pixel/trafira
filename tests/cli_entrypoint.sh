@@ -35,7 +35,11 @@ grep -Fq 'function show_help()' "$TRAFIRA_BIN" ||
   fail "trafira ucode entrypoint must own help text"
 
 fake_lib="$WORK_DIR/lib"
-mkdir -p "$fake_lib/service" "$fake_lib/diagnostics" "$fake_lib/components" "$fake_lib/dns"
+mkdir -p "$fake_lib/service" "$fake_lib/diagnostics" "$fake_lib/components" "$fake_lib/dns" "$fake_lib/subscription"
+
+cat >"$fake_lib/subscription/preview.uc" <<'UCODE'
+print("preview\t", ARGV[0], "\t", ARGV[1] || "", "\n");
+UCODE
 
 cat >"$fake_lib/diagnostics/runtime.uc" <<'UCODE'
 #!/usr/bin/env ucode
@@ -67,6 +71,18 @@ show_version_out="$(TRAFIRA_LIB="$fake_lib" ucode "$TRAFIRA_BIN" show_version)"
 subscription_out="$(TRAFIRA_LIB="$fake_lib" ucode "$TRAFIRA_BIN" subscription_update proxy 2)"
 [ "$subscription_out" = $'updates\tsubscription-update\tproxy\t2' ] ||
   fail "subscription_update must dispatch through components/updates.uc with arguments"
+
+preview_request='{"section":"proxy","include":{"regex":["a.*b", "a\u0027b"]}}'
+preview_out="$(TRAFIRA_LIB="$fake_lib" ucode "$TRAFIRA_BIN" subscription_preview "$preview_request")"
+[ "$preview_out" = "$(printf 'preview\tpreview\t%s' "$preview_request")" ] ||
+  fail "subscription_preview must preserve the JSON argument"
+
+for action in report prepare_async; do
+  snapshot_out="$(TRAFIRA_LIB="$fake_lib" ucode "$TRAFIRA_BIN" "ruleset_snapshot_$action")"
+  mode="ruleset-snapshot-${action//_/-}"
+  [ "$snapshot_out" = "$(printf 'updates\t%s\t\t' "$mode")" ] ||
+    fail "snapshot commands must dispatch through components/updates.uc"
+done
 
 component_out="$(TRAFIRA_LIB="$fake_lib" ucode "$TRAFIRA_BIN" component_action sing_box update)"
 [ "$component_out" = $'action\tcomponent-action\tsing_box\tupdate' ] ||

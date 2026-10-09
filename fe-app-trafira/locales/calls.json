@@ -422,6 +422,13 @@
     ]
   },
   {
+    "call": "Apply the Trafira configuration again to enable saved copies for this core",
+    "key": "Apply the Trafira configuration again to enable saved copies for this core",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:58"
+    ]
+  },
+  {
     "call": "At least one valid domain must be specified.",
     "key": "At least one valid domain must be specified.",
     "places": [
@@ -646,6 +653,13 @@
     ]
   },
   {
+    "call": "Bypass BitTorrent",
+    "key": "Bypass BitTorrent",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:521"
+    ]
+  },
+  {
     "call": "Bypass Trafira",
     "key": "Bypass Trafira",
     "places": [
@@ -660,6 +674,13 @@
     ]
   },
   {
+    "call": "Bypass Wi-Fi Calling",
+    "key": "Bypass Wi-Fi Calling",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:532"
+    ]
+  },
+  {
     "call": "Cache File Path",
     "key": "Cache File Path",
     "places": [
@@ -671,6 +692,13 @@
     "key": "Cache file path cannot be empty",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:713"
+    ]
+  },
+  {
+    "call": "Cached servers: %s; included: %s; excluded: %s",
+    "key": "Cached servers: %s; included: %s; excluded: %s",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3374"
     ]
   },
   {
@@ -1002,6 +1030,20 @@
     ]
   },
   {
+    "call": "Copy missing",
+    "key": "Copy missing",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:77"
+    ]
+  },
+  {
+    "call": "Copy present",
+    "key": "Copy present",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:76"
+    ]
+  },
+  {
     "call": "Copy proxy link",
     "key": "Copy proxy link",
     "places": [
@@ -1016,6 +1058,20 @@
     "key": "Could not compare FakeIP and control public IPs",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:89"
+    ]
+  },
+  {
+    "call": "Could not read snapshot status",
+    "key": "Could not read snapshot status",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:29"
+    ]
+  },
+  {
+    "call": "Could not start snapshot preparation",
+    "key": "Could not start snapshot preparation",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:28"
     ]
   },
   {
@@ -1423,6 +1479,13 @@
     ]
   },
   {
+    "call": "Does not match inclusion filters",
+    "key": "Does not match inclusion filters",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3292"
+    ]
+  },
+  {
     "call": "Does not resolve",
     "key": "Does not resolve",
     "places": [
@@ -1746,6 +1809,13 @@
     ]
   },
   {
+    "call": "Evaluate unsaved filters against cached server candidates. Source changes and group membership are not previewed. No download, save or restart.",
+    "key": "Evaluate unsaved filters against cached server candidates. Source changes and group membership are not previewed. No download, save or restart.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3276"
+    ]
+  },
+  {
     "call": "Exclude by proxy parameters",
     "key": "Exclude by proxy parameters",
     "places": [
@@ -1770,6 +1840,13 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2722",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2935",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3371"
+    ]
+  },
+  {
+    "call": "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted.",
+    "key": "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:533"
     ]
   },
   {
@@ -1821,6 +1898,13 @@
     "key": "Exclude URLTest / Priority group",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3442"
+    ]
+  },
+  {
+    "call": "Excluded",
+    "key": "Excluded",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3404"
     ]
   },
   {
@@ -1977,6 +2061,13 @@
     "key": "Filter the servers that will be displayed on the dashboard. Excluded servers are also removed from the URLTest and Priority groups of this section.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3282"
+    ]
+  },
+  {
+    "call": "Filters disabled",
+    "key": "Filters disabled",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3291"
     ]
   },
   {
@@ -2337,6 +2428,13 @@
     ]
   },
   {
+    "call": "Included",
+    "key": "Included",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3404"
+    ]
+  },
+  {
     "call": "Information",
     "key": "Information",
     "places": [
@@ -2625,6 +2723,13 @@
     ]
   },
   {
+    "call": "Invalid or oversized preview request",
+    "key": "Invalid or oversized preview request",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3353"
+    ]
+  },
+  {
     "call": "Invalid path format. Path must start with \"/\" and contain valid characters",
     "key": "Invalid path format. Path must start with \"/\" and contain valid characters",
     "places": [
@@ -2651,6 +2756,13 @@
     "key": "Invalid regular expression",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:4560"
+    ]
+  },
+  {
+    "call": "Invalid regular expressions match no servers, as in runtime filtering.",
+    "key": "Invalid regular expressions match no servers, as in runtime filtering.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3393"
     ]
   },
   {
@@ -3066,6 +3178,13 @@
     ]
   },
   {
+    "call": "Loading…",
+    "key": "Loading…",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3302"
+    ]
+  },
+  {
     "call": "Log Level",
     "key": "Log Level",
     "places": [
@@ -3112,6 +3231,20 @@
     "key": "Matched by %s",
     "places": [
       "src/trafira/tabs/dashboard/helpers/aliceDevices.ts:105"
+    ]
+  },
+  {
+    "call": "Matches exclusion filters",
+    "key": "Matches exclusion filters",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3293"
+    ]
+  },
+  {
+    "call": "Matches filters",
+    "key": "Matches filters",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3290"
     ]
   },
   {
@@ -3344,6 +3477,13 @@
     "key": "No public firewall port required",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:99"
+    ]
+  },
+  {
+    "call": "No remote rule sets in saved configuration",
+    "key": "No remote rule sets in saved configuration",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:85"
     ]
   },
   {
@@ -3794,6 +3934,69 @@
     ]
   },
   {
+    "call": "Prepare saved copies",
+    "key": "Prepare saved copies",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:115"
+    ]
+  },
+  {
+    "call": "Preparing snapshots",
+    "key": "Preparing snapshots",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:93"
+    ]
+  },
+  {
+    "call": "Preview failed: %s",
+    "key": "Preview failed: %s",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3417"
+    ]
+  },
+  {
+    "call": "Preview filters",
+    "key": "Preview filters",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3425"
+    ]
+  },
+  {
+    "call": "Preview server filters",
+    "key": "Preview server filters",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3275"
+    ]
+  },
+  {
+    "call": "Preview unavailable for group filters. Clear group selections to preview individual server filters.",
+    "key": "Preview unavailable for group filters. Clear group selections to preview individual server filters.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3316"
+    ]
+  },
+  {
+    "call": "Preview unavailable: cached country.is data is incomplete. No country lookup was performed.",
+    "key": "Preview unavailable: cached country.is data is incomplete. No country lookup was performed.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3357"
+    ]
+  },
+  {
+    "call": "Preview unavailable: no usable cached server candidates. Update the subscription normally first.",
+    "key": "Preview unavailable: no usable cached server candidates. Update the subscription normally first.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3364"
+    ]
+  },
+  {
+    "call": "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it.",
+    "key": "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3361"
+    ]
+  },
+  {
     "call": "Priority",
     "key": "Priority",
     "places": [
@@ -3921,10 +4124,24 @@
     ]
   },
   {
+    "call": "Referenced in saved startup configuration",
+    "key": "Referenced in saved startup configuration",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:80"
+    ]
+  },
+  {
     "call": "Refill",
     "key": "Refill",
     "places": [
       "src/trafira/tabs/dashboard/partials/renderSections.ts:130"
+    ]
+  },
+  {
+    "call": "Refresh status",
+    "key": "Refresh status",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:124"
     ]
   },
   {
@@ -3967,6 +4184,13 @@
     "key": "Require a username and password for the local mixed proxy",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7694"
+    ]
+  },
+  {
+    "call": "Requires sing-box 1.14 or newer",
+    "key": "Requires sing-box 1.14 or newer",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:45"
     ]
   },
   {
@@ -4160,6 +4384,20 @@
     "key": "Save",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3632"
+    ]
+  },
+  {
+    "call": "Saved configuration unavailable",
+    "key": "Saved configuration unavailable",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:48"
+    ]
+  },
+  {
+    "call": "Saved rule sets",
+    "key": "Saved rule sets",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:32"
     ]
   },
   {
@@ -4367,6 +4605,13 @@
     "key": "Selector and URLTest outbounds must contain a non-empty outbounds array",
     "places": [
       "src/validators/validateOutboundJson.ts:85"
+    ]
+  },
+  {
+    "call": "Send recognized BitTorrent traffic from intercepted LAN connections directly, before section rules. Encrypted peers and HTTPS trackers may not be recognized.",
+    "key": "Send recognized BitTorrent traffic from intercepted LAN connections directly, before section rules. Encrypted peers and HTTPS trackers may not be recognized.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:522"
     ]
   },
   {
@@ -4629,6 +4874,27 @@
     ]
   },
   {
+    "call": "Snapshot preparation completed",
+    "key": "Snapshot preparation completed",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:95"
+    ]
+  },
+  {
+    "call": "Snapshot preparation failed; check core, configuration, proxy and storage",
+    "key": "Snapshot preparation failed; check core, configuration, proxy and storage",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:96"
+    ]
+  },
+  {
+    "call": "Snapshot status unavailable",
+    "key": "Snapshot status unavailable",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:42"
+    ]
+  },
+  {
     "call": "Some addresses use Trafira; others connect directly",
     "key": "Some addresses use Trafira; others connect directly",
     "places": [
@@ -4796,6 +5062,20 @@
     "key": "Stop Trafira",
     "places": [
       "src/trafira/tabs/diagnostic/partials/renderAvailableActions.ts:59"
+    ]
+  },
+  {
+    "call": "Storage",
+    "key": "Storage",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:67"
+    ]
+  },
+  {
+    "call": "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core.",
+    "key": "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:36"
     ]
   },
   {
@@ -5073,6 +5353,13 @@
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5744",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6218"
+    ]
+  },
+  {
+    "call": "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected.",
+    "key": "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3383"
     ]
   },
   {

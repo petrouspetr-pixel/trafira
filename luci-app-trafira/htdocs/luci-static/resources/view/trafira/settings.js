@@ -517,6 +517,28 @@ function createSettingsContent(section, capabilities) {
 
   o = section.option(
     form.Flag,
+    "exclude_bittorrent",
+    _("Bypass BitTorrent"),
+    _(
+      "Send recognized BitTorrent traffic from intercepted LAN connections directly, before section rules. Encrypted peers and HTTPS trackers may not be recognized.",
+    ),
+  );
+  o.default = "0";
+  o.rmempty = false;
+
+  o = section.option(
+    form.Flag,
+    "exclude_wifi_calling",
+    _("Bypass Wi-Fi Calling"),
+    _(
+      "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted.",
+    ),
+  );
+  o.default = "0";
+  o.rmempty = false;
+
+  o = section.option(
+    form.Flag,
     "disable_quic",
     _("Disable QUIC"),
     _(

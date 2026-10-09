@@ -2482,3 +2482,167 @@ msgstr "sing-box outbound для Zapret2 настроен"
 
 msgid "Zapret2 sing-box outbound is not configured"
 msgstr "sing-box outbound для Zapret2 не настроен"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:521
+msgid "Bypass BitTorrent"
+msgstr "Торренты напрямую"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:532
+msgid "Bypass Wi-Fi Calling"
+msgstr "Wi-Fi Calling напрямую"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3334
+msgid "Cached servers: %s; included: %s; excluded: %s"
+msgstr "Серверов в кеше: %s; остаётся: %s; исключено: %s"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:62
+msgid "Copy missing"
+msgstr "Копия отсутствует"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:61
+msgid "Copy present"
+msgstr "Копия сохранена"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:28
+msgid "Could not read snapshot status"
+msgstr "Не удалось получить состояние сохранённых списков"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:27
+msgid "Could not start snapshot preparation"
+msgstr "Не удалось запустить подготовку копий списков"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3290
+msgid "Does not match inclusion filters"
+msgstr "Не соответствует фильтрам включения"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3276
+msgid "Evaluate unsaved filters against cached server candidates. Source changes and group membership are not previewed. No download, save or restart."
+msgstr "Проверить несохранённые фильтры на серверах из кеша. Изменения источников и состава групп не учитываются. Подписка не скачивается, настройки не сохраняются, служба не перезапускается."
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:533
+msgid "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted."
+msgstr "Исключить UDP-соединения из локальной сети на порты 500 и 4500 из перехвата Trafira для звонков через Wi-Fi. Правила межсетевого экрана продолжают действовать; адреса FakeIP остаются в перехвате."
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3344
+msgid "Excluded"
+msgstr "Исключён"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3289
+msgid "Filters disabled"
+msgstr "Фильтры выключены"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3344
+msgid "Included"
+msgstr "Остаётся"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3323
+msgid "Invalid or oversized preview request"
+msgstr "Некорректный или слишком большой запрос предпросмотра"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3339
+msgid "Invalid regular expressions match no servers, as in runtime filtering."
+msgstr "Некорректные регулярные выражения не находят серверы, как и при рабочей фильтрации."
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3298
+msgid "Loading…"
+msgstr "Загрузка…"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3291
+msgid "Matches exclusion filters"
+msgstr "Соответствует фильтрам исключения"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3288
+msgid "Matches filters"
+msgstr "Соответствует фильтрам"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:70
+msgid "No remote rule sets in saved configuration"
+msgstr "В сохранённой конфигурации нет удалённых списков"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:99
+msgid "Prepare saved copies"
+msgstr "Подготовить копии списков"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:78
+msgid "Preparing snapshots"
+msgstr "Подготовка копий списков"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3350
+msgid "Preview failed: %s"
+msgstr "Не удалось выполнить предпросмотр: %s"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3355
+msgid "Preview filters"
+msgstr "Проверить фильтры"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3275
+msgid "Preview server filters"
+msgstr "Предпросмотр фильтров серверов"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3304
+msgid "Preview unavailable for group filters. Clear group selections to preview individual server filters."
+msgstr "Предпросмотр фильтров по группам недоступен. Уберите выбор групп, чтобы проверить фильтры отдельных серверов."
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3326
+msgid "Preview unavailable: cached country.is data is incomplete. No country lookup was performed."
+msgstr "Предпросмотр недоступен: в кеше недостаточно данных country.is. Запросы для определения стран не выполнялись."
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3329
+msgid "Preview unavailable: no usable cached server candidates. Update the subscription normally first."
+msgstr "Предпросмотр недоступен: в кеше нет подходящих данных о серверах. Сначала обновите подписку обычным способом."
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3328
+msgid "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it."
+msgstr "Предпросмотр недоступен: кеш создан до добавления этой функции. Примените сохранённую конфигурацию обычным способом, чтобы пересоздать кеш."
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:65
+msgid "Referenced in saved startup configuration"
+msgstr "Указана в сохранённой конфигурации запуска"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:108
+msgid "Refresh status"
+msgstr "Обновить состояние"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:44
+msgid "Requires sing-box 1.14 or newer"
+msgstr "Требуется sing-box 1.14 или новее"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:47
+msgid "Saved configuration unavailable"
+msgstr "Сохранённая конфигурация недоступна"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:31
+msgid "Saved rule sets"
+msgstr "Сохранённые списки"
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:522
+msgid "Send recognized BitTorrent traffic from intercepted LAN connections directly, before section rules. Encrypted peers and HTTPS trackers may not be recognized."
+msgstr "Направлять распознанный трафик BitTorrent из перехватываемых соединений локальной сети напрямую, до правил разделов. Зашифрованные соединения и HTTPS-трекеры могут не распознаваться."
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:80
+msgid "Snapshot preparation completed"
+msgstr "Копии списков подготовлены"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:81
+msgid "Snapshot preparation failed; check core, configuration, proxy and storage"
+msgstr "Не удалось подготовить копии списков. Проверьте ядро, конфигурацию, прокси и свободное место"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:41
+msgid "Snapshot status unavailable"
+msgstr "Состояние сохранённых списков недоступно"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:52
+msgid "Storage"
+msgstr "Занято места"
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:35
+msgid "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core."
+msgstr "Копии проверяются при подготовке и перед запуском. Наличие файла ещё не подтверждает его исправность или использование работающим ядром."
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3337
+msgid "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected."
+msgstr "Предпросмотр использует последний созданный кеш. Несохранённые адреса подписок, настройки источников и изменения групп не учитываются."
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:58
+msgid "Apply the Trafira configuration again to enable saved copies for this core"
+msgstr "Повторно примените конфигурацию Trafira, чтобы включить сохранение копий для этого ядра"

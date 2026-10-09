@@ -1274,15 +1274,15 @@ var COMMAND_TIMEOUT = 1e4;
 
 // src/helpers/executeShellCommand.ts
 async function executeShellCommand({
-  command,
+  command: command2,
   args,
   timeout = COMMAND_TIMEOUT
 }) {
   try {
     return await withTimeout(
-      fs.exec(command, args),
+      fs.exec(command2, args),
       timeout,
-      [command, ...args].join(" ")
+      [command2, ...args].join(" ")
     );
   } catch (err) {
     const error = err;
@@ -2651,10 +2651,10 @@ function getOutboundTagBySection(sectionName) {
 }
 
 // src/trafira/methods/shell/callBaseMethod.ts
-async function callBaseMethod(method, args = [], command = "/usr/bin/trafira", options = {}) {
+async function callBaseMethod(method, args = [], command2 = "/usr/bin/trafira", options = {}) {
   try {
     const response = await executeShellCommand({
-      command,
+      command: command2,
       args: [method, ...args],
       timeout: options.timeout ?? 15e3
     });
@@ -8092,10 +8092,169 @@ function render2() {
     E("div", { class: "fkp_diagnostic-page__right-bar" }, [
       E("div", { id: "fkp_diagnostic-page-wiki" }),
       E("div", { id: "fkp_diagnostic-page-actions" }),
-      E("div", { id: "fkp_diagnostic-page-system-info" })
+      E("div", { id: "fkp_diagnostic-page-system-info" }),
+      E("div", { id: "fkp_diagnostic-page-snapshots" })
     ])
   ]);
 }
+
+// src/trafira/tabs/diagnostic/snapshotPanel.ts
+var SnapshotController = class {
+  constructor(read, start, render6) {
+    this.read = read;
+    this.start = start;
+    this.render = render6;
+    this.active = false;
+    this.generation = 0;
+    this.failures = 0;
+    this.report = null;
+    this.starting = false;
+  }
+  async mount() {
+    this.unmount();
+    this.active = true;
+    this.failures = 0;
+    await this.refresh();
+  }
+  unmount() {
+    this.active = false;
+    this.starting = false;
+    this.generation++;
+    clearTimeout(this.timer);
+  }
+  async refresh() {
+    clearTimeout(this.timer);
+    const generation = this.generation;
+    try {
+      const report = await this.read();
+      if (!this.active || generation !== this.generation) return;
+      this.report = report;
+      this.failures = 0;
+      this.render(report, "", this.starting);
+    } catch {
+      if (!this.active || generation !== this.generation) return;
+      this.failures++;
+      this.render(this.report, "Could not read snapshot status", this.starting);
+    }
+    if (this.report?.job?.running && this.failures < 3) {
+      this.timer = setTimeout(() => void this.refresh(), 3e3);
+    }
+  }
+  async prepare() {
+    if (this.starting) return;
+    const generation = this.generation;
+    this.starting = true;
+    this.render(this.report, "", true);
+    try {
+      const result = await this.start();
+      if (!result.success) throw new Error("rejected");
+      if (!this.active || generation !== this.generation) return;
+      this.starting = false;
+      await this.refresh();
+    } catch {
+      if (this.active && generation === this.generation) {
+        this.render(this.report, "Could not start snapshot preparation", false);
+      }
+    } finally {
+      if (generation === this.generation) this.starting = false;
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderSnapshots.ts
+async function command(name) {
+  const result = await executeShellCommand({
+    command: "/usr/bin/trafira",
+    args: [name],
+    timeout: 15e3
+  });
+  if (result.code) throw new Error("Snapshot command failed");
+  return JSON.parse(result.stdout);
+}
+function size(bytes) {
+  return `${(bytes / 1024).toFixed(1)} KiB`;
+}
+function render3(report, error, starting) {
+  const container = document.getElementById("fkp_diagnostic-page-snapshots");
+  if (!container) return;
+  const busy = starting || !!report?.job?.running;
+  const errorText = error === "Could not start snapshot preparation" ? _("Could not start snapshot preparation") : _("Could not read snapshot status");
+  container.replaceChildren(
+    E("div", { class: "fkp_diagnostic-page__right-bar__system-info" }, [
+      E("b", {}, _("Saved rule sets")),
+      E(
+        "p",
+        {},
+        _(
+          "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core."
+        )
+      ),
+      ...error ? [E("p", { class: "alert-message warning" }, errorText)] : [],
+      ...!report ? [E("p", {}, _("Snapshot status unavailable"))] : [
+        ...!report.supported ? [E("p", {}, _("Requires sing-box 1.14 or newer"))] : [],
+        ...!report.available ? [E("p", {}, _("Saved configuration unavailable"))] : [],
+        ...report.supported && report.available && report.entries.length > 0 && !report.preparable ? [
+          E(
+            "p",
+            {},
+            _(
+              "Apply the Trafira configuration again to enable saved copies for this core"
+            )
+          )
+        ] : [],
+        E(
+          "p",
+          {},
+          `${_("Storage")}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`
+        ),
+        ...report.entries.map(
+          (entry) => E("div", {}, [
+            E("b", {}, entry.tag),
+            E(
+              "p",
+              {},
+              entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
+            ),
+            ...entry.configured_initial ? [E("p", {}, _("Referenced in saved startup configuration"))] : []
+          ])
+        ),
+        ...report.entries.length === 0 ? [E("p", {}, _("No remote rule sets in saved configuration"))] : [],
+        ...report.job ? [
+          E(
+            "p",
+            {},
+            report.job.running ? _("Preparing snapshots") : report.job.success ? _("Snapshot preparation completed") : _(
+              "Snapshot preparation failed; check core, configuration, proxy and storage"
+            )
+          )
+        ] : []
+      ],
+      E(
+        "button",
+        {
+          class: "btn cbi-button",
+          disabled: busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length,
+          click: () => void snapshots.prepare()
+        },
+        _("Prepare saved copies")
+      ),
+      E(
+        "button",
+        {
+          class: "btn cbi-button",
+          disabled: starting,
+          click: () => void snapshots.refresh()
+        },
+        _("Refresh status")
+      )
+    ])
+  );
+}
+var snapshots = new SnapshotController(
+  () => command("ruleset_snapshot_report"),
+  () => command("ruleset_snapshot_prepare_async"),
+  render3
+);
 
 // src/trafira/tabs/diagnostic/checks/updateCheckStore.ts
 function updateCheckStore(check, minified) {
@@ -11038,6 +11197,7 @@ async function onPageMount2() {
     preservePersistedRun: true
   });
   diagnosticMounted = true;
+  void snapshots.mount();
   diagnosticMountId += 1;
   const mountId = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -11076,6 +11236,7 @@ function onPageUnmount2({
   preservePersistedRun = false
 } = {}) {
   diagnosticMounted = false;
+  snapshots.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;
@@ -11345,7 +11506,7 @@ var DiagnosticTab = {
 };
 
 // src/trafira/tabs/monitoring/render.ts
-function render3() {
+function render4() {
   return E(
     "div",
     {
@@ -13301,13 +13462,13 @@ var styles5 = `
 
 // src/trafira/tabs/monitoring/index.ts
 var MonitoringTab = {
-  render: render3,
+  render: render4,
   initController: initController3,
   styles: styles5
 };
 
 // src/trafira/tabs/updates/render.ts
-function render4() {
+function render5() {
   return E("div", { id: "updates-status", class: "fkp_updates-page" }, [
     E("div", {
       id: "fkp_updates-components",
@@ -14480,7 +14641,7 @@ var styles6 = `
 
 // src/trafira/tabs/updates/index.ts
 var UpdatesTab = {
-  render: render4,
+  render: render5,
   initController: initController4,
   styles: styles6
 };

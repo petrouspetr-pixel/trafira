@@ -11,6 +11,7 @@ export function render() {
       E('div', { id: 'fkp_diagnostic-page-wiki' }),
       E('div', { id: 'fkp_diagnostic-page-actions' }),
       E('div', { id: 'fkp_diagnostic-page-system-info' }),
+      E('div', { id: 'fkp_diagnostic-page-snapshots' }),
     ]),
   ]);
 }

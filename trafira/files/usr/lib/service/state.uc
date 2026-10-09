@@ -892,6 +892,8 @@ function nft_runtime_signature_body(settings, sections) {
 
     body = signature_add_value(body, "settings.source_network_interfaces", option(settings, "source_network_interfaces", "br-lan"));
     body = signature_add_value(body, "settings.exclude_ntp", bool_option(settings, "exclude_ntp", false) ? "1" : "0");
+    if (bool_option(settings, "exclude_wifi_calling", false))
+        body = signature_add_value(body, "settings.exclude_wifi_calling", "1");
     body = alice_config.signature_body(settings, signature_add_value, body);
 
     for (let section in sections) {
@@ -1422,6 +1424,8 @@ function sing_box_signature_body(settings, sections, servers, mwan3_active) {
     body = signature_add_value(body, "settings.dns_rewrite_ttl", option(settings, "dns_rewrite_ttl", "60"));
     body = signature_add_value(body, "settings.output_network_interface", option(settings, "output_network_interface", ""));
     body = signature_add_value(body, "settings.disable_quic", bool_option_value(settings, "disable_quic", false));
+    if (bool_option(settings, "exclude_bittorrent", false))
+        body = signature_add_value(body, "settings.exclude_bittorrent", "1");
     if (sing_box_signature_has_remote_ruleset_sources(sections))
         body = signature_add_value(body, "settings.update_interval", settings_update_interval(settings));
     body = signature_add_value(body, "settings.cache_path", option(settings, "cache_path", "/tmp/sing-box/cache.db"));

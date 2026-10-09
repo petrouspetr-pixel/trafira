@@ -1513,6 +1513,10 @@ let mode = ARGV[0] || "";
 
 if (mode == "ui-state-json")
     ui_state_json();
+else if (mode == "cached-sing-box-version") {
+    let info = sing_box_version_info();
+    print(info ? info.version : "", "\n");
+}
 else if (mode == "get-ui-capabilities")
     ui_capabilities_json();
 else if (mode == "get-ui-state")

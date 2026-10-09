@@ -115,4 +115,26 @@ function refresh(config, proxy) {
     return ok;
 }
 
-return { apply, save, refresh, path };
+// A cheap inventory, not a validation pass: initial_path only describes the
+// saved configuration, never proves that the live process loaded these bytes.
+function report(config, version) {
+    let entries = [];
+    let compatible = true;
+    for (let rule in common.array_or_empty(config && config.route && config.route.rule_set)) {
+        let file = path(rule);
+        if (!file) continue;
+        if (rule.http_client == null) compatible = false;
+        let info = fs.lstat(file);
+        let present = info && info.type == "file";
+        push(entries, {
+            tag: rule.tag || "", present: !!present,
+            bytes: present ? info.size : 0, mtime: present ? info.mtime : null,
+            configured_initial: !!(present && rule.initial_path == file)
+        });
+    }
+    return { supported: !!modern(version), available: type(config) == "object",
+        preparable: !!modern(version) && compatible && length(entries) > 0,
+        entries, total_bytes: usage(), quota_bytes: MAX_TOTAL, max_file_bytes: MAX_FILE };
+}
+
+return { apply, save, refresh, path, report };

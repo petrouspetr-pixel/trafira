@@ -12,6 +12,9 @@ const TMP_SUBSCRIPTION_FOLDER = getenv("TMP_SUBSCRIPTION_FOLDER") || TMP_SING_BO
 const RUNTIME_STATE_DIR = getenv("TRAFIRA_RUNTIME_STATE_DIR") || "/var/run/trafira";
 const LIST_UPDATE_STATE_FILE = getenv("TRAFIRA_LIST_UPDATE_STATE_FILE") || RUNTIME_STATE_DIR + "/list-update.timestamp";
 const LIST_UPDATE_PID_FILE = getenv("TRAFIRA_LIST_UPDATE_PID_FILE") || "/var/run/trafira_list_update.pid";
+const LIST_UPDATE_LOCK_FILE = getenv("TRAFIRA_LIST_UPDATE_LOCK_FILE") || LIST_UPDATE_PID_FILE + ".lock";
+const SNAPSHOT_JOB_FILE = getenv("TRAFIRA_SNAPSHOT_JOB_FILE") || RUNTIME_STATE_DIR + "/snapshot-job.json";
+let list_update_lock = null;
 const SUBSCRIPTION_UPDATE_STATE_DIR = getenv("TRAFIRA_SUBSCRIPTION_UPDATE_STATE_DIR") || RUNTIME_STATE_DIR + "/subscription-update";
 const SUBSCRIPTION_JOB_DIR = getenv("TRAFIRA_SUBSCRIPTION_UPDATE_JOB_DIR") || "/var/run/trafira/subscription-update-jobs";
 const SUBSCRIPTION_UPDATE_LOCK_DIR = getenv("TRAFIRA_SUBSCRIPTION_UPDATE_LOCK_DIR") || RUNTIME_STATE_DIR + "/subscription-update.lock";
@@ -2488,11 +2491,30 @@ function import_subnets_from_remote_subnet_lists(section, settings) {
     return ok;
 }
 
+// Keep lock files in place: unlinking would create a second independently
+// lockable inode. Kernel locks are released automatically on process exit.
+function snapshot_file_lock(path) {
+    ensure_parent_dir(path);
+    let file = fs.open(path, "ae", 384);
+    if (!file) return null;
+    if (file.lock("xn")) return file;
+    file.close();
+    return null;
+}
+
+function snapshot_unlock(file) {
+    if (file) { file.lock("u"); file.close(); }
+}
+
 function list_update_pid_begin() {
+    list_update_lock = snapshot_file_lock(LIST_UPDATE_LOCK_FILE);
+    if (!list_update_lock) return false;
     let existing_pid = trim(as_string(fs.readfile(LIST_UPDATE_PID_FILE) || ""));
     let current_pid = owner_pid();
     if (existing_pid != "" && existing_pid != current_pid && runtime_pid_running(existing_pid)) {
         log_message("Another lists update is already running, skipping", "info");
+        snapshot_unlock(list_update_lock);
+        list_update_lock = null;
         return false;
     }
 
@@ -2503,6 +2525,106 @@ function list_update_pid_begin() {
 
 function list_update_pid_end() {
     remove_file(LIST_UPDATE_PID_FILE);
+    snapshot_unlock(list_update_lock);
+    list_update_lock = null;
+}
+
+function snapshot_job(locked) {
+    let value = read_json_file(SNAPSHOT_JOB_FILE);
+    if (type(value) != "object") return null;
+    if (value.running && now_seconds() - int(value.started_at) > 15 && !runtime_pid_running(value.pid)) {
+        let guard = locked ? null : snapshot_file_lock(SNAPSHOT_JOB_FILE + ".lock");
+        if (!locked && !guard) return value;
+        // Re-read before marking a dead worker, preserving a completed result.
+        value = read_json_file(SNAPSHOT_JOB_FILE);
+        if (value && value.running && now_seconds() - int(value.started_at) > 15 && !runtime_pid_running(value.pid)) {
+            value.running = false;
+            value.success = false;
+            value.message = "Snapshot worker exited unexpectedly";
+            value.updated_at = now_seconds();
+            write_state_file(SNAPSHOT_JOB_FILE, value);
+        }
+        snapshot_unlock(guard);
+    }
+    return value;
+}
+
+function snapshot_report_value(locked) {
+    let settings = uci_settings();
+    let config = read_json_file(option(settings, "config_path", "/etc/sing-box/config.json"));
+    let version = trim(module_output([LIB_DIR + "/service/ui.uc", "cached-sing-box-version"]));
+    let report = require("singbox.ruleset_cache").report(config, version);
+    report.job = snapshot_job(locked);
+    return report;
+}
+
+function snapshot_prepare_worker() {
+    // Close the inherited service descriptor here: dash cannot parse the
+    // multi-digit shell redirection used by some older launchers.
+    let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
+    if (inherited_lock) inherited_lock.close();
+    let job = read_json_file(SNAPSHOT_JOB_FILE);
+    if (!job || !job.running) exit(1);
+    job.pid = owner_pid();
+    if (!write_state_file(SNAPSHOT_JOB_FILE, job)) exit(1);
+    let ok = false;
+    let message = "Another lists update is already running";
+    if (list_update_pid_begin()) {
+        try {
+            let report = snapshot_report_value();
+            let settings = uci_settings();
+            let config = read_json_file(option(settings, "config_path", "/etc/sing-box/config.json"));
+            let proxy = service_proxy_address(settings, "lists");
+            // A selected proxy that cannot be resolved must not become direct.
+            let proxy_missing = bool_option(settings, "download_lists_via_proxy", false) && proxy == "";
+            if (report.supported && report.available && report.preparable && !proxy_missing) {
+                ok = require("singbox.ruleset_cache").refresh(config, proxy);
+                message = ok ? "Snapshot preparation completed" : "Snapshot preparation failed; previous copies preserved";
+            }
+            else message = "Snapshot preparation unavailable: check core, configuration and lists proxy";
+        }
+        catch (e) { message = "Snapshot preparation failed"; }
+        list_update_pid_end();
+    }
+    job.running = false;
+    job.success = ok;
+    job.message = message;
+    job.updated_at = now_seconds();
+    write_state_file(SNAPSHOT_JOB_FILE, job);
+    exit(ok ? 0 : 1);
+}
+
+function snapshot_prepare_async() {
+    ensure_parent_dir(SNAPSHOT_JOB_FILE);
+    let start_lock = snapshot_file_lock(SNAPSHOT_JOB_FILE + ".lock");
+    if (!start_lock) {
+        write_json({success: false, message: "Snapshot preparation is already starting"});
+        return;
+    }
+    let previous = snapshot_job(true);
+    let report = snapshot_report_value(true);
+    let list_pid = trim(as_string(fs.readfile(LIST_UPDATE_PID_FILE) || ""));
+    if ((previous && previous.running) || runtime_pid_running(list_pid) || !report.supported || !report.available || !report.preparable) {
+        snapshot_unlock(start_lock);
+        write_json({success: false, message: "Snapshot preparation is running or unavailable"});
+        return;
+    }
+    let job = {running: true, success: false, pid: "", started_at: now_seconds(), updated_at: now_seconds(), message: "Preparing snapshots"};
+    if (!write_state_file(SNAPSHOT_JOB_FILE, job)) {
+        snapshot_unlock(start_lock);
+        write_json({success: false, message: "Failed to write snapshot job"});
+        return;
+    }
+    // The worker inherits runtime overrides and alone records its PID/result.
+    let command = command_from_args(["ucode", "-L", LIB_DIR, LIB_DIR + "/components/updates.uc", "ruleset-snapshot-prepare-worker"]);
+    let pid = trim(command_output("sh -c " + shell_quote(command + " </dev/null >/dev/null 2>&1 & echo $!")));
+    if (!job_pid_valid(pid)) {
+        job.running = false;
+        job.message = "Failed to start snapshot worker";
+        write_state_file(SNAPSHOT_JOB_FILE, job);
+    }
+    snapshot_unlock(start_lock);
+    write_json({success: job_pid_valid(pid), message: job_pid_valid(pid) ? "Preparing snapshots" : job.message});
 }
 
 function dns_probe_passed(proxy_address) {
@@ -2983,6 +3105,12 @@ else if (mode == "remove-cron-jobs")
     remove_cron_jobs(ARGV[1], ARGV[2], ARGV[3]);
 else if (mode == "list-update")
     list_update();
+else if (mode == "ruleset-snapshot-report")
+    write_json(snapshot_report_value());
+else if (mode == "ruleset-snapshot-prepare-async")
+    snapshot_prepare_async();
+else if (mode == "ruleset-snapshot-prepare-worker")
+    snapshot_prepare_worker();
 else if (mode == "list-update-if-due")
     list_update_if_due();
 else if (mode == "stop-list-update")

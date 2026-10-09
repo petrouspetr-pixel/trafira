@@ -3577,3 +3577,167 @@ msgstr ""
 #: src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:107
 msgid "Zapret2 sing-box outbound is not configured"
 msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:521
+msgid "Bypass BitTorrent"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:532
+msgid "Bypass Wi-Fi Calling"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3334
+msgid "Cached servers: %s; included: %s; excluded: %s"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:62
+msgid "Copy missing"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:61
+msgid "Copy present"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:28
+msgid "Could not read snapshot status"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:27
+msgid "Could not start snapshot preparation"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3290
+msgid "Does not match inclusion filters"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3276
+msgid "Evaluate unsaved filters against cached server candidates. Source changes and group membership are not previewed. No download, save or restart."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:533
+msgid "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3344
+msgid "Excluded"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3289
+msgid "Filters disabled"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3344
+msgid "Included"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3323
+msgid "Invalid or oversized preview request"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3339
+msgid "Invalid regular expressions match no servers, as in runtime filtering."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3298
+msgid "Loading…"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3291
+msgid "Matches exclusion filters"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3288
+msgid "Matches filters"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:70
+msgid "No remote rule sets in saved configuration"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:99
+msgid "Prepare saved copies"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:78
+msgid "Preparing snapshots"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3350
+msgid "Preview failed: %s"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3355
+msgid "Preview filters"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3275
+msgid "Preview server filters"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3304
+msgid "Preview unavailable for group filters. Clear group selections to preview individual server filters."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3326
+msgid "Preview unavailable: cached country.is data is incomplete. No country lookup was performed."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3329
+msgid "Preview unavailable: no usable cached server candidates. Update the subscription normally first."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3328
+msgid "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:65
+msgid "Referenced in saved startup configuration"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:108
+msgid "Refresh status"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:44
+msgid "Requires sing-box 1.14 or newer"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:47
+msgid "Saved configuration unavailable"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:31
+msgid "Saved rule sets"
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:522
+msgid "Send recognized BitTorrent traffic from intercepted LAN connections directly, before section rules. Encrypted peers and HTTPS trackers may not be recognized."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:80
+msgid "Snapshot preparation completed"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:81
+msgid "Snapshot preparation failed; check core, configuration, proxy and storage"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:41
+msgid "Snapshot status unavailable"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:52
+msgid "Storage"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:35
+msgid "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3337
+msgid "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:58
+msgid "Apply the Trafira configuration again to enable saved copies for this core"
+msgstr ""
