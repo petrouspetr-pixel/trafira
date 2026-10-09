@@ -1,0 +1,19 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+set -u
+child=
+cleanup() {
+    if [ -n "$child" ]; then
+        kill -TERM "$child" 2>/dev/null || true
+        wait "$child" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+trap 'exit 0' HUP INT TERM
+while :; do
+    sleep 30 &
+    child=$!
+    wait "$child" || exit 0
+    child=
+    ucode -L /usr/lib/trafira -L /usr/lib/trafira-warp /usr/lib/trafira/integrations/warp_cli.uc watchdog >/dev/null 2>&1 || true
+done

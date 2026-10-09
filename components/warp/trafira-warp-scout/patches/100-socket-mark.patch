@@ -1,0 +1,244 @@
+--- a/bind.go
++++ b/bind.go
+@@ -5,6 +5,7 @@
+ 	"net"
+ 	"net/netip"
+ 	"strconv"
++ "sync"
+ 
+ 	"github.com/amnezia-vpn/amneziawg-go/conn"
+ )
+@@ -13,18 +14,20 @@
+ // a tun.
+ type deviceBind struct {
+ 	iface string
++ mu sync.Mutex
++ mark uint32
+ 	conn  *net.UDPConn
+ }
+ 
+ type sourceEndpoint struct{ dst netip.AddrPort }
+ 
+-func newDeviceBind(iface string) *deviceBind { return &deviceBind{iface: iface} }
++func newDeviceBind(iface string) *deviceBind { return &deviceBind{iface: iface, mark: uint32(trafiraMark)} }
+ 
+ func (b *deviceBind) Open(port uint16) ([]conn.ReceiveFunc, uint16, error) {
+-	var lc net.ListenConfig
+-	if b.iface != "" {
+-		lc.Control = deviceControl(b.iface, 0)
+-	}
++	b.mu.Lock()
++ defer b.mu.Unlock()
++ var lc net.ListenConfig
++ lc.Control = markedControl(b.iface, 0, b.mark)
+ 	pc, err := lc.ListenPacket(context.Background(), "udp", net.JoinHostPort("", strconv.Itoa(int(port))))
+ 	if err != nil {
+ 		return nil, 0, err
+@@ -36,7 +39,11 @@
+ }
+ 
+ func (b *deviceBind) receive(bufs [][]byte, sizes []int, eps []conn.Endpoint) (int, error) {
+-	n, addr, err := b.conn.ReadFromUDPAddrPort(bufs[0])
++	b.mu.Lock()
++ c := b.conn
++ b.mu.Unlock()
++ if c == nil { return 0, net.ErrClosed }
++ n, addr, err := c.ReadFromUDPAddrPort(bufs[0])
+ 	if err != nil {
+ 		// The only expected read error is the socket being closed; treat any as terminal
+ 		// so the device's receive goroutine exits cleanly, as the Bind contract requires.
+@@ -48,9 +55,13 @@
+ }
+ 
+ func (b *deviceBind) Send(bufs [][]byte, ep conn.Endpoint) error {
+-	dst := ep.(*sourceEndpoint).dst
++	b.mu.Lock()
++ c := b.conn
++ b.mu.Unlock()
++ if c == nil { return net.ErrClosed }
++ dst := ep.(*sourceEndpoint).dst
+ 	for _, buf := range bufs {
+-		if _, err := b.conn.WriteToUDPAddrPort(buf, dst); err != nil {
++		if _, err := c.WriteToUDPAddrPort(buf, dst); err != nil {
+ 			return err
+ 		}
+ 	}
+@@ -66,13 +77,26 @@
+ }
+ 
+ func (b *deviceBind) Close() error {
++ b.mu.Lock()
++ defer b.mu.Unlock()
+ 	if b.conn == nil {
+ 		return nil
+ 	}
+-	return b.conn.Close()
++	c:=b.conn
++ b.conn=nil
++ return c.Close()
+ }
+ 
+-func (b *deviceBind) SetMark(uint32) error { return nil }
++func (b *deviceBind) SetMark(mark uint32) error {
++ b.mu.Lock()
++ defer b.mu.Unlock()
++ if b.conn != nil {
++  raw,err:=b.conn.SyscallConn(); if err!=nil {return err}
++  if err=socketMarkControl(raw,mark);err!=nil {return err}
++ }
++ b.mark=mark
++ return nil
++}
+ 
+ func (b *deviceBind) BatchSize() int { return 1 }
+ 
+--- a/cli.go
++++ b/cli.go
+@@ -152,9 +152,11 @@
+ 	var opts options
+ 	fs := flag.NewFlagSet(cmd.name, flag.ExitOnError)
+ 	fs.Usage = func() { commandUsage(fs.Output(), *cmd, fs) }
+-	cmd.setup(fs, &opts)
++	fs.UintVar(&trafiraMark, "fwmark", 0, "Trafira service socket mark")
++ cmd.setup(fs, &opts)
+ 	fs.Parse(os.Args[2:])
+ 	applyCommonFlags(fs, &opts)
++ if trafiraMark>0xffffffff {fmt.Fprintln(os.Stderr,"invalid fwmark");os.Exit(2)}
+ 
+ 	showEmoji = opts.emoji
+ 
+@@ -162,7 +164,7 @@
+ 	defer cancel()
+ 
+ 	// "version" must stay a bare string: install.sh compares its whole output.
+-	if cmd.name != "version" {
++	if cmd.name != "version" && trafiraMark==0 {
+ 		noticeUpdate(ctx)
+ 	}
+ 
+--- a/tunnel.go
++++ b/tunnel.go
+@@ -86,7 +86,8 @@
+ 	}
+ 	dev := device.NewDevice(tunDev, bind, device.NewLogger(device.LogLevelSilent, ""))
+ 
+-	if err := dev.IpcSet(base); err != nil {
++	if trafiraMark!=0 {base=fmt.Sprintf("fwmark=%d\n",trafiraMark)+base}
++ if err := dev.IpcSet(base); err != nil {
+ 		dev.Close()
+ 		return nil, err
+ 	}
+--- a/register.go
++++ b/register.go
+@@ -211,6 +211,7 @@
+ 	if err != nil {
+ 		return account{}, err
+ 	}
++	if trafiraMark != 0 { return a, nil } // Trafira owns only this WG account.
+ 	a.Masque = mintMasque(ctx, client, existing.Masque)
+ 	a.Outer = mintOuter(ctx, client, existing.Outer)
+ 	return a, nil
+@@ -301,10 +301,10 @@
+ }
+ 
+ func regTransport(proxy *url.URL) *http.Transport {
+-	d := &net.Dialer{}
++	d := &net.Dialer{Resolver: markedResolver(), Control:markedControl(scanInterface,regTunnelMSS,uint32(trafiraMark))}
+ 	t := &http.Transport{DialContext: d.DialContext}
+ 	if scanInterface != "" {
+-		d.Control = deviceControl(scanInterface, regTunnelMSS)
++		d.Control = markedControl(scanInterface, regTunnelMSS,uint32(trafiraMark))
+ 		// Force the interface's address family: a v6 dial through a v4-only tun
+ 		// (or vice versa) blackholes, so pin the network to what the interface carries.
+ 		network := "tcp4"
+@@ -380,7 +380,7 @@
+ }
+ 
+ func resolveIPv4(host string) (string, error) {
+-	ips, err := net.LookupHost(host)
++	ips, err := markedResolver().LookupHost(context.Background(),host)
+ 	if err != nil {
+ 		return "", err
+ 	}
+@@ -418,6 +418,12 @@
+ const tunnelDiscoveryBudget = 40 * time.Second
+ 
+ func obtainAccount(ctx context.Context, o options, ips []netip.Addr, timeout time.Duration, existing account) (account, error) {
++ if trafiraMark!=0 {
++  if o.proxy!="" || o.relay!="" || o.through!="" {return account{},fmt.Errorf("Trafira registration requires direct transport")}
++  direct:= &http.Client{Timeout:registerTimeout,Transport:regTransport(nil)}
++  return mintAccount(ctx,direct,existing)
++ }
++
+ 	if o.proxy != "" {
+ 		c, err := proxyClient(o.proxy)
+ 		if err != nil {
+--- a/discovery.go
++++ b/discovery.go
+@@ -166,6 +166,7 @@
+ )
+ 
+ func pingHost(addr netip.Addr, timeout time.Duration) (time.Duration, bool) {
++ if trafiraMark!=0 {return 0,false} // Ranking uses the measured in-tunnel RTT.
+ 	conn, dst := listenPing(addr)
+ 	if conn == nil {
+ 		return 0, false
+--- a/main.go
++++ b/main.go
+@@ -18,6 +18,8 @@
+ // register needs this too - its tunnel fallback registers through one of the
+ // sampled addresses.
+ func setupScan(opts options) (protoRun, []netip.Addr, error) {
++ if trafiraMark!=0 && (opts.proto!=protoAWG || opts.through!="" || opts.proxy!="") {return protoRun{},nil,fmt.Errorf("Trafira mode requires direct AWG")}
++
+ 	// -proto is the tunnel that crosses this network, which under -through is the
+ 	// outer one; what gets scanned then runs inside it.
+ 	proto := opts.proto
+--- /dev/null
++++ b/trafira_linux.go
+@@ -0,0 +1,45 @@
++//go:build linux
++
++// SPDX-License-Identifier: MIT
++// Copyright (c) 2026 Trafira contributors
++package main
++
++import (
++ "context"
++ "fmt"
++ "net"
++ "net/netip"
++ "strings"
++ "syscall"
++ "time"
++ "golang.org/x/sys/unix"
++)
++
++var trafiraMark uint
++func socketMarkControl(raw syscall.RawConn, mark uint32) error {
++ var operation error
++ if err:=raw.Control(func(fd uintptr){operation=unix.SetsockoptInt(int(fd),unix.SOL_SOCKET,unix.SO_MARK,int(mark))});err!=nil{return err}
++ return operation
++}
++func markedControl(iface string, maxseg int, mark uint32) func(string,string,syscall.RawConn)error {
++ return func(network,address string,raw syscall.RawConn)error {
++  if iface!="" {if err:=deviceControl(iface,maxseg)(network,address,raw);err!=nil{return err}}
++  if mark!=0 {
++   if strings.HasPrefix(network,"tcp") {
++    host,_,err:=net.SplitHostPort(address);if err!=nil{return err}
++    ip,err:=netip.ParseAddr(host);if err!=nil{return err}
++    if !ip.IsGlobalUnicast() || ip.IsPrivate() || ip.IsLoopback() || netip.MustParsePrefix("198.18.0.0/15").Contains(ip) {return fmt.Errorf("non-public API address")}
++   }
++   return socketMarkControl(raw,mark)
++  }
++  return nil
++ }
++}
++func markedResolver() *net.Resolver {
++ if trafiraMark==0 {return net.DefaultResolver}
++ return &net.Resolver{PreferGo:true,Dial:func(ctx context.Context,network,address string)(net.Conn,error){
++  // This dedicated resolver belongs only to the marked registration client.
++  d:=net.Dialer{Timeout:8*time.Second,Control:markedControl("",0,uint32(trafiraMark))}
++  return d.DialContext(ctx,network,"1.1.1.1:53")
++ }}
++}

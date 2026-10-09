@@ -1,0 +1,106 @@
+name: WARP Component CI
+on:
+  pull_request:
+    paths: ['components/warp/**', 'scripts/build-warp.sh', 'scripts/warp-manifest.py', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
+  push:
+    branches: [main]
+    paths: ['components/warp/**', 'scripts/build-warp.sh', 'scripts/warp-manifest.py', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
+concurrency:
+  group: warp-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  package-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - run: python3 -m unittest discover -s tests/warp -p 'test_*.py'
+      - run: node --test tests/warp/test_view.cjs
+  packages:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        manager: [opkg, apk]
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - name: Host build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget zstd patch
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/trafira-warp-sdk
+          key: warp-sdk-${{ matrix.manager }}-24.10.6-25.12.3
+      - name: Build optional packages without release
+        run: bash scripts/build-warp.sh 0.0.0 ${{ matrix.manager }} aarch64_cortex-a53 dist/warp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: warp-${{ matrix.manager }}
+          path: dist/warp/*
+
+  scout-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - name: Prepare pinned Scout source
+        run: |
+          curl --proto '=https' --proto-redir '=https' -fL --retry 3 --max-time 120 https://codeload.github.com/vernette/warpscout/tar.gz/refs/tags/v0.16.0 -o /tmp/scout.tar.gz
+          printf '%s  %s\n' c21c777239856401f6529e4e2503d9f6ebd9071f78988fe86e35aaefc65a1c20 /tmp/scout.tar.gz | sha256sum -c -
+          mkdir /tmp/scout
+          tar -xf /tmp/scout.tar.gz --strip-components=1 -C /tmp/scout
+          cp tests/warp/scout_mark_test.go /tmp/scout/trafira_mark_test.go
+          for patch in components/warp/trafira-warp-scout/patches/*.patch; do
+            [ ! -f "$patch" ] || patch -d /tmp/scout -p1 < "$patch"
+          done
+      - name: Test actual socket marks without contacting Cloudflare
+        run: |
+          cd /tmp/scout
+          sudo env "PATH=$PATH" GOCACHE=/tmp/warp-test-go "GOMODCACHE=$HOME/go/pkg/mod" go test ./...
+
+  network:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - name: Build pinned test daemons and namespace tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libjson-c-dev pkg-config nftables iproute2 curl python3 wireguard-tools
+          git clone --depth 1 --branch v0.0.20250529 https://github.com/jow-/ucode.git /tmp/ucode
+          cmake -S /tmp/ucode -B /tmp/ucode/build -DUBUS_SUPPORT=OFF -DUCI_SUPPORT=OFF -DULOOP_SUPPORT=OFF
+          cmake --build /tmp/ucode/build --parallel
+          sudo cmake --install /tmp/ucode/build
+          sudo ldconfig
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 90 https://github.com/SagerNet/sing-box/releases/download/v1.12.12/sing-box-1.12.12-linux-amd64.tar.gz -o /tmp/sing-box.tar.gz
+          echo '7c103cb2f9a7dc54cb82962043596718ed27989a478d6405f0939a9b775f889f  /tmp/sing-box.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/sing-box.tar.gz -C /tmp
+          sudo install -m 0755 /tmp/sing-box-1.12.12-linux-amd64/sing-box /usr/local/bin/sing-box
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 90 https://codeload.github.com/amnezia-vpn/amneziawg-go/tar.gz/refs/tags/v3.1.20260828 -o /tmp/awg.tar.gz
+          echo '24c656cfb80ff6855702710eaf2e3729fa710bf6bfdbbbdfba01984ccd17de95  /tmp/awg.tar.gz' | sha256sum -c -
+          mkdir /tmp/awg
+          tar -xf /tmp/awg.tar.gz --strip-components=1 -C /tmp/awg
+          (cd /tmp/awg && CGO_ENABLED=0 go build -o /tmp/awg-test .)
+          sudo mkdir -p /usr/libexec
+          sudo install -m0755 /tmp/awg-test /usr/libexec/trafira-warp-amneziawg-go
+          cc -O2 -Wall -Wextra -Werror components/warp/trafira-warp-awg/files/warp-awgctl.c -o /tmp/awgctl
+          cc -O2 -Wall -Wextra -Werror components/warp/trafira-warp-awg/files/warp-exec.c -o /tmp/warp-exec
+          sudo install -m0755 /tmp/awgctl /usr/libexec/trafira-warp-awgctl
+          sudo install -m0755 /tmp/warp-exec /usr/libexec/trafira-warp-exec
+      - name: Verify actual WARP packet paths and process failure
+        run: sudo env RUN_TRAFIRA_WARP_NETWORK_TESTS=1 bash tests/warp_network.sh

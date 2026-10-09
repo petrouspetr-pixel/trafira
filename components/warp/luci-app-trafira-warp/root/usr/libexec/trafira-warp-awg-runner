@@ -1,0 +1,5 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+set -eu
+umask 077
+exec ucode -L /usr/lib/trafira-warp /usr/lib/trafira-warp/warp/runner.uc

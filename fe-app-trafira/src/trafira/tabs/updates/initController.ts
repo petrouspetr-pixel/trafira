@@ -45,6 +45,7 @@ import {
   subscribeRuntimeUiState,
 } from '../../services/runtimeUiState.service';
 import { Trafira } from '../../types';
+import { warpActions } from './warpComponent';
 import { coreVersionsPanel } from './renderCoreVersions';
 
 type UpdateStatus = StoreType['updatesChecks'][Trafira.ComponentName]['status'];
@@ -64,6 +65,7 @@ interface ComponentCard {
   version: string;
   latestVersion?: string;
   releaseUrl?: string;
+  managementUrl?: string;
   actions: ComponentActionButton[];
 }
 
@@ -214,7 +216,12 @@ function applyCachedCheckResults(results: Trafira.ComponentActionResult[]) {
   results.forEach((result) => {
     const status = result.status || null;
 
-    if (status === 'latest' || status === 'outdated' || status === 'dev') {
+    if (
+      status === 'latest' ||
+      status === 'outdated' ||
+      status === 'dev' ||
+      status === 'unavailable'
+    ) {
       setCheckResult(
         result.component,
         status,
@@ -401,6 +408,12 @@ function patchSystemInfoAfterMutation(result: Trafira.ComponentActionResult) {
     }
   }
 
+  if (result.component === 'warp') {
+    nextSystemInfo.warp_installed = result.action === 'remove' ? 0 : 1;
+    nextSystemInfo.warp_version =
+      result.action === 'remove' ? 'not installed' : version;
+  }
+
   const normalizedSystemInfo = normalizeSingBoxVariantFields(nextSystemInfo);
 
   store.set({
@@ -443,7 +456,12 @@ async function applyCompletedComponentAction({
 
     const status = result.status || null;
 
-    if (status === 'latest' || status === 'outdated' || status === 'dev') {
+    if (
+      status === 'latest' ||
+      status === 'outdated' ||
+      status === 'dev' ||
+      status === 'unavailable'
+    ) {
       setCheckResult(
         result.component,
         status,
@@ -815,6 +833,7 @@ function getComponentCards(): ComponentCard[] {
   const zapretInstalled = Boolean(systemInfo.zapret_installed);
   const zapret2Installed = Boolean(systemInfo.zapret2_installed);
   const byedpiInstalled = Boolean(systemInfo.byedpi_installed);
+  const warpInstalled = Boolean(systemInfo.warp_installed);
   const singBoxInstalled = !isNotInstalled(systemInfo.sing_box_version);
   const singBoxStable =
     singBoxInstalled &&
@@ -899,7 +918,36 @@ function getComponentCards(): ComponentCard[] {
     removeKey: 'byedpiRemove',
   });
 
+  const warpComponentActions: ComponentActionButton[] = warpActions(
+    warpInstalled,
+    getVisibleCheckResult('warp')?.status || null,
+  ).map((action) => {
+    if (action === 'check_update') return getCheckAction('warp', 'warpCheck');
+    if (action === 'install')
+      return getInstallAction('warp', 'warpInstall', warpInstalled);
+    return {
+      key: 'warpRemove',
+      text: _('Remove'),
+      icon: renderXIcon24,
+      component: 'warp',
+      action: 'remove',
+    };
+  });
   return [
+    {
+      component: 'warp',
+      column: 1,
+      title: 'WARP',
+      version: warpInstalled
+        ? systemInfo.warp_version || _('Installed')
+        : _('Not installed'),
+      latestVersion: getLatestVersion('warp'),
+      releaseUrl: getGitHubReleaseUrl('warp'),
+      managementUrl: warpInstalled
+        ? '/cgi-bin/luci/admin/services/trafira-warp'
+        : undefined,
+      actions: warpComponentActions,
+    },
     {
       component: 'trafira',
       column: 0,
@@ -988,12 +1036,18 @@ function renderComponentCard(card: ComponentCard) {
   // 2. Details (renders status messages for check results)
   const detailsChildren: Node[] = [];
   const checkResult = getVisibleCheckResult(card.component);
+  if (card.managementUrl)
+    detailsChildren.push(
+      E('a', { href: card.managementUrl }, [_('Open WARP settings')]),
+    );
 
   if (checkResult && checkResult.status) {
     let labelText = '';
     const latestValueNodes: Node[] = [];
 
-    if (checkResult.status === 'outdated') {
+    if (checkResult.status === 'unavailable') {
+      labelText = _('No compatible WARP release is available yet');
+    } else if (checkResult.status === 'outdated') {
       labelText = _('Update is available:');
       const versionToShow =
         checkResult.latest_version || card.latestVersion || card.version;

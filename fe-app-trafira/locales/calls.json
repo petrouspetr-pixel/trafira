@@ -891,7 +891,7 @@
     "call": "Check update",
     "key": "Check update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:743"
+      "src/trafira/tabs/updates/initController.ts:761"
     ]
   },
   {
@@ -2285,10 +2285,10 @@
     "places": [
       "src/trafira/methods/shell/index.ts:170",
       "src/trafira/methods/shell/index.ts:177",
-      "src/trafira/tabs/updates/initController.ts:509",
-      "src/trafira/tabs/updates/initController.ts:510",
-      "src/trafira/tabs/updates/initController.ts:572",
-      "src/trafira/tabs/updates/initController.ts:722"
+      "src/trafira/tabs/updates/initController.ts:527",
+      "src/trafira/tabs/updates/initController.ts:528",
+      "src/trafira/tabs/updates/initController.ts:590",
+      "src/trafira/tabs/updates/initController.ts:740"
     ]
   },
   {
@@ -2771,14 +2771,14 @@
     "call": "Install",
     "key": "Install",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:757"
+      "src/trafira/tabs/updates/initController.ts:775"
     ]
   },
   {
     "call": "Install another build:",
     "key": "Install another build:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1162"
+      "src/trafira/tabs/updates/initController.ts:1216"
     ]
   },
   {
@@ -2786,6 +2786,13 @@
     "key": "Install selected version",
     "places": [
       "src/trafira/tabs/updates/renderCoreVersions.ts:29"
+    ]
+  },
+  {
+    "call": "Installed",
+    "key": "Installed",
+    "places": [
+      "src/trafira/tabs/updates/initController.ts:942"
     ]
   },
   {
@@ -2799,8 +2806,8 @@
     "call": "Installed version is newer than release",
     "key": "Installed version is newer than release",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:292",
-      "src/trafira/tabs/updates/initController.ts:1020"
+      "src/trafira/tabs/updates/initController.ts:299",
+      "src/trafira/tabs/updates/initController.ts:1074"
     ]
   },
   {
@@ -3452,15 +3459,15 @@
     "call": "Latest version is installed",
     "key": "Latest version is installed",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:295",
-      "src/trafira/tabs/updates/initController.ts:1018"
+      "src/trafira/tabs/updates/initController.ts:302",
+      "src/trafira/tabs/updates/initController.ts:1072"
     ]
   },
   {
     "call": "Latest version:",
     "key": "Latest version:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1020"
+      "src/trafira/tabs/updates/initController.ts:1074"
     ]
   },
   {
@@ -3545,11 +3552,11 @@
     "call": "Loading...",
     "key": "Loading...",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:908",
-      "src/trafira/tabs/updates/initController.ts:919",
-      "src/trafira/tabs/updates/initController.ts:930",
-      "src/trafira/tabs/updates/initController.ts:943",
-      "src/trafira/tabs/updates/initController.ts:956"
+      "src/trafira/tabs/updates/initController.ts:956",
+      "src/trafira/tabs/updates/initController.ts:967",
+      "src/trafira/tabs/updates/initController.ts:978",
+      "src/trafira/tabs/updates/initController.ts:991",
+      "src/trafira/tabs/updates/initController.ts:1004"
     ]
   },
   {
@@ -3841,6 +3848,13 @@
     ]
   },
   {
+    "call": "No compatible WARP release is available yet",
+    "key": "No compatible WARP release is available yet",
+    "places": [
+      "src/trafira/tabs/updates/initController.ts:1049"
+    ]
+  },
+  {
     "call": "No conflict detected",
     "key": "No conflict detected",
     "places": [
@@ -3971,9 +3985,10 @@
     "places": [
       "src/trafira/helpers/singBoxVariant.ts:29",
       "src/trafira/helpers/singBoxVariant.ts:37",
-      "src/trafira/tabs/updates/initController.ts:933",
-      "src/trafira/tabs/updates/initController.ts:946",
-      "src/trafira/tabs/updates/initController.ts:959"
+      "src/trafira/tabs/updates/initController.ts:943",
+      "src/trafira/tabs/updates/initController.ts:981",
+      "src/trafira/tabs/updates/initController.ts:994",
+      "src/trafira/tabs/updates/initController.ts:1007"
     ]
   },
   {
@@ -4122,8 +4137,8 @@
     "call": "Open",
     "key": "Open",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1011",
-      "src/trafira/tabs/updates/initController.ts:1033"
+      "src/trafira/tabs/updates/initController.ts:1065",
+      "src/trafira/tabs/updates/initController.ts:1087"
     ]
   },
   {
@@ -4138,6 +4153,13 @@
     "key": "Open Project Page",
     "places": [
       "src/trafira/tabs/diagnostic/partials/renderWikiDisclaimer.ts:31"
+    ]
+  },
+  {
+    "call": "Open WARP settings",
+    "key": "Open WARP settings",
+    "places": [
+      "src/trafira/tabs/updates/initController.ts:1041"
     ]
   },
   {
@@ -4671,7 +4693,8 @@
     "call": "Remove",
     "key": "Remove",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:802"
+      "src/trafira/tabs/updates/initController.ts:820",
+      "src/trafira/tabs/updates/initController.ts:930"
     ]
   },
   {
@@ -6547,7 +6570,7 @@
       "src/trafira/services/systemInfo.service.ts:22",
       "src/trafira/services/systemInfo.service.ts:25",
       "src/trafira/services/systemInfo.service.ts:26",
-      "src/trafira/tabs/updates/initController.ts:330",
+      "src/trafira/tabs/updates/initController.ts:337",
       "src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25"
     ]
   },
@@ -6613,21 +6636,21 @@
     "call": "Update",
     "key": "Update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:757"
+      "src/trafira/tabs/updates/initController.ts:775"
     ]
   },
   {
     "call": "Update is available",
     "key": "Update is available",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:288"
+      "src/trafira/tabs/updates/initController.ts:295"
     ]
   },
   {
     "call": "Update is available:",
     "key": "Update is available:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:997"
+      "src/trafira/tabs/updates/initController.ts:1051"
     ]
   },
   {
