@@ -28,5 +28,13 @@ let primary=p.apply(base,[section],{vpn:{mode:"primary"}});
 assert(primary.route.rules[0].outbound=="vpn-out" && primary.dns.servers[2].detour=="vpn-out","primary DNS protected");
 assert(base.route.rules[0].action=="route" && length(base.dns.servers)==2,"baseline never mutated");
 assert(p.apply(base,[{...section,failure_policy:"legacy"}],{}).route.rules[0].outbound=="vpn-out","legacy unchanged");
+let unknown=json(sprintf("%J",base));
+unknown.dns.rules[0].server="absent";
+assert(p.apply(unknown,[section],{vpn:{mode:"primary"}}).dns.rules[0].action=="reject","unknown DNS resolver is never left unprotected");
+let response=json(sprintf("%J",base));
+response.dns.rules=[{action:"evaluate",server:"dns-server",__trafira_origin:{section:"vpn"}},{action:"route",match_response:true,rule_set:"addresses",server:"fakeip-server",__trafira_origin:{section:"vpn"}}];
+let protected=p.apply(response,[section],{vpn:{mode:"primary"}});
+assert(protected.dns.rules[0].action=="evaluate" && protected.dns.servers[2].detour=="vpn-out","address evaluation stays on protected DNS");
+assert(p.apply(response,[section],{}).dns.rules[0].action=="reject","cold address evaluation fails closed before any DNS lookup");
 print("failure policy configuration checks passed\n");
 '

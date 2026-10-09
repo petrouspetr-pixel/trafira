@@ -17,5 +17,7 @@ assert(next.state.mode=="blocked" && next.changed,"manual selection re-enters he
 assert(next.state.selected=="new" && next.state.fail_count==0,"manual selection resets counters without disabling policy");
 next=m.observe(section,{...previous,selected:"node"},{health:"unknown",selected:"node"},{health:"unknown"},101);
 assert(next.state.mode=="primary" && !next.changed && next.state.monitor_error,"API error never silently enables direct");
+let deep={};for(let n=0;n<35;n++)deep["n"+n]={now:"n"+(n+1)};
+assert(m.sample({delay:1},deep,"n0").health=="unknown","unresolved selector chain is not healthy");
 print("failure policy monitor evidence checks passed\n");
 '
