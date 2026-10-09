@@ -203,7 +203,7 @@ function restore_dnsmasq_if_needed() {
 
     let restored = command_success_from_args([ BIN_PATH, "restore_dnsmasq" ]);
     if (path_exists(DNS_APPLY_UC))
-        return command_success_from_args([ "ucode", DNS_APPLY_UC, "failsafe-restore" ]);
+        return command_success_from_args([ "ucode", "-L", env("TRAFIRA_LIB", "/usr/lib/trafira"), DNS_APPLY_UC, "failsafe-restore" ]);
     return restored;
 }
 

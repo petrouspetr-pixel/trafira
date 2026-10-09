@@ -439,12 +439,23 @@ if (getenv("IPKG_INSTROOT") == null || getenv("IPKG_INSTROOT") == "")
 exit(0);
 EOF
 
-  cat > "$scripts_dir/backend-pre-upgrade.sh" <<'EOF'
-#!/usr/bin/ucode
-if (getenv("IPKG_INSTROOT") == null || getenv("IPKG_INSTROOT") == "")
-    exit(system("/usr/bin/trafira package_prerm upgrade >/dev/null 2>&1"));
-exit(0);
+  # APK runs the incoming pre-upgrade hook before replacing installed files.
+  # Bundle our fixed lifecycle helper instead of invoking the old package_prerm.
+  {
+    cat <<'EOF'
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] && exit 0
+helper=$(mktemp "${TMPDIR:-/tmp}/trafira-preupgrade.XXXXXX") || exit 1
+trap 'rm -f "$helper"' EXIT
+trap 'exit 1' HUP INT TERM
+cat >"$helper" <<'TRAFIRA_PACKAGE_LIFECYCLE' || exit 1
 EOF
+    cat "$ROOT_DIR/trafira/files/usr/lib/service/package.uc"
+    cat <<'EOF'
+TRAFIRA_PACKAGE_LIFECYCLE
+ucode -L "${TRAFIRA_LIB:-/usr/lib/trafira}" "$helper" prerm upgrade
+EOF
+  } > "$scripts_dir/backend-pre-upgrade.sh"
 
   cat > "$scripts_dir/backend-post-upgrade.sh" <<'EOF'
 #!/bin/sh

@@ -59,8 +59,8 @@ grep -Fq '/usr/bin/trafira package_prerm' "$TRAFIRA_MAKEFILE" ||
   fail "trafira Makefile prerm must delegate cleanup to package_prerm"
 grep -Fq '/usr/bin/trafira package_postinst' "$TRAFIRA_MAKEFILE" ||
   fail "trafira Makefile postinst must restore a service that was running before upgrade"
-grep -Fq '/usr/bin/trafira package_prerm upgrade' "$BUILD_SCRIPT" ||
-  fail "manual APK pre-upgrade must record and stop the running service"
+grep -Fq '"$helper" prerm upgrade' "$BUILD_SCRIPT" ||
+  fail "manual APK pre-upgrade must use the incoming lifecycle helper"
 grep -Fq '/usr/bin/trafira package_postinst' "$BUILD_SCRIPT" ||
   fail "manual packages must restore a service that was running before upgrade"
 if grep -Fq '/usr/bin/trafira luci_postinst' "$BUILD_SCRIPT"; then
