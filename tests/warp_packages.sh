@@ -20,5 +20,9 @@ let failed=p.install(selected,hooks);assert(!failed.success && failed.restored &
 calls=[];hooks.install=()=>true;
 assert(p.install(selected,hooks).success && index(calls,"keep_stopped")>=0 && index(calls,"start")<0,"disabled service remains stopped");
 assert(!p.release_asset({tag_name:"v1",assets:[{name:"manifest.json",browser_download_url:"https://evil.invalid/file"}]},"manifest.json"),"own release source only");
+calls=[];hooks.space=()=>false;
+assert(!p.install(selected,hooks).success && !length(calls),"no space never stops service");
+hooks.space=()=>true;hooks.install=()=>false;hooks.restore=()=>false;
+let broken=p.install(selected,hooks);assert(broken.rollback_error && !broken.restored,"failed restore is explicit");
 print("WARP package family preflight and rollback checks passed\n");
 '
