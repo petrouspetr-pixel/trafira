@@ -201,3 +201,6 @@ msgstr "WARP недоступен. Проверьте комплект уста�
 msgid "minutes"
 msgstr "минут"
 
+
+msgid "Median / p95 (ms)"
+msgstr "Медиана / p95 (мс)"

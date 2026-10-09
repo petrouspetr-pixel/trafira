@@ -30,7 +30,7 @@ return view.extend({
  callAction: function(request) { return action(JSON.stringify(request)); },
  load: function() { return status().catch(function(){ return {success:false,error:'component_unavailable'}; }); },
  notify: function(result) {
-  if (!result || result.success === false)
+  if (!result || result.success === false || result.error)
    ui.addNotification(null, element('p', {}, errors[result && result.error] || _('The operation failed. Check status and retry.')), 'error');
  },
  refresh: function() {
@@ -113,7 +113,7 @@ return view.extend({
    button(_('Test Google, ChatGPT, Gemini, Grok and Cloudflare'),function(){self.act({action:'test_start',duration:Number(duration.value||30),services:['google','chatgpt','gemini','grok','cloudflare']});},!s.running)
   ]));
   if(s.test && s.test.summary){var t=s.test.summary;items.push(element('p',{},
-   _('Samples')+': '+String(t.samples||0)+'; '+_('Transport errors')+': '+String(t.transport_errors||0)+'; '+_('HTTP 403/429')+': '+String(t.http_restricted||0)+'; median / p95 (ms): '+String(t.median||0)+' / '+String(t.p95||0)));}
+   _('Samples')+': '+String(t.samples||0)+'; '+_('Transport errors')+': '+String(t.transport_errors||0)+'; '+_('HTTP 403/429')+': '+String(t.http_restricted||0)+'; '+_('Median / p95 (ms)')+': '+(t.median==null?_('Unknown'):String(Math.round(t.median*1000)))+' / '+(t.p95==null?_('Unknown'):String(Math.round(t.p95*1000)))));}
   if(j.running)items.push(self.button(_('Cancel operation'),function(){self.act({action:'cancel',job_id:j.job_id});},self.pending));
   this.panel.replaceChildren.apply(this.panel,items);
  },

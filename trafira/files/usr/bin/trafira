@@ -116,7 +116,7 @@ function show_help() {
     print("                            Generate a sing-box Reality key pair in JSON format\n");
     print("    get_tls_certificate_sha256 [server]\n");
     print("                            Get a server TLS certificate SHA-256 fingerprint in JSON format\n");
-    print("    component_action        Manage Trafira, sing-box, zapret, zapret2, and ByeDPI components\n");
+    print("    component_action        Manage Trafira, sing-box, zapret, zapret2, ByeDPI, and WARP components\n");
     print("    component_action_async  Start a component action in the background\n");
     print("    component_action_status Get background component action status\n");
     print("    component_updates_if_due Check installed components for updates when due\n");
