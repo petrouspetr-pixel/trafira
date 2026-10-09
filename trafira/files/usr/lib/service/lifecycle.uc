@@ -1517,7 +1517,7 @@ else {
     status = 1;
 }
 
-if(status==0 && checkpoint) {
+if(status==0 && index(["main","start","restart","reload"],mode)>=0) {
     if(!require("service.applied_config").save(checkpoint))
         log_message("Applied configuration checkpoint unavailable; diagnostics will report incomplete state", "warn");
     if(!require("service.config_transaction").status().recovery_pending && !require("service.runtime_apply").clear())status=1;

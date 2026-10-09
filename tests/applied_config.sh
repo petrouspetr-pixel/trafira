@@ -5,7 +5,7 @@ WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 export TRAFIRA_CONFIG_FILE="$WORK_DIR/uci" TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime" FIXTURE_CORE="$WORK_DIR/core.json"
 mkdir -p "$TRAFIRA_RUNTIME_STATE_DIR"
-ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '''let fs=require("fs"),a=require("service.applied_config");
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e 'let fs=require("fs"),a=require("service.applied_config");
 let path=getenv("TRAFIRA_CONFIG_FILE"),core=getenv("FIXTURE_CORE");
 fs.writefile(path,"config settings settings\n option shutdown_correctly 1\n");fs.writefile(core,"{}");
 let old=a.capture({config_path:core,alice_mode_enabled:"0"},[]);
@@ -22,4 +22,4 @@ assert(a.save(a.capture({config_path:core},[])),"checkpoint restored");
 fs.unlink(core);
 assert(!a.refresh(core) && !a.active(),"refresh requires real generated config digest");
 print("applied configuration checkpoint checks passed\n");
-'''
+'
