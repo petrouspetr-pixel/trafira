@@ -37,8 +37,9 @@ function owned_by_ancestor() {
 function acquire(operation,allow_borrow) {
     let directory=fs.lstat(DIRECTORY);
     if(directory && directory.type!="directory") return null;
-    if(!directory && !fs.mkdir(DIRECTORY,448)) return null;
-    if(!fs.chmod(DIRECTORY,448)) return null;
+    // Providers run without root and must retain access to their own subfolders.
+    // Keep the shared runtime directory traversable; lock files stay private.
+    if(!directory && !fs.mkdir(DIRECTORY,493)) return null;
     let info=fs.lstat(LOCK);
     if(info && info.type!="file") return null;
     let file=fs.open(LOCK,"ae",384);
