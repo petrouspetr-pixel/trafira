@@ -1787,6 +1787,8 @@ function validate_runtime_config(context) {
         mwan3_mask: uci_core().get("mwan3.globals.mmx_mask")
     });
     if (router_origin.error) fail_validation(router_origin.error);
+    if (router_origin.enabled && fixture_uci_data == null && !require("nft.router_origin").snapshot(settings, sections))
+        fail_validation("Router-origin bootstrap or native VPN transport could not be verified");
     validate_outbound_detours_rows(detour_rows_from_sections(sections));
     for (let error in require("singbox.failure_policy").validate_sections(sections))
         fail_validation(error);

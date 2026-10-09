@@ -36,9 +36,24 @@ function validate(raw) {
     return r;
 }
 function decision(status, reason) { return {status,outbound:status=="direct"?"bypass-out":null,trace:[],missing:reason?[reason]:[]}; }
-function gate(settings,r) {
-    if (r.source.kind=="router")
-        return decision("indeterminate","router_output_rules_require_origin_support");
+function gate(settings,r,config) {
+    if (r.source.kind=="router") {
+        if(!common.bool_option(settings,"router_origin_enabled",false))return decision("indeterminate","legacy_router_output_rules");
+        if(!r.destination_ip)return decision("indeterminate","router_destination_address_needed");
+        if(!filter(arr(config.inbounds),(inbound)=>inbound.tag=="router-tproxy-in")[0])return decision("indeterminate","router_settings_not_applied");
+        let constants=require("core.constants");
+        if(system("nft list chain inet "+quote(constants.NFT_TABLE_NAME)+" router_origin >/dev/null 2>&1",2000)!=0)
+            return decision("indeterminate","router_capture_not_running");
+        let snapshot=read_json((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json",65536);
+        if(!snapshot || snapshot.section!=settings.router_origin_section)return decision("indeterminate","router_bootstrap_snapshot_unavailable");
+        for(let cidr in ["127.0.0.0/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16","::1/128","fc00::/7","fe80::/10"])
+            if(ip.ip_in_cidr(r.destination_ip,cidr) && !ip.ip_in_cidr(r.destination_ip,"fc00::/18"))return decision("indeterminate","local_destination_check_nft_exclusions");
+        if(r.port==53 && index(arr(snapshot.dns),r.destination_ip)>=0)return decision("direct","router_bootstrap_dns");
+        if(r.network=="udp" && r.port==123 && index(arr(snapshot.ntp),r.destination_ip)>=0)return decision("direct","router_bootstrap_ntp");
+        for(let endpoint in arr(snapshot.vpn))if(r.network=="udp" && endpoint.ip==r.destination_ip && endpoint.port==r.port)
+            return decision("direct","router_vpn_transport");
+        return null;
+    }
     let a=alice.config(settings), device={ips:[r.source.ip],mac:r.source.mac,interface:r.source.interface};
     if (a.enabled) {
         let matched=alice.match_device(a,device);
@@ -118,9 +133,10 @@ function explain(raw) {
     if (!origins) push(limitations,"provenance_unavailable");
     let sets=load_sets(config,limitations);
     let request={domain:lc(r.domain),source_ip:r.source.ip,destination_ip:r.destination_ip,port:r.port,network:r.network,
-        protocol:r.protocol,source_mac_address:r.source.mac,inbound:ip.ip_family(r.source.ip)==6?"tproxy6-in":"tproxy-in"};
-    let route=gate(settings,r) || matcher.explain(config,request,origins || {},sets);
+        protocol:r.protocol,source_mac_address:r.source.mac,inbound:r.source.kind=="router"?(ip.ip_family(r.destination_ip)==6?"router-tproxy6-in":"router-tproxy-in"):(ip.ip_family(r.source.ip)==6?"tproxy6-in":"tproxy-in")};
+    let route=gate(settings,r,config) || matcher.explain(config,request,origins || {},sets);
     let dns_request={domain:request.domain,source_ip:request.source_ip,query_type:"A"};
+    if(r.source.kind=="router") {dns_request.inbound=request.inbound;push(limitations,"router_assumes_unmarked_application_original_direction");}
     let dns=matcher.explain({route:obj(config.dns)},dns_request,{route:obj(origins).dns},sets);
     let selected=route.outbound ? selected_node(config,route.outbound) : null;
     if (digest!=provenance.hash_file(path)) return error("configuration_changed_retry");
