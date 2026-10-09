@@ -22,6 +22,7 @@ cat >"$WORK_DIR/owner.uc" <<'UC'
 let fs=require("fs"),lock=require("service.operation_lock");
 let held=lock.acquire("owner");
 assert(held,"owner acquires lock");
+assert(!lock.acquire("independent-worker",false),"asynchronous worker cannot borrow a parent's lock");
 assert(system("ucode -L \"$TRAFIRA_LIB\" \"$LOCK_TEST_DIR/child.uc\"")==0,"nested command succeeds");
 fs.writefile(getenv("LOCK_TEST_DIR")+"/ready","1");
 system("sleep 10");
