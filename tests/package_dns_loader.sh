@@ -47,3 +47,38 @@ if DNS_RESTORE_FAIL=1 ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/package.uc" 
 fi
 grep -Fxq '105 trafira' "$TRAFIRA_RT_TABLES"
 printf 'Package DNS loader and restore failure checks passed\n'
+
+# The incoming APK hook runs before the installed library is replaced.
+# It must not dispatch package_prerm through an old, broken CLI implementation.
+make_dir() { mkdir -p "$1"; }
+source <(sed -n '/^write_backend_apk_scripts() {/,/^}/p' "$ROOT_DIR/build.sh")
+write_backend_apk_scripts "$WORK_DIR/hooks"
+cat >"$TRAFIRA_BIN" <<'EOF'
+#!/bin/sh
+[ "$1" != package_prerm ] || exit 99
+exit 0
+EOF
+export TMPDIR="$WORK_DIR"
+printf '105 trafira\n' >"$TRAFIRA_RT_TABLES"
+run_upgrade_hook() {
+  if head -1 "$WORK_DIR/hooks/backend-pre-upgrade.sh" | grep -q ucode; then
+    ucode "$WORK_DIR/hooks/backend-pre-upgrade.sh"
+  else
+    sh "$WORK_DIR/hooks/backend-pre-upgrade.sh"
+  fi
+}
+run_upgrade_hook || { echo 'FAIL: incoming APK hook depends on the old package lifecycle' >&2; exit 1; }
+test -s "$TRAFIRA_PACKAGE_UPGRADE_STATE"
+if grep -Fq '105 trafira' "$TRAFIRA_RT_TABLES"; then exit 1; fi
+printf '105 trafira\n' >"$TRAFIRA_RT_TABLES"
+if DNS_RESTORE_FAIL=1 run_upgrade_hook; then
+  echo 'FAIL: APK hook ignored DNS restore failure' >&2
+  exit 1
+fi
+grep -Fxq '105 trafira' "$TRAFIRA_RT_TABLES"
+if compgen -G "$WORK_DIR/trafira-preupgrade.*" >/dev/null; then
+  echo 'FAIL: APK hook leaked temporary helper' >&2
+  exit 1
+fi
+IPKG_INSTROOT="$WORK_DIR/offline-root" run_upgrade_hook
+printf 'Incoming APK hook compatibility and failure propagation passed\n'
