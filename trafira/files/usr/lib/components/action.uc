@@ -941,7 +941,11 @@ function trafira_status_running_with_timeout() {
 }
 
 function capture_trafira_running_state() {
-    trafira_was_running = file_exists(BIN_PATH) && trafira_status_running_with_timeout();
+    // Capture presence, not full routing health: an incomplete live runtime
+    // still has to be restarted and verified after replacing its core.
+    trafira_was_running = file_exists(BIN_PATH) && command_success_from_args([
+        "ucode", "-L", LIB_DIR, LIB_DIR + "/service/state.uc", "sing-box-service-running"
+    ]);
 }
 
 function restart_trafira_after_successful_change() {

@@ -5,7 +5,12 @@ function list(value){return type(value)=="array"?value:[];}
 function fingerprint(section){
     let clean={};
     for(let key in sort(keys(section)))
-        if(substr(key,0,1)!="." && substr(key,0,7)!="preset_")clean[key]=section[key];
+        if(substr(key,0,1)!="." && substr(key,0,7)!="preset_") {
+            let value=section[key];
+            if(type(value)=="array" && !length(value))continue;
+            let scalar=(v)=>v===true?"1":v===false?"0":""+v;
+            clean[key]=type(value)=="array"?map(value,scalar):scalar(value);
+        }
     // An exact canonical fingerprint avoids hash collisions and needs no crypto package.
     return sprintf("%J",clean);
 }

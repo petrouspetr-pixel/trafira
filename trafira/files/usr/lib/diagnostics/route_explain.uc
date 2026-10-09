@@ -6,6 +6,7 @@ let alice = require("config.alice");
 let matcher = require("diagnostics.route_match");
 let provenance = require("singbox.provenance");
 let arr = common.array_or_empty, obj = common.object_or_empty;
+let read_guard=null;
 function quote(value) { return "'" + replace(common.as_string(value), /'/g, "'\\''") + "'"; }
 function read_json(path, limit) {
     let info = fs.stat(path);
@@ -123,9 +124,25 @@ function selected_node(config,tag) {
         return type(data.now)=="string" && index(arr(out.outbounds),data.now)>=0 ? {tag,current:substr(data.now,0,256)} : null;
     } catch (e) { return null; }
 }
+function fake_destination(config,address) {
+    if(!address)return false;
+    let ranges=[];
+    for(let server in arr(obj(config.dns).servers))if(server.type=="fakeip")
+        push(ranges,server.inet4_range||"198.18.0.0/15",server.inet6_range||"fc00::/18");
+    let legacy=obj(obj(config.dns).fakeip);
+    if(legacy.enabled)push(ranges,legacy.inet4_range||"198.18.0.0/15",legacy.inet6_range||"fc00::/18");
+    return length(filter(ranges,(range)=>ip.ip_in_cidr(address,range)))>0;
+}
 function explain(raw) {
     let r=validate(raw); if (!r) return error("invalid_request");
-    let settings=obj(uci.get_all("trafira","settings")),path=common.option(settings,"config_path","");
+    let root=getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira",lockinfo=fs.lstat(root+"/operation.lock");
+    if(lockinfo && lockinfo.type=="file")read_guard=fs.open(root+"/operation.lock","re");
+    let locked=read_guard && read_guard.lock("sn");
+    let applied=locked?require("service.applied_config").active():null;
+    let settings=applied?applied.settings:obj(uci.get_all("trafira","settings")),path=common.option(settings,"config_path","");
+    let lib=getenv("TRAFIRA_LIB")||"/usr/lib/trafira";
+    let active=applied && system("exec ucode -L "+quote(lib)+" "+quote(lib+"/service/state.uc")+" sing-box-service-running >/dev/null 2>&1",3000)==0 &&
+        system("nft list table inet "+quote(require("core.constants").NFT_TABLE_NAME)+" >/dev/null 2>&1",2000)==0;
     if (path=="") return error("configuration_unavailable");
     let digest=provenance.hash_file(path), config=read_json(path,4194304);
     if (!digest || type(config)!="object") return error("configuration_unavailable");
@@ -134,10 +151,11 @@ function explain(raw) {
     let sets=load_sets(config,limitations);
     let request={domain:lc(r.domain),source_ip:r.source.ip,destination_ip:r.destination_ip,port:r.port,network:r.network,
         protocol:r.protocol,source_mac_address:r.source.mac,inbound:r.source.kind=="router"?(ip.ip_family(r.destination_ip)==6?"router-tproxy6-in":"router-tproxy-in"):(ip.ip_family(r.source.ip)==6?"tproxy6-in":"tproxy-in")};
-    let route=gate(settings,r,config) || matcher.explain(config,request,origins || {},sets);
+    let route=!active?decision("indeterminate","applied_capture_state_unavailable"):fake_destination(config,r.destination_ip)?decision("indeterminate","fakeip_is_not_real_destination"):gate(settings,r,config) || matcher.explain(config,request,origins || {},sets);
     let dns_request={domain:request.domain,source_ip:request.source_ip,query_type:"A"};
+    if(r.source.kind=="device")dns_request.inbound=require("singbox.constants").SOURCE_DNS_INBOUND_TAG;
     if(r.source.kind=="router") {dns_request.inbound=request.inbound;push(limitations,"router_assumes_unmarked_application_original_direction");}
-    let dns=matcher.explain({route:obj(config.dns)},dns_request,{route:obj(origins).dns},sets);
+    let dns=active?matcher.explain({route:obj(config.dns)},dns_request,{route:obj(origins).dns},sets):decision("indeterminate","applied_capture_state_unavailable");
     let selected=route.outbound ? selected_node(config,route.outbound) : null;
     if (digest!=provenance.hash_file(path)) return error("configuration_changed_retry");
     return {success:true,generated_at:time(),config_digest:digest,decision:route,dns_policy:dns,

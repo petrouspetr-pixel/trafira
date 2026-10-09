@@ -95,6 +95,7 @@ function apply_states(expected,states) {
                     unguard:clear_guard,
                     restore:()=>store.write(path,previous) && store.publish(base.generation,path,base.states) && reload() && healthy()
                 });
+                if(result.success || result.restored)require("service.applied_config").refresh(path);
                 if(result.success)result.applied_generation=base.generation;
                 store.write(ROOT+"/failure-policy-result.json",{...result,generation:base.generation,changed_at:int(clock(true)[0])});
             }

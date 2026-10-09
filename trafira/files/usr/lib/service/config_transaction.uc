@@ -74,7 +74,8 @@ function apply_locked(candidate_path,expected_digest,reason,hooks) {
     if(fs.lstat(JOURNAL))return failure("recovery_required");
     if(type(hooks)!="object" || type(hooks.validate)!="function" || type(hooks.capture)!="function" || type(hooks.activate)!="function" || type(hooks.restore)!="function")return failure("missing_runtime_checks");
     if(!expected_digest || hash(TARGET)!=expected_digest)return failure("conflict");
-    let original=read(TARGET,MAX_FILE),candidate=read(candidate_path,MAX_FILE);
+    let original=hooks.original!=null?hooks.original:read(TARGET,MAX_FILE),candidate=read(candidate_path,MAX_FILE);
+    if(type(original)!="string" || length(original)>MAX_FILE)return failure("invalid_original_config");
     if(original==null || candidate==null)return failure("invalid_config_file");
     if(!hooks.validate(candidate_path))return failure("candidate_check_failed");
     if(read(candidate_path,MAX_FILE)!=candidate)return failure("candidate_changed");
@@ -88,7 +89,9 @@ function apply_locked(candidate_path,expected_digest,reason,hooks) {
     let service=hooks.capture();
     if(type(service)!="object" || type(service.running)!="bool" || type(service.enabled)!="bool")return failure("service_state_unavailable");
     let state={schema:1,job_id:sprintf("c-%x-%x",clock()[0],clock()[1]),worker:locks.identity(),original_digest:expected_digest,service,stage:"prepared"};
-    if(!durable_write(BACKUP,original) || hash(BACKUP)!=expected_digest || !journal(state))return failure("backup_failed");
+    if(!durable_write(BACKUP,original) || read(BACKUP,MAX_FILE)!=original)return failure("backup_failed");
+    state.original_digest=hash(BACKUP);
+    if(!state.original_digest || !journal(state))return failure("backup_failed");
     // A crash after this point must restore BACKUP before the next startup.
     if(hash(TARGET)!=expected_digest) {finish(failure("conflict"));return failure("conflict");}
     if(!durable_write(TARGET,candidate))return rollback_failure("replace_failed",hooks,state.job_id);

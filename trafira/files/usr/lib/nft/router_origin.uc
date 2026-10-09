@@ -13,6 +13,10 @@ function resolve(name) {
     return length(result)?result:null;
 }
 function snapshot(settings,sections) {
+    let prepared=require("singbox.failure_store").read((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-bootstrap-prepared.json");
+    let use_prepared=prepared && prepared.config_text==require("service.applied_config").normalized(fs.readfile(getenv("TRAFIRA_CONFIG_FILE")||"/etc/config/trafira")) && require("service.operation_lock").is_live_ancestor(prepared.worker);
+    if(use_prepared)return prepared.data;
+
     let result={dns:[],ntp:[],vpn:[],vpn_ports:[]},known_interfaces={};
     for(let address in common.list_option(settings,"bootstrap_dns_server")) {
         if(!ip.valid_ip(address))return null;
