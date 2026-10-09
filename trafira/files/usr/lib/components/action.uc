@@ -27,6 +27,11 @@ let rollback_package_files = [];
 let rollback_packages = [];
 let rollback_apk_world = null;
 let retain_rollback_files = false;
+let selected_request = null, selected_core = null, selected_hooks = null;
+let selected_error = "", selected_original_config = null, selected_result = {};
+let selected_release = null;
+let core_selection = require("components.core_selection");
+const CONFIG_FILE = getenv("TRAFIRA_CONFIG_FILE") || "/etc/config/trafira";
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -430,6 +435,7 @@ function cleanup_action() {
 
 function updates_response(success, component, action, message, current_version, latest_version, changed, status, release_url) {
     write_json({
+        ...selected_result,
         success: !!success,
         kind: "component",
         component: as_string(component),
@@ -457,9 +463,48 @@ function action_success(component, action, message, current_version, latest_vers
     exit(0);
 }
 
+function selected_core_unchanged() {
+    if (!selected_core) return true;
+    if (selected_hooks.digest() == selected_core.expected_digest && selected_hooks.current() == selected_core.original_version) return true;
+    selected_error = "conflict";
+    return false;
+}
+
+function finish_selected_core() {
+    if (!selected_core) return true;
+    let result = core_selection.finish(selected_core, selected_hooks);
+    if (!result.success) selected_error = result.error || "pin_write_failed";
+    return result.success;
+}
+
+function restore_selected_config() {
+    if (selected_original_config == null) return false;
+    let path = CONFIG_FILE + ".core-restore." + owner_pid();
+    let f = fs.open(path, "wex", 384);
+    if (!f) return false;
+    let ok = f.write(selected_original_config) == length(selected_original_config);
+    f.close();
+    if (!ok || fs.readfile(path) != selected_original_config || system("sync") != 0) { fs.unlink(path); return false; }
+    if (!fs.rename(path, CONFIG_FILE)) { fs.unlink(path); return false; }
+    return system("sync") == 0;
+}
+
 function action_fail(component, action, message, current_version, latest_version, status, release_url) {
     updates_log(message, "error");
+    if (selected_core && trafira_stopped_for_sing_box_change) {
+        selected_result.error = selected_error || "install_failed";
+        selected_result.restored = restore_selected_config();
+    } else if (selected_request) selected_result.error = selected_error || "install_failed";
     restart_trafira_after_failed_sing_box_change();
+    if (selected_core && trafira_stopped_for_sing_box_change) {
+        // Lifecycle can update internal UCI hints. Restore the saved bytes after
+        // restarting as well, so failed installs never leave a new pin/config.
+        selected_result.restored = selected_result.restored && restore_selected_config() &&
+            selected_hooks.current() == selected_core.original_version && !retain_rollback_files &&
+            selected_hooks.restored();
+        if (!selected_result.restored) selected_result.rollback_error = "restore_failed";
+        if (!selected_result.restored) retain_rollback_files = true;
+    }
     updates_response(false, component, action, message, current_version || "", latest_version || "", 0, status || "", release_url || "");
     cleanup_action();
     exit(1);
@@ -533,6 +578,12 @@ function pkg_install_name_command(package_name) {
 
 function pkg_install_name_downgrade(package_name, package_version) {
     package_name = as_string(package_name);
+    if (selected_core && selected_core.candidate.repository_package == package_name) {
+        if (package_version != selected_core.candidate.version) return false;
+        let args = is_apk() ? [ "apk", "add", "--allow-untrusted", selected_core.archive ] :
+            [ "opkg", "install", "--force-overwrite", "--force-reinstall", "--force-downgrade", selected_core.archive ];
+        return run_logged_install("Installing selected " + package_name, command_from_args(args) + " </dev/null");
+    }
     if (is_apk()) {
         package_version = as_string(package_version);
         if (package_version == "")
@@ -907,6 +958,8 @@ function restart_trafira_after_successful_change() {
 function stop_trafira_before_sing_box_change() {
     if (trafira_stopped_for_sing_box_change)
         return;
+    if (!selected_core_unchanged())
+        action_fail("sing_box", "install", "Configuration or installed core changed during preparation");
     trafira_stopped_for_sing_box_change = true;
 
     if (trafira_was_running && file_exists(SERVICE_INIT))
@@ -1353,6 +1406,7 @@ function set_sing_box_extended_release_from_json(release_json, compressed) {
 }
 
 function resolve_sing_box_extended_release(compressed) {
+    if (selected_release) return selected_release;
     let release_json = fetch_github_release_json("shtorm-7", "sing-box-extended");
     let resolved = set_sing_box_extended_release_from_json(release_json, compressed);
     if (resolved != null)
@@ -1851,8 +1905,8 @@ function install_sing_box_extended_package(action) {
     if (!ensure_tmp_download_capacity(release.asset_size, release.asset_name))
         action_fail("sing_box", action, "Not enough available RAM/tmpfs to safely download sing-box-extended package", current_version, latest_version);
 
-    let package_file = tmp_dir + "/" + release.asset_name;
-    if (!download_with_retry(release.asset_url, package_file, release.asset_name))
+    let package_file = selected_core ? selected_core.archive : tmp_dir + "/" + release.asset_name;
+    if (!selected_core && !download_with_retry(release.asset_url, package_file, release.asset_name))
         action_fail("sing_box", action, "Failed to download sing-box-extended package", current_version, latest_version);
 
     if (!run_logged("Updating package lists before sing-box-extended package installation", pkg_list_update_command()))
@@ -1924,7 +1978,7 @@ function install_sing_box_extended_package(action) {
 
     write_sing_box_variant_state("extended", new_version);
     restart_trafira_after_successful_change();
-    if (!wait_trafira_running_after_sing_box_change()) {
+    if (!wait_trafira_running_after_sing_box_change() || !finish_selected_core()) {
         updates_log("sing-box-extended package did not start cleanly; restoring previous sing-box variant", "error");
         if (file_exists(SERVICE_INIT))
             command_success_from_args([ SERVICE_INIT, "stop" ]);
@@ -1968,8 +2022,8 @@ function install_sing_box_extended(action, compressed) {
         check_success("sing_box", normalize_sing_box_version(current_version), normalize_sing_box_version(latest_version), release.release_url);
     }
 
-    let archive_file = tmp_dir + "/" + release.asset_name;
-    if (!download_with_retry(release.asset_url, archive_file, release.asset_name))
+    let archive_file = selected_core ? selected_core.archive : tmp_dir + "/" + release.asset_name;
+    if (!selected_core && !download_with_retry(release.asset_url, archive_file, release.asset_name))
         action_fail("sing_box", action, "Failed to download " + label, current_version, latest_version);
 
     let binary_path = select_archive_member_path(archive_file, "sing-box");
@@ -2090,7 +2144,7 @@ function install_sing_box_extended(action, compressed) {
 
     write_sing_box_variant_state("extended-compressed", new_version);
     restart_trafira_after_successful_change();
-    if (!wait_trafira_running_after_sing_box_change()) {
+    if (!wait_trafira_running_after_sing_box_change() || !finish_selected_core()) {
         updates_log(label + " did not start cleanly; restoring previous sing-box binary", "error");
         if (file_exists(SERVICE_INIT))
             command_success_from_args([ SERVICE_INIT, "stop" ]);
@@ -2120,7 +2174,7 @@ function install_package_sing_box(action, tiny) {
         current_version = binary_version;
     if (current_version == "")
         current_version = binary_version;
-    let latest_version = available_package_version(package_name);
+    let latest_version = selected_release ? selected_release.version : available_package_version(package_name);
     if (latest_version == "")
         latest_version = installed_package_version(package_name);
 
@@ -2134,7 +2188,7 @@ function install_package_sing_box(action, tiny) {
 
     if (!run_logged("Updating package lists before " + package_name + " installation", pkg_list_update_command()))
         action_fail("sing_box", action, "Failed to update package lists", current_version, latest_version);
-    latest_version = available_package_version(package_name);
+    latest_version = selected_release ? selected_release.version : available_package_version(package_name);
     if (latest_version == "")
         latest_version = installed_package_version(package_name);
     if (latest_version == "")
@@ -2181,7 +2235,7 @@ function install_package_sing_box(action, tiny) {
             package_name, previous_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, cronet_touched);
     write_sing_box_variant_state(tiny ? "tiny" : "stable", new_version);
     restart_trafira_after_successful_change();
-    if (!wait_trafira_running_after_sing_box_change())
+    if (!wait_trafira_running_after_sing_box_change() || !finish_selected_core())
         fail_package_sing_box_install(action, tiny, "was installed, but Trafira did not start cleanly", new_version, latest_version,
             package_name, previous_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, cronet_touched);
     remove_file(backup_binary);
@@ -2288,7 +2342,74 @@ function install_trafira() {
     action_success("trafira", "install", "Trafira has been installed", new_version, latest_version, 1, "latest", release.release_url);
 }
 
+function prepare_selected_core(action) {
+    let sources=require("components.core_sources"),pins=require("components.core_pin"),versions=require("components.core_versions");
+    let pin=pins.read(),env=sources.environment();
+    if (!selected_request && !pin) return;
+    if (!selected_request) {
+        if (action != "install" && action != "check_update") {
+            selected_error="pinned_variant_mismatch";
+            action_fail("sing_box",action,"Unpin the core before changing its variant");
+        }
+        let resolved=versions.select(sources.fetch(env),env,pin);
+        if (!resolved.candidate) {
+            selected_error=resolved.error;
+            action_fail("sing_box",action,"Pinned core is unavailable from its configured source");
+        }
+        selected_release=resolved.candidate;
+        if (action=="check_update") return;
+        selected_request={action:"install",candidate_id:pin.variant+"~"+env.architecture+"~"+env.package_type+"~"+pin.version,
+            expected_current_version:sources.current_version(),pin:true};
+    }
+    let profile=require("config.profile_runtime"),candidate=require("components.core_candidate"),hash=require("singbox.provenance").hash_file;
+    let directory=tmp_dir+"/selected",staged=directory+"/binary",configuration=directory+"/config",downloads=directory+"/downloads";
+    if (!fs.mkdir(directory,448) || !fs.mkdir(downloads,448) || !fs.mkdir(configuration,448) || !fs.mkdir(staged,448)) {
+        selected_error="storage_unavailable";action_fail("sing_box",action,"Cannot create private core staging directory");
+    }
+    let stat=fs.lstat(CONFIG_FILE);
+    if (!stat || stat.type!="file" || stat.size>1048576) {
+        selected_error="invalid_config_file";action_fail("sing_box",action,"Cannot read saved Trafira configuration");
+    }
+    selected_original_config=fs.readfile(CONFIG_FILE);
+    if (selected_original_config==null) action_fail("sing_box",action,"Cannot preserve saved configuration");
+    // Keep the exact original configuration alongside the existing offline
+    // rollback material if restoration later requires administrator attention.
+    let saved=fs.open(directory+"/original.uci","wex",384);
+    if (!saved) action_fail("sing_box",action,"Cannot preserve saved configuration");
+    let saved_ok=saved.write(selected_original_config)==length(selected_original_config);saved.close();
+    if (!saved_ok || fs.readfile(directory+"/original.uci")!=selected_original_config)
+        action_fail("sing_box",action,"Cannot preserve saved configuration");
+    let previous_package=env.variant=="stable"?"sing-box":env.variant=="tiny"?"sing-box-tiny":env.variant=="extended"?"sing-box-extended":"";
+    let previous_package_version=previous_package?installed_package_version(previous_package):"";
+    selected_hooks={
+        current:sources.current_version,digest:()=>hash(CONFIG_FILE),environment:()=>env,fetch:sources.fetch,
+        download:function(release) {
+            if (!ensure_tmp_download_capacity(release.asset_size||67108864,"selected core")) return null;
+            if (release.repository_package) return sources.download_repository(release,downloads);
+            let file=downloads+"/"+release.asset_name;
+            return sources.download(release.asset_url,file,release.asset_size,120)?file:null;
+        },
+        stage:(archive,release)=>candidate.stage(archive,release,staged),
+        check:function(core) {
+            let read=profile.read_document(CONFIG_FILE,configuration,"Core preflight");
+            if (!read.success) return false;
+            let prepared=profile.prepare(read.document,configuration);
+            return prepared.success && profile.hooks(read.document,configuration,core).validate(prepared.path);
+        },
+        pin_read:pins.read,pin_write:pins.write,package_version:installed_package_version,
+        restored:()=> (!previous_package || installed_package_version(previous_package)==previous_package_version) &&
+            (!trafira_was_running || trafira_status_running_with_timeout())
+    };
+    let prepared=core_selection.prepare(selected_request,selected_hooks);
+    if (!prepared.success) {selected_error=prepared.error;action_fail("sing_box",action,"Selected core preflight failed");}
+    selected_core=prepared;selected_release=prepared.candidate;
+    // Release the expanded candidate before staging rollback packages. The
+    // already verified, private archive remains the installer's sole input.
+    command_success_from_args(["rm","-rf",staged,configuration]);
+}
+
 function dispatch_sing_box(action) {
+    prepare_selected_core(action);
     if (action == "install_extended") {
         install_sing_box_extended(action, false);
         return;
@@ -2367,7 +2488,7 @@ function component_action(component, action) {
 
 let mode = ARGV[0] || "";
 let operation_lock=null;
-if(mode=="component-action" && ARGV[2]!="check_update") {
+if((mode=="component-action" && ARGV[2]!="check_update") || mode=="component-version-action") {
     operation_lock=require("service.operation_lock").acquire("component");
     if(!operation_lock) {
         write_json({success:false,message:"Another configuration operation is already running",error:"busy"});
@@ -2375,7 +2496,17 @@ if(mode=="component-action" && ARGV[2]!="check_update") {
     }
 }
 
-if (mode == "component-action")
+if (mode == "component-version-action") {
+    let info=fs.lstat(ARGV[1]||"");
+    if (!info || info.type!="file" || info.size>8192 || (info.mode & 63)!=0) {
+        write_json({success:false,error:"invalid_request"});exit(1);
+    }
+    try {selected_request=json(fs.readfile(ARGV[1]));}catch(e){selected_request=null;}
+    if (!require("components.core_pin").request_valid(selected_request) || selected_request.action!="install") {
+        write_json({success:false,error:"invalid_request"});exit(1);
+    }
+    component_action("sing_box","install");
+} else if (mode == "component-action")
     component_action(ARGV[1], ARGV[2]);
 else if (mode == "latest-trafira-release-json")
     print(latest_trafira_release_json());
