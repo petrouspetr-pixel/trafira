@@ -37,7 +37,8 @@ JSON
 ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
 let fs=require("fs"),s=require("components.core_sources");
 let env={variant:"extended",architecture:"aarch64",package_type:"apk"},root=getenv("CORE_SOURCE_TEST");
-assert(length(s.fetch(env))==1,"bounded release fetch");
+let fetched=s.fetch(env);
+assert(length(fetched)==1,"bounded release fetch: "+sprintf("%J",{fetched,transport:s.transport(),requests:fs.readfile(root+"/requests")}));
 assert(index(fs.readfile(root+"/requests"),"http://127.0.0.1:4535")>=0,"configured component transport used");
 fs.writefile(root+"/requests","");fs.writefile(root+"/fail","1");
 assert(s.fetch(env)==null,"failed proxy is not bypassed");
