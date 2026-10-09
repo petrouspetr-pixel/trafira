@@ -48,13 +48,16 @@ function write(id,document) {
     if(existing && existing.type!="file") return failure("invalid_profile_file");
     let temporary=path(id)+".stage";
     if(fs.lstat(temporary)) return failure("staging_conflict");
-    let file=fs.open(temporary,"we",384);
+    let file=fs.open(temporary,"wex",384);
     if(!file) return failure("storage_full_or_unavailable");
     let ok=file.write(text)==length(text);
-    if(!file.flush()) ok=false;
+    // ucode 20250529 inverts fflush()'s result; close and read back instead.
+    file.flush();
     file.close();
+    if(fs.readfile(temporary)!=text || system("sync")!=0) ok=false;
     if(!fs.chmod(temporary,384)) ok=false;
     if(ok) ok=fs.rename(temporary,path(id));
+    if(ok) ok=system("sync")==0;
     if(!ok) {fs.unlink(temporary);return failure("storage_full_or_unavailable");}
     return {success:true,id};
 }
