@@ -509,7 +509,7 @@
     "call": "Automatic component update checks",
     "key": "Automatic component update checks",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:599"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:631"
     ]
   },
   {
@@ -530,7 +530,7 @@
     "call": "Automatically check installed components for new versions",
     "key": "Automatically check installed components for new versions",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:600"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:632"
     ]
   },
   {
@@ -748,14 +748,14 @@
     "call": "Cache File Path",
     "key": "Cache File Path",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:721"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:753"
     ]
   },
   {
     "call": "Cache file path cannot be empty",
     "key": "Cache file path cannot be empty",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:735"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:767"
     ]
   },
   {
@@ -992,10 +992,10 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3786",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1714",
       "src/partials/modal/renderModal.ts:263",
-      "src/trafira/tabs/monitoring/initController.ts:832",
-      "src/trafira/tabs/monitoring/initController.ts:882",
       "src/trafira/tabs/dashboard/initController.ts:1061",
-      "src/trafira/tabs/dashboard/initController.ts:1329"
+      "src/trafira/tabs/dashboard/initController.ts:1329",
+      "src/trafira/tabs/monitoring/initController.ts:832",
+      "src/trafira/tabs/monitoring/initController.ts:882"
     ]
   },
   {
@@ -1033,7 +1033,7 @@
     "call": "Component update check interval",
     "key": "Component update check interval",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:608"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:640"
     ]
   },
   {
@@ -1068,7 +1068,7 @@
     "call": "Config File Path",
     "key": "Config File Path",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:708"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:740"
     ]
   },
   {
@@ -1269,7 +1269,7 @@
     "call": "Default address for checking server availability and latency. URLTest uses its own address.",
     "key": "Default address for checking server availability and latency. URLTest uses its own address.",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:644"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:676"
     ]
   },
   {
@@ -1427,8 +1427,8 @@
     "key": "Direct connection",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21",
-      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17"
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21"
     ]
   },
   {
@@ -1738,7 +1738,7 @@
     "call": "Dont Touch My DHCP!",
     "key": "Dont Touch My DHCP!",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:699"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:731"
     ]
   },
   {
@@ -1760,42 +1760,42 @@
     "call": "Download component packages via the selected section",
     "key": "Download component packages via the selected section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:680"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:712"
     ]
   },
   {
     "call": "Download components through",
     "key": "Download components through",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:687"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:719"
     ]
   },
   {
     "call": "Download components through a section",
     "key": "Download components through a section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:679"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:711"
     ]
   },
   {
     "call": "Download lists through",
     "key": "Download lists through",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:667"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:699"
     ]
   },
   {
     "call": "Download lists through a section",
     "key": "Download lists through a section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:659"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:691"
     ]
   },
   {
     "call": "Download remote lists and rule sets via the selected section",
     "key": "Download remote lists and rule sets via the selected section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:660"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:692"
     ]
   },
   {
@@ -2053,14 +2053,14 @@
     "call": "Exclude NTP",
     "key": "Exclude NTP",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:773"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:805"
     ]
   },
   {
     "call": "Exclude NTP protocol traffic from the tunnel to prevent it from being routed through the proxy or VPN",
     "key": "Exclude NTP protocol traffic from the tunnel to prevent it from being routed through the proxy or VPN",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:774"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:806"
     ]
   },
   {
@@ -2199,12 +2199,12 @@
     "call": "Failed to execute",
     "key": "Failed to execute",
     "places": [
+      "src/trafira/methods/shell/index.ts:170",
+      "src/trafira/methods/shell/index.ts:177",
       "src/trafira/tabs/updates/initController.ts:509",
       "src/trafira/tabs/updates/initController.ts:510",
       "src/trafira/tabs/updates/initController.ts:572",
-      "src/trafira/tabs/updates/initController.ts:722",
-      "src/trafira/methods/shell/index.ts:170",
-      "src/trafira/methods/shell/index.ts:177"
+      "src/trafira/tabs/updates/initController.ts:722"
     ]
   },
   {
@@ -3347,7 +3347,7 @@
     "call": "Latency test URL",
     "key": "Latency test URL",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:643"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:675"
     ]
   },
   {
@@ -3465,7 +3465,7 @@
     "call": "Log Level",
     "key": "Log Level",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:757"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:789"
     ]
   },
   {
@@ -4140,21 +4140,21 @@
     "call": "Path must be absolute (start with /)",
     "key": "Path must be absolute (start with /)",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:739"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:771"
     ]
   },
   {
     "call": "Path must contain at least one directory (like /tmp/cache.db)",
     "key": "Path must contain at least one directory (like /tmp/cache.db)",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:748"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:780"
     ]
   },
   {
     "call": "Path must end with cache.db",
     "key": "Path must end with cache.db",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:743"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:775"
     ]
   },
   {
@@ -4704,10 +4704,31 @@
     ]
   },
   {
+    "call": "Route remaining traffic from this router through a Connection section. LAN routing is unchanged. Local management, configured bootstrap DNS/NTP, marked service traffic and active WG/AWG transports are excluded. Other native VPN interfaces are not supported.",
+    "key": "Route remaining traffic from this router through a Connection section. LAN routing is unchanged. Local management, configured bootstrap DNS/NTP, marked service traffic and active WG/AWG transports are excluded. Other native VPN interfaces are not supported.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:600"
+    ]
+  },
+  {
     "call": "Route requests to this DNS server through another section.",
     "key": "Route requests to this DNS server through another section.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7344"
+    ]
+  },
+  {
+    "call": "Route router applications",
+    "key": "Route router applications",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:599"
+    ]
+  },
+  {
+    "call": "Router traffic section",
+    "key": "Router traffic section",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:609"
     ]
   },
   {
@@ -5021,14 +5042,14 @@
     "call": "Select or enter path for sing-box cache file. Change this ONLY if you know what you are doing",
     "key": "Select or enter path for sing-box cache file. Change this ONLY if you know what you are doing",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:722"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:754"
     ]
   },
   {
     "call": "Select path for sing-box config file. Change this ONLY if you know what you are doing",
     "key": "Select path for sing-box config file. Change this ONLY if you know what you are doing",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:709"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:741"
     ]
   },
   {
@@ -5043,7 +5064,7 @@
     "call": "Select the log level for sing-box",
     "key": "Select the log level for sing-box",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:758"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:790"
     ]
   },
   {
@@ -5186,9 +5207,9 @@
     "call": "Service action failed",
     "key": "Service action failed",
     "places": [
-      "src/trafira/tabs/diagnostic/initController.ts:597",
       "src/trafira/methods/shell/index.ts:376",
-      "src/trafira/methods/shell/index.ts:397"
+      "src/trafira/methods/shell/index.ts:397",
+      "src/trafira/tabs/diagnostic/initController.ts:597"
     ]
   },
   {
@@ -6064,7 +6085,7 @@
     "call": "Trafira will not modify your DHCP configuration",
     "key": "Trafira will not modify your DHCP configuration",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:700"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:732"
     ]
   },
   {
@@ -6631,8 +6652,8 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:564",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:586",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:593",
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:609",
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:637"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:641",
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:669"
     ]
   },
   {

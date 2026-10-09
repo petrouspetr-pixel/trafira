@@ -2946,3 +2946,12 @@ msgstr "Секунд с последнего переключения"
 
 msgid "Switching interrupts existing connections. Protection applies while Trafira is running."
 msgstr "Переключение прерывает текущие соединения. Защита действует, пока Trafira работает."
+
+msgid "Route router applications"
+msgstr "Маршрутизация приложений роутера"
+
+msgid "Router traffic section"
+msgstr "Секция для трафика роутера"
+
+msgid "Route remaining traffic from this router through a Connection section. LAN routing is unchanged. Local management, configured bootstrap DNS/NTP, marked service traffic and active WG/AWG transports are excluded. Other native VPN interfaces are not supported."
+msgstr "Отправлять оставшийся трафик приложений роутера через секцию подключения. Маршруты устройств LAN сохраняются. Исключаются локальное управление, настроенные DNS/NTP для запуска, служебный трафик с метками и активные транспорты WG/AWG. Другие системные VPN-интерфейсы не поддерживаются."

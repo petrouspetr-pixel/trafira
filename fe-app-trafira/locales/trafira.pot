@@ -4041,3 +4041,12 @@ msgstr ""
 
 msgid "Switching interrupts existing connections. Protection applies while Trafira is running."
 msgstr ""
+
+msgid "Route router applications"
+msgstr ""
+
+msgid "Router traffic section"
+msgstr ""
+
+msgid "Route remaining traffic from this router through a Connection section. LAN routing is unchanged. Local management, configured bootstrap DNS/NTP, marked service traffic and active WG/AWG transports are excluded. Other native VPN interfaces are not supported."
+msgstr ""
