@@ -17,6 +17,12 @@ printf '%s\n' "$*" >>"$PROFILE_TEST_DIR/checks"
 [ ! -e "$PROFILE_TEST_DIR/reject-check" ]
 SH
 chmod +x "$WORK_DIR/bin/sing-box"
+cat >"$WORK_DIR/candidate-core" <<'SH'
+#!/bin/sh
+printf '%s\n' "$LD_LIBRARY_PATH $*" >"$PROFILE_TEST_DIR/candidate-check"
+[ ! -e "$PROFILE_TEST_DIR/reject-candidate" ]
+SH
+chmod +x "$WORK_DIR/candidate-core"
 ucode -L "$TRAFIRA_LIB" -e '
 let fs=require("fs"),r=require("config.profile_runtime"),f=require("config.profile_format");
 let directory=getenv("PROFILE_TEST_DIR")+"/stage";
@@ -36,6 +42,11 @@ fs.unlink(getenv("PROFILE_TEST_DIR")+"/reject-check");
 assert(!r.dependencies({outbounds:[{bind_interface:"missing-trafira-test"}]}),"missing interface rejected");
 assert(!r.dependencies({dns:{servers:[{tls:{client_key_path:"/missing-trafira-key"}}]}}),"missing key rejected");
 assert(r.dependencies({outbounds:[{bind_interface:"lo"}]}),"existing interface accepted");
+let core={binary:getenv("PROFILE_TEST_DIR")+"/candidate-core",library_path:directory,version:"1.14.0",variant:"stable"};
+let candidate_hooks=r.hooks(document,directory,core);
+assert(candidate_hooks.validate(prepared.path) && index(fs.readfile(getenv("PROFILE_TEST_DIR")+"/candidate-check")||"",directory)>=0,"selected candidate checked with staged libraries");
+fs.writefile(getenv("PROFILE_TEST_DIR")+"/reject-candidate","1");
+assert(!candidate_hooks.validate(prepared.path),"candidate failure cannot fall back to installed core");
 fs.writefile(prepared.path,"changed");
 assert(!hooks.validate(prepared.path),"tampered candidate rejected");
 '
