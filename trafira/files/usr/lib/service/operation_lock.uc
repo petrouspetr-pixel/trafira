@@ -25,7 +25,7 @@ function is_live_ancestor(owner) {
     }
     return false;
 }
-function identity(){return process("self");}
+function identity(pid){return process(pid||"self");}
 function owned_by_ancestor() {
     let info=fs.lstat(OWNER);
     if(!info || info.type!="file" || info.size>1024) return false;
