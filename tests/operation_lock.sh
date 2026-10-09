@@ -12,6 +12,7 @@ export TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime"
 export TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 export LOCK_TEST_DIR="$WORK_DIR"
 mkdir -p "$TRAFIRA_RUNTIME_STATE_DIR"
+chmod 755 "$TRAFIRA_RUNTIME_STATE_DIR"
 cat >"$WORK_DIR/child.uc" <<'UC'
 let lock=require("service.operation_lock");
 let held=lock.acquire("child");
@@ -36,6 +37,7 @@ for _ in $(seq 1 50); do
   sleep 0.1
 done
 test -f "$WORK_DIR/ready"
+test "$(stat -c %a "$TRAFIRA_RUNTIME_STATE_DIR")" = 755
 ucode -L "$TRAFIRA_LIB" -e 'let l=require("service.operation_lock"); assert(!l.acquire("competitor"),"unrelated worker must be busy");'
 for entry in 'service/lifecycle.uc start' 'service/initd.uc start-service' 'components/action.uc component-action'; do
   read -r module action <<<"$entry"
