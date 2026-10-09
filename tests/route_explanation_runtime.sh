@@ -39,3 +39,21 @@ JS
 head -n2 "$TRAFIRA_UCI_STATE_FILE" >"$WORK_DIR/original"
 test "${before%% *}" = "$(sha256sum "$WORK_DIR/original" | cut -d' ' -f1)"
 printf 'route explanation runtime checks passed\n'
+
+cat >"$WORK_DIR/bin/nft" <<'SH'
+#!/bin/sh
+exit 0
+SH
+chmod +x "$WORK_DIR/bin/nft"
+printf 'trafira.settings.router_origin_enabled=1\ntrafira.settings.router_origin_section=vpn\n' >>"$TRAFIRA_UCI_STATE_FILE"
+cat >"$WORK_DIR/config.json" <<'JSON'
+{"inbounds":[{"tag":"router-tproxy-in"},{"tag":"router-tproxy6-in"}],"route":{"rules":[{"inbound":["router-tproxy-in","router-tproxy6-in"],"action":"route","outbound":"vpn-out"}],"final":"direct-out"},"dns":{"rules":[],"final":"dns-server"},"outbounds":[{"tag":"vpn-out","type":"direct"}]}
+JSON
+printf '%s' '{"section":"vpn","dns":["198.51.100.53"],"ntp":[],"vpn":[]}' >"$TRAFIRA_RUNTIME_STATE_DIR/router-origin.json"
+run '{"domain":"store.example","destination_ip":"198.51.100.8","source":{"kind":"router"},"port":443,"network":"tcp"}' >"$WORK_DIR/router.json"
+run '{"domain":"dns.example","destination_ip":"198.51.100.53","source":{"kind":"router"},"port":53,"network":"udp"}' >"$WORK_DIR/bootstrap.json"
+node - "$WORK_DIR" <<'JS'
+const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
+assert.equal(JSON.parse(fs.readFileSync(`${dir}/router.json`)).decision.outbound,'vpn-out','router ignores LAN Alice bypass');
+assert.equal(JSON.parse(fs.readFileSync(`${dir}/bootstrap.json`)).decision.status,'direct','bootstrap exclusion explained');
+JS
