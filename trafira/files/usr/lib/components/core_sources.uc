@@ -19,7 +19,7 @@ function transport() {
 function download(url,destination,maximum,timeout) {
     let selected=transport();if(!selected)return false;
     let args=["curl","--connect-timeout","5","--max-time",""+timeout,"--max-filesize",""+maximum,"--proto","=https","--proto-redir","=https","-fsSL"];
-    if(selected.proxy)push(args,"--proxy","http://"+selected.proxy);
+    if(selected.proxy)push(args,"--proxy","http://"+selected.proxy,"--noproxy","");
     else push(args,"--noproxy","*");
     push(args,url,"-o",destination);
     // exec makes the ucode timeout refer to curl itself, not an intermediate shell.
@@ -71,5 +71,25 @@ function fetch(env) {
     } else return null;
     return versions.from_packages(packages,env);
 }
+function download_repository(candidate,directory) {
+    if(!candidate || index(["sing-box","sing-box-tiny"],candidate.repository_package)<0 ||
+        type(candidate.version)!="string" || !match(candidate.version,/^[A-Za-z0-9._+~-]{1,128}$/))return null;
+    let stat=fs.lstat(directory),selected=transport();
+    if(!selected || !stat || stat.type!="directory" || length(fs.lsdir(directory)||[]))return null;
+    fs.chmod(directory,448);
+    let proxy=selected.proxy?"http://"+selected.proxy:"",bypass=proxy?"":"*";
+    let environment=command(["env","http_proxy="+proxy,"HTTP_PROXY="+proxy,"https_proxy="+proxy,"HTTPS_PROXY="+proxy,
+        "no_proxy="+bypass,"NO_PROXY="+bypass,"all_proxy=","ALL_PROXY="]);
+    let operation;
+    if(candidate.package_type=="apk")operation=command(["apk","fetch","--output",directory,candidate.repository_package+"="+candidate.version]);
+    else if(candidate.package_type=="ipk")operation=command(["opkg","download",candidate.repository_package]);
+    else return null;
+    if(system("cd "+quote(directory)+" && exec "+environment+" "+operation+" </dev/null >/dev/null 2>&1",120000)!=0)return null;
+    let files=fs.lsdir(directory)||[];
+    if(length(files)!=1 || !match(files[0],/^[A-Za-z0-9._+~-]+\.(apk|ipk)$/))return null;
+    let path=directory+"/"+files[0];stat=fs.lstat(path);
+    // The candidate stage independently verifies package name, architecture and exact revision.
+    return stat && stat.type=="file" && stat.size>0 && stat.size<=268435456?path:null;
+}
 function current_version(){return module_output("singbox/runtime.uc",["version"])||"not-installed";}
-return {fetch,environment,transport,download,current_version};
+return {fetch,environment,transport,download,download_repository,current_version};
