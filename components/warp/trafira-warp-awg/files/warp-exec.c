@@ -40,11 +40,32 @@ static bool cancelled(const char *path,const char *id) {
     snprintf(needle,sizeof(needle),"\"%s\"",id);
     return strstr(buffer,needle)!=NULL;
 }
+static bool write_identity(void) {
+    const char *path=getenv("TRAFIRA_WARP_PIDFILE");
+    if(!path || !*path) return true;
+    char raw[4096];
+    FILE *stat=fopen("/proc/self/stat","r");
+    if(!stat) return false;
+    bool ok=fgets(raw,sizeof(raw),stat)!=NULL;
+    fclose(stat);
+    if(!ok) return false;
+    char *end=strrchr(raw,')'),*save=NULL,*field=NULL;
+    if(!end) return false;
+    field=strtok_r(end+1," ",&save);
+    for(int n=0; n<19 && field; n++) field=strtok_r(NULL," ",&save);
+    if(!field || strspn(field,"0123456789")!=strlen(field)) return false;
+    int fd=open(path,O_CREAT|O_EXCL|O_WRONLY|O_NOFOLLOW|O_CLOEXEC,0600);
+    if(fd<0) return false;
+    int count=dprintf(fd,"{\"pid\":\"%ld\",\"ticks\":\"%s\"}",(long)getpid(),field);
+    ok=count>0 && fsync(fd)==0;
+    close(fd);
+    return ok;
+}
 int main(int argc,char **argv) {
     char *end;
     if(argc<5) return 2;
     long seconds=strtol(argv[1],&end,10);
-    if(*end || seconds<1 || seconds>3600 || strlen(argv[3])>80 ||
+    if(*end || seconds<0 || seconds>3600 || strlen(argv[3])>80 ||
        strspn(argv[3],"abcdefghijklmnopqrstuvwxyz0123456789-")!=strlen(argv[3])) return 2;
     struct sigaction sa={0};
     sa.sa_handler=stop_parent;
@@ -72,6 +93,7 @@ int main(int argc,char **argv) {
             sigaction(SIGTERM,&sa,NULL);sigaction(SIGINT,&sa,NULL);sigaction(SIGHUP,&sa,NULL);
             struct rlimit maximum={2097152,2097152};
             if(setrlimit(RLIMIT_FSIZE,&maximum)<0) _exit(125);
+            if(!write_identity()) _exit(125);
             execvp(argv[4],argv+4);
             _exit(127);
         }
@@ -91,7 +113,7 @@ int main(int argc,char **argv) {
         if(size==(ssize_t)sizeof(result)) break;
         if(size==0) { result=125; break; }
         if(interrupted || cancelled(argv[2],argv[3])) { result=130; break; }
-        if(now()>=deadline) { result=124; break; }
+        if(seconds && now()>=deadline) { result=124; break; }
         struct timespec delay={.tv_sec=0,.tv_nsec=100000000};
         nanosleep(&delay,NULL);
     }

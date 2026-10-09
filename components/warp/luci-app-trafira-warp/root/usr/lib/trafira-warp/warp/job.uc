@@ -34,7 +34,7 @@ function live(owner) {
 }
 function status() {
     let value=state.load(CURRENT)||{running:false},journal=fs.lstat(ACTIVE);
-    if(value.running && !live(value.worker) && clock()[0]-(value.started_at||0)>10)
+    if(value.running && ((value.worker && !live(value.worker)) || (!value.worker && clock()[0]-(value.started_at||0)>10)))
         value={...value,success:false,running:false,error:"worker_interrupted"};
     return state.public_status({...value,recovery_pending:!!journal});
 }
@@ -53,6 +53,14 @@ function recover(hooks) {
     if(!state.remove(ACTIVE))return {...failure("recovery_error"),rollback_error:true};
     state.remove(BACKUP);return {success:true,restored:true};
 }
+function enough_space(snapshot) {
+    let p=fs.popen("df -P -k '"+replace(state.DIRECTORY,/'/g,"'\\''")+"' 2>/dev/null","re");
+    if(!p)return false;
+    let text=p.read(8193),code=p.close();if(code!=0 || length(text||"")>8192)return false;
+    let lines=filter(split(text||"","\n"),(line)=>trim(line)!="");
+    let fields=split(trim(lines[length(lines)-1]||""),/\s+/);
+    return length(fields)>=6 && match(fields[3],/^[0-9]+$/) && int(fields[3])*1024>=2*length(sprintf("%J",snapshot))+1048576;
+}
 function execute(request,hooks,id) {
     if(!valid_request(request))return failure("invalid_request");
     id=id||sprintf("w-%x-%x",clock()[0],clock()[1]);
@@ -65,7 +73,7 @@ function execute(request,hooks,id) {
         result=recover(hooks);
         if(result.success) {
             let snapshot=hooks.snapshot();
-            if(type(snapshot)!="object" || !state.save(BACKUP,{schema:1,job_id:id,snapshot}) ||
+            if(type(snapshot)!="object" || !enough_space(snapshot) || !state.save(BACKUP,{schema:1,job_id:id,snapshot}) ||
                 !state.save(ACTIVE,{schema:1,job_id:id,worker:identity(),stage:"prepared",expected_digest:request.expected_digest}))result=failure("storage_unavailable");
             else {
                 let current={job_id:id,running:true,worker:identity(),started_at:clock()[0],stage:"running"};

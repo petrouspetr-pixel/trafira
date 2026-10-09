@@ -10,7 +10,7 @@ function ensure(directory) {
 function permitted(path) {
     if(type(path)!="string")return false;
     let slash=rindex(path,"/"),directory=substr(path,0,slash),name=substr(path,slash+1);
-    return index([DIRECTORY,RUNTIME],directory)>=0 && match(name,/^[a-zA-Z0-9_-]+\.json$/);
+    return index([DIRECTORY,RUNTIME],directory)>=0 && match(name,/^[a-zA-Z0-9_-]+\.(json|conf)$/);
 }
 function load(path) {
     if(!permitted(path))return null;
@@ -21,11 +21,11 @@ function load(path) {
     if(length(text||"")>2097152)return null;
     try {let value=json(text);return type(value)=="object"?value:null;}catch(e){return null;}
 }
-function save(path,value) {
-    if(!permitted(path) || type(value)!="object")return false;
+function save_text(path,text) {
+    if(!permitted(path) || type(text)!="string")return false;
     let directory=substr(path,0,rindex(path,"/"));if(!ensure(directory))return false;
     let old=fs.lstat(path);if(old && old.type!="file")return false;
-    let text=sprintf("%J",value);if(length(text)>2097152)return false;
+    if(length(text)>2097152)return false;
     let temporary=path+".stage",stale=fs.lstat(temporary);
     if(stale && (stale.type!="file" || !fs.unlink(temporary)))return false;
     let file=fs.open(temporary,"wex",384);if(!file)return false;
@@ -36,6 +36,7 @@ function save(path,value) {
     if(!fs.rename(temporary,path))return false;
     return directory!=DIRECTORY || system("sync")==0;
 }
+function save(path,value){return type(value)=="object" && save_text(path,sprintf("%J",value));}
 function remove(path) {
     if(!permitted(path))return false;
     let info=fs.lstat(path);if(!info)return true;
@@ -53,4 +54,4 @@ function public_status(value) {
         if(type(value[key])=="int" && value[key]>=0)result[key]=value[key];
     return result;
 }
-return {DIRECTORY,RUNTIME,ensure,load,save,remove,public_status};
+return {DIRECTORY,RUNTIME,ensure,load,save,save_text,remove,public_status};

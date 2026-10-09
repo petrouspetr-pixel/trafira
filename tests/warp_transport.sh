@@ -17,5 +17,7 @@ assert(t.valid_config(config),"valid owned candidate");
 let args=t.address_commands(config,false);assert(length(args)==1 && args[0][0]=="ip","IPv6 disabled adds only IPv4");
 let commands=t.address_commands(config,true);assert(length(commands)==2,"IPv6 configured when available");
 assert(t.network_section("tfwarp0").defaultroute=="0" && t.network_section("tfwarp0").peerdns=="0","no global route or DNS");
+assert(t.routing_identity("tfwarp0").table!=t.routing_identity("tfwarp1").table,"isolated slot tables");
+assert(!t.routing_identity("wan"),"no policy table for foreign interfaces");
 print("WARP transport validation checks passed\n");
 '

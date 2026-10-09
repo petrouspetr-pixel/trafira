@@ -33,7 +33,7 @@ class ProcessLifecycle(unittest.TestCase):
         for interrupted in (False,True):
             cancel = Path(self.work.name)/("cancel-%s.json" % interrupted)
             pidfile = Path(self.work.name)/("child-%s" % interrupted)
-            proc = subprocess.Popen([self.binary,"30",str(cancel),"w-test","sh","-c",'echo $$ > "$1"; sleep 30',"sh",str(pidfile)])
+            proc = subprocess.Popen([self.binary,"0",str(cancel),"w-test","sh","-c",'echo $$ > "$1"; sleep 30',"sh",str(pidfile)])
             for _ in range(100):
                 if pidfile.exists():break
                 time.sleep(.02)

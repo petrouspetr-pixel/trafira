@@ -27,8 +27,8 @@ function choose_interface(sections,devices) {
 function valid_config(c) {
     if(type(c)!="object" || !valid_interface(c.interface) || !valid_endpoint(c.endpoint) || c.fwmark!=134217728 || c.mtu!=1280 || !ipv4(c.ipv4) || (c.ipv6 && !ipv6(c.ipv6)))return false;
     for(let key in ["private_key","peer_public_key"])if(type(c[key])!="string" || !match(c[key],/^[A-Za-z0-9+\/]{43}=$/))return false;
-    if(type(c.jc)!="int" || c.jc<0 || c.jc>10 || type(c.jmin)!="int" || type(c.jmax)!="int" || c.jmin<0 || c.jmax<c.jmin || c.jmax>1280)return false;
-    return c.i1==null || (type(c.i1)=="string" && length(c.i1)<=8192 && !match(c.i1,/[\r\n]/));
+    if(type(c.jc)!="int" || c.jc<1 || c.jc>10 || type(c.jmin)!="int" || type(c.jmax)!="int" || c.jmin<1 || c.jmax<c.jmin || c.jmax>1280)return false;
+    return (type(c.i1)=="string" && length(c.i1)>0 && length(c.i1)<=8192 && !match(c.i1,/[\r\n]/));
 }
 function network_section(name){return {proto:"none",device:name,auto:"0",defaultroute:"0",peerdns:"0",delegate:"0",trafira_warp_managed:"1"};}
 function address_commands(c,enable_ipv6) {
@@ -55,4 +55,97 @@ function status() {
     let handshake=output([ctl,"get",c.interface,"last_handshake_time_sec"]),age=handshake && int(handshake)>0?clock()[0]-int(handshake):null;
     return {...inactive,running:true,interface:c.interface,endpoint,listen_port:int(port),fwmark:c.fwmark,handshake_age:age,https_ok:runtime.https_ok===true,warp:runtime.warp===true};
 }
-return {valid_interface,ipv4,ipv6,valid_endpoint,choose_interface,valid_config,network_section,address_commands,status,quote,output};
+function owned(section,name) {
+    if(!section)return false;
+    let expected=network_section(name);
+    for(let key in expected)if(section[key]!=expected[key])return false;
+    return section[".type"]=="interface";
+}
+function config_text(c) {
+    return "[Interface]\nPrivateKey = "+c.private_key+"\nFwMark = "+c.fwmark+"\nJc = "+c.jc+"\nJmin = "+c.jmin+"\nJmax = "+c.jmax+"\nI1 = "+c.i1+
+        "\n\n[Peer]\nPublicKey = "+c.peer_public_key+"\nEndpoint = "+c.endpoint+"\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n";
+}
+function routing_identity(name) {
+    if(!valid_interface(name))return null;
+    let number=int(substr(name,6));return {priority:18090+number,table:51890+number};
+}
+function route_setup(c) {
+    let owned_route=routing_identity(c.interface);
+    for(let family in ["-4","-6"]) {
+        if(family=="-6" && (!c.ipv6 || trim(fs.readfile("/proc/sys/net/ipv6/conf/all/disable_ipv6")||"1")=="1"))continue;
+        let text=output(["ip",family,"-j","rule","show"]),routes=output(["ip",family,"-j","route","show","table",""+owned_route.table]);
+        let rules,entries;
+        try {rules=json(text);entries=json(routes);}catch(e){return false;}
+        if(type(rules)!="array" || type(entries)!="array")return false;
+        let found=false;
+        for(let rule in rules) {
+            if(rule.priority!=owned_route.priority && rule.table!=owned_route.table)continue;
+            if(rule.priority!=owned_route.priority || rule.table!=owned_route.table || rule.oif!=c.interface)return false;
+            found=true;
+        }
+        for(let route in entries)if(route.dst!="default" || route.dev!=c.interface || route.gateway)return false;
+        if(!length(entries) && output(["ip",family,"route","add","default","dev",c.interface,"table",""+owned_route.table])==null)return false;
+        if(!found && output(["ip",family,"rule","add","priority",""+owned_route.priority,"oif",c.interface,"lookup",""+owned_route.table])==null)return false;
+    }
+    return true;
+}
+function snapshot() {
+    let config=state.load(state.DIRECTORY+"/transport.json"),cursor=require("uci").cursor();
+    return {config,network:config?cursor.get_all("network",config.interface):null,running:status().running};
+}
+function mark_available(mark) {
+    for(let family in ["-4","-6"]) {
+        let rules=output(["ip",family,"rule","show"]);if(rules==null)return false;
+        for(let line in split(rules,"\n")) {
+            let found=match(line,/fwmark (0x[0-9a-fA-F]+|[0-9]+)(?:\/(0x[0-9a-fA-F]+|[0-9]+))?/);
+            if(found && (mark & (found[2]?int(found[2]):4294967295))==(int(found[1]) & (found[2]?int(found[2]):4294967295)))return false;
+        }
+    }
+    return true;
+}
+function apply(config,id) {
+    let c={...config},cursor=require("uci").cursor(),old=state.load(state.DIRECTORY+"/transport.json");
+    if(!valid_config(c) || !mark_available(c.fwmark))return {success:false,error:"invalid_transport"};
+    let existing=cursor.get_all("network",c.interface);
+    if(existing && (!old || old.interface!=c.interface || !owned(existing,c.interface)))return {success:false,error:"interface_conflict"};
+    if(!existing && fs.stat("/sys/class/net/"+c.interface))return {success:false,error:"interface_conflict"};
+    let was_running=status().running;
+    if(output(["/etc/init.d/trafira-warp","stop"])==null && was_running)return {success:false,error:"stop_failed"};
+    c.generation=(old?.generation||0)+1;
+    if(!state.save_text(state.DIRECTORY+"/awg.conf",config_text(c)) || !state.save(state.DIRECTORY+"/transport.json",c))return {success:false,error:"storage_unavailable"};
+    if(!existing) {
+        cursor.set("network",c.interface,"interface");
+        for(let key,value in network_section(c.interface))cursor.set("network",c.interface,key,value);
+        if(!cursor.commit("network"))return {success:false,error:"network_commit_failed"};
+        let dynamic={name:c.interface,...network_section(c.interface)};
+        if(output(["ubus","call","network","add_dynamic",sprintf("%J",dynamic)])==null)return {success:false,error:"network_apply_failed"};
+    }
+    if(c.enabled!==true)return {success:true,enabled:false};
+    if(output(["/etc/init.d/trafira-warp","start"])==null)return {success:false,error:"start_failed"};
+    for(let n=0;n<10;n++) {
+        if(job.cancelled(id))return {success:false,error:"cancelled"};
+        if(status().running)return {success:true,enabled:true};
+        system("sleep 1");
+    }
+    return {success:false,error:"start_failed"};
+}
+function restore(saved,id) {
+    let current=state.load(state.DIRECTORY+"/transport.json"),cursor=require("uci").cursor();
+    if(saved.config) {
+        let result=apply({...saved.config,enabled:saved.running===true},id);
+        if(!result.success)return false;
+        // Preserve desired boot state independently of current service activity.
+        return state.save(state.DIRECTORY+"/transport.json",saved.config);
+    }
+    if(current) {
+        let existing=cursor.get_all("network",current.interface);
+        if(existing && !owned(existing,current.interface))return false;
+        output(["/etc/init.d/trafira-warp","stop"]);
+        if(existing) {
+            output(["ubus","call","network.interface."+current.interface,"down"]);
+            cursor.delete("network",current.interface);if(!cursor.commit("network"))return false;
+        }
+    }
+    return state.remove(state.DIRECTORY+"/transport.json") && state.remove(state.DIRECTORY+"/awg.conf");
+}
+return {routing_identity,route_setup,owned,config_text,snapshot,apply,restore,mark_available,valid_interface,ipv4,ipv6,valid_endpoint,choose_interface,valid_config,network_section,address_commands,status,quote,output};
