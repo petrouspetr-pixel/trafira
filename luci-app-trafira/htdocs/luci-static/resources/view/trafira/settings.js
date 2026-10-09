@@ -756,10 +756,7 @@ function createSettingsContent(section, capabilities) {
     ),
   );
   o.value("/tmp/sing-box/cache.db", "RAM (/tmp/sing-box/cache.db)");
-  o.value(
-    "/usr/share/sing-box/cache.db",
-    "Flash (/usr/share/sing-box/cache.db)",
-  );
+  o.value("/etc/sing-box/cache.db", "Flash (/etc/sing-box/cache.db)");
   o.default = "/tmp/sing-box/cache.db";
   o.rmempty = false;
   o.validate = function (section_id, value) {
