@@ -58,8 +58,20 @@ function link_local(ip) {
     return core_ip.ip_in_cidr(ip, "fe80::/10");
 }
 
+function cidr_coverage(value, entries) {
+    if (type(core_ip.cidr_list_coverage) == "function")
+        return core_ip.cidr_list_coverage(value, entries);
+
+    // Older Trafira installs expose address membership but not subnet
+    // coverage. This fallback preserves host-IP classification there.
+    for (let entry in entries)
+        if (core_ip.ip_in_cidr(value, entry))
+            return { any: true, all: true, matched: entry };
+
+    return { any: false, all: false, matched: null };
+}
+
 function parse_leases(text) {
-    let by_mac = {};
     let by_ip = {};
     let malformed = 0;
     for (let line in split(as_string(text), "\n")) {
@@ -70,13 +82,10 @@ function parse_leases(text) {
             malformed++;
             continue;
         }
-        if (fields[3] != "*") {
+        if (fields[3] != "*")
             by_ip[fields[2]] = fields[3];
-            if (core_ip.valid_mac(fields[1]))
-                by_mac[lc(fields[1])] = fields[3];
-        }
     }
-    return { by_mac, by_ip, malformed };
+    return { by_ip, malformed };
 }
 
 // Only neighbours on interfaces Trafira captures or the Alice list names are
@@ -108,15 +117,20 @@ function lan_devices(neigh, leases, relevant_interfaces) {
         if (mac == "" || !core_ip.valid_ip(ip) || (!online && !seen) ||
             !alice_config.interface_in_list(relevant_interfaces, entry.dev))
             continue;
+        if (link_local(ip))
+            continue;
 
-        let key = as_string(entry.dev) + "|" + mac;
+        // Neighbor tables can report several IPs for one MAC (for example,
+        // when an AP proxies ARP). Keep each IP separate: Alice IP rules apply
+        // to packets from that address, and a lease name belongs to its IP.
+        let key = as_string(entry.dev) + "|" + mac + "|" + ip;
         if (devices[key] == null) {
             devices[key] = {
                 kind: "lan",
-                name: leases.by_mac[mac] || "",
+                name: leases.by_ip[ip] || "",
                 mac,
                 interface: as_string(entry.dev),
-                ips: [],
+                ips: [ ip ],
                 online: false,
                 last_handshake: null
             };
@@ -125,10 +139,6 @@ function lan_devices(neigh, leases, relevant_interfaces) {
 
         let device = devices[key];
         device.online = device.online || online;
-        if (!link_local(ip) && index(device.ips, ip) < 0)
-            push(device.ips, ip);
-        if (device.name == "" && leases.by_ip[ip])
-            device.name = leases.by_ip[ip];
     }
 
     return {
@@ -219,7 +229,7 @@ function classify(device, alice, captured_interfaces) {
     let has_unmatched = false;
     if (matched_by == null) {
         for (let ip in device.ips) {
-            let coverage = core_ip.cidr_list_coverage(ip, alice.ips);
+            let coverage = cidr_coverage(ip, alice.ips);
             has_matched = has_matched || coverage.any;
             has_unmatched = has_unmatched || !coverage.all;
             if (matched_by == null && coverage.matched != null)
@@ -276,7 +286,7 @@ function build_report(data) {
     let devices = [];
     let lease_data = lease_result.ok
         ? parse_leases(lease_result.output)
-        : { by_mac: {}, by_ip: {}, malformed: 0 };
+        : { by_ip: {}, malformed: 0 };
 
     if (!lease_result.ok)
         push(report_warnings, { code: "dhcp_source_unavailable", value: "" });

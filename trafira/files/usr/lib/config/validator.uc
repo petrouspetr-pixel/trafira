@@ -1729,26 +1729,26 @@ function validate_alice_settings(settings) {
 
     let mode = option(settings, "alice_list_mode", alice_config.LIST_MODE_ALLOW);
     if (mode != alice_config.LIST_MODE_ALLOW && mode != alice_config.LIST_MODE_DENY)
-        fail_validation("Invalid Alice mode list mode '" + mode + "'. Aborted.");
+        fail_validation("Invalid Alice Mode list mode '" + mode + "'. Aborted.");
     for (let source in alice.ips)
         if (!core_ip.nft_ip_or_cidr(source))
-            fail_validation("Invalid Alice mode device IP or subnet '" + source + "'. Aborted.");
+            fail_validation("Invalid Alice Mode device IP or subnet '" + source + "'. Aborted.");
     for (let mac in alice.macs)
         if (!core_ip.valid_mac(mac))
-            fail_validation("Invalid Alice mode MAC address '" + mac + "'. Aborted.");
+            fail_validation("Invalid Alice Mode MAC address '" + mac + "'. Aborted.");
 
     let source_interfaces = list_option(settings, "source_network_interfaces");
     if (length(source_interfaces) == 0)
         source_interfaces = [ "br-lan" ];
     for (let name in alice.interfaces) {
         if (!alice_config.valid_interface_name(name))
-            fail_validation("Invalid Alice mode interface '" + name + "'. Aborted.");
+            fail_validation("Invalid Alice Mode interface '" + name + "'. Aborted.");
         let captured = false;
         for (let source in source_interfaces)
             if (alice_config.interface_matches(name, source) || alice_config.interface_matches(source, name))
                 captured = true;
         if (!captured)
-            log_message("Alice mode interface '" + name + "' is not in source_network_interfaces, so it has no effect", "warn");
+            log_message("Alice Mode interface '" + name + "' is not in source_network_interfaces, so it has no effect", "warn");
     }
 }
 

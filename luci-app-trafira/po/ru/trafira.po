@@ -147,10 +147,10 @@ msgid "After a connection failure, retry the skipped server after this duration"
 msgstr "После ошибки соединения повторять попытку через этот интервал"
 
 msgid "Alice Mode"
-msgstr "Маршрутизация по устройствам"
+msgstr "Alice Mode"
 
 msgid "Alice Mode devices are currently unavailable"
-msgstr "Данные об устройствах временно недоступны"
+msgstr "Данные об устройствах Alice Mode временно недоступны"
 
 msgid "All"
 msgstr "Все"
@@ -672,7 +672,7 @@ msgid "Enable"
 msgstr "Включить"
 
 msgid "Enable Alice Mode"
-msgstr "Включить маршрутизацию по устройствам"
+msgstr "Включить Alice Mode"
 
 msgid "Enable authentication"
 msgstr "Включить авторизацию"
@@ -1857,7 +1857,7 @@ msgid "Settings"
 msgstr "Настройки"
 
 msgid "Show each device's routing status on the dashboard."
-msgstr "Показывать на главной странице, как маршрутизируется каждое устройство."
+msgstr "Показывать на дашборде, как маршрутизируется каждое устройство."
 
 msgid "Show metadata on dashboard"
 msgstr "Отображать метаданные в дашборде"
