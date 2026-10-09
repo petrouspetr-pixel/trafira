@@ -43,8 +43,8 @@ function hooks(integration) {
         return ok;
     }
     function perform(request,id) {
-        let mark=integration.mark||134217728;
-        if(mark!=134217728)return {success:false,error:"mark_conflict"};
+        let mark=integration.mark||transport.outbound_mark();
+        if(mark!=transport.outbound_mark())return {success:false,error:"mark_conflict"};
         if(request.action=="status")return {success:true};
         if(request.action=="test_start")return stability.run(request.duration,request.services,id);
         if(request.action=="scan_start")return scout.run(request.mode,mark,id);

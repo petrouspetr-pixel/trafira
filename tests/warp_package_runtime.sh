@@ -22,7 +22,7 @@ cat >"$WORK/lib/components/core_sources.uc" <<'UC'
 let fs=require("fs");
 function download(url,path) {
  let root=getenv("FIXTURE");
- if(fs.stat(root+"/offline"))throw "unexpected network access";
+ assert(!fs.stat(root+"/offline"),"unexpected network access");
  let source=index(url,"api.github.com")>=0?"release.json":substr(url,rindex(url,"/")+1);
  let text=fs.readfile(root+"/assets/"+source);if(text==null)return false;
  return fs.writefile(path,text)==length(text);

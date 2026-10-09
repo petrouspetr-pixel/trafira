@@ -79,6 +79,7 @@ try:
     ip(client,'addr','add','192.0.2.3/24','dev','client');ip(client,'-6','addr','add','2001:db8:2::3/64','dev','client','nodad')
     ip(client,'route','add','default','via','192.0.2.1');ip(client,'-6','route','add','default','via','2001:db8:2::1')
     ip(server,'addr','add','198.51.100.2/32','dev','lo')
+    ip(server,'addr','add','1.1.1.1/32','dev','lo')
     ip(server,'route','add','192.0.2.0/24','via','162.159.192.2');ip(server,'-6','route','add','2001:db8:2::/64','via','2001:db8:1::1')
     ip(router,'route','add','default','via','162.159.192.1')
     ip(router,'-6','route','add','default','via','2001:db8:1::2')
@@ -107,9 +108,18 @@ try:
     assert snapshot is not None and snapshot.get('warp'), 'Userspace WARP bootstrap must be recognized'
     assert snapshot['vpn']==[] and snapshot['vpn_ports']==[],snapshot
     # A real UAPI handshake followed by HTTP over both tunnel address families.
-    start(['python3',ROOT/'tests/helpers/failure_policy_servers.py','http'],server,'http')
+    run(['openssl','req','-x509','-newkey','rsa:2048','-nodes','-days','1','-subj','/CN=warp.test','-addext','subjectAltName=DNS:warp.test,IP:1.1.1.1,IP:198.51.100.2','-keyout',work/'tls.key','-out',work/'tls.crt'])
+    os.environ['CURL_CA_BUNDLE']=str(work/'tls.crt')
+    start(['python3',ROOT/'tests/helpers/warp_servers.py',work/'tls.crt',work/'tls.key'],server,'http')
+    time.sleep(.5)
+    assert json.loads(uc('print(sprintf("%J",require("warp.stability").health("tfwarp0","fixture")));'))['warp'],'verified HTTPS over real AWG'
+
     start(['python3','-m','http.server','18080','--bind','192.0.2.1','--directory',work],router,'management')
     config={'log':{'level':'error'},'inbounds':[{'type':'tproxy','tag':'lan4','listen':'127.0.0.1','listen_port':1602},{'type':'tproxy','tag':'lan6','listen':'::1','listen_port':1603}], 'outbounds':[{'type':'direct','tag':'vpn-out','bind_interface':'tfwarp0'}], 'route':{'rules':[{'action':'sniff','inbound':['lan4','lan6']}],'default_mark':134217728,'final':'vpn-out'}, 'dns':{'servers':[],'rules':[]}}
+    config['inbounds'].append({'type':'direct','tag':'dns-test','listen':'127.0.0.42','listen_port':53})
+    config['route']['rules'].append({'action':'hijack-dns','protocol':'dns'})
+    config['route']['default_domain_resolver']='dns-server'
+    config['dns']={'servers':[{'type':'udp','tag':'dns-server','server':'198.51.100.2','detour':'vpn-out'},{'type':'fakeip','tag':'fakeip','inet4_range':'198.18.0.0/15','inet6_range':'fc00::/18'}], 'rules':[{'inbound':'dns-test','query_type':['A','AAAA'],'server':'fakeip'}], 'final':'dns-server'}
     (work/'base.json').write_text(json.dumps(config))
     uc('let fs=require("fs"),r=require("config.router_origin"),c=json(fs.readfile("'+str(work/'base.json')+'"));r.attach(c,{router_origin_enabled:"1",router_origin_section:"vpn"},[{".name":"vpn",action:"connection"}]);require("core.common").strip_internal_fields(c);fs.writefile("'+str(work/'router.json')+'",sprintf("%J",c));')
     run(['sing-box','check','-c',work/'router.json'],router)
@@ -120,31 +130,44 @@ try:
  counter direct6 {}
  counter plain_peer {}
  chain egress { type filter hook postrouting priority 0; policy accept;
- oifname "wan" ip daddr 198.51.100.2 tcp dport 18080 counter name direct4
+ oifname "wan" ip daddr { 198.51.100.2, 1.1.1.1 } meta l4proto { tcp, udp } th dport { 53, 443, 18080, 18443 } counter name direct4
  oifname "wan" ip6 daddr 2001:db8:1::2 tcp dport 18080 counter name direct6
- oifname "wan" ip daddr 162.159.192.1 udp dport 2408 meta mark 0 counter name plain_peer
+ oifname "wan" ip daddr 162.159.192.1 udp dport { 2408, 2409 } meta mark 0 counter name plain_peer
  }
  }''')
     # Ordinary LAN traffic retains its direct path; protected LAN uses WARP.
     curl(client,source='192.0.2.3');curl(client,'[2001:db8:1::2]',source='2001:db8:2::3')
     run(['nft','reset','counters','table','inet','Audit'],router)
     curl(client,source='192.0.2.2');curl(client,'[2001:db8:1::2]',source='2001:db8:2::2');counters_zero()
+    run(['curl','--noproxy','*','--interface','192.0.2.2','--cacert',work/'tls.crt','--max-time','3','--resolve','warp.test:18443:198.51.100.2','-fsS','https://warp.test:18443/'],client);counters_zero()
     # Router-origin off is direct, on is bound to WARP with no broad UDP bypass.
     curl();run(['nft','reset','counters','table','inet','Audit'],router)
     origin=uc('print(require("config.router_origin").nft("WarpTest","local4","local6","0x04000000",{dns:[],ntp:[],vpn:[],vpn_ports:[]}));')
     nft(origin);curl();curl(address='[2001:db8:1::2]');counters_zero()
+    dns_query="import socket,struct;s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.settimeout(3);q=struct.pack('!HHHHHH',123,256,1,0,0,0)+b'\\x04warp\\x04test\\x00'+struct.pack('!HH',1,1);s.sendto(q,('127.0.0.42',53));a=s.recv(2048);print(socket.inet_ntoa(a[-4:]))"
+    fake=run(['python3','-c',dns_query],router).stdout.strip()
+    assert fake.startswith('198.18.') or fake.startswith('198.19.'),fake
+    def fake_request(success):
+        result=run(['curl','--noproxy','*','--max-time','3','-fsS','--resolve','warp.test:18080:'+fake,'http://warp.test:18080/'],router,check=False)
+        assert (result.returncode==0)==success,result.stderr
+    fake_request(True);counters_zero()
+
     run(['python3','-c',"import socket;s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.sendto(b'ordinary-app',('162.159.192.1',2408))"],router);time.sleep(.3);counters_zero()
     # SIGKILL the actual runner: guardian must remove its TUN; nothing falls back.
     runner.kill();runner.wait(timeout=5)
     wait(lambda:ip(router,'-j','link','show').stdout.find('tfwarp0')<0,'supervisor removes tunnel after runner death')
-    curl(success=False);curl(address='[2001:db8:1::2]',success=False)
+    curl(success=False);curl(address='[2001:db8:1::2]',success=False);fake_request(False)
     curl(client,source='192.0.2.2',success=False);curl(client,'[2001:db8:1::2]',source='2001:db8:2::2',success=False);counters_zero()
     curl(client,address='192.0.2.1',source='192.0.2.2')
+    inactive=json.loads(uc('print(sprintf("%J",require("nft.router_origin").snapshot({},[{".name":"warp",action:"connection",enabled:"1",interfaces:["tfwarp0"]}])));'))
+    assert inactive and inactive['warp']['running'] is False,'inactive owned transport remains recognizable'
     core.terminate();core.wait(timeout=5)
     core=start(['sing-box','run','-c',work/'router.json'],router,'sing-box-cold');time.sleep(.6)
     assert core.poll() is None,'cold core must start with unavailable WARP'
     curl(client,source='192.0.2.2',success=False);counters_zero()
     # Restart the actual owned runner and its oif policy after abrupt loss.
+    uapi('tfwarp9','listen_port=2409')
+    uc('let s=require("warp.state"),t=require("warp.transport"),c=s.load(s.DIRECTORY+"/transport.json");c.endpoint="162.159.192.1:2409";c.generation++;assert(s.save(s.DIRECTORY+"/transport.json",c) && s.save_text(s.DIRECTORY+"/awg.conf",t.config_text(c)),"endpoint change");')
     runner=start(['ucode','-L',LIB,'-L',work/'addon',work/'addon/warp/runner.uc'],router,'awg-restart')
     wait(lambda:json.loads(uc('print(sprintf("%J",require("warp.transport").status()));')).get('running'),'runner restarts')
     curl(client,source='192.0.2.2');curl();counters_zero()
@@ -153,6 +176,14 @@ try:
     nft(guard);run(['nft','delete','table','inet','WarpTest'],router)
     curl(success=False);curl(client,source='192.0.2.2',success=False);counters_zero()
     curl(client,address='192.0.2.1',source='192.0.2.3')
+    run(['nft','delete','table','inet','TrafiraReloadGuard'],router)
+    runner.kill();runner.wait(timeout=5)
+    wait(lambda:ip(router,'-j','link','show').stdout.find('tfwarp0')<0,'runner cleanup before IPv4-only')
+    run(['sysctl','-qw','net.ipv6.conf.all.disable_ipv6=1','net.ipv6.conf.default.disable_ipv6=1'],router)
+    runner=start(['ucode','-L',LIB,'-L',work/'addon',work/'addon/warp/runner.uc'],router,'awg-ipv4-only')
+    wait(lambda:json.loads(uc('print(sprintf("%J",require("warp.transport").status()));')).get('running'),'IPv4-only runner')
+    assert not json.loads(ip(router,'-j','-6','addr','show','dev','tfwarp0').stdout)[0].get('addr_info'),'no IPv6 address when globally disabled'
+    run(['curl','--noproxy','*','--interface','tfwarp0','--max-time','3','-fsS','http://198.51.100.2:18080/'],router);counters_zero()
     print('WARP actual runner/UAPI, IPv4/IPv6 LAN, router-origin, peer UDP isolation, SIGKILL and fail-closed WAN counters passed')
 except Exception:
     for file in work.glob('*.log'):

@@ -14,11 +14,15 @@ function read(probe) {
     let pipe=fs.popen("exec "+command+" 2>/dev/null","re");if(!pipe)return {success:false,error:"component_unavailable",running:false};
     let text=pipe.read(16385),code=pipe.close(),status;
     try {if(code==0 && length(text||"")<=16384)status=json(text);}catch(e){}
+    if(!probe && status?.schema==1 && status.owner=="trafira-warp" && status.running===false && status.configured===true && match(status.interface||"",/^tfwarp[0-9]$/))
+        return {success:true,schema:1,owner:"trafira-warp",running:false,configured:true,interface:status.interface,generation:status.generation};
     if(!valid(status))return {success:false,error:status?.running?"invalid_transport":"transport_stopped",running:false};
     return {success:true,schema:1,owner:"trafira-warp",interface:status.interface,endpoint:status.endpoint,listen_port:status.listen_port,fwmark:status.fwmark,
         running:true,generation:status.generation,https_ok:status.https_ok===true,warp:status.warp===true,handshake_age:status.handshake_age};
 }
 function exemptions(status) {
+    if(!probe && status?.schema==1 && status.owner=="trafira-warp" && status.running===false && status.configured===true && match(status.interface||"",/^tfwarp[0-9]$/))
+        return {success:true,schema:1,owner:"trafira-warp",running:false,configured:true,interface:status.interface,generation:status.generation};
     if(!valid(status))return null;
     let endpoint=split(status.endpoint,":");
     // Endpoints are audit data. Router-origin must exempt the verified mark,

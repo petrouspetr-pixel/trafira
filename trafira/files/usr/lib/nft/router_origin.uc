@@ -13,6 +13,10 @@ function resolve(name) {
     return length(result)?result:null;
 }
 function include_warp(result,known,status) {
+    if(status?.schema==1 && status.owner=="trafira-warp" && status.running===false && status.configured===true && match(status.interface||"",/^tfwarp[0-9]$/)) {
+        known[status.interface]=true;
+        result.warp={interface:status.interface,generation:status.generation,running:false};return true;
+    }
     let warp=require("integrations.warp_transport"),verified=warp.exemptions(status);
     if(!verified)return false;
     for(let name in verified.interfaces)known[name]=true;

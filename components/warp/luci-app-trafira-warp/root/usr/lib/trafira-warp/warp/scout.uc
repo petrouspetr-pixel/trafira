@@ -34,7 +34,7 @@ function candidate_current(candidate,account_digest,generation,now) {
 function register(id,mark) {
     let existing=state.load(ACCOUNT);if(fs.lstat(ACCOUNT) && !existing)return {success:false,error:"invalid_account"};
     if(existing)return account_valid(existing)?{success:true,registered:true}:{success:false,error:"invalid_account"};
-    if(mark!=134217728 || !state.ensure(state.DIRECTORY))return {success:false,error:"invalid_transport"};
+    if(mark!=transport.outbound_mark() || !state.ensure(state.DIRECTORY))return {success:false,error:"invalid_transport"};
     let target=state.DIRECTORY+"/registration.json";
     if(fs.lstat(target)) {
         let pending=state.load(target);
@@ -48,7 +48,7 @@ function register(id,mark) {
     return {success:false,error:result.success?"invalid_account":result.error};
 }
 function run(mode,mark,id) {
-    if(index(["quick","full"],mode)<0 || mark!=134217728)return {success:false,error:"invalid_request"};
+    if(index(["quick","full"],mode)<0 || mark!=transport.outbound_mark())return {success:false,error:"invalid_request"};
     let account=state.load(ACCOUNT);if(!account_valid(account))return {success:false,error:"registration_required"};
     let old=state.load(state.DIRECTORY+"/transport.json"),iface=old?.interface;
     if(!iface)iface=transport.choose_interface(require("uci").cursor().get_all("network")||{},fs.lsdir("/sys/class/net")||[]);

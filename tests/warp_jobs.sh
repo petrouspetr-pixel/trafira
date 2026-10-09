@@ -118,3 +118,16 @@ import json,sys
 v=json.load(open(sys.argv[1]));assert not v['running'] and v['restored'],v
 PYTEST
 echo 'WARP SIGKILL recovery checks passed'
+
+mkdir -p "$WORK/bin"
+cat >"$WORK/bin/df" <<'SH'
+#!/bin/sh
+printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\nfixture 100 100 0 100%% /\n'
+SH
+chmod +x "$WORK/bin/df"
+PATH="$WORK/bin:$PATH" ucode -L "$TRAFIRA_WARP_LIB" -e '
+let j=require("warp.job"),changed=false;
+let r=j.execute({action:"enable"},{snapshot:()=>({old:true}),perform:()=>{changed=true;return {success:true};},restore:()=>true});
+assert(!r.success && r.error=="storage_unavailable" && !changed,"no space rejects before mutation");
+print("WARP no-space preflight passed\n");
+'

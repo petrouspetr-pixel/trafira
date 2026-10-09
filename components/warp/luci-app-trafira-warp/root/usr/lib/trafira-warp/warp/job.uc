@@ -14,7 +14,7 @@ function valid_request(request) {
     if(request.action=="scan_start" && index(["quick","full"],request.mode)<0)return false;
     if(request.action=="test_start") {
         if(index([15,30,45,60],request.duration)<0 || type(request.services)!="array" || !length(request.services) || length(request.services)>5)return false;
-        for(let id in request.services)if(index(["google","chatgpt","gemini","grok","cloudflare"],id)<0)return false;
+        let seen={};for(let id in request.services){if(index(["google","chatgpt","gemini","grok","cloudflare"],id)<0 || seen[id])return false;seen[id]=true;}
     }
     if(index(["attach","detach"],request.action)>=0 && (type(request.expected_digest)!="string" || !match(request.expected_digest,/^[a-f0-9]{64}$/) || !valid_id(request.preview_id)))return false;
     if(request.action=="scan_apply" && !valid_id(request.candidate_id))return false;

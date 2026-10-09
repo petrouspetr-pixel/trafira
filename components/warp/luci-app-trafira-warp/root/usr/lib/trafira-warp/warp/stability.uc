@@ -3,7 +3,7 @@ let fs=require("fs"),state=require("warp.state"),transport=require("warp.transpo
 const SERVICES={google:{host:"www.gstatic.com",path:"/generate_204"},chatgpt:{host:"chatgpt.com",path:"/"},gemini:{host:"gemini.google.com",path:"/"},grok:{host:"grok.com",path:"/"},cloudflare:{host:"cloudflare-dns.com",path:"/cdn-cgi/trace"}};
 function valid_request(duration,services) {
     if(index([15,30,45,60],duration)<0 || type(services)!="array" || !length(services) || length(services)>5)return false;
-    for(let id in services)if(!SERVICES[id])return false;
+    let seen={};for(let id in services){if(!SERVICES[id] || seen[id])return false;seen[id]=true;}
     return true;
 }
 function valid_address(ip) {
@@ -50,6 +50,7 @@ function run(duration,services,id) {
         let current=transport.status();if(!current.running || current.generation!=start.generation){error="transport_changed";break;}
         trace=health(start.interface,id);
         for(let service in services) {
+            if(clock()[0]>=end)break;
             if(job.cancelled(id)){error="cancelled";break;}
             push(samples,{...probe(start.interface,service,id),at:clock()[0]});
             if(!state.save(state.RUNTIME+"/test.json",{job_id:id,running:true,generation:start.generation,started_at:started,samples,summary:summarize(samples),...trace}))return {success:false,error:"storage_unavailable"};

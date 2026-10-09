@@ -52,10 +52,14 @@ function owned(section,name) {
 function status() {
     let c=state.load(state.DIRECTORY+"/transport.json"),runtime=state.load(state.RUNTIME+"/transport.json");
     let inactive={schema:1,owner:"trafira-warp",success:true,running:false,enabled:c?.enabled===true,generation:c?.generation||0};
-    if(!c || !valid_config(c) || !runtime || runtime.ready!==true || runtime.generation!=c.generation || !job.live(runtime.worker))return inactive;
-    if(fs.readlink("/proc/"+runtime.worker.pid+"/exe")!="/usr/libexec/trafira-warp-amneziawg-go")return {...inactive,error:"ownership_error"};
+    if(!c || !valid_config(c))return inactive;
     let cursor=require("uci").cursor(),section=cursor.get_all("network",c.interface);
     if(!owned(section,c.interface))return {...inactive,error:"ownership_error"};
+    // A verified configuration without a device is intentionally fail-closed.
+    // Recognize its name on reload without granting any socket exemption.
+    if(!fs.stat("/sys/class/net/"+c.interface))return {...inactive,configured:true,interface:c.interface};
+    if(!runtime || runtime.ready!==true || runtime.generation!=c.generation || !job.live(runtime.worker))return {...inactive,error:"ownership_error"};
+    if(fs.readlink("/proc/"+runtime.worker.pid+"/exe")!="/usr/libexec/trafira-warp-amneziawg-go")return {...inactive,error:"ownership_error"};
     if(trim(fs.readfile("/sys/class/net/"+c.interface+"/ifindex")||"")!=runtime.ifindex)return {...inactive,error:"ownership_error"};
     let socket=fs.lstat("/var/run/amneziawg/"+c.interface+".sock");
     if(!socket || socket.type!="socket" || !fs.stat("/sys/class/net/"+c.interface))return inactive;
