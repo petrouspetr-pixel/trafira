@@ -2,10 +2,10 @@
 
 // Separate entrypoint: LuCI grants this command only to configuration writers.
 const LIB=getenv("TRAFIRA_LIB")||"/usr/lib/trafira";
-if(index(["profile_action","core_action","gaming_preset_action"],ARGV[0])<0 || length(ARGV)!=2 || length(ARGV[1])>65536) {
+if(index(["profile_action","core_action","gaming_preset_action","warp_action"],ARGV[0])<0 || length(ARGV)!=2 || length(ARGV[1])>65536) {
     print('{"success":false,"error":"invalid_request"}\n');
     exit(1);
 }
 function quote(value){return "'"+replace(""+value,/'/g,"'\\''")+"'";}
-let module=ARGV[0]=="gaming_preset_action"?"config/gaming_cli.uc":ARGV[0]=="core_action"?"components/core_cli.uc":"config/profile_cli.uc";
+let module=ARGV[0]=="warp_action"?"integrations/warp_cli.uc":ARGV[0]=="gaming_preset_action"?"config/gaming_cli.uc":ARGV[0]=="core_action"?"components/core_cli.uc":"config/profile_cli.uc";
 exit(system(join(" ",map(["ucode","-L",LIB,LIB+"/"+module,"action",ARGV[1]],quote))));

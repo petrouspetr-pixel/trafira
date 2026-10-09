@@ -9,6 +9,7 @@ ucode -L "$ROOT/components/warp/luci-app-trafira-warp/root/usr/lib/trafira-warp"
 let fs=require("fs"),s=require("warp.state"),j=require("warp.job");
 let path=getenv("TRAFIRA_WARP_STATE")+"/test.json";
 assert(s.save(path,{private_key:"private",token:"secret",running:true}),"atomic save");
+assert(fs.stat(path).mode%512==384,"private file mode");
 assert(s.load(path).token=="secret","private state available only internally");
 let output=s.public_status(s.load(path));
 assert(output.running && !output.private_key && !output.token,"whitelisted public status");
@@ -16,6 +17,8 @@ fs.symlink(path,path+".link");assert(!s.save(path+".link",{}),"reject symlink ov
 assert(!j.valid_request({action:"scan_start",mode:"shell"}),"reject unknown scan mode");
 assert(!j.valid_request({action:"register",url:"https://private.invalid"}),"reject unexpected field");
 assert(j.valid_request({action:"test_start",duration:15,services:["google"]}),"allowed duration");
+assert(!j.live({pid:j.identity().pid,ticks:"0"}),"reused PID rejected");
+assert(!j.cancel("absent").success,"cancel cannot target a foreign process");
 let restored=false;
 let hooks={snapshot:()=>({old:true}),perform:()=>({success:false,error:"test_failure"}),restore:(snapshot)=>{restored=snapshot.old;return true;}};
 let r=j.execute({action:"enable"},hooks);
