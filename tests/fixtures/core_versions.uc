@@ -26,3 +26,18 @@ let oversized=[];for(let n=0;n<101;n++)push(oversized,releases[0]);
 assert(v.catalog(oversized,env).unavailable_reason=="catalog_too_large","candidate bound");
 assert(v.catalog([{...releases[0],extra:sprintf("%02100000d",1)}],env).unavailable_reason=="catalog_too_large","response size bound");
 print("core version catalog checks passed\n");
+let prefix="https://github.com/shtorm-7/sing-box-extended/releases/download/v1.14.2/";
+let name="sing-box-extended_1.14.2_openwrt_aarch64.apk";
+let github=[{tag_name:"v1.14.2",html_url:"https://github.com/shtorm-7/sing-box-extended/releases/tag/v1.14.2",assets:[
+ {name,browser_download_url:prefix+name,size:123,digest:"sha256:"+sprintf("%064d",1)},
+ {name:"sing-box-extended_1.14.2_openwrt_x86_64.apk",browser_download_url:prefix+"wrong.apk",size:123}
+]}];
+let normalized=v.from_github(github,env);
+assert(length(normalized)==1 && normalized[0].architecture=="aarch64","only matching package asset exposed");
+assert(normalized[0].sha256==sprintf("%064d",1),"published checksum preserved");
+github[0].assets[0].browser_download_url="https://attacker.invalid/package.apk";
+assert(length(v.from_github(github,env))==0,"off-source release asset rejected");
+let packages=v.from_packages([{name:"sing-box",version:"1.14.2-r1",arch:"aarch64"},{name:"sing-box-tiny",version:"1.14.2-r1",arch:"aarch64"}],{...env,variant:"stable"});
+assert(length(packages)==1 && packages[0].repository_package=="sing-box","repository package variant exact");
+assert(v.catalog(packages,{...env,variant:"stable"}).entries[0].available,"real repository version selectable");
+print("core version source adapter checks passed\n");
