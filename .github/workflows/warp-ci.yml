@@ -40,3 +40,27 @@ jobs:
         with:
           name: warp-${{ matrix.manager }}
           path: dist/warp/*
+
+  scout-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - name: Prepare pinned Scout source
+        run: |
+          curl --proto '=https' --proto-redir '=https' -fL --retry 3 --max-time 120 https://codeload.github.com/vernette/warpscout/tar.gz/refs/tags/v0.16.0 -o /tmp/scout.tar.gz
+          printf '%s  %s\n' c21c777239856401f6529e4e2503d9f6ebd9071f78988fe86e35aaefc65a1c20 /tmp/scout.tar.gz | sha256sum -c -
+          mkdir /tmp/scout
+          tar -xf /tmp/scout.tar.gz --strip-components=1 -C /tmp/scout
+          cp tests/warp/scout_mark_test.go /tmp/scout/trafira_mark_test.go
+          for patch in components/warp/trafira-warp-scout/patches/*.patch; do
+            [ ! -f "$patch" ] || patch -d /tmp/scout -p1 < "$patch"
+          done
+      - name: Test actual socket marks without contacting Cloudflare
+        run: |
+          cd /tmp/scout
+          sudo env "PATH=$PATH" GOCACHE=/tmp/warp-test-go "GOMODCACHE=$HOME/go/pkg/mod" go test ./...
