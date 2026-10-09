@@ -1551,8 +1551,10 @@ function nft_runtime_signature_from_settings_and_sections(settings, sections) {
     body = signature_add_value(body, "settings.source_network_interfaces", option(settings, "source_network_interfaces", "br-lan"));
     body = signature_add_value(body, "settings.exclude_ntp", bool_option(settings, "exclude_ntp", false) ? "1" : "0");
     body = alice_config.signature_body(settings, signature_add_value, body);
-    body = signature_add_value(body, "settings.router_origin_enabled", option(settings, "router_origin_enabled", "0"));
-    body = signature_add_value(body, "settings.router_origin_section", option(settings, "router_origin_section", ""));
+    if (bool_option(settings, "router_origin_enabled", false)) {
+        body = signature_add_value(body, "settings.router_origin_enabled", "1");
+        body = signature_add_value(body, "settings.router_origin_section", option(settings, "router_origin_section", ""));
+    }
 
     for (let section in sections)
         body = nft_rule_signature_body(body, object_or_empty(section));

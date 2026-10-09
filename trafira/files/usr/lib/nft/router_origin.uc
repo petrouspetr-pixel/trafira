@@ -1,5 +1,5 @@
 let fs=require("fs"),ip=require("core.ip"),common=require("core.common"),uci=require("core.uci"),model=require("config.router_origin");
-function quote(value){return "'"+replace(""+value,/'/g,"'\''")+"'";}
+function quote(value){return "'"+replace(""+value,/'/g,"'\\''")+"'";}
 function output(args) {
     let stream=fs.popen(join(" ",map(args,quote))+" 2>/dev/null","re");if(!stream)return null;
     let text=stream.read(65537),status=stream.close();

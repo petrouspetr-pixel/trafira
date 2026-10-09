@@ -4,6 +4,7 @@ on:
     paths:
       - 'trafira/files/**'
       - 'tests/failure_policy*'
+      - 'tests/router_origin*'
       - 'tests/helpers/failure_policy_servers.py'
       - '.github/workflows/failure-policy-network.yml'
   push:
@@ -11,6 +12,7 @@ on:
     paths:
       - 'trafira/files/**'
       - 'tests/failure_policy*'
+      - 'tests/router_origin*'
       - 'tests/helpers/failure_policy_servers.py'
       - '.github/workflows/failure-policy-network.yml'
 jobs:
@@ -35,3 +37,6 @@ jobs:
           sudo install -m 0755 /tmp/sing-box-1.12.12-linux-amd64/sing-box /usr/local/bin/sing-box
       - name: Verify packet paths and crash guards
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/failure_policy_network.sh
+
+      - name: Verify router-origin packet paths
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/router_origin_network.sh

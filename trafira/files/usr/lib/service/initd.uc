@@ -505,7 +505,7 @@ function handle_wan_up(owner_pid) {
         running,
         service_is_enabled() ? "1" : "0",
         start_retry_pending(START_RETRY_FILE) ? "1" : "0",
-        badwan_interface_monitored(settings, "wan") ? "1" : "0"
+        (badwan_interface_monitored(settings, "wan") || option(settings, "router_origin_enabled", "0") == "1") ? "1" : "0"
     );
 
     if (action == "reload") {
@@ -720,6 +720,8 @@ function trigger_plan(settings) {
     print("config\tconfig.change\t", CONFIG_NAME, "\t", SERVICE_INIT, "\treload\t", CONFIG_CHANGE_REASON, "\n");
     print("interface\tinterface.*.up\twan\t", SERVICE_INIT, "\thandle_wan_up\t\n");
 
+    if (option(settings, "router_origin_enabled", "0") == "1")
+        print("interface\tinterface.*.up\t*\t", SERVICE_INIT, "\treload\trouter_origin_network_change\n");
     if (badwan_enabled) {
         for (let iface in badwan_interfaces) {
             iface = trim(iface);
