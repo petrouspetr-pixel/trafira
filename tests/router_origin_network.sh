@@ -38,13 +38,14 @@ for family in -4 -6; do
  ip -n "$router" "$family" route add local default dev lo table 200
 done
 ip netns exec "$server" python3 "$ROOT_DIR/tests/helpers/failure_policy_servers.py" http >"$WORK_DIR/http.log" 2>&1 &
-ip netns exec "$router" python3 "$ROOT_DIR/tests/helpers/failure_policy_servers.py" http >"$WORK_DIR/management.log" 2>&1 &
+ip netns exec "$router" python3 -m http.server 18080 --bind 192.0.2.1 --directory "$WORK_DIR" >"$WORK_DIR/management.log" 2>&1 &
 cat >"$WORK_DIR/server.json" <<'JSON'
 {"log":{"level":"error"},"inbounds":[{"type":"socks","tag":"proxy","listen":"0.0.0.0","listen_port":1080}],"outbounds":[{"type":"direct","tag":"direct"}]}
 JSON
 ip netns exec "$server" sing-box run -c "$WORK_DIR/server.json" >"$WORK_DIR/server.log" 2>&1 &
+server_pid=$!
 cat >"$WORK_DIR/udp.py" <<'PY'
-import socket,threading
+import socket,threading,struct
 
 def serve(family,address):
  s=socket.socket(family,socket.SOCK_DGRAM)
@@ -52,13 +53,26 @@ def serve(family,address):
  s.bind((address,18081))
  while True:
   data,peer=s.recvfrom(2048);s.sendto(data,peer)
+def dns():
+ s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.bind(('0.0.0.0',53))
+ while True:
+  data,peer=s.recvfrom(2048)
+  if len(data)<17:continue
+  end=12
+  while end<len(data) and data[end]:end+=data[end]+1
+  if end+5>len(data):continue
+  question=data[12:end+5];qtype=struct.unpack('!H',data[end+1:end+3])[0]
+  address=socket.inet_pton(socket.AF_INET,'198.51.100.2') if qtype==1 else socket.inet_pton(socket.AF_INET6,'2001:db8:1::2')
+  answer=b'\xc0\x0c'+struct.pack('!HHIH',qtype,1,0,len(address))+address
+  s.sendto(data[:2]+b'\x81\x80\x00\x01\x00\x01\x00\x00\x00\x00'+question+answer,peer)
+threading.Thread(target=dns,daemon=True).start()
 threading.Thread(target=serve,args=(socket.AF_INET,'0.0.0.0'),daemon=True).start()
 serve(socket.AF_INET6,'::')
 PY
 ip netns exec "$server" python3 "$WORK_DIR/udp.py" >"$WORK_DIR/udp.log" 2>&1 &
 ucode -L "$LIB" -e '
 let r=require("config.router_origin"),fs=require("fs");
-let c={log:{level:"error"},inbounds:[],outbounds:[{type:"socks",tag:"vpn-out",server:"198.51.100.2",server_port:1080,version:"5"}],route:{rules:[{action:"sniff",inbound:["unused"]},{action:"hijack-dns",protocol:"dns"}],default_mark:0x08000000,final:"vpn-out"},dns:{servers:[{type:"udp",tag:"dns-server",server:"198.51.100.2"}],rules:[]}};
+let c={log:{level:"error"},inbounds:[],outbounds:[{type:"socks",tag:"vpn-out",server:"proxy.fixture.test",server_port:1080,version:"5",domain_resolver:"dns-server"}],route:{rules:[{action:"sniff",inbound:["unused"]},{action:"hijack-dns",protocol:"dns"}],default_mark:0x08000000,final:"vpn-out"},dns:{servers:[{type:"udp",tag:"dns-server",server:"198.51.100.2"}],rules:[]}};
 r.attach(c,{router_origin_enabled:"1",router_origin_section:"vpn"},[{".name":"vpn",action:"connection"}]);
 require("core.common").strip_internal_fields(c);
 fs.writefile(ARGV[0],sprintf("%J",c));
@@ -108,6 +122,14 @@ PY
 ip netns exec "$router" nft -j list counters table inet Audit | python3 -c 'import json,sys; cs=[x["counter"] for x in json.load(sys.stdin)["nftables"] if "counter" in x]; assert len(cs)==2 and all(c["packets"]==0 for c in cs),cs'
 ip netns exec "$client" curl --noproxy '*' --max-time 3 -fsS http://198.51.100.2:18080/ >/dev/null
 ip netns exec "$client" curl --noproxy '*' --max-time 3 -fsS http://192.0.2.1:18080/ >/dev/null
+# A lost selected proxy never turns router traffic into an implicit direct path.
+kill "$server_pid"
+sleep 0.2
+for address in 198.51.100.2 '[2001:db8:1::2]'; do
+ if request "$address" 2>/dev/null; then echo 'Router traffic escaped failed proxy' >&2; exit 1; fi
+done
+ip netns exec "$server" sing-box run -c "$WORK_DIR/server.json" >"$WORK_DIR/server-restarted.log" 2>&1 &
+sleep 0.4
 # Rebuilding after a network event reinstalls exclusions and routing together.
 base_rules
 ip netns exec "$router" nft -f "$WORK_DIR/router.nft"
