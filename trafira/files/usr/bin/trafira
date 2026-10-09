@@ -65,6 +65,7 @@ function show_help() {
     print("    ruleset_snapshot_report Show saved remote rule-set copies and job status\n");
     print("    ruleset_snapshot_prepare_async Prepare saved rule-set copies in background\n");
     print("    subscription_preview    Preview unsaved filters against cached server candidates (JSON)\n");
+    print("    route_explain           Explain a connection scenario against the applied configuration (JSON)\n");
     print("    list_update_if_due      Update remote lists only when the configured interval has elapsed\n");
     print("    subscription_update [rule] [source_index]\n");
     print("                            Update all subscription proxies, one rule, or one source in a rule\n");
@@ -147,6 +148,7 @@ function command_spec(command) {
         ruleset_snapshot_report: [ "components/updates.uc", "ruleset-snapshot-report", 0 ],
         ruleset_snapshot_prepare_async: [ "components/updates.uc", "ruleset-snapshot-prepare-async", 0 ],
         subscription_preview: [ "subscription/preview.uc", "preview", 1 ],
+        route_explain: [ "diagnostics/route_explain.uc", "explain", 1 ],
         list_update_if_due: [ "components/updates.uc", "list-update-if-due", 0 ],
         subscription_update: [ "components/updates.uc", "subscription-update", 2 ],
         subscription_update_async: [ "components/updates.uc", "subscription-update-async", 2 ],
