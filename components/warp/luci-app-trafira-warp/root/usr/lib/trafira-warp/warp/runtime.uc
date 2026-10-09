@@ -20,6 +20,13 @@ function activate(config,id) {
     if(!runtime || !state.save(state.RUNTIME+"/transport.json",{...runtime,https_ok:true,warp:true,checked_at:clock()[0]}))return {success:false,error:"storage_unavailable"};
     return {success:true};
 }
+function refresh_health(id) {
+    let live=transport.status();if(!live.running)return {success:false,error:"transport_stopped"};
+    let check=stability.health(live.interface,id),current=state.load(state.RUNTIME+"/transport.json");
+    if(!current || current.generation!=live.generation)return {success:false,error:"transport_changed"};
+    if(!state.save(state.RUNTIME+"/transport.json",{...current,https_ok:check.success===true,warp:check.warp===true,checked_at:clock()[0]}))return {success:false,error:"storage_unavailable"};
+    return status();
+}
 function hooks(integration) {
     integration=integration||{};
     function snapshot() {
@@ -68,4 +75,4 @@ function hooks(integration) {
     }
     return {snapshot,restore,perform,validate:integration.validate};
 }
-return {status,hooks,activate};
+return {status,hooks,activate,refresh_health};

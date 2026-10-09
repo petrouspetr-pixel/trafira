@@ -17,7 +17,7 @@ function preview(request,state) {
         let digest=hash(transaction.TARGET),source=runtime.read_document(transaction.TARGET,work.directory,"WARP");
         if(!source.success)result=source;
         else {
-            let live=transport.read(),removal=request.action=="preview_detach",section=filter(source.document.config,(s)=>s[".type"]=="section" && s.warp_owner=="trafira-warp")[0];
+            let removal=request.action=="preview_detach",live=transport.read(!removal),section=filter(source.document.config,(s)=>s[".type"]=="section" && s.warp_owner=="trafira-warp")[0];
             let candidate=removal?model.detach(source.document,(section||{})[".name"],digest,digest):model.attach(source.document,live,digest,digest);
             if(!candidate.success)result=candidate;
             else {
@@ -37,7 +37,7 @@ function preview(request,state) {
 function validate(request,state) {
     let preview=state.load(RUN+"/preview.json"),current=state.load(STATE+"/transport.json");
     if(!preview || preview.preview_id!=request.preview_id || preview.expected_digest!=request.expected_digest || hash(transaction.TARGET)!=request.expected_digest || preview.action!=request.action || preview.generation!=(current?.generation||0) || preview.expires_at<clock()[0])return fail("conflict");
-    if(request.action=="attach") {let live=transport.read();if(!live.running || !live.https_ok || !live.warp)return fail("transport_unhealthy");}
+    if(request.action=="attach") {let live=transport.read(true);if(!live.running || !live.https_ok || !live.warp)return fail("transport_unhealthy");}
     return {success:true};
 }
 function apply(request,state) {

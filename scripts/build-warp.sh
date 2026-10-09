@@ -57,5 +57,6 @@ for package in luci-app-trafira-warp trafira-warp-awg trafira-warp-scout; do
  fi
  cp "$artifact" "$OUTPUT/"
 done
+python3 "$ROOT/scripts/warp-manifest.py" "$OUTPUT" "$VERSION" "$KIND"
 cd "$OUTPUT"
 sha256sum -- *.$EXT >SHA256SUMS

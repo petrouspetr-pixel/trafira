@@ -66,9 +66,15 @@ function action(text,recovery) {
     }catch(e){result=fail("operation_failed");}
     locks.release(lock);return result;
 }
-if(ARGV[0]=="permit-start") {
+if(ARGV[0]=="package-state") {
+    let result=require("integrations.warp_package_state").execute(ARGV[1],ARGV[2]);
+    print(sprintf("%J\n",result));exit(result.success?0:1);
+}
+if(ARGV[0]=="permit-start" || ARGV[0]=="probe") {
     let owner;
     try {owner=json(fs.readfile((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/operation-owner.json"));}catch(e){}
-    exit(locks.is_live_ancestor(owner)?0:1);
+    if(!locks.is_live_ancestor(owner))exit(1);
+    if(ARGV[0]=="probe")print(sprintf("%J\n",require("warp.runtime").refresh_health("preview-health")));
+    exit(0);
 }
 print(sprintf("%J\n",ARGV[0]=="recover"?action("{}",true):ARGV[0]=="worker"?worker(ARGV[1]):ARGV[0]=="action"?action(ARGV[1]):fail("invalid_request")));

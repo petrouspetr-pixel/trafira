@@ -2448,6 +2448,35 @@ function dispatch_sing_box(action) {
         install_package_sing_box(action, false);
 }
 
+function dispatch_warp(action) {
+    let work=tmp_dir+"/warp";
+    if(!command_success_from_args(["mkdir","-m","700",work]))action_fail("warp",action,"WARP staging directory is unavailable");
+    let offline=work+"/offline.conf",empty=work+"/empty";
+    command_success_from_args(["mkdir","-m","700",empty]);
+    let architectures=replace(command_output_from_args(["opkg","print-architecture"]),/^arch /gm,"arch ");
+    if(!is_apk())write_file(offline,"dest root /\nlists_dir ext "+empty+"\noption overlay_root /overlay\n"+architectures);
+    function package_command(files,simulate) {
+        let args=is_apk()?["apk","add","--no-network","--allow-untrusted"]:["opkg","-f",offline,"install","--force-reinstall","--force-downgrade"];
+        if(simulate)push(args,is_apk()?"--simulate":"--noaction");
+        for(let path in files)push(args,path);
+        return "PKG_UPGRADE=1 "+(is_apk()?"":"OPKG_CONF_DIR="+shell_quote(empty)+" ")+command_from_args(args)+" </dev/null";
+    }
+    let ctx={work,arch:read_openwrt_release_value("DISTRIB_ARCH"),manager:is_apk()?"apk":"opkg",trafira_version:TRAFIRA_VERSION,
+        version:installed_package_version,inspect:rollback_archive_info,
+        check:(files)=>command_success(package_command(files,true)),
+        install:(files)=>run_logged_install("Installing verified WARP family without network",package_command(files,false)),
+        remove:(names)=>run_logged_install("Removing WARP package family",command_from_args(is_apk()?["apk","del","--no-network",...names]:["opkg","remove",...reverse([...names])])+" </dev/null"),
+        space:(ram,overlay)=>filesystem_available_bytes("/tmp")>=ram && mem_available_bytes()>=ram && filesystem_available_bytes("/overlay")>=overlay,
+        world:()=>is_apk()?read_file("/etc/apk/world"):null,
+        restore_world:(world)=>write_file("/etc/apk/world.trafira-warp",world) && fs.rename("/etc/apk/world.trafira-warp","/etc/apk/world")
+    };
+    let result;
+    try {result=require("components.warp_package_runtime").execute(action,ctx);}catch(e){result={success:false,error:"warp_operation_failed",rollback_error:file_exists("/etc/trafira/warp-packages/journal.json")};}
+    selected_result=result;
+    if(result.success)action_success("warp",action,"WARP component operation completed",result.current_version,result.latest_version,result.changed,result.status,result.release_url);
+    action_fail("warp",action,"WARP: "+(result.error||"operation_failed"),result.current_version,result.latest_version,result.status,result.release_url);
+}
+
 function normalize_component_name(component) {
     component = as_string(component);
     if (component == "sing-box" || component == "singbox")
@@ -2472,7 +2501,9 @@ function component_action(component, action) {
         ensure_install_storage(component, action, 0);
     capture_trafira_running_state();
 
-    if (component == "trafira" && action == "check_update")
+    if (component == "warp")
+        dispatch_warp(action);
+    else if (component == "trafira" && action == "check_update")
         check_trafira();
     else if (component == "trafira" && action == "install")
         install_trafira();

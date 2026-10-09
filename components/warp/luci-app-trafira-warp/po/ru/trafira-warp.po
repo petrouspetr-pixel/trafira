@@ -198,6 +198,6 @@ msgstr "WARP для Trafira"
 msgid "WARP is unavailable. Check the installed package family."
 msgstr "WARP недоступен. Проверьте комплект установленных пакетов."
 
-msgid "seconds"
-msgstr "секунд"
+msgid "minutes"
+msgstr "минут"
 

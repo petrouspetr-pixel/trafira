@@ -107,7 +107,7 @@ return view.extend({
    button(_('Detach from Trafira'),function(){self.openPreview(true);}),
    button(_('Delete local registration'),function(){self.confirm({action:'unregister'},_('Delete local registration'),_('The tunnel and its local credentials will be removed. Cloudflare-side registration is not revoked. All Trafira references must be removed first.'));},!s.registered)
   ]));
-  var duration=element('select',{},[15,30,45,60].map(function(n){return element('option',{value:String(n),selected:n===30},String(n)+' '+_('seconds'));}));
+  var duration=element('select',{change:function(ev){self.duration=Number(ev.target.value);}},[15,30,45,60].map(function(n){return element('option',{value:String(n),selected:n===(self.duration||30)},String(n)+' '+_('minutes'));}));
   items.push(element('div',{},[
    element('h3',{},_('Service availability test')),duration,
    button(_('Test Google, ChatGPT, Gemini, Grok and Cloudflare'),function(){self.act({action:'test_start',duration:Number(duration.value||30),services:['google','chatgpt','gemini','grok','cloudflare']});},!s.running)

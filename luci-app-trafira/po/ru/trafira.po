@@ -3033,3 +3033,9 @@ msgstr "Просмотреть игровые правила"
 
 msgid "Apply reviewed changes"
 msgstr "Применить просмотренные изменения"
+
+msgid "No compatible WARP release is available yet"
+msgstr "Совместимый релиз WARP пока недоступен"
+
+msgid "Open WARP settings"
+msgstr "Открыть настройки WARP"

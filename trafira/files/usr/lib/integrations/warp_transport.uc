@@ -8,9 +8,9 @@ function valid(status) {
     let endpoint=match(status.endpoint||"",/^([^:]+):([0-9]+)$/);
     return endpoint && ip.valid_ipv4(endpoint[1]) && int(endpoint[2])>0 && int(endpoint[2])<=65535 && type(status.listen_port)=="int" && status.listen_port>0 && status.listen_port<=65535;
 }
-function read() {
+function read(probe) {
     if(!fs.stat(ADDON+"/warp/runtime.uc"))return {success:false,error:"component_not_installed",running:false};
-    let command=join(" ",map(["ucode","-L",LIB,"-L",ADDON,LIB+"/integrations/warp_cli.uc","action",'{"action":"status"}'],quote));
+    let command=join(" ",map(["ucode","-L",LIB,"-L",ADDON,LIB+"/integrations/warp_cli.uc",probe?"probe":"action",'{"action":"status"}'],quote));
     let pipe=fs.popen("exec "+command+" 2>/dev/null","re");if(!pipe)return {success:false,error:"component_unavailable",running:false};
     let text=pipe.read(16385),code=pipe.close(),status;
     try {if(code==0 && length(text||"")<=16384)status=json(text);}catch(e){}

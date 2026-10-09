@@ -1,10 +1,10 @@
 name: WARP Component CI
 on:
   pull_request:
-    paths: ['components/warp/**', 'scripts/build-warp.sh', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
+    paths: ['components/warp/**', 'scripts/build-warp.sh', 'scripts/warp-manifest.py', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
   push:
     branches: [main]
-    paths: ['components/warp/**', 'scripts/build-warp.sh', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
+    paths: ['components/warp/**', 'scripts/build-warp.sh', 'scripts/warp-manifest.py', 'tests/warp*', 'tests/warp/**', '.github/workflows/warp-ci.yml', 'trafira/files/**']
 concurrency:
   group: warp-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true

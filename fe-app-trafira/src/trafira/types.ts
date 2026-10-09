@@ -219,7 +219,8 @@ export namespace Trafira {
     | 'block'
     | 'zapret'
     | 'zapret2'
-    | 'byedpi';
+    | 'byedpi'
+    | 'warp';
   type LegacyConnectionType = 'proxy' | 'vpn' | 'block' | 'exclusion';
   type ProxyConfigType =
     | 'urltest'
@@ -489,6 +490,8 @@ export namespace Trafira {
     zapret2_version: string;
     zapret2_installed: 0 | 1;
     byedpi_version: string;
+    warp_installed?: 0 | 1;
+    warp_version?: string;
     byedpi_installed: 0 | 1;
     openwrt_version: string;
     device_model: string;
@@ -610,7 +613,8 @@ export namespace Trafira {
     | 'sing_box'
     | 'zapret'
     | 'zapret2'
-    | 'byedpi';
+    | 'byedpi'
+    | 'warp';
 
   export type ComponentAction =
     | 'check_update'
@@ -633,7 +637,7 @@ export namespace Trafira {
     latest_version: string;
     release_url?: string;
     changed: boolean;
-    status?: 'latest' | 'outdated' | 'dev' | '';
+    status?: 'latest' | 'outdated' | 'dev' | 'unavailable' | '';
     pid?: string | null;
     started_at?: number;
     updated_at?: number | null;
