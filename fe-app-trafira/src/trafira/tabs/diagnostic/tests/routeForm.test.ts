@@ -22,6 +22,8 @@ class Element {
     public attributes: Record<string, unknown>,
   ) {
     Object.assign(this, attributes);
+    // LuCI E serializes boolean attributes; required="false" is still required.
+    this.required = attributes.required != null;
   }
   addEventListener(event: string, listener: () => void) {
     this.listeners[event] = listener;
