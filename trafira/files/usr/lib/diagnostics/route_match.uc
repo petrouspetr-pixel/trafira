@@ -126,7 +126,7 @@ function explain(config, request, sources, rulesets) {
     let route = obj(obj(config).route), trace = [], budget = {steps:0};
     let current = json(sprintf("%J", obj(request))), selected = null;
     for (let i=0; i<length(arr(route.rules)); i++) {
-        let rule = route.rules[i], action = rule.action || (rule.outbound ? "route" : "unknown");
+        let rule = route.rules[i], action = rule.action || (rule.outbound || rule.server ? "route" : "unknown");
         let matched = evaluate(rule, current, rulesets, budget, 0, false);
         let row = {index:i,match:matched.value,action,origin:arr(obj(sources).route)[i] || null,
                    shadowed:selected != null,missing:matched.missing};
