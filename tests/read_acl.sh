@@ -43,7 +43,7 @@ for (const args of [
   ['profile_action', '{"action":"apply"}'], ['core_action', '{"action":"install"}'],
   ['profile_action', '{"action":"export_begin","id":"home"}'],
   ['profile_action', '{"action":"export_read","id":"transfer","offset":0}'],
-  ['core_action', '{"action":"unpin"}'], ['gaming_preset_action', '{"action":"remove"}'],
+  ['core_action', '{"action":"unpin"}'], ['core_action', '{"action":"pin","expected_current_version":"1.14.2","expected_current_variant":"stable"}'], ['gaming_preset_action', '{"action":"remove"}'],
   ['core_action', 'not-json'], ['core_action', '{"action":"catalog"}', 'install']
 ]) {
   const result = run(args);

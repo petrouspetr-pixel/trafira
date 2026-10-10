@@ -20,10 +20,17 @@ function status(request) {
         error:result.error||(!result.success?"version_action_failed":""),restored:result.restored===true,rollback_error:result.rollback_error||""};
 }
 function dispatch(request) {
-    if(request.action=="catalog")return {...catalog.load(sources.environment(),request.refresh,sources.fetch),current_version:sources.current_version(),pin:pin.read()};
+    if(request.action=="catalog") {
+        let env=sources.environment();
+        return {...catalog.load(env,request.refresh,sources.fetch),current_version:sources.current_version(),current_variant:env.variant,pin:pin.read()};
+    }
     if(request.action=="status")return status(request);
     if(request.expected_current_version!=sources.current_version())return failure("conflict");
-    if(request.action=="unpin")return pin.write(null);
+    if(request.action=="pin")return pin.pin_installed(request,{current:sources.current_version,environment:sources.environment,installed_version:sources.installed_version,write:pin.write});
+    if(request.action=="unpin") {
+        let result=pin.write(null);
+        return result.success?{...result,pin:null}:result;
+    }
     let result=updater(["component-version-async",sprintf("%J",request)]);
     return result.success?{success:true,running:true,job_id:result.job_id}:failure(result.error||"launch_failed");
 }

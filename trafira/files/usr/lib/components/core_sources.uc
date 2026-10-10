@@ -103,4 +103,12 @@ function download_repository(candidate,directory) {
     return stat && stat.type=="file" && stat.size>0 && stat.size<=268435456?path:null;
 }
 function current_version(){return module_output("singbox/runtime.uc",["version"])||"not-installed";}
-return {fetch,environment,transport,download,download_repository,current_version};
+function installed_version(env) {
+    if(index(["stable","tiny"],env.variant)>=0)
+        return module_output("core/packages.uc",["version",env.variant=="tiny"?"sing-box-tiny":"sing-box"])||"";
+    // Extended release identifiers follow the installed binary version.
+    if(index(["extended","extended-compressed"],env.variant)>=0)
+        return replace(current_version(),/\+.*$/,"");
+    return "";
+}
+return {fetch,environment,transport,download,download_repository,current_version,installed_version};
