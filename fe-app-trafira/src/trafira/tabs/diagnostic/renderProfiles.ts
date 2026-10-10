@@ -1,4 +1,5 @@
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
+import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
 import {
   ProfilePanelController,
   ProfileRequest,
@@ -64,6 +65,8 @@ export const profilesPanel = {
     const output = E('div', { role: 'status' });
     const message = E('p', { role: 'status' });
     const restoreHint = E('p', { class: 'cbi-value-description' });
+    const outputRow = row('', '', [output]);
+    const restoreHintRow = row('', '', [restoreHint]);
     const buttons: HTMLButtonElement[] = [];
     function button(label: string, click: () => void, writer = false) {
       const element = E(
@@ -80,16 +83,6 @@ export const profilesPanel = {
       ) as HTMLButtonElement;
       buttons.push(element);
       return element;
-    }
-    function row(label: string, id: string, children: Node[]) {
-      const title = E('label', { class: 'cbi-value-title' }, label);
-      if (id) (title as HTMLLabelElement).htmlFor = id;
-      return E('div', { class: 'cbi-value' }, [
-        title,
-        E('div', { class: 'cbi-value-field' }, [
-          E('div', { class: 'trafira-profile-controls' }, children),
-        ]),
-      ]);
     }
     function notify(value: string, error = false) {
       message.textContent = value;
@@ -133,6 +126,8 @@ export const profilesPanel = {
         last?.canRestore === false
           ? _('No previous configuration is available to restore.')
           : '';
+      restoreHintRow.className =
+        'cbi-value' + (restoreHint.textContent ? '' : ' hidden');
     }
     async function submit(request: ProfileRequest, refresh = false) {
       notify('');
@@ -355,10 +350,9 @@ export const profilesPanel = {
       updateButtons();
     });
     host.replaceChildren(
-      E('h3', {}, _('Configuration profiles')),
       E(
         'p',
-        {},
+        { class: 'cbi-section-descr' },
         _(
           'Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile.',
         ),
@@ -380,7 +374,7 @@ export const profilesPanel = {
       E('h4', {}, _('Selected profile')),
       row(_('Saved profiles'), select.id, [select, refresh]),
       row('', '', [review, apply]),
-      output,
+      outputRow,
       row(_('New name for selected profile'), renameName.id, [
         renameName,
         rename,
@@ -392,16 +386,18 @@ export const profilesPanel = {
         importButton,
       ]),
       row('', '', [exportButton]),
-      E(
-        'p',
-        { class: 'cbi-section-descr' },
-        _(
-          'Exported profiles contain passwords and keys. Keep the downloaded file private.',
+      row('', '', [
+        E(
+          'p',
+          { class: 'cbi-value-description' },
+          _(
+            'Exported profiles contain passwords and keys. Keep the downloaded file private.',
+          ),
         ),
-      ),
+      ]),
       E('h4', {}, _('Previous configuration')),
       row('', '', [restore]),
-      restoreHint,
+      restoreHintRow,
     );
     const controller = new ProfilePanelController(command, (state) => {
       if (generation !== mountId) return;
@@ -505,11 +501,19 @@ export const profilesPanel = {
                       ]),
                       ...preview.changes.map((change) =>
                         E('tr', { class: 'tr' }, [
-                          E('td', { class: 'td' }, change.section),
-                          E('td', { class: 'td' }, change.option || '—'),
                           E(
                             'td',
-                            { class: 'td' },
+                            { class: 'td', 'data-title': _('Section') },
+                            change.section,
+                          ),
+                          E(
+                            'td',
+                            { class: 'td', 'data-title': _('Option') },
+                            change.option || '—',
+                          ),
+                          E(
+                            'td',
+                            { class: 'td', 'data-title': _('Change') },
                             (
                               {
                                 added: _('Added'),
@@ -543,6 +547,8 @@ export const profilesPanel = {
               ]
             : []),
       );
+      outputRow.className =
+        'cbi-value' + (output.children.length ? '' : ' hidden');
       updateButtons();
     });
     controller.mount();

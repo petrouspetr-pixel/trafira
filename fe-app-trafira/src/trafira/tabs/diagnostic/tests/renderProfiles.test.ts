@@ -288,7 +288,7 @@ it('aligns controls with native LuCI fields and keeps gaps around every action',
           n.children.some(
             (c) =>
               typeof c !== 'string' &&
-              c.className === 'trafira-profile-controls' &&
+              c.className === 'trafira-form-controls' &&
               all(c).includes(control),
           ),
       ),

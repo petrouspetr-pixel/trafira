@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 11:20+0300\n"
-"PO-Revision-Date: 2026-10-10 11:20+0300\n"
+"POT-Creation-Date: 2026-10-10 12:10+0300\n"
+"PO-Revision-Date: 2026-10-10 12:10+0300\n"
 "Last-Translator: petrouspetr-pixel <280500603+petrouspetr-pixel@users.noreply.github.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -184,7 +184,7 @@ msgstr ""
 msgid "Add URLTest / Priority group"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:515
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:519
 msgid "Added"
 msgstr ""
 
@@ -226,7 +226,7 @@ msgstr ""
 msgid "After a connection failure, retry the skipped server after this duration"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:115
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:118
 msgid "After existing device rules"
 msgstr ""
 
@@ -235,7 +235,7 @@ msgstr ""
 msgid "Alice Mode"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:34
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:35
 msgid "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
 msgstr ""
 
@@ -320,7 +320,7 @@ msgstr ""
 msgid "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:231
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:248
 msgid "An existing device rule may overlap. The selected priority determines which rule takes effect."
 msgstr ""
 
@@ -329,7 +329,7 @@ msgid "Analysis of the applied configuration, not a live connection capture."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/profilePanel.ts:61
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:50
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:51
 msgid "Another configuration operation is already running."
 msgstr ""
 
@@ -337,11 +337,11 @@ msgstr ""
 msgid "Another list update is already running. Wait for it to finish, then download the copies again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:178
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:173
 msgid "Apply profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:470
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:479
 msgid "Apply reviewed changes"
 msgstr ""
 
@@ -353,11 +353,11 @@ msgstr ""
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:181
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:198
 msgid "Applying configuration. You can reconnect to this page."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:457
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:453
 msgid "Applying settings in the background. You can close this page."
 msgstr ""
 
@@ -420,7 +420,7 @@ msgstr ""
 msgid "Backend validation failed: %s"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:110
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:113
 msgid "Before existing device rules"
 msgstr ""
 
@@ -584,16 +584,17 @@ msgstr ""
 msgid "Certificate pin is unavailable. Apply or restart the server to generate the default certificate, then open this dialog again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:504
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:500
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:516
 msgid "Change"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:517
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:519
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:521
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:523
 msgid "Changed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:220
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:237
 msgid "Changed rules"
 msgstr ""
 
@@ -657,11 +658,11 @@ msgstr ""
 msgid "Checks passed with manual DHCP"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:319
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:336
 msgid "Choose a platform"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:169
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:175
 msgid "Choose a platform, device addresses, connection and rule priority before previewing."
 msgstr ""
 
@@ -669,8 +670,8 @@ msgstr ""
 msgid "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:106
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:425
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:109
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:437
 msgid "Choose rule priority"
 msgstr ""
 
@@ -764,7 +765,7 @@ msgid "Config File Path"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/profilePanel.ts:58
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:33
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:34
 msgid "Configuration changed. Review the differences again."
 msgstr ""
 
@@ -772,11 +773,7 @@ msgstr ""
 msgid "Configuration for Trafira service"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:358
-msgid "Configuration profiles"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:191
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:208
 msgid "Configuration validation passed. Review the changes below."
 msgstr ""
 
@@ -893,11 +890,11 @@ msgstr ""
 msgid "Could not start the download task. Refresh the status and try again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:378
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:372
 msgid "Create a profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:155
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:150
 msgid "Create profile from saved settings"
 msgstr ""
 
@@ -949,15 +946,15 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:195
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:190
 msgid "Delete profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:366
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:383
 msgid "Delete the edited preset rules? The next step shows the changes."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:199
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:194
 msgid "Delete the selected saved profile? Current settings will remain unchanged."
 msgstr ""
 
@@ -990,6 +987,10 @@ msgstr ""
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:267
 msgid "Device IP address"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:126
+msgid "Device IP addresses"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:184
@@ -1040,7 +1041,7 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:17
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:203
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:220
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:24
 msgid "Direct connection"
 msgstr ""
@@ -1314,7 +1315,7 @@ msgstr ""
 msgid "Edit rule action"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:350
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:367
 msgid "Edited"
 msgstr ""
 
@@ -1355,7 +1356,7 @@ msgstr ""
 msgid "Enable Mixed Proxy Authentication"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:444
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:453
 msgid "Enable only these addresses in Alice Mode if required"
 msgstr ""
 
@@ -1507,11 +1508,11 @@ msgstr ""
 msgid "Explain route"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:330
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:325
 msgid "Export profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:398
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:393
 msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
 msgstr ""
 
@@ -1616,7 +1617,7 @@ msgstr ""
 msgid "Fix the highlighted fields and save again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:199
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:251
 msgid "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below."
 msgstr ""
@@ -1641,8 +1642,8 @@ msgstr ""
 msgid "Fuzzing is not supported here because Trafira needs deterministic runtime validation."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:396
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:413
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:428
 msgid "Gaming presets"
 msgstr ""
 
@@ -1783,11 +1784,11 @@ msgstr ""
 msgid "Idle timeout"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:390
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:384
 msgid "Import a profile file (JSON, up to 1 MiB)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:323
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:318
 msgid "Import profile"
 msgstr ""
 
@@ -2049,7 +2050,7 @@ msgstr ""
 msgid "Invalid port or range. Use 80 or 1000-2000"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:417
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:413
 msgid "Invalid profile"
 msgstr ""
 
@@ -2211,7 +2212,7 @@ msgstr ""
 msgid "JSON outbound settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:354
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:371
 msgid "Keep as ordinary rules"
 msgstr ""
 
@@ -2347,7 +2348,7 @@ msgstr ""
 msgid "Main DNS server. If multiple servers are selected, a timeout switches to a backup."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:389
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:383
 msgid "Manage and transfer profiles"
 msgstr ""
 
@@ -2459,7 +2460,7 @@ msgstr ""
 msgid "Network interface settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:384
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:378
 msgid "New name for selected profile"
 msgstr ""
 
@@ -2528,8 +2529,8 @@ msgstr ""
 msgid "No DNS query was sent from the selected device."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:161
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:164
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:167
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:170
 msgid "No enabled connection rules. Add a connection first."
 msgstr ""
 
@@ -2537,11 +2538,11 @@ msgstr ""
 msgid "No enabled server inbounds configured"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:166
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:172
 msgid "No gaming presets are available."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:157
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:163
 msgid "No known devices. Connect the device to the router and refresh the list."
 msgstr ""
 
@@ -2549,7 +2550,7 @@ msgstr ""
 msgid "No other marking rules found"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:134
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:127
 msgid "No previous configuration is available to restore."
 msgstr ""
 
@@ -2573,7 +2574,7 @@ msgstr ""
 msgid "No rules use Zapret2"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:437
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:433
 msgid "No saved profiles yet. Enter a name and create a profile from the saved configuration."
 msgstr ""
 
@@ -2667,7 +2668,7 @@ msgstr ""
 msgid "Offline: %d"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:483
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:479
 msgid "Only changed section and option names are shown; values are hidden."
 msgstr ""
 
@@ -2728,7 +2729,8 @@ msgstr ""
 msgid "Operation timed out"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:503
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:499
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:511
 msgid "Option"
 msgstr ""
 
@@ -2749,7 +2751,7 @@ msgstr ""
 msgid "Other devices do the opposite. Match devices by interface, MAC address or IP address."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:210
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:227
 msgid "Other traffic"
 msgstr ""
 
@@ -2873,7 +2875,7 @@ msgstr ""
 msgid "Prefix text"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:362
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:379
 msgid "Preview deletion"
 msgstr ""
 
@@ -2885,7 +2887,7 @@ msgstr ""
 msgid "Preview filters"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:454
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:463
 msgid "Preview gaming rules"
 msgstr ""
 
@@ -2909,11 +2911,11 @@ msgstr ""
 msgid "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:402
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:398
 msgid "Previous configuration"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:464
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:460
 msgid "Previous settings were restored."
 msgstr ""
 
@@ -2950,32 +2952,32 @@ msgstr ""
 msgid "Priority settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:148
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:143
 msgid "Profile created."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:150
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:145
 msgid "Profile deleted."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:479
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:475
 msgid "Profile differences"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:379
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:373
 msgid "Profile name"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:149
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:144
 msgid "Profile renamed."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:299
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:294
 msgid "Profile transfer completed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:306
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:349
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:301
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:344
 msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
 msgstr ""
 
@@ -3003,21 +3005,21 @@ msgstr ""
 msgid "QR code is too large"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:436
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:444
 msgid "Read-only access: you can preview rules but cannot apply changes."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:371
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:365
 msgid "Read-only access. Configuration changes require write permission."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:193
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:196
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:246
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:195
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245
 msgid "Real destination IP (optional)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:244
 msgid "Real destination IP (required for the router)"
 msgstr ""
 
@@ -3061,11 +3063,11 @@ msgstr ""
 msgid "Refresh available versions"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:451
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:431
 msgid "Refresh devices"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:161
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:156
 msgid "Refresh profiles"
 msgstr ""
 
@@ -3097,15 +3099,15 @@ msgstr ""
 msgid "Remove the specified servers from this level."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:516
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:520
 msgid "Removed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:165
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:160
 msgid "Rename profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:448
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:459
 msgid "Replace my edits to this preset after preview"
 msgstr ""
 
@@ -3157,13 +3159,13 @@ msgstr ""
 msgid "Restart Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/profilePanel.ts:77
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:51
 #: src/trafira/tabs/updates/renderCoreVersions.ts:62
+#: src/trafira/tabs/diagnostic/profilePanel.ts:77
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:52
 msgid "Restoration failed. Check the service before continuing."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:187
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:182
 msgid "Restore previous settings"
 msgstr ""
 
@@ -3299,7 +3301,7 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:362
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:356
 msgid "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile."
 msgstr ""
 
@@ -3307,7 +3309,7 @@ msgstr ""
 msgid "Saved configuration unavailable"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:381
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:375
 msgid "Saved profiles"
 msgstr ""
 
@@ -3333,7 +3335,8 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:397
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:51
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:502
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:498
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:506
 msgid "Section"
 msgstr ""
 
@@ -3354,8 +3357,8 @@ msgstr ""
 msgid "Select a common client profile or enter a custom User-Agent"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:335
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:421
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:352
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:436
 msgid "Select a connection"
 msgstr ""
 
@@ -3363,8 +3366,8 @@ msgstr ""
 msgid "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:325
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:417
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:342
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:429
 msgid "Select a known device"
 msgstr ""
 
@@ -3376,7 +3379,7 @@ msgstr ""
 msgid "Select a predefined domain list"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:411
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:407
 msgid "Select a saved profile"
 msgstr ""
 
@@ -3398,7 +3401,7 @@ msgstr ""
 msgid "Select a version"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:46
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:47
 msgid "Select an enabled connection rule."
 msgstr ""
 
@@ -3422,7 +3425,7 @@ msgstr ""
 msgid "Select DNS protocol to use"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:407
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:424
 msgid "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
 msgstr ""
 
@@ -3468,7 +3471,7 @@ msgstr ""
 msgid "Selected"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:380
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:374
 msgid "Selected profile"
 msgstr ""
 
@@ -3554,11 +3557,11 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:174
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:169
 msgid "Show differences"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:541
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:545
 msgid "Show differences before applying the selected profile."
 msgstr ""
 
@@ -3679,7 +3682,7 @@ msgstr ""
 msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:248
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:265
 msgid "Some routes could not be fully verified. Review existing rules and saved list copies."
 msgstr ""
 
@@ -3695,9 +3698,9 @@ msgstr ""
 msgid "Sorts servers in this section by lowest latency in the dashboard."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279
 #: src/trafira/tabs/monitoring/initController.ts:831
 #: src/trafira/tabs/monitoring/initController.ts:881
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279
 msgid "Source"
 msgstr ""
 
@@ -3787,7 +3790,7 @@ msgstr ""
 msgid "Storage"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:400
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:417
 msgid "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic."
 msgstr ""
 
@@ -3856,11 +3859,11 @@ msgstr ""
 msgid "Tailscale hostname"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:222
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:221
 msgid "TCP, unknown protocol"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:256
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:273
 msgid "Technical details"
 msgstr ""
 
@@ -3915,8 +3918,8 @@ msgstr ""
 msgid "The entered address is a FakeIP. Enter the real destination IP instead."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:47
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:192
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:48
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:209
 msgid "The generated configuration did not pass validation."
 msgstr ""
 
@@ -3929,7 +3932,7 @@ msgstr ""
 msgid "The NFQUEUE number is assigned by Trafira for each rule and must not be overridden here."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:57
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:58
 msgid "The operation failed. Refresh the page and review the settings."
 msgstr ""
 
@@ -3938,7 +3941,7 @@ msgid "The previous version was restored."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/profilePanel.ts:68
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:492
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:488
 msgid "The profile cannot be used with the current configuration and components."
 msgstr ""
 
@@ -3982,11 +3985,11 @@ msgstr ""
 msgid "The saved profile is unavailable. Refresh the profile list."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:43
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:44
 msgid "The selected address is no longer known. Refresh the device list."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:237
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:254
 msgid "The selected addresses will be enabled in Alice Mode."
 msgstr ""
 
@@ -4011,11 +4014,11 @@ msgstr ""
 msgid "There are rules using Zapret2"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:40
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:41
 msgid "These rules were edited. Confirm replacement or keep them as ordinary rules."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:37
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:38
 msgid "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
 msgstr ""
 
@@ -4069,7 +4072,7 @@ msgstr ""
 msgid "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:529
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:533
 msgid "This profile matches the saved configuration."
 msgstr ""
 
@@ -4077,7 +4080,7 @@ msgstr ""
 msgid "This router"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:471
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:467
 msgid "This saved profile is invalid. Delete it or import a valid file."
 msgstr ""
 
@@ -4220,7 +4223,7 @@ msgstr ""
 msgid "Trafira-managed nfqws2 runtime is ready"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:213
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:208
 msgid "Transferring profile"
 msgstr ""
 
@@ -4271,7 +4274,7 @@ msgstr ""
 msgid "UDP (Unprotected DNS)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:223
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:222
 msgid "UDP, unknown protocol"
 msgstr ""
 
@@ -4649,7 +4652,7 @@ msgstr ""
 msgid "You can select Output Network Interface, by default autodetect"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:207
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:206
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:258
 msgid "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
 msgstr ""

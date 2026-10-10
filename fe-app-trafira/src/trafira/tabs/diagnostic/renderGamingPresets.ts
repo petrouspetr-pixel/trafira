@@ -1,4 +1,5 @@
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
+import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
 import {
   confirmConfigurationReplacement,
   reloadAfterConfigurationCommit,
@@ -99,10 +100,12 @@ export const gamingPresetsPanel = {
     let observedRunning = false;
     let loading = false;
     let confirming = false;
-    const platform = E('select', {}) as HTMLSelectElement,
-      device = E('select', {}) as HTMLSelectElement,
-      proxy = E('select', {}) as HTMLSelectElement;
-    const placement = E('select', {}, [
+    const platform = E('select', {
+        id: 'trafira-game-platform',
+      }) as HTMLSelectElement,
+      device = E('select', { id: 'trafira-game-device' }) as HTMLSelectElement,
+      proxy = E('select', { id: 'trafira-game-proxy' }) as HTMLSelectElement;
+    const placement = E('select', { id: 'trafira-game-priority' }, [
       E('option', { value: '' }, _('Choose rule priority')),
       E(
         'option',
@@ -115,11 +118,14 @@ export const gamingPresetsPanel = {
         _('After existing device rules'),
       ),
     ]) as HTMLSelectElement;
-    const addresses = E('div', {}),
+    const addresses = E('div', { class: 'trafira-form-controls' }),
       output = E('div', {}),
       status = E('p', {}),
       existing = E('div', {});
     const hint = E('p', { role: 'status' });
+    const addressRow = row(_('Device IP addresses'), '', [addresses]);
+    const hintRow = row('', '', [hint]);
+    const resultRow = row('', '', [E('div', {}, [status, output, existing])]);
     const enable = E('input', { type: 'checkbox' }) as HTMLInputElement,
       replace = E('input', { type: 'checkbox' }) as HTMLInputElement;
     let apply: HTMLButtonElement;
@@ -169,6 +175,17 @@ export const gamingPresetsPanel = {
                 : _(
                     'Choose a platform, device addresses, connection and rule priority before previewing.',
                   );
+      addressRow.className =
+        'cbi-value' +
+        (addresses.querySelectorAll('input').length ? '' : ' hidden');
+      hintRow.className = 'cbi-value' + (hint.textContent ? '' : ' hidden');
+      resultRow.className =
+        'cbi-value' +
+        (status.textContent ||
+        output.children.length ||
+        existing.children.length
+          ? ''
+          : ' hidden');
     }
     const controller = new GamingPresetController(command, (next) => {
       if (mine !== generation) return;
@@ -298,7 +315,7 @@ export const gamingPresetsPanel = {
         }) as HTMLInputElement;
         input.addEventListener('change', () => controller.invalidate());
         addresses.append(
-          E('label', { style: 'display:block' }, [input, ' ' + address]),
+          E('label', { class: 'cbi-checkbox' }, [input, ' ' + address]),
         );
       }
       update();
@@ -396,38 +413,29 @@ export const gamingPresetsPanel = {
       E('h3', {}, _('Gaming presets')),
       E(
         'p',
-        {},
+        { class: 'cbi-section-descr' },
         _(
           'Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic.',
         ),
       ),
       E(
         'p',
-        {},
+        { class: 'cbi-section-descr' },
         _(
           'Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened.',
         ),
       ),
-      E('div', { class: 'fkp_diagnostic-fields' }, [
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          E('span', {}, _('Gaming presets')),
-          platform,
-        ]),
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          E('span', {}, _('Select a known device')),
-          device,
-        ]),
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          E('span', {}, _('Select a connection')),
-          proxy,
-        ]),
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          E('span', {}, _('Choose rule priority')),
-          placement,
-        ]),
+      row(_('Gaming presets'), 'trafira-game-platform', [platform]),
+      row(_('Select a known device'), 'trafira-game-device', [
+        device,
+        button(_('Refresh devices'), () => {
+          void refresh();
+        }),
       ]),
-      addresses,
-      hint,
+      addressRow,
+      row(_('Select a connection'), 'trafira-game-proxy', [proxy]),
+      row(_('Choose rule priority'), 'trafira-game-priority', [placement]),
+      hintRow,
       ...(!canWrite
         ? [
             E(
@@ -439,18 +447,19 @@ export const gamingPresetsPanel = {
             ),
           ]
         : []),
-      E('label', { style: 'display:block' }, [
-        enable,
-        ' ' + _('Enable only these addresses in Alice Mode if required'),
+      row('', '', [
+        E('label', { class: 'cbi-checkbox' }, [
+          enable,
+          ' ' + _('Enable only these addresses in Alice Mode if required'),
+        ]),
       ]),
-      E('label', { style: 'display:block' }, [
-        replace,
-        ' ' + _('Replace my edits to this preset after preview'),
+      row('', '', [
+        E('label', { class: 'cbi-checkbox' }, [
+          replace,
+          ' ' + _('Replace my edits to this preset after preview'),
+        ]),
       ]),
-      E('div', { class: 'fkp_diagnostic-actions' }, [
-        button(_('Refresh devices'), () => {
-          void refresh();
-        }),
+      row('', '', [
         (preview = button(_('Preview gaming rules'), () => {
           if (!catalog || preview.disabled) return;
           void controller.preview(
@@ -477,9 +486,7 @@ export const gamingPresetsPanel = {
           if (accepted) void controller.apply();
         })),
       ]),
-      status,
-      output,
-      existing,
+      resultRow,
     );
     controller.mount();
     mounted = {

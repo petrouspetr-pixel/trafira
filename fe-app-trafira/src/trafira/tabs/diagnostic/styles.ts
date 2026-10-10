@@ -205,8 +205,7 @@ export const styles = `
     min-width: 0;
 }
 
-.fkp_diagnostic-panel,
-#trafira-gaming-presets {
+.fkp_diagnostic-panel {
     border: 1px solid var(--background-color-low, lightgray);
     border-radius: 4px;
     padding: 16px;
@@ -214,23 +213,16 @@ export const styles = `
     overflow-wrap: anywhere;
 }
 
-.fkp_diagnostic-panel h3,
-#trafira-profiles > h3,
-#trafira-gaming-presets > h3 {
+.fkp_diagnostic-panel h3 {
     margin-top: 0;
 }
 
 .trafira-feature-slot {
-    margin: 16px 0;
     width: 100%;
     min-width: 0;
 }
 
-#cbi-${TRAFIRA_CBI_PREFIX}-profiles > h3 {
-    display: none;
-}
-
-.trafira-profile-controls {
+.trafira-form-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -238,18 +230,18 @@ export const styles = `
     min-width: 0;
 }
 
-.trafira-profile-controls > input,
-.trafira-profile-controls > select {
+.trafira-form-controls > input,
+.trafira-form-controls > select {
     max-width: 100%;
     box-sizing: border-box;
 }
 
-.trafira-profile-controls > button {
-    margin: 0;
+.trafira-form-controls > select {
+    width: auto;
 }
 
-.trafira-feature-slot p {
-    max-width: 90ch;
+.trafira-form-controls > button {
+    margin: 0;
 }
 
 .fkp_diagnostic-fields {
@@ -326,7 +318,7 @@ export const styles = `
         white-space: normal;
     }
 
-    .trafira-profile-controls > button {
+    .trafira-form-controls > button {
         max-width: 100%;
         white-space: normal;
     }

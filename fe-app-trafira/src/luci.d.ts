@@ -11,6 +11,7 @@ type HtmlAttributes<T extends HtmlTag = 'div'> = Partial<
     'aria-label'?: string;
     'aria-live'?: 'off' | 'polite' | 'assertive';
     'data-latency-section'?: string;
+    'data-title'?: string;
     click?: (event: MouseEvent) => void;
     toggle?: (event: Event) => void;
     onclick?: (event: MouseEvent) => void;
