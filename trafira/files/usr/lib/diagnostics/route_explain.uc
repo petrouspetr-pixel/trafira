@@ -82,9 +82,11 @@ function decode_set(path,format) {
     if (!pipe) return null;
     let temporary=trim(pipe.read(256)||"");
     if (pipe.close()!=0 || !match(temporary,/^\/tmp\/trafira-explain[.][A-Za-z0-9]+$/)) return null;
+    // The watchdog must not inherit the RPC output streams: its sleep child
+    // can outlive the killed shell, preventing file.exec from receiving EOF.
     // Bound both output size and runtime; OpenWrt does not always provide timeout.
     let command="(ulimit -f 8192; exec sing-box rule-set " + (format=="source"?"compile":"decompile") + " " + quote(path) + " -o " + quote(temporary) +
-        " >/dev/null 2>&1) & child=$!; (sleep 3; kill -TERM \"$child\" 2>/dev/null) & guard=$!; " +
+        " >/dev/null 2>&1) & child=$!; (sleep 3; kill -TERM \"$child\" 2>/dev/null) >/dev/null 2>&1 & guard=$!; " +
         "wait \"$child\"; code=$?; kill \"$guard\" 2>/dev/null; wait \"$guard\" 2>/dev/null; exit \"$code\"";
     // Compile validates source copies against the installed core's accepted
     // schema/version; only binary copies need their temporary decoded output.

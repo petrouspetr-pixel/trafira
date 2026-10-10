@@ -52,6 +52,26 @@ stamp
 before="$(sha256sum "$saved" "$WORK_DIR/config.json" "$TRAFIRA_UCI_STATE_FILE")"
 run "$SOURCE_REQUEST" >"$WORK_DIR/source.json"
 run "$ROUTER_REQUEST" >"$WORK_DIR/router.json"
+# LuCI file.exec waits for stdout/stderr EOF, not just the ucode process exit.
+# A killed watchdog shell can leave its sleep child holding those RPC streams.
+node - "$TRAFIRA_LIB" "$ROUTER_REQUEST" <<'JS'
+const {spawn}=require('child_process'),assert=require('assert/strict');
+const [lib,request]=process.argv.slice(2);
+const child=spawn('ucode',['-L',lib,`${lib}/diagnostics/route_explain.uc`,'explain',request]);
+let stdout='';
+child.stdout.on('data',data=>stdout+=data);
+const deadline=setTimeout(()=>{
+ child.kill();
+ console.error('route explanation must close its RPC streams after the calculation; a watchdog retained stdout/stderr');
+ process.exit(1);
+},2500);
+child.on('error',error=>{clearTimeout(deadline);throw error;});
+child.on('close',code=>{
+ clearTimeout(deadline);
+ assert.equal(code,0,'route subprocess completed');
+ assert.equal(JSON.parse(stdout).success,true,'complete JSON arrived before the pipe deadline');
+});
+JS
 test "$before" = "$(sha256sum "$saved" "$WORK_DIR/config.json" "$TRAFIRA_UCI_STATE_FILE")"
 node - "$WORK_DIR" <<'JS'
 const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
