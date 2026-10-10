@@ -23,6 +23,11 @@ function find(
     if (found) return found;
   }
 }
+function textOf(node: NodeView): string {
+  return node.children
+    .map((child) => (typeof child === 'string' ? child : textOf(child)))
+    .join(' ');
+}
 let output: NodeView;
 let expanded = false;
 beforeEach(() => {
@@ -111,9 +116,9 @@ describe('diagnostics layout', () => {
   }
   it('enables both snapshot buttons while idle under LuCI attribute semantics', async () => {
     await snapshots.mount();
-    expect(button('Prepare saved copies').attributes).not.toHaveProperty(
-      'disabled',
-    );
+    expect(
+      button('Download / update list copies').attributes,
+    ).not.toHaveProperty('disabled');
     expect(button('Refresh status').attributes).not.toHaveProperty('disabled');
   });
   it('disables both buttons during start, then enables them after completion', async () => {
@@ -130,15 +135,15 @@ describe('diagnostics layout', () => {
         }),
     );
     const pending = snapshots.prepare();
-    expect(button('Prepare saved copies').attributes).toHaveProperty(
+    expect(button('Download / update list copies').attributes).toHaveProperty(
       'disabled',
     );
     expect(button('Refresh status').attributes).toHaveProperty('disabled');
     finish({ code: 0, stdout: JSON.stringify({ success: true }), stderr: '' });
     await pending;
-    expect(button('Prepare saved copies').attributes).not.toHaveProperty(
-      'disabled',
-    );
+    expect(
+      button('Download / update list copies').attributes,
+    ).not.toHaveProperty('disabled');
     expect(button('Refresh status').attributes).not.toHaveProperty('disabled');
   });
   it.each([
@@ -157,7 +162,7 @@ describe('diagnostics layout', () => {
       stdout: JSON.stringify({ ...JSON.parse(result.stdout), ...patch }),
     });
     await snapshots.mount();
-    expect(button('Prepare saved copies').attributes).toHaveProperty(
+    expect(button('Download / update list copies').attributes).toHaveProperty(
       'disabled',
     );
     expect(button('Refresh status').attributes).not.toHaveProperty('disabled');
@@ -167,14 +172,14 @@ describe('diagnostics layout', () => {
     const details = find(output, (node) => node.tag === 'details')!;
     expect(details.attributes).not.toHaveProperty('open');
     expect(find(details, (node) => node.tag === 'summary')?.children).toEqual([
-      'Saved rule sets (22)',
+      'Show saved lists and storage (22)',
     ]);
     expect(
       find(
         output,
         (node) =>
           node.tag === 'p' &&
-          String(node.children[0]).includes('Copy present: 20 / 22'),
+          String(node.children[0]).includes('Copies stored on router: 20 / 22'),
       ),
     ).toBeDefined();
     expanded = true;
@@ -182,5 +187,80 @@ describe('diagnostics layout', () => {
     expect(
       find(output, (node) => node.tag === 'details')?.attributes,
     ).toHaveProperty('open');
+  });
+  it.each([
+    {
+      running: false,
+      success: false,
+      message: 'Another lists update is already running',
+      shown:
+        'Another list update is already running. Wait for it to finish, then download the copies again.',
+    },
+    {
+      running: false,
+      success: false,
+      message: 'Snapshot preparation failed; previous copies preserved',
+      shown:
+        'Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage.',
+    },
+    {
+      running: false,
+      success: false,
+      message: 'Snapshot worker exited unexpectedly',
+      shown: 'Downloading copies was interrupted. Download the copies again.',
+    },
+    {
+      running: false,
+      success: true,
+      message: 'Snapshot preparation completed',
+      shown:
+        'Copies were downloaded and checked. They will be checked again before the next startup.',
+    },
+  ])('explains the actual download result: $message', async (job) => {
+    const result = await executeShellCommand({
+      command: '/usr/bin/trafira',
+      args: [],
+    });
+    vi.mocked(executeShellCommand).mockResolvedValue({
+      ...result,
+      stdout: JSON.stringify({ ...JSON.parse(result.stdout), job }),
+    });
+    await snapshots.mount();
+    expect(textOf(output)).toContain(job.shown);
+  });
+  it('shows a safe fallback for unknown backend failure details', async () => {
+    const result = await executeShellCommand({
+      command: '/usr/bin/trafira',
+      args: [],
+    });
+    const rawMessage =
+      'Failed https://user:secret@example.org/list?token=secret';
+    vi.mocked(executeShellCommand).mockResolvedValue({
+      ...result,
+      stdout: JSON.stringify({
+        ...JSON.parse(result.stdout),
+        job: { running: false, success: false, message: rawMessage },
+      }),
+    });
+    await snapshots.mount();
+    expect(textOf(output)).not.toContain(rawMessage);
+    expect(textOf(output)).toContain(
+      'Could not download copies. Check the internet connection, list-download proxy and router storage.',
+    );
+  });
+  it('explains a storage failure when the download could not start', async () => {
+    await snapshots.mount();
+    vi.mocked(executeShellCommand).mockResolvedValueOnce({
+      code: 0,
+      stdout: JSON.stringify({
+        success: false,
+        message: 'Failed to write snapshot job',
+      }),
+      stderr: '',
+    });
+    await snapshots.prepare();
+    expect(textOf(output)).toContain(
+      'Could not save the download task. Check free storage on the router.',
+    );
   });
 });

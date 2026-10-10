@@ -108,10 +108,31 @@
     ]
   },
   {
+    "call": "A copy download is already starting. Wait, then refresh the status.",
+    "key": "A copy download is already starting. Wait, then refresh the status.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:29"
+    ]
+  },
+  {
     "call": "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration.",
     "key": "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration.",
     "places": [
       "src/trafira/tabs/dashboard/renderFailurePolicies.ts:43"
+    ]
+  },
+  {
+    "call": "A required saved list is missing or unreadable. Download or update copies in Saved rule sets, then try again.",
+    "key": "A required saved list is missing or unreadable. Download or update copies in Saved rule sets, then try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:74"
+    ]
+  },
+  {
+    "call": "A saved list changed during the check. Try again.",
+    "key": "A saved list changed during the check. Try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:67"
     ]
   },
   {
@@ -274,7 +295,7 @@
     "call": "Additional route information (optional)",
     "key": "Additional route information (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:176"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:239"
     ]
   },
   {
@@ -362,6 +383,20 @@
     "key": "Alice Mode devices are currently unavailable",
     "places": [
       "src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:225"
+    ]
+  },
+  {
+    "call": "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details.",
+    "key": "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:12"
+    ]
+  },
+  {
+    "call": "Alice Mode sends this device directly, bypassing Trafira.",
+    "key": "Alice Mode sends this device directly, bypassing Trafira.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:36"
     ]
   },
   {
@@ -457,10 +492,38 @@
     ]
   },
   {
+    "call": "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information.",
+    "key": "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:51"
+    ]
+  },
+  {
+    "call": "An earlier rule checks the application protocol. Select the protocol to continue.",
+    "key": "An earlier rule checks the application protocol. Select the protocol to continue.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:58"
+    ]
+  },
+  {
+    "call": "An earlier rule needs additional data. See the rule evaluation details below.",
+    "key": "An earlier rule needs additional data. See the rule evaluation details below.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:81"
+    ]
+  },
+  {
+    "call": "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed.",
+    "key": "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:78"
+    ]
+  },
+  {
     "call": "Analysis of the applied configuration, not a live connection capture.",
     "key": "Analysis of the applied configuration, not a live connection capture.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:65"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:95"
     ]
   },
   {
@@ -468,6 +531,13 @@
     "key": "Another configuration operation is already running.",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:46"
+    ]
+  },
+  {
+    "call": "Another list update is already running. Wait for it to finish, then download the copies again.",
+    "key": "Another list update is already running. Wait for it to finish, then download the copies again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:63"
     ]
   },
   {
@@ -495,7 +565,7 @@
     "call": "Apply the Trafira configuration again to enable saved copies for this core",
     "key": "Apply the Trafira configuration again to enable saved copies for this core",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:59"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:141"
     ]
   },
   {
@@ -614,6 +684,13 @@
     ]
   },
   {
+    "call": "Block connection",
+    "key": "Block connection",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:39"
+    ]
+  },
+  {
     "call": "Block traffic",
     "key": "Block traffic",
     "places": [
@@ -625,7 +702,7 @@
     "call": "Blocked",
     "key": "Blocked",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:22"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:23"
     ]
   },
   {
@@ -815,6 +892,13 @@
     ]
   },
   {
+    "call": "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test.",
+    "key": "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:113"
+    ]
+  },
+  {
     "call": "Cannot receive checks result",
     "key": "Cannot receive checks result",
     "places": [
@@ -853,7 +937,7 @@
     "call": "Catalog checked",
     "key": "Catalog checked",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:80"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
     ]
   },
   {
@@ -914,7 +998,7 @@
     "call": "Checking route",
     "key": "Checking route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:57"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:87"
     ]
   },
   {
@@ -944,17 +1028,17 @@
     "call": "Checks failed",
     "key": "Checks failed",
     "places": [
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10",
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26"
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26",
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10"
     ]
   },
   {
     "call": "Checks passed",
     "key": "Checks passed",
     "places": [
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13",
       "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:23",
-      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43",
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13"
+      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43"
     ]
   },
   {
@@ -968,7 +1052,7 @@
     "call": "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only.",
     "key": "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:100"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:137"
     ]
   },
   {
@@ -1049,10 +1133,10 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3786",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1714",
       "src/partials/modal/renderModal.ts:263",
-      "src/trafira/tabs/dashboard/initController.ts:1061",
-      "src/trafira/tabs/dashboard/initController.ts:1329",
       "src/trafira/tabs/monitoring/initController.ts:832",
-      "src/trafira/tabs/monitoring/initController.ts:882"
+      "src/trafira/tabs/monitoring/initController.ts:882",
+      "src/trafira/tabs/dashboard/initController.ts:1061",
+      "src/trafira/tabs/dashboard/initController.ts:1329"
     ]
   },
   {
@@ -1172,10 +1256,17 @@
     ]
   },
   {
+    "call": "Connection options",
+    "key": "Connection options",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:42"
+    ]
+  },
+  {
     "call": "Connection route",
     "key": "Connection route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:78"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:120"
     ]
   },
   {
@@ -1222,6 +1313,27 @@
     ]
   },
   {
+    "call": "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them.",
+    "key": "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:174"
+    ]
+  },
+  {
+    "call": "Copies stored on router",
+    "key": "Copies stored on router",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:152"
+    ]
+  },
+  {
+    "call": "Copies were downloaded and checked. They will be checked again before the next startup.",
+    "key": "Copies were downloaded and checked. They will be checked again before the next startup.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:54"
+    ]
+  },
+  {
     "call": "Copy",
     "key": "Copy",
     "places": [
@@ -1233,16 +1345,14 @@
     "call": "Copy missing",
     "key": "Copy missing",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:73",
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:100"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:189"
     ]
   },
   {
     "call": "Copy present",
     "key": "Copy present",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:73",
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:99"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:188"
     ]
   },
   {
@@ -1263,24 +1373,66 @@
     ]
   },
   {
-    "call": "Could not explain route",
-    "key": "Could not explain route",
+    "call": "Could not download copies. Check the internet connection, list-download proxy and router storage.",
+    "key": "Could not download copies. Check the internet connection, list-download proxy and router storage.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:59"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:79"
     ]
   },
   {
-    "call": "Could not read snapshot status",
-    "key": "Could not read snapshot status",
+    "call": "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads.",
+    "key": "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:30"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:67"
     ]
   },
   {
-    "call": "Could not start snapshot preparation",
-    "key": "Could not start snapshot preparation",
+    "call": "Could not explain route. Check that Trafira is running, then try again.",
+    "key": "Could not explain route. Check that Trafira is running, then try again.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:29"
+      "src/trafira/tabs/diagnostic/routePresentation.ts:121"
+    ]
+  },
+  {
+    "call": "Could not load available versions. Check the connection and refresh the list.",
+    "key": "Could not load available versions. Check the connection and refresh the list.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:58"
+    ]
+  },
+  {
+    "call": "Could not read saved-copy status. Refresh the status to try again.",
+    "key": "Could not read saved-copy status. Refresh the status to try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:25"
+    ]
+  },
+  {
+    "call": "Could not save the download task. Check free storage on the router.",
+    "key": "Could not save the download task. Check free storage on the router.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:37"
+    ]
+  },
+  {
+    "call": "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again.",
+    "key": "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:33"
+    ]
+  },
+  {
+    "call": "Could not start downloading copies. Refresh the status and try again.",
+    "key": "Could not start downloading copies. Refresh the status and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:45"
+    ]
+  },
+  {
+    "call": "Could not start the download task. Refresh the status and try again.",
+    "key": "Could not start the download task. Refresh the status and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:41"
     ]
   },
   {
@@ -1301,7 +1453,7 @@
     "call": "Current selected node",
     "key": "Current selected node",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:87"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:146"
     ]
   },
   {
@@ -1392,7 +1544,14 @@
     "call": "Destination port",
     "key": "Destination port",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:172"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:235"
+    ]
+  },
+  {
+    "call": "Detect protocol",
+    "key": "Detect protocol",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:40"
     ]
   },
   {
@@ -1415,7 +1574,7 @@
     "call": "Device by IP address",
     "key": "Device by IP address",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:116"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:172"
     ]
   },
   {
@@ -1429,16 +1588,16 @@
     "call": "Device IP address",
     "key": "Device IP address",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:121",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:171"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:177",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:234"
     ]
   },
   {
     "call": "Device MAC (optional)",
     "key": "Device MAC (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:125",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:178"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:182",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:241"
     ]
   },
   {
@@ -1510,8 +1669,8 @@
     "key": "Direct connection",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837",
-      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:22",
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17"
     ]
   },
   {
@@ -1591,7 +1750,8 @@
     "call": "DNS policy (A query)",
     "key": "DNS policy (A query)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:80"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:127",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129"
     ]
   },
   {
@@ -1755,6 +1915,13 @@
     ]
   },
   {
+    "call": "Does not match",
+    "key": "Does not match",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:34"
+    ]
+  },
+  {
     "call": "Does not match inclusion filters",
     "key": "Does not match inclusion filters",
     "places": [
@@ -1786,7 +1953,7 @@
     "call": "Domain",
     "key": "Domain",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:169"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:232"
     ]
   },
   {
@@ -1840,6 +2007,13 @@
     ]
   },
   {
+    "call": "Download / update list copies",
+    "key": "Download / update list copies",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:243"
+    ]
+  },
+  {
     "call": "Download component packages via the selected section",
     "key": "Download component packages via the selected section",
     "places": [
@@ -1872,6 +2046,13 @@
     "key": "Download lists through a section",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:691"
+    ]
+  },
+  {
+    "call": "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads.",
+    "key": "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:108"
     ]
   },
   {
@@ -1908,6 +2089,20 @@
     "places": [
       "src/trafira/tabs/monitoring/initController.ts:825",
       "src/trafira/tabs/monitoring/initController.ts:879"
+    ]
+  },
+  {
+    "call": "Downloading and checking list copies…",
+    "key": "Downloading and checking list copies…",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:52"
+    ]
+  },
+  {
+    "call": "Downloading copies was interrupted. Download the copies again.",
+    "key": "Downloading copies was interrupted. Download the copies again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:71"
     ]
   },
   {
@@ -2078,6 +2273,13 @@
     ]
   },
   {
+    "call": "Enter a valid domain, destination port and device IP address, or select This router.",
+    "key": "Enter a valid domain, destination port and device IP address, or select This router.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:109"
+    ]
+  },
+  {
     "call": "Enter an absolute file path",
     "key": "Enter an absolute file path",
     "places": [
@@ -2092,10 +2294,31 @@
     ]
   },
   {
+    "call": "Enter the device IP address, or select a detected device.",
+    "key": "Enter the device IP address, or select a detected device.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:54"
+    ]
+  },
+  {
+    "call": "Enter the device MAC address in Additional route information.",
+    "key": "Enter the device MAC address in Additional route information.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:55"
+    ]
+  },
+  {
     "call": "Enter the HWID sent with subscription requests",
     "key": "Enter the HWID sent with subscription requests",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2398"
+    ]
+  },
+  {
+    "call": "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route.",
+    "key": "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:6"
     ]
   },
   {
@@ -2222,7 +2445,7 @@
     "call": "Explain route",
     "key": "Explain route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:187"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:250"
     ]
   },
   {
@@ -2296,12 +2519,12 @@
     "call": "Failed to execute",
     "key": "Failed to execute",
     "places": [
+      "src/trafira/methods/shell/index.ts:170",
+      "src/trafira/methods/shell/index.ts:177",
       "src/trafira/tabs/updates/initController.ts:509",
       "src/trafira/tabs/updates/initController.ts:510",
       "src/trafira/tabs/updates/initController.ts:572",
-      "src/trafira/tabs/updates/initController.ts:722",
-      "src/trafira/methods/shell/index.ts:170",
-      "src/trafira/methods/shell/index.ts:177"
+      "src/trafira/tabs/updates/initController.ts:722"
     ]
   },
   {
@@ -2494,6 +2717,13 @@
     "key": "gRPC service",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2816"
+    ]
+  },
+  {
+    "call": "Handle DNS",
+    "key": "Handle DNS",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:43"
     ]
   },
   {
@@ -2772,8 +3002,8 @@
     "call": "Incoming interface (optional)",
     "key": "Incoming interface (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:186",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:242"
     ]
   },
   {
@@ -2801,14 +3031,14 @@
     "call": "Install selected version",
     "key": "Install selected version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:29"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:37"
     ]
   },
   {
     "call": "Installed version",
     "key": "Installed version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:80"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
     ]
   },
   {
@@ -2823,14 +3053,14 @@
     "call": "Installing in the background. You may close this page.",
     "key": "Installing in the background. You may close this page.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:85"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:117"
     ]
   },
   {
     "call": "Insufficient information",
     "key": "Insufficient information",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:23"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:24"
     ]
   },
   {
@@ -3344,8 +3574,8 @@
     "call": "Issues detected",
     "key": "Issues detected",
     "places": [
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17",
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20"
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20",
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17"
     ]
   },
   {
@@ -3443,6 +3673,13 @@
     ]
   },
   {
+    "call": "Last download",
+    "key": "Last download",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:224"
+    ]
+  },
+  {
     "call": "Last WireGuard handshake",
     "key": "Last WireGuard handshake",
     "places": [
@@ -3501,13 +3738,6 @@
     ]
   },
   {
-    "call": "Limitations",
-    "key": "Limitations",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:93"
-    ]
-  },
-  {
     "call": "List must be an HTTP(S) URL or a local .lst path",
     "key": "List must be an HTTP(S) URL or a local .lst path",
     "places": [
@@ -3543,6 +3773,13 @@
     ]
   },
   {
+    "call": "Lists without a saved copy",
+    "key": "Lists without a saved copy",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:152"
+    ]
+  },
+  {
     "call": "Loading client link...",
     "key": "Loading client link...",
     "places": [
@@ -3565,7 +3802,8 @@
       "src/trafira/tabs/updates/initController.ts:919",
       "src/trafira/tabs/updates/initController.ts:930",
       "src/trafira/tabs/updates/initController.ts:943",
-      "src/trafira/tabs/updates/initController.ts:956"
+      "src/trafira/tabs/updates/initController.ts:956",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:83"
     ]
   },
   {
@@ -3573,6 +3811,13 @@
     "key": "Loading…",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3302"
+    ]
+  },
+  {
+    "call": "Local copies help Trafira start when remote list sources are unavailable.",
+    "key": "Local copies help Trafira start when remote list sources are unavailable.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:101"
     ]
   },
   {
@@ -3628,7 +3873,14 @@
     "call": "Matched route",
     "key": "Matched route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:20"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21"
+    ]
+  },
+  {
+    "call": "Matches",
+    "key": "Matches",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:33"
     ]
   },
   {
@@ -3678,13 +3930,6 @@
     "key": "Minimum time between switches (seconds)",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7790"
-    ]
-  },
-  {
-    "call": "Missing information",
-    "key": "Missing information",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:35"
     ]
   },
   {
@@ -3764,6 +4009,14 @@
     "key": "Native fallback reacts to real connection failures and requires sing-box extended. The watchdog mode works with all supported sing-box variants.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3020"
+    ]
+  },
+  {
+    "call": "Needs more information",
+    "key": "Needs more information",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:35",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66"
     ]
   },
   {
@@ -3857,6 +4110,20 @@
     ]
   },
   {
+    "call": "No compatible versions are available",
+    "key": "No compatible versions are available",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:86"
+    ]
+  },
+  {
+    "call": "No compatible versions are available for this installation.",
+    "key": "No compatible versions are available for this installation.",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:119"
+    ]
+  },
+  {
     "call": "No conflict detected",
     "key": "No conflict detected",
     "places": [
@@ -3874,7 +4141,7 @@
     "call": "No DNS query was sent from the selected device.",
     "key": "No DNS query was sent from the selected device.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:91"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:136"
     ]
   },
   {
@@ -3902,7 +4169,7 @@
     "call": "No remote rule sets in saved configuration",
     "key": "No remote rule sets in saved configuration",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:121"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:210"
     ]
   },
   {
@@ -3989,7 +4256,15 @@
       "src/trafira/helpers/singBoxVariant.ts:37",
       "src/trafira/tabs/updates/initController.ts:933",
       "src/trafira/tabs/updates/initController.ts:946",
-      "src/trafira/tabs/updates/initController.ts:959"
+      "src/trafira/tabs/updates/initController.ts:959",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
+    ]
+  },
+  {
+    "call": "Not pinned",
+    "key": "Not pinned",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
     ]
   },
   {
@@ -4124,7 +4399,7 @@
     "call": "Only the first 200 rules are displayed",
     "key": "Only the first 200 rules are displayed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:47"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:70"
     ]
   },
   {
@@ -4212,7 +4487,7 @@
     "call": "Overridden by an earlier rule",
     "key": "Overridden by an earlier rule",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:43"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66"
     ]
   },
   {
@@ -4306,14 +4581,14 @@
     "call": "Pin selected version",
     "key": "Pin selected version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:106"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:148"
     ]
   },
   {
     "call": "Pinned version",
     "key": "Pinned version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:80"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
     ]
   },
   {
@@ -4392,20 +4667,6 @@
     "key": "Prefix text",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2470"
-    ]
-  },
-  {
-    "call": "Prepare saved copies",
-    "key": "Prepare saved copies",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:152"
-    ]
-  },
-  {
-    "call": "Preparing snapshots",
-    "key": "Preparing snapshots",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:129"
     ]
   },
   {
@@ -4561,7 +4822,7 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2482",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2516",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:173"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:236"
     ]
   },
   {
@@ -4590,8 +4851,8 @@
     "call": "Real destination IP (optional)",
     "key": "Real destination IP (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:133",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:180"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:190",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:243"
     ]
   },
   {
@@ -4647,7 +4908,7 @@
     "call": "Referenced in saved startup configuration",
     "key": "Referenced in saved startup configuration",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:107"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:196"
     ]
   },
   {
@@ -4661,7 +4922,7 @@
     "call": "Refresh available versions",
     "key": "Refresh available versions",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:21"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:29"
     ]
   },
   {
@@ -4672,10 +4933,17 @@
     ]
   },
   {
+    "call": "Refresh required",
+    "key": "Refresh required",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:100"
+    ]
+  },
+  {
     "call": "Refresh status",
     "key": "Refresh status",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:161"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:252"
     ]
   },
   {
@@ -4745,7 +5013,7 @@
     "call": "Requires sing-box 1.14 or newer",
     "key": "Requires sing-box 1.14 or newer",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:46"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:128"
     ]
   },
   {
@@ -4760,6 +5028,13 @@
     "key": "Reserve section",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7756"
+    ]
+  },
+  {
+    "call": "Resolve domain",
+    "key": "Resolve domain",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:41"
     ]
   },
   {
@@ -4815,8 +5090,8 @@
     "call": "Restoration failed. Check the service before continuing.",
     "key": "Restoration failed. Check the service before continuing.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:40",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:47"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:47",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:48"
     ]
   },
   {
@@ -4839,6 +5114,13 @@
     "places": [
       "src/trafira/tabs/monitoring/initController.ts:819",
       "src/trafira/tabs/monitoring/initController.ts:877"
+    ]
+  },
+  {
+    "call": "Route connection",
+    "key": "Route connection",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:38"
     ]
   },
   {
@@ -4867,6 +5149,27 @@
     "key": "Route router applications",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:599"
+    ]
+  },
+  {
+    "call": "Router application routing has not been applied. Save and apply the Trafira settings first.",
+    "key": "Router application routing has not been applied. Save and apply the Trafira settings first.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:18"
+    ]
+  },
+  {
+    "call": "Router application routing is not active. Restart Trafira and try again.",
+    "key": "Router application routing is not active. Restart Trafira and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:21"
+    ]
+  },
+  {
+    "call": "Router routing data is unavailable. Restart Trafira and try again.",
+    "key": "Router routing data is unavailable. Restart Trafira and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:24"
     ]
   },
   {
@@ -4907,10 +5210,17 @@
     ]
   },
   {
+    "call": "Rule action",
+    "key": "Rule action",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66"
+    ]
+  },
+  {
     "call": "Rule evaluation order",
     "key": "Rule evaluation order",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:38"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:61"
     ]
   },
   {
@@ -4933,6 +5243,13 @@
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8096",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8125"
+    ]
+  },
+  {
+    "call": "Rule-set copies for startup",
+    "key": "Rule-set copies for startup",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:97"
     ]
   },
   {
@@ -5016,15 +5333,7 @@
     "call": "Saved configuration unavailable",
     "key": "Saved configuration unavailable",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:49"
-    ]
-  },
-  {
-    "call": "Saved rule sets",
-    "key": "Saved rule sets",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:33",
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:87"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:131"
     ]
   },
   {
@@ -5101,6 +5410,13 @@
     ]
   },
   {
+    "call": "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information.",
+    "key": "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:9"
+    ]
+  },
+  {
     "call": "Select a known device",
     "key": "Select a known device",
     "places": [
@@ -5148,7 +5464,8 @@
     "call": "Select a version",
     "key": "Select a version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:63"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:24",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:85"
     ]
   },
   {
@@ -5383,9 +5700,9 @@
     "call": "Service action failed",
     "key": "Service action failed",
     "places": [
-      "src/trafira/tabs/diagnostic/initController.ts:598",
       "src/trafira/methods/shell/index.ts:376",
-      "src/trafira/methods/shell/index.ts:397"
+      "src/trafira/methods/shell/index.ts:397",
+      "src/trafira/tabs/diagnostic/initController.ts:598"
     ]
   },
   {
@@ -5468,6 +5785,13 @@
     ]
   },
   {
+    "call": "Show saved lists and storage",
+    "key": "Show saved lists and storage",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:164"
+    ]
+  },
+  {
     "call": "Show servers from selected groups without repeating their filtering criteria.",
     "key": "Show servers from selected groups without repeating their filtering criteria.",
     "places": [
@@ -5508,6 +5832,13 @@
     "key": "Sing-box autostart disabled",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runSingBoxCheck.ts:77"
+    ]
+  },
+  {
+    "call": "sing-box could not export a saved list for this calculation. Some binary lists, including AdGuard lists, cannot be exported. Downloading the same copy again may not help.",
+    "key": "sing-box could not export a saved list for this calculation. Some binary lists, including AdGuard lists, cannot be exported. Downloading the same copy again may not help.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:64"
     ]
   },
   {
@@ -5563,28 +5894,14 @@
     "call": "Sing-box versions",
     "key": "Sing-box versions",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:96"
-    ]
-  },
-  {
-    "call": "Snapshot preparation completed",
-    "key": "Snapshot preparation completed",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:131"
-    ]
-  },
-  {
-    "call": "Snapshot preparation failed; check core, configuration, proxy and storage",
-    "key": "Snapshot preparation failed; check core, configuration, proxy and storage",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:132"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:133"
     ]
   },
   {
     "call": "Snapshot status unavailable",
     "key": "Snapshot status unavailable",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:43"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:125"
     ]
   },
   {
@@ -5592,6 +5909,13 @@
     "key": "Some addresses use Trafira; others connect directly",
     "places": [
       "src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:47"
+    ]
+  },
+  {
+    "call": "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage.",
+    "key": "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:75"
     ]
   },
   {
@@ -5606,6 +5930,13 @@
     "key": "Some LAN neighbor entries were invalid and skipped.",
     "places": [
       "src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:65"
+    ]
+  },
+  {
+    "call": "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check.",
+    "key": "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:68"
     ]
   },
   {
@@ -5633,9 +5964,9 @@
     "call": "Source",
     "key": "Source",
     "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:233",
       "src/trafira/tabs/monitoring/initController.ts:831",
-      "src/trafira/tabs/monitoring/initController.ts:881",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:170"
+      "src/trafira/tabs/monitoring/initController.ts:881"
     ]
   },
   {
@@ -5745,6 +6076,13 @@
     ]
   },
   {
+    "call": "Starting the copy download…",
+    "key": "Starting the copy download…",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:122"
+    ]
+  },
+  {
     "call": "State",
     "key": "State",
     "places": [
@@ -5777,7 +6115,7 @@
     "call": "Storage",
     "key": "Storage",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:68"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:169"
     ]
   },
   {
@@ -5785,13 +6123,6 @@
     "key": "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint.",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:274"
-    ]
-  },
-  {
-    "call": "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core.",
-    "key": "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:37"
     ]
   },
   {
@@ -5911,7 +6242,7 @@
     "call": "TCP, unknown protocol",
     "key": "TCP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:145"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:203"
     ]
   },
   {
@@ -5980,11 +6311,25 @@
     ]
   },
   {
+    "call": "The applied routing state is unavailable. Start Trafira and try again.",
+    "key": "The applied routing state is unavailable. Start Trafira and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:15"
+    ]
+  },
+  {
     "call": "The desync fwmark is managed by Trafira for loop prevention and must not be overridden here.",
     "key": "The desync fwmark is managed by Trafira for loop prevention and must not be overridden here.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5698",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6143"
+    ]
+  },
+  {
+    "call": "The entered address is a FakeIP. Enter the real destination IP instead.",
+    "key": "The entered address is a FakeIP. Enter the real destination IP instead.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:33"
     ]
   },
   {
@@ -5999,7 +6344,7 @@
     "call": "The installed version changed. Refresh the version list.",
     "key": "The installed version changed. Refresh the version list.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:43"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:51"
     ]
   },
   {
@@ -6021,7 +6366,7 @@
     "call": "The previous version was restored.",
     "key": "The previous version was restored.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:87"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:123"
     ]
   },
   {
@@ -6032,10 +6377,31 @@
     ]
   },
   {
+    "call": "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira.",
+    "key": "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:3"
+    ]
+  },
+  {
+    "call": "The routing configuration changed during the check. Try again.",
+    "key": "The routing configuration changed during the check. Try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:112"
+    ]
+  },
+  {
     "call": "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression.",
     "key": "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8038"
+    ]
+  },
+  {
+    "call": "The rule set is too complex to evaluate within the diagnostic limits.",
+    "key": "The rule set is too complex to evaluate within the diagnostic limits.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:61"
     ]
   },
   {
@@ -6046,11 +6412,18 @@
     ]
   },
   {
+    "call": "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again.",
+    "key": "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:115"
+    ]
+  },
+  {
     "call": "The sing-box version operation failed.",
     "key": "The sing-box version operation failed.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:46",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:83"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:54",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:115"
     ]
   },
   {
@@ -6086,6 +6459,13 @@
     "key": "This Alice Mode exception also covers other devices. Edit it manually before applying this preset.",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:33"
+    ]
+  },
+  {
+    "call": "This DNS connection is excluded from router application routing.",
+    "key": "This DNS connection is excluded from router application routing.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:42"
     ]
   },
   {
@@ -6143,6 +6523,13 @@
     ]
   },
   {
+    "call": "This is a local destination. Its route depends on the router firewall exclusions.",
+    "key": "This is a local destination. Its route depends on the router firewall exclusions.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:27"
+    ]
+  },
+  {
     "call": "This option requires a value.",
     "key": "This option requires a value.",
     "places": [
@@ -6161,7 +6548,21 @@
     "call": "This router",
     "key": "This router",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:117"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:173"
+    ]
+  },
+  {
+    "call": "This time synchronization connection is excluded from router application routing.",
+    "key": "This time synchronization connection is excluded from router application routing.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:45"
+    ]
+  },
+  {
+    "call": "This VPN transport connection is excluded to prevent a routing loop.",
+    "key": "This VPN transport connection is excluded to prevent a routing loop.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:48"
     ]
   },
   {
@@ -6235,6 +6636,13 @@
     "key": "Traffic Total",
     "places": [
       "src/trafira/tabs/dashboard/initController.ts:1633"
+    ]
+  },
+  {
+    "call": "Trafira does not intercept traffic from this incoming interface.",
+    "key": "Trafira does not intercept traffic from this incoming interface.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:39"
     ]
   },
   {
@@ -6468,7 +6876,7 @@
     "call": "UDP, unknown protocol",
     "key": "UDP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:146"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:204"
     ]
   },
   {
@@ -6507,7 +6915,7 @@
     "call": "Unavailable for this installation",
     "key": "Unavailable for this installation",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:71"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:101"
     ]
   },
   {
@@ -6613,7 +7021,7 @@
     "call": "Unpin version",
     "key": "Unpin version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:37"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:45"
     ]
   },
   {
@@ -7037,7 +7445,14 @@
     "call": "Where will the connection go?",
     "key": "Where will the connection go?",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:167"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:230"
+    ]
+  },
+  {
+    "call": "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information.",
+    "key": "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:30"
     ]
   },
   {

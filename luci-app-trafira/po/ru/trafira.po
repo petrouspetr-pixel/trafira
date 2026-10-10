@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 04:47+0300\n"
-"PO-Revision-Date: 2026-10-10 04:47+0300\n"
+"POT-Creation-Date: 2026-10-10 05:31+0300\n"
+"PO-Revision-Date: 2026-10-10 05:31+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -59,8 +59,17 @@ msgstr "✔ Работает"
 msgid "✘ Stopped"
 msgstr "✘ Остановлен"
 
+msgid "A copy download is already starting. Wait, then refresh the status."
+msgstr "Загрузка копий уже запускается. Подождите и обновите состояние."
+
 msgid "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
 msgstr "После неудачного переключения сохраняется защитная блокировка трафика. Перезапустите Trafira для повторной проверки конфигурации."
+
+msgid "A required saved list is missing or unreadable. Download or update copies in Saved rule sets, then try again."
+msgstr "Нужная копия списка отсутствует или не читается. Скачайте или обновите копии в блоке «Копии списков для запуска» и повторите проверку."
+
+msgid "A saved list changed during the check. Try again."
+msgstr "Во время проверки изменилась копия списка. Повторите проверку."
 
 msgid "Absolute path to an existing file on the router. Enter the path, not the file contents."
 msgstr "Абсолютный путь к существующему файлу на роутере. Введите путь, а не содержимое файла."
@@ -167,6 +176,12 @@ msgstr "Alice Mode исключает это устройство. Перед п
 msgid "Alice Mode devices are currently unavailable"
 msgstr "Данные об устройствах Alice Mode временно недоступны"
 
+msgid "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
+msgstr "Для Alice Mode нужны MAC-адрес или входящий интерфейс устройства. Выберите обнаруженное устройство или укажите недостающие сведения."
+
+msgid "Alice Mode sends this device directly, bypassing Trafira."
+msgstr "Alice Mode направляет это устройство напрямую, в обход Trafira."
+
 msgid "All"
 msgstr "Все"
 
@@ -206,11 +221,26 @@ msgstr "ALPN"
 msgid "Alter ID"
 msgstr "Alter ID"
 
+msgid "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information."
+msgstr "Более раннее правило проверяет IP назначения. Укажите реальный IP в дополнительных сведениях."
+
+msgid "An earlier rule checks the application protocol. Select the protocol to continue."
+msgstr "Более раннее правило проверяет протокол приложения. Выберите протокол для продолжения."
+
+msgid "An earlier rule needs additional data. See the rule evaluation details below."
+msgstr "Для более раннего правила нужны дополнительные данные. Подробнее — в порядке проверки правил ниже."
+
+msgid "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed."
+msgstr "Более раннее правило использует условие, которое эта проверка не рассчитывает. Подтвердить маршрут нельзя."
+
 msgid "Analysis of the applied configuration, not a live connection capture."
 msgstr "Анализ применённой конфигурации. Фактическое соединение может зависеть от дополнительных условий."
 
 msgid "Another configuration operation is already running."
 msgstr "Уже выполняется другая операция с конфигурацией."
+
+msgid "Another list update is already running. Wait for it to finish, then download the copies again."
+msgstr "Списки уже обновляются. Дождитесь завершения и повторите загрузку копий."
 
 msgid "Apply profile"
 msgstr "Применить профиль"
@@ -271,6 +301,9 @@ msgstr "Backend-проверка завершилась ошибкой: %s"
 
 msgid "Before existing device rules"
 msgstr "Перед существующими правилами устройств"
+
+msgid "Block connection"
+msgstr "Заблокировать соединение"
 
 msgid "Block traffic"
 msgstr "Блокировать трафик"
@@ -356,6 +389,9 @@ msgstr "Путь к файлу кэша не может быть пустым"
 msgid "Cached servers: %s; included: %s; excluded: %s"
 msgstr "Серверов в кеше: %s; остаётся: %s; исключено: %s"
 
+msgid "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test."
+msgstr "Расчёт по сохранённым копиям списков. Работающий sing-box мог обновить их. Это проверка конфигурации, а не реального соединения."
+
 msgid "Cannot receive checks result"
 msgstr "Не удалось получить результаты проверки"
 
@@ -411,7 +447,7 @@ msgid "Checks passed with manual DHCP"
 msgstr "Проверки пройдены с ручным DHCP"
 
 msgid "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
-msgstr ""
+msgstr "Выберите доступную версию установленного варианта. Перед заменой проверяется совместимость. Закрепление влияет только на обновления через Trafira."
 
 msgid "Choose rule priority"
 msgstr "Выберите приоритет правил"
@@ -494,6 +530,9 @@ msgstr "Настройте User-Agent в настройках элемента"
 msgid "Connect through"
 msgstr "Подключаться через"
 
+msgid "Connection options"
+msgstr "Параметры соединения"
+
 msgid "Connection route"
 msgstr "Маршрут соединения"
 
@@ -515,6 +554,15 @@ msgstr "Успехов подряд до восстановления"
 msgid "Copied"
 msgstr "Скопировано"
 
+msgid "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them."
+msgstr "Копии проверяются при загрузке и перед запуском. Этот список показывает наличие файлов, но не проверяет их содержимое и использование работающим сервисом."
+
+msgid "Copies stored on router"
+msgstr "Копий на роутере"
+
+msgid "Copies were downloaded and checked. They will be checked again before the next startup."
+msgstr "Копии скачаны и проверены. Перед следующим запуском Trafira проверит их ещё раз."
+
 msgid "Copy"
 msgstr "Копировать"
 
@@ -530,14 +578,32 @@ msgstr "Скопировать ссылку прокси"
 msgid "Could not compare FakeIP and control public IPs"
 msgstr "Не удалось сравнить публичные IP FakeIP и контрольной проверки"
 
-msgid "Could not explain route"
-msgstr "Не удалось проверить маршрут. Проверьте введённые данные и повторите попытку."
+msgid "Could not download copies. Check the internet connection, list-download proxy and router storage."
+msgstr "Не удалось скачать копии. Проверьте интернет, прокси для загрузки списков и свободное место на роутере."
 
-msgid "Could not read snapshot status"
-msgstr "Не удалось получить состояние сохранённых списков"
+msgid "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads."
+msgstr "Не удалось скачать копии. Проверьте версию sing-box, сохранённую конфигурацию и прокси для загрузки списков."
 
-msgid "Could not start snapshot preparation"
-msgstr "Не удалось запустить подготовку копий списков"
+msgid "Could not explain route. Check that Trafira is running, then try again."
+msgstr "Не удалось проверить маршрут. Убедитесь, что Trafira работает, и повторите проверку."
+
+msgid "Could not load available versions. Check the connection and refresh the list."
+msgstr "Не удалось загрузить доступные версии. Проверьте подключение и обновите список."
+
+msgid "Could not read saved-copy status. Refresh the status to try again."
+msgstr "Не удалось прочитать состояние копий. Нажмите «Обновить состояние», чтобы повторить."
+
+msgid "Could not save the download task. Check free storage on the router."
+msgstr "Не удалось сохранить задачу загрузки. Проверьте свободное место на роутере."
+
+msgid "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again."
+msgstr "Не удалось запустить загрузку копий. Возможно, уже обновляются списки либо недоступны sing-box или сохранённая конфигурация. Обновите состояние и повторите."
+
+msgid "Could not start downloading copies. Refresh the status and try again."
+msgstr "Не удалось запустить загрузку копий. Обновите состояние и повторите."
+
+msgid "Could not start the download task. Refresh the status and try again."
+msgstr "Не удалось запустить задачу загрузки. Обновите состояние и повторите."
 
 msgid "Current section cannot be used as its own transit section"
 msgstr "Текущую секцию нельзя использовать как транзит для самой себя"
@@ -586,6 +652,9 @@ msgstr "Удалить выбранный сохранённый профиль?
 
 msgid "Destination port"
 msgstr "Порт назначения"
+
+msgid "Detect protocol"
+msgstr "Определить протокол"
 
 msgid "Detect server country"
 msgstr "Определять страну сервера"
@@ -734,6 +803,9 @@ msgstr "Не тестировать серверы с одним из выбра
 msgid "Do not test specified servers."
 msgstr "Не тестировать указанные серверы."
 
+msgid "Does not match"
+msgstr "Не совпадает"
+
 msgid "Does not match inclusion filters"
 msgstr "Не соответствует фильтрам включения"
 
@@ -770,6 +842,9 @@ msgstr "Входящий"
 msgid "Download"
 msgstr "Скачать"
 
+msgid "Download / update list copies"
+msgstr "Скачать или обновить копии списков"
+
 msgid "Download component packages via the selected section"
 msgstr "Скачивать пакеты компонентов через выбранную секцию"
 
@@ -785,6 +860,9 @@ msgstr "Скачивать списки через"
 msgid "Download lists through a section"
 msgstr "Скачивать списки через секцию"
 
+msgid "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
+msgstr "Скачайте или обновите списки из сохранённой конфигурации: Trafira проверит их и сохранит копии на роутере. Для загрузки используются настройки прокси списков."
+
 msgid "Download remote lists and rule sets via the selected section"
 msgstr "Скачивать удаленные списки и наборы правил через выбранную секцию"
 
@@ -799,6 +877,12 @@ msgstr "Скачивать через"
 
 msgid "Downloaded"
 msgstr "Загружено"
+
+msgid "Downloading and checking list copies…"
+msgstr "Загрузка и проверка копий списков…"
+
+msgid "Downloading copies was interrupted. Download the copies again."
+msgstr "Загрузка копий прервана. Повторите загрузку."
 
 msgid "Drag rows to change priority. The rule at the top is checked first."
 msgstr "Перетаскивайте строки, чтобы изменить приоритет. Правило сверху проверяется первым."
@@ -869,14 +953,26 @@ msgstr "Введите название уровня"
 msgid "Enter a valid DNS server address"
 msgstr "Укажите корректный адрес DNS-сервера"
 
+msgid "Enter a valid domain, destination port and device IP address, or select This router."
+msgstr "Укажите корректный домен, порт назначения и IP-адрес устройства или выберите «Сам роутер»."
+
 msgid "Enter an absolute file path"
 msgstr "Введите абсолютный путь к файлу"
 
 msgid "Enter HWID"
 msgstr "Укажите HWID"
 
+msgid "Enter the device IP address, or select a detected device."
+msgstr "Введите IP-адрес устройства или выберите обнаруженное устройство."
+
+msgid "Enter the device MAC address in Additional route information."
+msgstr "Введите MAC-адрес устройства в дополнительных сведениях."
+
 msgid "Enter the HWID sent with subscription requests"
 msgstr "HWID, который будет отправляться при запросах подписки"
+
+msgid "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route."
+msgstr "Укажите реальный IP назначения в дополнительных сведениях. Одного домена недостаточно для расчёта маршрута приложений роутера."
 
 msgid "Enter the subscription URL"
 msgstr "Введите URL подписки"
@@ -1036,6 +1132,9 @@ msgstr "Глобальная проверка"
 
 msgid "gRPC service"
 msgstr "gRPC-сервис"
+
+msgid "Handle DNS"
+msgstr "Обработать DNS"
 
 msgid "Handshake timeout"
 msgstr "Таймаут рукопожатия"
@@ -1430,6 +1529,9 @@ msgstr "Ключевое слово не должно содержать про�
 msgid "LAN device data is unavailable; LAN devices may be missing."
 msgstr "Данные об устройствах LAN недоступны — список может быть неполным."
 
+msgid "Last download"
+msgstr "Последняя загрузка"
+
 msgid "Last WireGuard handshake"
 msgstr "Последнее рукопожатие WireGuard"
 
@@ -1454,9 +1556,6 @@ msgstr "Уровень"
 msgid "Level name"
 msgstr "Название уровня"
 
-msgid "Limitations"
-msgstr "Ограничения"
-
 msgid "List must be an HTTP(S) URL or a local .lst path"
 msgstr "Список должен быть HTTP(S) URL или локальным путём .lst"
 
@@ -1472,6 +1571,9 @@ msgstr "Порт прослушивания"
 msgid "Listening port"
 msgstr "Слушающий порт"
 
+msgid "Lists without a saved copy"
+msgstr "Списков без копии"
+
 msgid "Loading client link..."
 msgstr "Загрузка клиентской ссылки..."
 
@@ -1483,6 +1585,9 @@ msgstr "Загрузка..."
 
 msgid "Loading…"
 msgstr "Загрузка…"
+
+msgid "Local copies help Trafira start when remote list sources are unavailable."
+msgstr "Локальные копии помогают Trafira запуститься, когда источники списков недоступны."
 
 msgid "Log Level"
 msgstr "Уровень логов"
@@ -1508,6 +1613,9 @@ msgstr "Совпадение: %s"
 msgid "Matched route"
 msgstr "Найденный маршрут"
 
+msgid "Matches"
+msgstr "Совпадает"
+
 msgid "Matches exclusion filters"
 msgstr "Соответствует фильтрам исключения"
 
@@ -1528,9 +1636,6 @@ msgstr "Минимальная разница задержки в миллисе
 
 msgid "Minimum time between switches (seconds)"
 msgstr "Минимальное время между переключениями (секунды)"
-
-msgid "Missing information"
-msgstr "Недостающие данные"
 
 msgid "Mixed Proxy Password"
 msgstr "Пароль смешанного прокси"
@@ -1564,6 +1669,9 @@ msgstr "Нативный fallback (sing-box extended)"
 
 msgid "Native fallback reacts to real connection failures and requires sing-box extended. The watchdog mode works with all supported sing-box variants."
 msgstr "Нативный fallback реагирует на реальные ошибки соединения и требует sing-box extended. Режим контроля Trafira работает со всеми поддерживаемыми вариантами sing-box."
+
+msgid "Needs more information"
+msgstr "Нужны дополнительные сведения"
 
 msgid "Network Interface"
 msgstr "Сетевой интерфейс"
@@ -1600,6 +1708,12 @@ msgstr "Нет активных подключений"
 
 msgid "No closed connections"
 msgstr "Нет закрытых подключений"
+
+msgid "No compatible versions are available"
+msgstr "Нет совместимых версий"
+
+msgid "No compatible versions are available for this installation."
+msgstr "Для этой установки нет совместимых версий."
 
 msgid "No conflict detected"
 msgstr "Конфликт не обнаружен"
@@ -1654,6 +1768,9 @@ msgstr "Ещё не реализовано"
 
 msgid "Not installed"
 msgstr "Не установлено"
+
+msgid "Not pinned"
+msgstr "Не закреплена"
 
 msgid "Not public"
 msgstr "Не публичный"
@@ -1820,12 +1937,6 @@ msgstr "Предпочитаемый IP"
 msgid "Prefix text"
 msgstr "Текст префикса"
 
-msgid "Prepare saved copies"
-msgstr "Подготовить копии списков"
-
-msgid "Preparing snapshots"
-msgstr "Подготовка копий списков"
-
 msgid "Preview deletion"
 msgstr "Просмотреть удаление"
 
@@ -1934,6 +2045,9 @@ msgstr "Обновить список версий"
 msgid "Refresh devices"
 msgstr "Обновить устройства"
 
+msgid "Refresh required"
+msgstr "Требуется обновить список"
+
 msgid "Refresh status"
 msgstr "Обновить состояние"
 
@@ -1973,6 +2087,9 @@ msgstr "Резервное подключение"
 msgid "Reserve section"
 msgstr "Резервная секция"
 
+msgid "Resolve domain"
+msgstr "Определить IP домена"
+
 msgid "Resolve domain names before routing so sing-box can use real destination IPs."
 msgstr "Разрешать доменные имена перед маршрутизацией, чтобы sing-box использовал реальные IP-адреса назначения."
 
@@ -2006,6 +2123,9 @@ msgstr "Продолжить обновление"
 msgid "Route"
 msgstr "Маршрут"
 
+msgid "Route connection"
+msgstr "Направить соединение"
+
 msgid "Route main DNS requests through the selected section."
 msgstr "Маршрутизировать основные DNS-запросы через выбранную секцию."
 
@@ -2017,6 +2137,15 @@ msgstr "Направлять запросы к этому DNS-серверу ч�
 
 msgid "Route router applications"
 msgstr "Маршрутизация приложений роутера"
+
+msgid "Router application routing has not been applied. Save and apply the Trafira settings first."
+msgstr "Маршрутизация приложений роутера ещё не применена. Сохраните и примените настройки Trafira."
+
+msgid "Router application routing is not active. Restart Trafira and try again."
+msgstr "Маршрутизация приложений роутера не работает. Перезапустите Trafira и повторите проверку."
+
+msgid "Router routing data is unavailable. Restart Trafira and try again."
+msgstr "Сведения о маршрутизации роутера недоступны. Перезапустите Trafira и повторите проверку."
 
 msgid "Router traffic section"
 msgstr "Секция для трафика роутера"
@@ -2033,6 +2162,9 @@ msgstr "Действуют правила маршрутизации и FakeIP D
 msgid "Routing section"
 msgstr "Секция маршрутизации"
 
+msgid "Rule action"
+msgstr "Действие правила"
+
 msgid "Rule evaluation order"
 msgstr "Порядок проверки правил"
 
@@ -2044,6 +2176,9 @@ msgstr "Настройки набора правил"
 
 msgid "Rule sets"
 msgstr "Наборы правил"
+
+msgid "Rule-set copies for startup"
+msgstr "Копии списков для запуска"
 
 msgid "Rules"
 msgstr "Правила"
@@ -2081,9 +2216,6 @@ msgstr "Можно сохранить до восьми профилей. При
 msgid "Saved configuration unavailable"
 msgstr "Сохранённая конфигурация недоступна"
 
-msgid "Saved rule sets"
-msgstr "Сохранённые списки"
-
 msgid "Search"
 msgstr "Поиск"
 
@@ -2113,6 +2245,9 @@ msgstr "Выберите распространённый профиль кли�
 
 msgid "Select a connection"
 msgstr "Выберите подключение"
+
+msgid "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information."
+msgstr "Выберите обнаруженное устройство или укажите входящий интерфейс, обычно br-lan, в дополнительных сведениях."
 
 msgid "Select a known device"
 msgstr "Выберите обнаруженное устройство"
@@ -2267,6 +2402,9 @@ msgstr "Показывать только серверы с одним из вы
 msgid "Show only servers with one of the selected transports."
 msgstr "Показывать только серверы с одним из выбранных транспортов."
 
+msgid "Show saved lists and storage"
+msgstr "Списки и место на роутере"
+
 msgid "Show servers from selected groups without repeating their filtering criteria."
 msgstr "Показывать серверы из выбранных групп без повторения их параметров фильтрации."
 
@@ -2284,6 +2422,9 @@ msgstr "Отображать метаданные этой подписки в �
 
 msgid "Sing-box autostart disabled"
 msgstr "Автостарт sing-box отключен"
+
+msgid "sing-box could not export a saved list for this calculation. Some binary lists, including AdGuard lists, cannot be exported. Downloading the same copy again may not help."
+msgstr "sing-box не смог экспортировать сохранённый список для расчёта. Некоторые бинарные списки, в том числе AdGuard, не поддерживают экспорт. Повторная загрузка той же копии может не помочь."
 
 msgid "Sing-box FakeIP DNS does not work"
 msgstr "FakeIP DNS sing-box не работает"
@@ -2309,23 +2450,23 @@ msgstr "Версия Sing-box совместима (новее 1.12.4)"
 msgid "Sing-box versions"
 msgstr "Версии sing-box"
 
-msgid "Snapshot preparation completed"
-msgstr "Копии списков подготовлены"
-
-msgid "Snapshot preparation failed; check core, configuration, proxy and storage"
-msgstr "Не удалось подготовить копии списков. Проверьте ядро, конфигурацию, прокси и свободное место"
-
 msgid "Snapshot status unavailable"
 msgstr "Состояние сохранённых списков недоступно"
 
 msgid "Some addresses use Trafira; others connect directly"
 msgstr "Часть адресов использует Trafira, остальные подключаются напрямую"
 
+msgid "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage."
+msgstr "Часть копий не удалось скачать или сохранить. Прежние копии этих списков сохранены. Проверьте интернет, прокси для загрузки списков и свободное место на роутере."
+
 msgid "Some DHCP lease entries were invalid and skipped."
 msgstr "Некоторые записи DHCP leases некорректны и пропущены."
 
 msgid "Some LAN neighbor entries were invalid and skipped."
 msgstr "Некоторые записи соседей LAN некорректны и пропущены."
+
+msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
+msgstr "Часть списков превышает ограничения диагностики по размеру или времени. Эта проверка не может подтвердить их правила."
 
 msgid "Some WireGuard peer entries were invalid and skipped."
 msgstr "Некоторые записи пиров WireGuard некорректны и пропущены."
@@ -2384,6 +2525,9 @@ msgstr "Отдельная служба Zapret2 неактивна"
 msgid "Start Trafira"
 msgstr "Запустить Trafira"
 
+msgid "Starting the copy download…"
+msgstr "Запуск загрузки копий…"
+
 msgid "State"
 msgstr "Состояние"
 
@@ -2401,9 +2545,6 @@ msgstr "Занято места"
 
 msgid "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
 msgstr "Магазин и сервисы учётной записи используют выбранный прокси; остальной трафик выбранных адресов идёт напрямую. Общие сервисы могут передавать и игровой трафик. Эти редактируемые списки охватывают не все адреса платформы."
-
-msgid "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core."
-msgstr "Копии проверяются при подготовке и перед запуском. Наличие файла ещё не подтверждает его исправность или использование работающим ядром."
 
 msgid "Subnets from the list will be extracted and added to nftables"
 msgstr "IP-адреса и подсети из списка будут извлечены и добавлены в nftables"
@@ -2483,14 +2624,20 @@ msgstr "URL проверки"
 msgid "The allow list is empty, so no devices use Trafira."
 msgstr "Список разрешённых устройств пуст — Trafira не будет обрабатывать трафик ни одного устройства."
 
+msgid "The applied routing state is unavailable. Start Trafira and try again."
+msgstr "Сведения о действующих правилах недоступны. Запустите Trafira и повторите проверку."
+
 msgid "The desync fwmark is managed by Trafira for loop prevention and must not be overridden here."
 msgstr "Desync fwmark управляется Trafira для защиты от циклов и не должен переопределяться здесь."
+
+msgid "The entered address is a FakeIP. Enter the real destination IP instead."
+msgstr "Указан адрес FakeIP. Введите реальный IP назначения."
 
 msgid "The generated configuration did not pass validation."
 msgstr "Созданная конфигурация не прошла проверку."
 
 msgid "The installed version changed. Refresh the version list."
-msgstr ""
+msgstr "Установленная версия изменилась. Обновите список версий."
 
 msgid "The NFQUEUE number is assigned by Trafira for each rule and must not be overridden here."
 msgstr "Номер NFQUEUE назначается Trafira для каждого правила и не должен переопределяться здесь."
@@ -2504,11 +2651,23 @@ msgstr "Предыдущая версия восстановлена."
 msgid "The profile cannot be used with the current configuration and components."
 msgstr "Профиль несовместим с текущей конфигурацией или установленными компонентами."
 
+msgid "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
+msgstr "Маршрут приложений роутера зависит от правил межсетевого экрана, которые эта проверка не рассчитывает. Выберите устройство локальной сети, чтобы проверить его маршрут через Trafira."
+
+msgid "The routing configuration changed during the check. Try again."
+msgstr "Во время проверки изменилась конфигурация маршрутизации. Повторите проверку."
+
 msgid "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression."
 msgstr "Правило применяется к домену и всем его поддоменам. Для полного совпадения, совпадению по слову или регулярному выражению используйте префиксы full:, keyword: или regex:."
 
+msgid "The rule set is too complex to evaluate within the diagnostic limits."
+msgstr "Список правил слишком сложен для расчёта в пределах ограничений диагностики."
+
 msgid "The selected address is no longer known. Refresh the device list."
 msgstr "Выбранный адрес больше не найден. Обновите список устройств."
+
+msgid "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again."
+msgstr "Конфигурация sing-box недоступна. Запустите Trafira или примените настройки и повторите проверку."
 
 msgid "The sing-box version operation failed."
 msgstr "Операция с версией sing-box не выполнена."
@@ -2527,6 +2686,9 @@ msgstr "Эти правила были изменены вручную. Подт
 
 msgid "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
 msgstr "Исключение Alice Mode затрагивает и другие устройства. Измените его вручную перед применением пресета."
+
+msgid "This DNS connection is excluded from router application routing."
+msgstr "Это DNS-соединение исключено из маршрутизации приложений роутера."
 
 msgid "This field is required"
 msgstr "Заполните это поле"
@@ -2549,6 +2711,9 @@ msgstr "Это поле должно запускать рабочую стра�
 msgid "This flag does not accept a value."
 msgstr "Этот флаг не принимает значение."
 
+msgid "This is a local destination. Its route depends on the router firewall exclusions."
+msgstr "Это локальный адрес. Его маршрут зависит от исключений в межсетевом экране роутера."
+
 msgid "This option requires a value."
 msgstr "Этой опции требуется значение."
 
@@ -2557,6 +2722,12 @@ msgstr "Предпросмотр использует последний соз�
 
 msgid "This router"
 msgstr "Сам роутер"
+
+msgid "This time synchronization connection is excluded from router application routing."
+msgstr "Это соединение для синхронизации времени исключено из маршрутизации приложений роутера."
+
+msgid "This VPN transport connection is excluded to prevent a routing loop."
+msgstr "Это служебное VPN-соединение исключено, чтобы избежать петли маршрутизации."
 
 msgid "Time"
 msgstr "Время"
@@ -2587,6 +2758,9 @@ msgstr "Трафик этого уровня пойдёт напрямую."
 
 msgid "Traffic Total"
 msgstr "Всего трафика"
+
+msgid "Trafira does not intercept traffic from this incoming interface."
+msgstr "Trafira не перехватывает трафик с этого входящего интерфейса."
 
 msgid "Trafira Error"
 msgstr "Ошибка Trafira"
@@ -2905,6 +3079,9 @@ msgstr "При переходе на другой уровень тестиро�
 
 msgid "Where will the connection go?"
 msgstr "Куда пойдёт соединение?"
+
+msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information."
+msgstr "Обход для Wi-Fi Calling зависит от реального IP назначения. Укажите его в дополнительных сведениях."
 
 msgid "WireGuard peer data is unavailable; peers may be missing."
 msgstr "Данные о пирах WireGuard недоступны — список может быть неполным."

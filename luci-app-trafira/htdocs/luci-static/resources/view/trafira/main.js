@@ -8218,10 +8218,10 @@ function render2() {
 
 // src/trafira/tabs/diagnostic/snapshotPanel.ts
 var SnapshotController = class {
-  constructor(read, start, render7) {
+  constructor(read, start, render6) {
     this.read = read;
     this.start = start;
-    this.render = render7;
+    this.render = render6;
     this.active = false;
     this.generation = 0;
     this.failures = 0;
@@ -8265,9 +8265,16 @@ var SnapshotController = class {
     this.render(this.report, "", true);
     try {
       const result = await this.start();
-      if (!result.success) throw new Error("rejected");
       if (!this.active || generation3 !== this.generation) return;
       this.starting = false;
+      if (!result.success) {
+        this.render(
+          this.report,
+          result.message || "Could not start snapshot preparation",
+          false
+        );
+        return;
+      }
       await this.refresh();
     } catch {
       if (this.active && generation3 === this.generation) {
@@ -8292,23 +8299,98 @@ async function command(name) {
 function size(bytes) {
   return `${(bytes / 1024).toFixed(1)} KiB`;
 }
+function startErrorText(error) {
+  switch (error) {
+    case "Could not read snapshot status":
+      return _(
+        "Could not read saved-copy status. Refresh the status to try again."
+      );
+    case "Snapshot preparation is already starting":
+      return _(
+        "A copy download is already starting. Wait, then refresh the status."
+      );
+    case "Snapshot preparation is running or unavailable":
+      return _(
+        "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again."
+      );
+    case "Failed to write snapshot job":
+      return _(
+        "Could not save the download task. Check free storage on the router."
+      );
+    case "Failed to start snapshot worker":
+      return _(
+        "Could not start the download task. Refresh the status and try again."
+      );
+    default:
+      return _(
+        "Could not start downloading copies. Refresh the status and try again."
+      );
+  }
+}
+function jobStatusText(job) {
+  if (job.running) return _("Downloading and checking list copies\u2026");
+  if (job.success) {
+    return _(
+      "Copies were downloaded and checked. They will be checked again before the next startup."
+    );
+  }
+  switch (job.message) {
+    case "Failed to write snapshot job":
+    case "Failed to start snapshot worker":
+      return startErrorText(job.message);
+    case "Another lists update is already running":
+      return _(
+        "Another list update is already running. Wait for it to finish, then download the copies again."
+      );
+    case "Snapshot preparation unavailable: check core, configuration and lists proxy":
+      return _(
+        "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads."
+      );
+    case "Snapshot worker exited unexpectedly":
+      return _(
+        "Downloading copies was interrupted. Download the copies again."
+      );
+    case "Snapshot preparation failed; previous copies preserved":
+      return _(
+        "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage."
+      );
+    default:
+      return _(
+        "Could not download copies. Check the internet connection, list-download proxy and router storage."
+      );
+  }
+}
 function render3(report, error, starting) {
   const container = document.getElementById("fkp_diagnostic-page-snapshots");
   if (!container) return;
   const expanded = container.querySelector("details")?.open;
   const busy = starting || !!report?.job?.running;
-  const errorText = error === "Could not start snapshot preparation" ? _("Could not start snapshot preparation") : _("Could not read snapshot status");
+  const stored = report?.entries.filter((entry) => entry.present).length || 0;
   container.replaceChildren(
     E("div", { class: "fkp_diagnostic-panel" }, [
-      E("h3", {}, _("Saved rule sets")),
+      E("h3", {}, _("Rule-set copies for startup")),
       E(
         "p",
         {},
         _(
-          "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core."
+          "Local copies help Trafira start when remote list sources are unavailable."
         )
       ),
-      ...error ? [E("p", { class: "alert-message warning" }, errorText)] : [],
+      E(
+        "p",
+        {},
+        _(
+          "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
+        )
+      ),
+      ...error ? [
+        E(
+          "p",
+          { class: "alert-message warning", role: "status" },
+          startErrorText(error)
+        )
+      ] : [],
+      ...starting ? [E("p", { role: "status" }, _("Starting the copy download\u2026"))] : [],
       ...!report ? [E("p", {}, _("Snapshot status unavailable"))] : [
         ...!report.supported ? [E("p", {}, _("Requires sing-box 1.14 or newer"))] : [],
         ...!report.available ? [E("p", {}, _("Saved configuration unavailable"))] : [],
@@ -8321,17 +8403,12 @@ function render3(report, error, starting) {
             )
           )
         ] : [],
-        E(
-          "p",
-          {},
-          `${_("Storage")}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`
-        ),
-        E(
-          "p",
-          {},
-          `${_("Copy present")}: ${report.entries.filter((entry) => entry.present).length} / ${report.entries.length} \xB7 ${_("Copy missing")}: ${report.entries.filter((entry) => !entry.present).length}`
-        ),
         ...report.entries.length ? [
+          E(
+            "p",
+            {},
+            `${_("Copies stored on router")}: ${stored} / ${report.entries.length} \xB7 ${_("Lists without a saved copy")}: ${report.entries.length - stored}`
+          ),
           E(
             "details",
             {
@@ -8342,7 +8419,19 @@ function render3(report, error, starting) {
               E(
                 "summary",
                 {},
-                `${_("Saved rule sets")} (${report.entries.length})`
+                `${_("Show saved lists and storage")} (${report.entries.length})`
+              ),
+              E(
+                "p",
+                {},
+                `${_("Storage")}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`
+              ),
+              E(
+                "p",
+                {},
+                _(
+                  "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them."
+                )
               ),
               E(
                 "div",
@@ -8374,10 +8463,11 @@ function render3(report, error, starting) {
         ...report.job ? [
           E(
             "p",
-            {},
-            report.job.running ? _("Preparing snapshots") : report.job.success ? _("Snapshot preparation completed") : _(
-              "Snapshot preparation failed; check core, configuration, proxy and storage"
-            )
+            {
+              role: "status",
+              ...!report.job.running && !report.job.success ? { class: "alert-message warning" } : {}
+            },
+            report.job.running ? jobStatusText(report.job) : `${_("Last download")}: ${jobStatusText(report.job)}`
           )
         ] : []
       ],
@@ -8389,7 +8479,7 @@ function render3(report, error, starting) {
             ...busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length ? { disabled: true } : {},
             click: () => void snapshots.prepare()
           },
-          _("Prepare saved copies")
+          _("Download / update list copies")
         ),
         E(
           "button",
@@ -8412,9 +8502,9 @@ var snapshots = new SnapshotController(
 
 // src/trafira/tabs/diagnostic/routeExplanation.ts
 var RouteExplanationController = class {
-  constructor(read, render7) {
+  constructor(read, render6) {
     this.read = read;
-    this.render = render7;
+    this.render = render6;
     this.active = false;
     this.generation = 0;
   }
@@ -8433,7 +8523,16 @@ var RouteExplanationController = class {
     this.render(null, "", true);
     try {
       const report = await this.read(request);
-      if (!report.success) throw new Error("rejected");
+      if (!report.success) {
+        const error = [
+          "invalid_request",
+          "configuration_changed_retry",
+          "configuration_unavailable"
+        ].includes(report.error || "") ? report.error : "Could not explain route";
+        if (this.active && this.generation === generation3)
+          this.render(null, error, false);
+        return;
+      }
       if (this.active && this.generation === generation3)
         this.render(report, "", false);
     } catch {
@@ -8442,6 +8541,118 @@ var RouteExplanationController = class {
     }
   }
 };
+
+// src/trafira/tabs/diagnostic/routePresentation.ts
+function routeReason(reason) {
+  const messages = {
+    legacy_router_output_rules: _(
+      "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
+    ),
+    router_destination_address_needed: _(
+      "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route."
+    ),
+    incoming_interface_missing: _(
+      "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information."
+    ),
+    alice_device_details_missing: _(
+      "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
+    ),
+    applied_capture_state_unavailable: _(
+      "The applied routing state is unavailable. Start Trafira and try again."
+    ),
+    router_settings_not_applied: _(
+      "Router application routing has not been applied. Save and apply the Trafira settings first."
+    ),
+    router_capture_not_running: _(
+      "Router application routing is not active. Restart Trafira and try again."
+    ),
+    router_bootstrap_snapshot_unavailable: _(
+      "Router routing data is unavailable. Restart Trafira and try again."
+    ),
+    local_destination_check_nft_exclusions: _(
+      "This is a local destination. Its route depends on the router firewall exclusions."
+    ),
+    wifi_calling_bypass_depends_on_real_destination: _(
+      "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information."
+    ),
+    fakeip_is_not_real_destination: _(
+      "The entered address is a FakeIP. Enter the real destination IP instead."
+    ),
+    alice_bypass: _(
+      "Alice Mode sends this device directly, bypassing Trafira."
+    ),
+    interface_not_captured: _(
+      "Trafira does not intercept traffic from this incoming interface."
+    ),
+    router_bootstrap_dns: _(
+      "This DNS connection is excluded from router application routing."
+    ),
+    router_bootstrap_ntp: _(
+      "This time synchronization connection is excluded from router application routing."
+    ),
+    router_vpn_transport: _(
+      "This VPN transport connection is excluded to prevent a routing loop."
+    ),
+    destination_ip: _(
+      "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information."
+    ),
+    source_ip: _("Enter the device IP address, or select a detected device."),
+    source_mac_address: _(
+      "Enter the device MAC address in Additional route information."
+    ),
+    protocol: _(
+      "An earlier rule checks the application protocol. Select the protocol to continue."
+    ),
+    evaluation_limit: _(
+      "The rule set is too complex to evaluate within the diagnostic limits."
+    ),
+    ruleset_decode_failed: _(
+      "sing-box could not export a saved list for this calculation. Some binary lists, including AdGuard lists, cannot be exported. Downloading the same copy again may not help."
+    ),
+    ruleset_changed: _("A saved list changed during the check. Try again."),
+    ruleset_limit: _(
+      "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
+    )
+  };
+  if (messages[reason]) return messages[reason];
+  if (reason.startsWith("rule_set:"))
+    return _(
+      "A required saved list is missing or unreadable. Download or update copies in Saved rule sets, then try again."
+    );
+  if (reason.startsWith("unsupported:") || reason.startsWith("unsupported_"))
+    return _(
+      "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed."
+    );
+  return _(
+    "An earlier rule needs additional data. See the rule evaluation details below."
+  );
+}
+function routeReasons(reasons, unavailable = []) {
+  return [
+    ...new Set(
+      reasons.map((reason) => {
+        const detail = reason.startsWith("rule_set:") ? unavailable.find((entry) => entry.tag === reason.slice(9)) : void 0;
+        return routeReason(
+          detail && ["decode_failed", "changed", "limit"].includes(detail.reason) ? `ruleset_${detail.reason}` : reason
+        );
+      })
+    )
+  ];
+}
+function routeError(error) {
+  const messages = {
+    invalid_request: _(
+      "Enter a valid domain, destination port and device IP address, or select This router."
+    ),
+    configuration_changed_retry: _(
+      "The routing configuration changed during the check. Try again."
+    ),
+    configuration_unavailable: _(
+      "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again."
+    )
+  };
+  return messages[error] || _("Could not explain route. Check that Trafira is running, then try again.");
+}
 
 // src/trafira/tabs/diagnostic/renderRouteExplanation.ts
 async function command2(name, args = []) {
@@ -8461,35 +8672,54 @@ function status(value) {
     indeterminate: _("Insufficient information")
   }[value];
 }
-function decisionView(title, decision) {
-  return E("div", {}, [
-    E("b", {}, title),
-    E(
-      "p",
-      {},
-      `${status(decision.status)}${decision.outbound ? `: ${decision.outbound}` : ""}`
-    ),
-    ...decision.missing.map(
-      (reason) => E("p", {}, `${_("Missing information")}: ${reason}`)
-    ),
-    E("details", {}, [
-      E("summary", {}, _("Rule evaluation order")),
-      ...decision.trace.map(
-        (row) => E(
-          "p",
-          {},
-          `#${row.index + 1}: ${row.match} \xB7 ${row.action} \xB7 ${row.origin?.section || row.origin?.kind || "\u2014"}${row.shadowed ? ` (${_("Overridden by an earlier rule")})` : ""}`
-        )
+function decisionView(title, decision, unavailable = []) {
+  const matches = {
+    yes: _("Matches"),
+    no: _("Does not match"),
+    unknown: _("Needs more information")
+  };
+  const actions = {
+    route: _("Route connection"),
+    reject: _("Block connection"),
+    sniff: _("Detect protocol"),
+    resolve: _("Resolve domain"),
+    "route-options": _("Connection options"),
+    "hijack-dns": _("Handle DNS")
+  };
+  return E(
+    "div",
+    { class: `fkp_route-decision fkp_route-decision--${decision.status}` },
+    [
+      E("b", {}, title),
+      E(
+        "p",
+        {},
+        `${status(decision.status)}${decision.outbound ? `: ${decision.outbound}` : ""}`
       ),
-      ...decision.trace_truncated ? [E("p", {}, _("Only the first 200 rules are displayed"))] : []
-    ])
-  ]);
+      ...routeReasons(decision.missing, unavailable).map(
+        (reason) => E("p", {}, reason)
+      ),
+      ...decision.trace.length ? [
+        E("details", { class: "fkp_diagnostic-details" }, [
+          E("summary", {}, _("Rule evaluation order")),
+          ...decision.trace.map(
+            (row) => E(
+              "p",
+              {},
+              `#${row.index + 1}: ${matches[row.match] || _("Needs more information")} \xB7 ${actions[row.action] || _("Rule action")}${row.origin?.section ? ` \xB7 ${row.origin.section}` : ""}${row.shadowed ? ` (${_("Overridden by an earlier rule")})` : ""}`
+            )
+          ),
+          ...decision.trace_truncated ? [E("p", {}, _("Only the first 200 rules are displayed"))] : []
+        ])
+      ] : []
+    ]
+  );
 }
-function render4(report, error, busy) {
+function renderRouteExplanationResult(report, error, busy) {
   const result = document.getElementById("trafira-route-explanation-result");
   if (!result) return;
   result.replaceChildren(
-    ...busy ? [E("p", {}, _("Checking route"))] : error ? [E("p", {}, _("Could not explain route"))] : report ? [
+    ...busy ? [E("p", {}, _("Checking route"))] : error ? [E("p", { class: "alert-message warning" }, routeError(error))] : report ? [
       E(
         "p",
         {},
@@ -8504,25 +8734,48 @@ function render4(report, error, busy) {
           new Date(report.generated_at * 1e3).toLocaleString()
         )
       ] : [],
-      decisionView(_("Connection route"), report.decision),
-      ...report.dns_policy ? [decisionView(_("DNS policy (A query)"), report.dns_policy)] : [],
+      ...report.rule_sets?.basis === "saved_snapshots" ? [
+        E(
+          "p",
+          { class: "fkp_route-basis" },
+          _(
+            "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test."
+          )
+        )
+      ] : [],
+      decisionView(
+        _("Connection route"),
+        report.decision,
+        report.rule_sets?.unavailable_reasons
+      ),
+      ...report.dns_policy ? [
+        E("details", { class: "fkp_diagnostic-details" }, [
+          E("summary", {}, _("DNS policy (A query)")),
+          decisionView(
+            _("DNS policy (A query)"),
+            report.dns_policy,
+            report.rule_sets?.unavailable_reasons
+          ),
+          E(
+            "p",
+            {},
+            _("No DNS query was sent from the selected device.")
+          )
+        ])
+      ] : [],
       ...report.selector ? [
         E(
           "p",
           {},
           `${_("Current selected node")}: ${report.selector.current}`
         )
-      ] : [],
-      E("p", {}, _("No DNS query was sent from the selected device.")),
-      ...report.limitations.map(
-        (reason) => E("p", {}, `${_("Limitations")}: ${reason}`)
-      )
+      ] : []
     ] : []
   );
 }
 var controller = new RouteExplanationController(
   (request) => command2("route_explain", [JSON.stringify(request)]),
-  render4
+  renderRouteExplanationResult
 );
 var mountId = 0;
 var routeExplanationPanel = {
@@ -8533,7 +8786,8 @@ var routeExplanationPanel = {
     const domain = E("input", {
       type: "text",
       placeholder: "example.com",
-      maxLength: 253
+      maxLength: 253,
+      required: true
     });
     const source = E("select", {}, [
       E("option", { value: "device" }, _("Device by IP address")),
@@ -8541,7 +8795,8 @@ var routeExplanationPanel = {
     ]);
     const ip = E("input", {
       type: "text",
-      placeholder: _("Device IP address")
+      placeholder: _("Device IP address"),
+      required: true
     });
     const mac = E("input", {
       type: "text",
@@ -8559,7 +8814,8 @@ var routeExplanationPanel = {
       type: "number",
       min: "1",
       max: "65535",
-      value: "443"
+      value: "443",
+      required: true
     });
     const protocol = E("select", {}, [
       E("option", { value: "tls" }, "TLS / TCP"),
@@ -8575,9 +8831,14 @@ var routeExplanationPanel = {
         ip.value = device.ip;
         mac.value = device.mac || "";
         iface.value = device.interface || "";
+      } else if (source.value === "device") {
+        mac.value = "";
+        iface.value = "";
       }
+      ip.readOnly = mac.readOnly = iface.readOnly = !!device;
       const router = source.value === "router";
       ip.disabled = router;
+      ip.required = !router;
       mac.disabled = router;
       iface.disabled = router;
     });
@@ -8621,8 +8882,13 @@ var routeExplanationPanel = {
       };
       if (kind === "device") {
         request.source.ip = ip.value.trim();
-        if (mac.value.trim()) request.source.mac = mac.value.trim();
-        if (iface.value.trim()) request.source.interface = iface.value.trim();
+        const detected = devices.find(
+          (device) => device.ip === request.source.ip
+        );
+        const deviceMac = mac.value.trim() || detected?.mac;
+        const deviceInterface = iface.value.trim() || detected?.interface;
+        if (deviceMac) request.source.mac = deviceMac;
+        if (deviceInterface) request.source.interface = deviceInterface;
       }
       if (destination.value.trim())
         request.destination_ip = destination.value.trim();
@@ -8632,7 +8898,11 @@ var routeExplanationPanel = {
     });
     container.replaceChildren(
       form,
-      E("div", { id: "trafira-route-explanation-result" })
+      E("div", {
+        id: "trafira-route-explanation-result",
+        role: "status",
+        "aria-live": "polite"
+      })
     );
     controller.mount();
     void command2("get_alice_devices").then((report) => {
@@ -8684,9 +8954,9 @@ var errors = {
   profile_limit: "A maximum of eight profiles can be saved."
 };
 var ProfilePanelController = class {
-  constructor(call, render7) {
+  constructor(call, render6) {
     this.call = call;
-    this.render = render7;
+    this.render = render6;
     this.active = false;
     this.generation = 0;
     this.state = initial();
@@ -9078,9 +9348,9 @@ var profilesPanel = {
 
 // src/trafira/tabs/diagnostic/gamingPresetPanel.ts
 var GamingPresetController = class {
-  constructor(call, render7) {
+  constructor(call, render6) {
     this.call = call;
-    this.render = render7;
+    this.render = render6;
     this.active = false;
     this.generation = 0;
     this.reviewed = null;
@@ -12818,6 +13088,21 @@ var styles4 = `
 .fkp_diagnostic-page p {
     max-width: 80ch;
 }
+
+.fkp_route-decision {
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid var(--border-color-low, #ddd);
+    border-left: 3px solid var(--success-color-medium, #39834a);
+    border-radius: 4px;
+}
+.fkp_route-decision--indeterminate,
+.fkp_route-decision--blocked {
+    border-left-color: var(--warning-color-medium, #b47916);
+}
+.fkp_route-basis {
+    color: var(--text-color-medium, #666);
+}
 `;
 
 // src/trafira/tabs/diagnostic/index.ts
@@ -12828,7 +13113,7 @@ var DiagnosticTab = {
 };
 
 // src/trafira/tabs/monitoring/render.ts
-function render5() {
+function render4() {
   return E(
     "div",
     {
@@ -14784,19 +15069,18 @@ var styles5 = `
 
 // src/trafira/tabs/monitoring/index.ts
 var MonitoringTab = {
-  render: render5,
+  render: render4,
   initController: initController3,
   styles: styles5
 };
 
 // src/trafira/tabs/updates/render.ts
-function render6() {
+function render5() {
   return E("div", { id: "updates-status", class: "fkp_updates-page" }, [
     E("div", {
       id: "fkp_updates-components",
       class: "fkp_updates-page__components"
-    }),
-    E("div", { id: "trafira-core-versions" })
+    })
   ]);
 }
 
@@ -14842,12 +15126,13 @@ var initial2 = () => ({
   selected: "",
   jobId: "",
   restored: false,
-  error: ""
+  error: "",
+  unavailableReason: ""
 });
 var CoreVersionPicker = class {
-  constructor(call, render7) {
+  constructor(call, render6) {
     this.call = call;
-    this.render = render7;
+    this.render = render6;
     this.active = false;
     this.generation = 0;
     this.pending = false;
@@ -14912,41 +15197,46 @@ var CoreVersionPicker = class {
     const generation3 = this.generation;
     this.state = {
       ...this.state,
-      error: "",
+      error: request.action === "status" ? this.state.error : "",
       stage: request.action === "catalog" ? "loading" : request.action === "status" ? this.state.stage : "installing"
     };
     this.render(this.state);
     try {
       const result = await this.call(request);
       if (!this.active || generation3 !== this.generation) return;
-      if (result.success === false || result.rollback_error) {
+      if (request.action === "catalog") {
+        this.state = {
+          ...this.state,
+          stage: result.success === true ? "idle" : "failed",
+          selected: "",
+          currentVersion: text2(result.current_version) || this.state.currentVersion,
+          cachedAt: Number(result.cached_at) || 0,
+          pinnedVersion: result.pin && typeof result.pin === "object" ? text2(result.pin.version) : "",
+          entries: Array.isArray(result.entries) ? result.entries.filter((entry) => entry && typeof entry === "object").map((entry) => ({
+            id: text2(entry.id),
+            version: text2(entry.version),
+            available: result.success === true && entry.available === true,
+            reason: text2(entry.reason)
+          })) : [],
+          unavailableReason: text2(result.unavailable_reason),
+          error: result.success === true ? "" : "Could not load available versions. Check the connection and refresh the list."
+        };
+      } else if (request.action === "status" && result.running !== true && !this.state.jobId) {
+        return;
+      } else if (result.success === false || result.rollback_error) {
         this.state = {
           ...this.state,
           stage: "failed",
           restored: result.restored === true,
           error: result.rollback_error ? "Restoration failed. Check the service before continuing." : result.error === "conflict" ? "The installed version changed. Refresh the version list." : "The sing-box version operation failed."
         };
-      } else if (request.action === "catalog") {
-        this.state = {
-          ...this.state,
-          stage: "idle",
-          selected: "",
-          currentVersion: text2(result.current_version),
-          cachedAt: Number(result.cached_at) || 0,
-          pinnedVersion: result.pin && typeof result.pin === "object" ? text2(result.pin.version) : "",
-          entries: Array.isArray(result.entries) ? result.entries.filter((entry) => entry && typeof entry === "object").map((entry) => ({
-            id: text2(entry.id),
-            version: text2(entry.version),
-            available: entry.available === true,
-            reason: text2(entry.reason)
-          })) : []
-        };
       } else if (result.running === true) {
         this.state = {
           ...this.state,
           stage: "installing",
           jobId: text2(result.job_id),
-          restored: false
+          restored: false,
+          error: ""
         };
       } else {
         this.state = {
@@ -14960,7 +15250,15 @@ var CoreVersionPicker = class {
       this.state = {
         ...this.state,
         stage: request.action === "status" ? this.state.stage : "failed",
-        error: "The sing-box version operation failed."
+        ...request.action === "catalog" ? {
+          selected: "",
+          entries: this.state.entries.map((entry) => ({
+            ...entry,
+            available: false,
+            reason: "stale_catalog"
+          }))
+        } : {},
+        error: request.action === "catalog" ? "Could not load available versions. Check the connection and refresh the list." : "The sing-box version operation failed."
       };
     } finally {
       if (this.active && generation3 === this.generation) {
@@ -14979,13 +15277,21 @@ var coreVersionsPanel = {
     const host = document.getElementById("trafira-core-versions");
     if (!host) return;
     let last;
-    const select = E("select", {});
+    const select = E("select", {
+      id: "trafira-core-version-select"
+    });
     const pin = E("input", {
       type: "checkbox",
       checked: true
     });
-    const info = E("p", {});
-    const message2 = E("p", { role: "status" });
+    const info = E("p", { class: "fkp_updates-page__core-versions-info" });
+    const message2 = E("p", {
+      class: "fkp_updates-page__core-versions-message",
+      role: "status"
+    });
+    message2.setAttribute("aria-live", "polite");
+    const selectLabel = E("label", {}, _("Select a version"));
+    selectLabel.htmlFor = "trafira-core-version-select";
     const refresh = E(
       "button",
       { class: "cbi-button", click: () => void picker.load(true) },
@@ -15016,6 +15322,9 @@ var coreVersionsPanel = {
       ),
       "The sing-box version operation failed.": _(
         "The sing-box version operation failed."
+      ),
+      "Could not load available versions. Check the connection and refresh the list.": _(
+        "Could not load available versions. Check the connection and refresh the list."
       )
     };
     const picker = new CoreVersionPicker(
@@ -15030,43 +15339,68 @@ var coreVersionsPanel = {
       },
       (state) => {
         last = state;
+        const hasAvailableVersions = state.entries.some(
+          (entry) => entry.available
+        );
+        const loading2 = state.stage === "loading";
         select.replaceChildren(
-          E("option", { value: "" }, _("Select a version")),
+          E(
+            "option",
+            { value: "" },
+            loading2 ? _("Loading...") : state.entries.length ? _("Select a version") : _("No compatible versions are available")
+          ),
           ...state.entries.map(
             (entry) => E(
               "option",
-              { value: entry.id, disabled: !entry.available },
-              entry.version + (entry.available ? "" : ` \u2014 ${_("Unavailable for this installation")}`)
+              {
+                value: entry.id,
+                ...!entry.available ? { disabled: true } : {}
+              },
+              entry.version + (entry.available ? "" : ` \u2014 ${entry.reason === "stale_catalog" ? _("Refresh required") : _("Unavailable for this installation")}`)
             )
           )
         );
         select.value = state.selected;
-        const busy = state.stage === "installing" || state.stage === "loading";
-        select.disabled = pin.disabled = refresh.disabled = busy;
+        const busy = state.stage === "installing" || loading2;
+        select.disabled = pin.disabled = busy || !hasAvailableVersions;
+        refresh.disabled = busy;
         install.disabled = busy || !state.selected;
         unpin.disabled = busy || !state.pinnedVersion;
-        info.textContent = `${_("Installed version")}: ${state.currentVersion || "\u2014"} \xB7 ${_("Pinned version")}: ${state.pinnedVersion || "\u2014"}${state.cachedAt ? ` \xB7 ${_("Catalog checked")}: ${new Date(state.cachedAt * 1e3).toLocaleString()}` : ""}`;
+        info.textContent = `${_("Installed version")}: ${state.currentVersion === "not-installed" ? _("Not installed") : state.currentVersion || "\u2014"} \xB7 ${_("Pinned version")}: ${state.pinnedVersion || _("Not pinned")}${state.cachedAt ? ` \xB7 ${_("Catalog checked")}: ${new Date(state.cachedAt * 1e3).toLocaleString()}` : ""}`;
         message2.textContent = [
-          state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : "",
+          state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : state.unavailableReason || !loading2 && !hasAvailableVersions ? _(
+            "No compatible versions are available for this installation."
+          ) : "",
           state.restored ? _("The previous version was restored.") : ""
         ].filter(Boolean).join(" ");
+        message2.hidden = !message2.textContent;
       }
     );
     select.addEventListener("change", () => picker.select(select.value));
     host.replaceChildren(
-      E("details", {}, [
+      E("details", { class: "fkp_updates-page__core-versions" }, [
         E("summary", {}, _("Sing-box versions")),
         E(
           "p",
-          {},
+          { class: "fkp_updates-page__core-versions-help" },
           _(
             "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
           )
         ),
         info,
-        select,
-        E("label", {}, [pin, _("Pin selected version")]),
-        E("div", {}, [refresh, install, unpin]),
+        E("div", { class: "fkp_updates-page__core-versions-field" }, [
+          selectLabel,
+          select
+        ]),
+        E("label", { class: "fkp_updates-page__core-versions-pin" }, [
+          pin,
+          _("Pin selected version")
+        ]),
+        E("div", { class: "fkp_updates-page__core-versions-buttons" }, [
+          refresh,
+          install,
+          unpin
+        ]),
         message2
       ])
     );
@@ -15947,6 +16281,11 @@ function renderComponentCard(card) {
     cardChildren.push(detailsContainer);
   }
   cardChildren.push(actionsContainer);
+  if (card.component === "sing_box") {
+    cardChildren.push(
+      document.getElementById("trafira-core-versions") || E("div", { id: "trafira-core-versions" })
+    );
+  }
   return E("div", { class: "fkp_updates-page__component" }, cardChildren);
 }
 function renderUpdatesComponents() {
@@ -15987,7 +16326,6 @@ function applyComponentUpdateCheckCache(componentUpdateCheckCache) {
 async function onPageMount4() {
   onPageUnmount4();
   updatesMounted = true;
-  coreVersionsPanel.mount();
   updatesMountId += 1;
   const mountId3 = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
@@ -15999,6 +16337,7 @@ async function onPageMount4() {
     applyComponentUpdateCheckCache(prefetchedComponentUpdateCheckCache);
   }
   renderUpdatesComponents();
+  coreVersionsPanel.mount();
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache)
   });
@@ -16085,10 +16424,10 @@ var styles6 = `
 
 .fkp_updates-page__components-column {
     display: flex;
-    flex: 1 1 auto;
+    flex: 1 1 360px;
     flex-direction: column;
     gap: 10px;
-    min-width: max-content;
+    min-width: 0;
 }
 
 @media (max-width: 760px) {
@@ -16109,7 +16448,7 @@ var styles6 = `
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-width: max-content;
+    min-width: 0;
 }
 
 .fkp_updates-page__component__header {
@@ -16147,7 +16486,7 @@ var styles6 = `
     align-items: center;
     min-height: 24px;
     gap: 8px;
-    white-space: nowrap;
+    flex-wrap: wrap;
 }
 
 .fkp_updates-page__component__info-label {
@@ -16198,7 +16537,7 @@ var styles6 = `
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
@@ -16217,14 +16556,63 @@ var styles6 = `
 
 .fkp_updates-page__component__variants-buttons {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
+}
+
+.fkp_updates-page__core-versions {
+    border-top: 1px var(--background-color-low, lightgray) solid;
+    padding-top: 8px;
+    font-size: 13px;
+}
+
+.fkp_updates-page__core-versions > summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.fkp_updates-page__core-versions-help,
+.fkp_updates-page__core-versions-info {
+    color: var(--text-color-medium, #666);
+    margin: 8px 0;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.fkp_updates-page__core-versions-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0;
+}
+
+.fkp_updates-page__core-versions-field > select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.fkp_updates-page__core-versions-pin,
+.fkp_updates-page__core-versions-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.fkp_updates-page__core-versions-buttons {
+    flex-wrap: wrap;
+}
+
+.fkp_updates-page__core-versions-message {
+    margin: 8px 0 0;
+    line-height: 1.45;
 }
 `;
 
 // src/trafira/tabs/updates/index.ts
 var UpdatesTab = {
-  render: render6,
+  render: render5,
   initController: initController4,
   styles: styles6
 };

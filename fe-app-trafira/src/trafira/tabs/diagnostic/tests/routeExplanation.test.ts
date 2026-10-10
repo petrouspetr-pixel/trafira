@@ -14,6 +14,17 @@ const report = (outbound: string): ExplainReport => ({
 });
 
 describe('route explanation controller', () => {
+  it('retains an actionable known backend rejection without exposing arbitrary errors', async () => {
+    const render = vi.fn();
+    const controller = new RouteExplanationController(
+      async () =>
+        ({ success: false, error: 'invalid_request' }) as ExplainReport,
+      render,
+    );
+    controller.mount();
+    await controller.submit(request);
+    expect(render.mock.lastCall).toEqual([null, 'invalid_request', false]);
+  });
   it('does not replace a newer result with an older request', async () => {
     let finishOld!: (value: ExplainReport) => void;
     const read = vi

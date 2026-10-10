@@ -20,6 +20,7 @@ export interface VersionState {
   jobId: string;
   restored: boolean;
   error: string;
+  unavailableReason: string;
 }
 export interface VersionRequest {
   action: 'catalog' | 'install' | 'unpin' | 'status';
@@ -40,6 +41,7 @@ const initial = (): VersionState => ({
   jobId: '',
   restored: false,
   error: '',
+  unavailableReason: '',
 });
 export class CoreVersionPicker {
   private active = false;
@@ -116,7 +118,7 @@ export class CoreVersionPicker {
     const generation = this.generation;
     this.state = {
       ...this.state,
-      error: '',
+      error: request.action === 'status' ? this.state.error : '',
       stage:
         request.action === 'catalog'
           ? 'loading'
@@ -128,23 +130,13 @@ export class CoreVersionPicker {
     try {
       const result = (await this.call(request)) as Record<string, unknown>;
       if (!this.active || generation !== this.generation) return;
-      if (result.success === false || result.rollback_error) {
+      if (request.action === 'catalog') {
         this.state = {
           ...this.state,
-          stage: 'failed',
-          restored: result.restored === true,
-          error: result.rollback_error
-            ? 'Restoration failed. Check the service before continuing.'
-            : result.error === 'conflict'
-              ? 'The installed version changed. Refresh the version list.'
-              : 'The sing-box version operation failed.',
-        };
-      } else if (request.action === 'catalog') {
-        this.state = {
-          ...this.state,
-          stage: 'idle',
+          stage: result.success === true ? 'idle' : 'failed',
           selected: '',
-          currentVersion: text(result.current_version),
+          currentVersion:
+            text(result.current_version) || this.state.currentVersion,
           cachedAt: Number(result.cached_at) || 0,
           pinnedVersion:
             result.pin && typeof result.pin === 'object'
@@ -156,10 +148,34 @@ export class CoreVersionPicker {
                 .map((entry: Record<string, unknown>) => ({
                   id: text(entry.id),
                   version: text(entry.version),
-                  available: entry.available === true,
+                  available:
+                    result.success === true && entry.available === true,
                   reason: text(entry.reason),
                 }))
             : [],
+          unavailableReason: text(result.unavailable_reason),
+          error:
+            result.success === true
+              ? ''
+              : 'Could not load available versions. Check the connection and refresh the list.',
+        };
+      } else if (
+        request.action === 'status' &&
+        result.running !== true &&
+        !this.state.jobId
+      ) {
+        // An idle worker is unrelated to the catalog request or current selection.
+        return;
+      } else if (result.success === false || result.rollback_error) {
+        this.state = {
+          ...this.state,
+          stage: 'failed',
+          restored: result.restored === true,
+          error: result.rollback_error
+            ? 'Restoration failed. Check the service before continuing.'
+            : result.error === 'conflict'
+              ? 'The installed version changed. Refresh the version list.'
+              : 'The sing-box version operation failed.',
         };
       } else if (result.running === true) {
         this.state = {
@@ -167,6 +183,7 @@ export class CoreVersionPicker {
           stage: 'installing',
           jobId: text(result.job_id),
           restored: false,
+          error: '',
         };
       } else {
         this.state = {
@@ -181,7 +198,20 @@ export class CoreVersionPicker {
       this.state = {
         ...this.state,
         stage: request.action === 'status' ? this.state.stage : 'failed',
-        error: 'The sing-box version operation failed.',
+        ...(request.action === 'catalog'
+          ? {
+              selected: '',
+              entries: this.state.entries.map((entry) => ({
+                ...entry,
+                available: false,
+                reason: 'stale_catalog',
+              })),
+            }
+          : {}),
+        error:
+          request.action === 'catalog'
+            ? 'Could not load available versions. Check the connection and refresh the list.'
+            : 'The sing-box version operation failed.',
       };
     } finally {
       if (this.active && generation === this.generation) {

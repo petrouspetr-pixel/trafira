@@ -79,3 +79,123 @@ it('reports a failed install and successful rollback without raw worker output',
   expect(state.restored).toBe(true);
   expect(JSON.stringify(state)).not.toContain('secret worker output');
 });
+
+it('retains installed and pinned versions when a catalog refresh fails', async () => {
+  const call = vi.fn().mockResolvedValue({
+    success: false,
+    error: 'catalog_fetch_failed',
+    current_version: '1.14.1-extended-2.7.2',
+    pin: { version: '1.14.0-extended-2.7.1', variant: 'extended' },
+    cached_at: 100,
+    stale: true,
+    entries: [
+      {
+        id: 'old',
+        version: '1.14.0-extended-2.7.1',
+        available: false,
+        reason: 'stale_catalog',
+      },
+    ],
+  });
+  const render = vi.fn();
+  const picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load(true);
+  expect(render.mock.lastCall?.[0]).toMatchObject({
+    stage: 'failed',
+    currentVersion: '1.14.1-extended-2.7.2',
+    pinnedVersion: '1.14.0-extended-2.7.1',
+    cachedAt: 100,
+    entries: [
+      {
+        id: 'old',
+        version: '1.14.0-extended-2.7.1',
+        available: false,
+        reason: 'stale_catalog',
+      },
+    ],
+    error:
+      'Could not load available versions. Check the connection and refresh the list.',
+  });
+});
+
+it('keeps a catalog failure visible when the background worker is idle', async () => {
+  const call = vi
+    .fn()
+    .mockResolvedValueOnce({
+      success: false,
+      error: 'catalog_fetch_failed',
+      entries: [],
+      current_version: '1.14.1',
+    })
+    .mockResolvedValueOnce({ success: true, running: false, job_id: '' });
+  const render = vi.fn();
+  const picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load();
+  await picker.poll();
+  expect(render.mock.lastCall?.[0]).toMatchObject({
+    stage: 'failed',
+    currentVersion: '1.14.1',
+    error:
+      'Could not load available versions. Check the connection and refresh the list.',
+  });
+});
+
+it('preserves a selected version during idle status checks', async () => {
+  const call = vi
+    .fn()
+    .mockResolvedValueOnce(catalog)
+    .mockResolvedValueOnce({ success: true, running: false, job_id: '' });
+  const render = vi.fn();
+  const picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load();
+  picker.select('older');
+  await picker.poll();
+  expect(render.mock.lastCall?.[0]).toMatchObject({
+    stage: 'selected',
+    selected: 'older',
+  });
+});
+
+it('reports why a successful catalog has no selectable versions', async () => {
+  const call = vi.fn().mockResolvedValue({
+    ...catalog,
+    entries: [],
+    unavailable_reason: 'no_available_versions',
+  });
+  const render = vi.fn();
+  const picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load();
+  expect(render.mock.lastCall?.[0].unavailableReason).toBe(
+    'no_available_versions',
+  );
+});
+
+it('disables old choices after a transport failure while retaining installed metadata', async () => {
+  const call = vi
+    .fn()
+    .mockResolvedValueOnce({
+      ...catalog,
+      pin: { version: '1.14.1', variant: 'stable' },
+    })
+    .mockRejectedValueOnce(new Error('offline'));
+  const render = vi.fn();
+  const picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load();
+  picker.select('older');
+  await picker.load(true);
+  const state = render.mock.lastCall?.[0];
+  expect(state).toMatchObject({
+    stage: 'failed',
+    selected: '',
+    currentVersion: '1.14.2',
+    pinnedVersion: '1.14.1',
+  });
+  expect(
+    state.entries.every((entry: { available: boolean }) => !entry.available),
+  ).toBe(true);
+});

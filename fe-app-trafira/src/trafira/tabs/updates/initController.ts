@@ -1190,6 +1190,13 @@ function renderComponentCard(card: ComponentCard) {
     cardChildren.push(detailsContainer);
   }
   cardChildren.push(actionsContainer);
+  if (card.component === 'sing_box') {
+    // Keep the mounted picker and its selection when component cards rerender.
+    cardChildren.push(
+      document.getElementById('trafira-core-versions') ||
+        E('div', { id: 'trafira-core-versions' }),
+    );
+  }
 
   return E('div', { class: 'fkp_updates-page__component' }, cardChildren);
 }
@@ -1255,7 +1262,6 @@ async function onPageMount() {
   onPageUnmount();
 
   updatesMounted = true;
-  coreVersionsPanel.mount();
   updatesMountId += 1;
   const mountId = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
@@ -1273,6 +1279,7 @@ async function onPageMount() {
   }
 
   renderUpdatesComponents();
+  coreVersionsPanel.mount();
 
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache),

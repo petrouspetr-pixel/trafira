@@ -19,15 +19,21 @@ SH
 printf '#!/bin/sh\nexit 0\n' >"$WORK_DIR/bin/nft"
 cat >"$WORK_DIR/bin/curl" <<'SH'
 #!/bin/sh
+printf '1' >"$TRAFIRA_RUNTIME_STATE_DIR/network-attempted"
 echo 'route explanation must not download or query DNS' >&2
 exit 91
 SH
 cat >"$WORK_DIR/bin/sing-box" <<'SH'
 #!/bin/sh
 # Stand in for the external binary codec only, not the diagnostic evaluator.
-[ "$1 $2" = 'rule-set decompile' ] && [ "$4" = '-o' ] || exit 92
+[ "$1" = 'rule-set' ] && [ "$4" = '-o' ] || exit 92
+case "$2" in compile|decompile) ;; *) exit 92;; esac
+if [ "$2" = decompile ] && [ -e "$TRAFIRA_RUNTIME_STATE_DIR/reject-decode" ]; then exit 1; fi
 grep -q '"version":3' "$3" || exit 1
 cp "$3" "$5"
+if [ -e "$TRAFIRA_RUNTIME_STATE_DIR/change-during-decode" ]; then
+    printf '{"version":3,"rules":[{"domain_suffix":"changed.example"}]}' >"$3"
+fi
 SH
 chmod +x "$WORK_DIR/bin/ucode" "$WORK_DIR/bin/nft" "$WORK_DIR/bin/curl" "$WORK_DIR/bin/sing-box"
 touch "$TRAFIRA_RUNTIME_STATE_DIR/operation.lock"
@@ -70,14 +76,22 @@ stamp
 run "$SOURCE_REQUEST" >"$WORK_DIR/missing.json"
 printf '{"version":3,"rules":"corrupt"}' >"$(snapshot_path)"
 run "$SOURCE_REQUEST" >"$WORK_DIR/corrupt.json"
+printf '{"version":255,"rules":[{"domain_suffix":"youtube.com"}]}' >"$(snapshot_path)"
+run "$SOURCE_REQUEST" >"$WORK_DIR/invalid-version.json"
+printf '{"version":3,"rules":[{"domain_suffix":"youtube.com"}]}' >"$(snapshot_path)"
+touch "$TRAFIRA_RUNTIME_STATE_DIR/change-during-decode"
+run "$SOURCE_REQUEST" >"$WORK_DIR/changed.json"
+rm "$TRAFIRA_RUNTIME_STATE_DIR/change-during-decode"
 node - "$WORK_DIR" <<'JS'
 const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
-for(const name of ['missing','corrupt']) {
+for(const name of ['missing','corrupt','invalid-version','changed']) {
  const r=JSON.parse(fs.readFileSync(`${dir}/${name}.json`));
  assert.equal(r.decision.status,'indeterminate',`${name} snapshot cannot disprove an earlier rule`);
  assert(r.decision.missing.includes('rule_set:youtube'));
  assert.equal(r.rule_sets.available,0);
  assert.equal(r.rule_sets.unavailable,1);
+ assert.equal(r.rule_sets.unavailable_reasons[0].tag,'youtube');
+ assert.equal(r.rule_sets.unavailable_reasons[0].reason,name==='missing'?'missing':name==='changed'?'changed':'decode_failed');
 }
 JS
 node - "$WORK_DIR/config.json" <<'JS'
@@ -87,4 +101,18 @@ printf '{"version":3,"rules":[{"domain_suffix":"youtube.com"}]}' >"$(snapshot_pa
 stamp
 run "$SOURCE_REQUEST" >"$WORK_DIR/binary.json"
 node -e 'const assert=require("assert/strict"),r=JSON.parse(require("fs").readFileSync(process.argv[1]));assert.equal(r.decision.outbound,"vpn-out","binary snapshot is decoded before matching");assert.equal(r.rule_sets.live_verified,false);' "$WORK_DIR/binary.json"
+touch "$TRAFIRA_RUNTIME_STATE_DIR/reject-decode"
+run "$SOURCE_REQUEST" >"$WORK_DIR/unsupported.json"
+rm "$TRAFIRA_RUNTIME_STATE_DIR/reject-decode"
+node -e 'const assert=require("assert/strict"),r=JSON.parse(require("fs").readFileSync(process.argv[1]));assert.equal(r.decision.status,"indeterminate");assert.deepEqual(r.rule_sets.unavailable_reasons,[{tag:"youtube",reason:"decode_failed"}],"existing unsupported binary copy is not reported missing");' "$WORK_DIR/unsupported.json"
+# Trusted local configured paths retain sing-box's normal symlink behavior.
+ln -s "$(snapshot_path)" "$WORK_DIR/local-link"
+node - "$WORK_DIR/config.json" "$WORK_DIR/local-link" <<'JS'
+const fs=require('fs'),p=process.argv[2],c=JSON.parse(fs.readFileSync(p));
+c.route.rule_set[0]={type:'local',tag:'youtube',format:'binary',path:process.argv[3]};fs.writeFileSync(p,JSON.stringify(c));
+JS
+stamp
+run "$SOURCE_REQUEST" >"$WORK_DIR/local.json"
+node -e 'const assert=require("assert/strict"),r=JSON.parse(require("fs").readFileSync(process.argv[1]));assert.equal(r.decision.outbound,"vpn-out","configured local symlink must remain readable");assert.equal(r.rule_sets.basis,"local");' "$WORK_DIR/local.json"
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/network-attempted"
 printf 'route explanation snapshot checks passed\n'

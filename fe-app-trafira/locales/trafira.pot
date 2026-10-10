@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 01:47+0300\n"
-"PO-Revision-Date: 2026-10-10 01:47+0300\n"
+"POT-Creation-Date: 2026-10-10 02:31+0300\n"
+"PO-Revision-Date: 2026-10-10 02:31+0300\n"
 "Last-Translator: petrouspetr-pixel <280500603+petrouspetr-pixel@users.noreply.github.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -82,8 +82,20 @@ msgstr ""
 msgid "✘ Stopped"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:29
+msgid "A copy download is already starting. Wait, then refresh the status."
+msgstr ""
+
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:43
 msgid "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:74
+msgid "A required saved list is missing or unreadable. Download or update copies in Saved rule sets, then try again."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:67
+msgid "A saved list changed during the check. Try again."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:217
@@ -176,7 +188,7 @@ msgstr ""
 msgid "Additional marking rules found"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:176
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:239
 msgid "Additional route information (optional)"
 msgstr ""
 
@@ -229,6 +241,14 @@ msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:225
 msgid "Alice Mode devices are currently unavailable"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:12
+msgid "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:36
+msgid "Alice Mode sends this device directly, bypassing Trafira."
 msgstr ""
 
 #: src/trafira/tabs/monitoring/initController.ts:626
@@ -284,12 +304,32 @@ msgstr ""
 msgid "Alter ID"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:65
+#: src/trafira/tabs/diagnostic/routePresentation.ts:51
+msgid "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:58
+msgid "An earlier rule checks the application protocol. Select the protocol to continue."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:81
+msgid "An earlier rule needs additional data. See the rule evaluation details below."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:78
+msgid "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:95
 msgid "Analysis of the applied configuration, not a live connection capture."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:46
 msgid "Another configuration operation is already running."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:63
+msgid "Another list update is already running. Wait for it to finish, then download the copies again."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderProfiles.ts:87
@@ -304,7 +344,7 @@ msgstr ""
 msgid "Apply section rules only to the specified local IP addresses"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:59
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:141
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr ""
 
@@ -375,12 +415,16 @@ msgstr ""
 msgid "Before existing device rules"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:39
+msgid "Block connection"
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7745
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:14
 msgid "Block traffic"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:22
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:23
 msgid "Blocked"
 msgstr ""
 
@@ -492,6 +536,10 @@ msgstr ""
 msgid "Cached servers: %s; included: %s; excluded: %s"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:113
+msgid "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/checks/runByedpiCheck.ts:26
 #: src/trafira/tabs/diagnostic/checks/runDnsCheck.ts:27
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:172
@@ -515,7 +563,7 @@ msgstr ""
 msgid "Cascade connection"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:80
+#: src/trafira/tabs/updates/renderCoreVersions.ts:112
 msgid "Catalog checked"
 msgstr ""
 
@@ -552,7 +600,7 @@ msgstr ""
 msgid "Check URL"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:57
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:87
 msgid "Checking route"
 msgstr ""
 
@@ -573,14 +621,14 @@ msgstr ""
 msgid "checks"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10
 #: src/trafira/tabs/diagnostic/helpers/getMeta.ts:26
+#: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10
 msgid "Checks failed"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:13
 #: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:23
 #: src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43
-#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:13
 msgid "Checks passed"
 msgstr ""
 
@@ -588,7 +636,7 @@ msgstr ""
 msgid "Checks passed with manual DHCP"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:100
+#: src/trafira/tabs/updates/renderCoreVersions.ts:137
 msgid "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
 msgstr ""
 
@@ -636,10 +684,10 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3786
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1714
 #: src/partials/modal/renderModal.ts:263
-#: src/trafira/tabs/dashboard/initController.ts:1061
-#: src/trafira/tabs/dashboard/initController.ts:1329
 #: src/trafira/tabs/monitoring/initController.ts:832
 #: src/trafira/tabs/monitoring/initController.ts:882
+#: src/trafira/tabs/dashboard/initController.ts:1061
+#: src/trafira/tabs/dashboard/initController.ts:1329
 msgid "Close"
 msgstr ""
 
@@ -711,7 +759,11 @@ msgstr ""
 msgid "Connect through"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:78
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:42
+msgid "Connection options"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:120
 msgid "Connection route"
 msgstr ""
 
@@ -740,18 +792,28 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:174
+msgid "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:152
+msgid "Copies stored on router"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:54
+msgid "Copies were downloaded and checked. They will be checked again before the next startup."
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1690
 #: src/partials/modal/renderModal.ts:258
 msgid "Copy"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:73
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:100
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:189
 msgid "Copy missing"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:73
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:99
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:188
 msgid "Copy present"
 msgstr ""
 
@@ -766,16 +828,40 @@ msgstr ""
 msgid "Could not compare FakeIP and control public IPs"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:59
-msgid "Could not explain route"
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:79
+msgid "Could not download copies. Check the internet connection, list-download proxy and router storage."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:30
-msgid "Could not read snapshot status"
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:67
+msgid "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:29
-msgid "Could not start snapshot preparation"
+#: src/trafira/tabs/diagnostic/routePresentation.ts:121
+msgid "Could not explain route. Check that Trafira is running, then try again."
+msgstr ""
+
+#: src/trafira/tabs/updates/renderCoreVersions.ts:58
+msgid "Could not load available versions. Check the connection and refresh the list."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:25
+msgid "Could not read saved-copy status. Refresh the status to try again."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:37
+msgid "Could not save the download task. Check free storage on the router."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:33
+msgid "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:45
+msgid "Could not start downloading copies. Refresh the status and try again."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:41
+msgid "Could not start the download task. Refresh the status and try again."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7862
@@ -786,7 +872,7 @@ msgstr ""
 msgid "Current section cannot download its own subscription"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:87
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:146
 msgid "Current selected node"
 msgstr ""
 
@@ -838,8 +924,12 @@ msgstr ""
 msgid "Delete the selected saved profile? Current settings will remain unchanged."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:172
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:235
 msgid "Destination port"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:40
+msgid "Detect protocol"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2651
@@ -852,7 +942,7 @@ msgstr ""
 msgid "detour must be a non-empty string"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:116
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:172
 msgid "Device by IP address"
 msgstr ""
 
@@ -860,13 +950,13 @@ msgstr ""
 msgid "Device filter"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:121
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:171
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:177
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:234
 msgid "Device IP address"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:125
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:178
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:182
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:241
 msgid "Device MAC (optional)"
 msgstr ""
 
@@ -908,8 +998,8 @@ msgid "Direct"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:22
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:17
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21
 msgid "Direct connection"
 msgstr ""
 
@@ -956,7 +1046,8 @@ msgstr ""
 msgid "DNS over TLS (DoT)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:80
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:127
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129
 msgid "DNS policy (A query)"
 msgstr ""
 
@@ -1054,6 +1145,10 @@ msgstr ""
 msgid "Do not test specified servers."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:34
+msgid "Does not match"
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3292
 msgid "Does not match inclusion filters"
 msgstr ""
@@ -1070,7 +1165,7 @@ msgstr ""
 msgid "DoH client certificate authentication"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:169
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:232
 msgid "Domain"
 msgstr ""
 
@@ -1103,6 +1198,10 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:243
+msgid "Download / update list copies"
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:712
 msgid "Download component packages via the selected section"
 msgstr ""
@@ -1121,6 +1220,10 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:691
 msgid "Download lists through a section"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:108
+msgid "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:692
@@ -1142,6 +1245,14 @@ msgstr ""
 #: src/trafira/tabs/monitoring/initController.ts:825
 #: src/trafira/tabs/monitoring/initController.ts:879
 msgid "Downloaded"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:52
+msgid "Downloading and checking list copies…"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:71
+msgid "Downloading copies was interrupted. Download the copies again."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:391
@@ -1242,6 +1353,10 @@ msgstr ""
 msgid "Enter a valid DNS server address"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/routePresentation.ts:109
+msgid "Enter a valid domain, destination port and device IP address, or select This router."
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:231
 msgid "Enter an absolute file path"
 msgstr ""
@@ -1250,8 +1365,20 @@ msgstr ""
 msgid "Enter HWID"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/routePresentation.ts:54
+msgid "Enter the device IP address, or select a detected device."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:55
+msgid "Enter the device MAC address in Additional route information."
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2398
 msgid "Enter the HWID sent with subscription requests"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:6
+msgid "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7526
@@ -1326,7 +1453,7 @@ msgstr ""
 msgid "Expires"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:187
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:250
 msgid "Explain route"
 msgstr ""
 
@@ -1370,12 +1497,12 @@ msgstr ""
 msgid "Failed to copy!"
 msgstr ""
 
+#: src/trafira/methods/shell/index.ts:170
+#: src/trafira/methods/shell/index.ts:177
 #: src/trafira/tabs/updates/initController.ts:509
 #: src/trafira/tabs/updates/initController.ts:510
 #: src/trafira/tabs/updates/initController.ts:572
 #: src/trafira/tabs/updates/initController.ts:722
-#: src/trafira/methods/shell/index.ts:170
-#: src/trafira/methods/shell/index.ts:177
 msgid "Failed to execute"
 msgstr ""
 
@@ -1491,6 +1618,10 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2816
 msgid "gRPC service"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:43
+msgid "Handle DNS"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:3069
@@ -1654,8 +1785,8 @@ msgstr ""
 msgid "Included"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:186
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:242
 msgid "Incoming interface (optional)"
 msgstr ""
 
@@ -1671,11 +1802,11 @@ msgstr ""
 msgid "Install another build:"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:29
+#: src/trafira/tabs/updates/renderCoreVersions.ts:37
 msgid "Install selected version"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:80
+#: src/trafira/tabs/updates/renderCoreVersions.ts:112
 msgid "Installed version"
 msgstr ""
 
@@ -1684,11 +1815,11 @@ msgstr ""
 msgid "Installed version is newer than release"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:85
+#: src/trafira/tabs/updates/renderCoreVersions.ts:117
 msgid "Installing in the background. You may close this page."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:23
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:24
 msgid "Insufficient information"
 msgstr ""
 
@@ -1986,8 +2117,8 @@ msgstr ""
 msgid "IPv6 only"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17
 #: src/trafira/tabs/diagnostic/helpers/getMeta.ts:20
+#: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17
 msgid "Issues detected"
 msgstr ""
 
@@ -2046,6 +2177,10 @@ msgstr ""
 msgid "LAN device data is unavailable; LAN devices may be missing."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:224
+msgid "Last download"
+msgstr ""
+
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:93
 msgid "Last WireGuard handshake"
 msgstr ""
@@ -2080,10 +2215,6 @@ msgstr ""
 msgid "Level name"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:93
-msgid "Limitations"
-msgstr ""
-
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7182
 msgid "List must be an HTTP(S) URL or a local .lst path"
 msgstr ""
@@ -2104,6 +2235,10 @@ msgstr ""
 msgid "Listening port"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:152
+msgid "Lists without a saved copy"
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1699
 msgid "Loading client link..."
 msgstr ""
@@ -2118,11 +2253,16 @@ msgstr ""
 #: src/trafira/tabs/updates/initController.ts:930
 #: src/trafira/tabs/updates/initController.ts:943
 #: src/trafira/tabs/updates/initController.ts:956
+#: src/trafira/tabs/updates/renderCoreVersions.ts:83
 msgid "Loading..."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3302
 msgid "Loading…"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:101
+msgid "Local copies help Trafira start when remote list sources are unavailable."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:786
@@ -2153,8 +2293,12 @@ msgstr ""
 msgid "Matched by %s"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:20
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21
 msgid "Matched route"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:33
+msgid "Matches"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3293
@@ -2183,10 +2327,6 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7790
 msgid "Minimum time between switches (seconds)"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:35
-msgid "Missing information"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7975
@@ -2233,6 +2373,11 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3020
 msgid "Native fallback reacts to real connection failures and requires sing-box extended. The watchdog mode works with all supported sing-box variants."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:35
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66
+msgid "Needs more information"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1816
@@ -2289,6 +2434,14 @@ msgstr ""
 msgid "No closed connections"
 msgstr ""
 
+#: src/trafira/tabs/updates/renderCoreVersions.ts:86
+msgid "No compatible versions are available"
+msgstr ""
+
+#: src/trafira/tabs/updates/renderCoreVersions.ts:119
+msgid "No compatible versions are available for this installation."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:32
 msgid "No conflict detected"
 msgstr ""
@@ -2297,7 +2450,7 @@ msgstr ""
 msgid "No devices"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:91
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:136
 msgid "No DNS query was sent from the selected device."
 msgstr ""
 
@@ -2313,7 +2466,7 @@ msgstr ""
 msgid "No public firewall port required"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:121
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:210
 msgid "No remote rule sets in saved configuration"
 msgstr ""
 
@@ -2368,7 +2521,12 @@ msgstr ""
 #: src/trafira/tabs/updates/initController.ts:933
 #: src/trafira/tabs/updates/initController.ts:946
 #: src/trafira/tabs/updates/initController.ts:959
+#: src/trafira/tabs/updates/renderCoreVersions.ts:112
 msgid "Not installed"
+msgstr ""
+
+#: src/trafira/tabs/updates/renderCoreVersions.ts:112
+msgid "Not pinned"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:62
@@ -2448,7 +2606,7 @@ msgstr ""
 msgid "Only servers with one of the selected transports."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:47
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:70
 msgid "Only the first 200 rules are displayed"
 msgstr ""
 
@@ -2500,7 +2658,7 @@ msgstr ""
 msgid "Output Network Interface"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:43
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66
 msgid "Overridden by an earlier rule"
 msgstr ""
 
@@ -2555,11 +2713,11 @@ msgstr ""
 msgid "Pin on dashboard"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:106
+#: src/trafira/tabs/updates/renderCoreVersions.ts:148
 msgid "Pin selected version"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:80
+#: src/trafira/tabs/updates/renderCoreVersions.ts:112
 msgid "Pinned version"
 msgstr ""
 
@@ -2606,14 +2764,6 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2470
 msgid "Prefix text"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:152
-msgid "Prepare saved copies"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:129
-msgid "Preparing snapshots"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:236
@@ -2705,7 +2855,7 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2482
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2516
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:173
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:236
 msgid "Protocol"
 msgstr ""
 
@@ -2722,8 +2872,8 @@ msgstr ""
 msgid "QR code is too large"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:133
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:180
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:190
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:243
 msgid "Real destination IP (optional)"
 msgstr ""
 
@@ -2755,7 +2905,7 @@ msgstr ""
 msgid "Reality short ID must contain 1-8 hex digits"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:107
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:196
 msgid "Referenced in saved startup configuration"
 msgstr ""
 
@@ -2763,7 +2913,7 @@ msgstr ""
 msgid "Refill"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:21
+#: src/trafira/tabs/updates/renderCoreVersions.ts:29
 msgid "Refresh available versions"
 msgstr ""
 
@@ -2771,7 +2921,11 @@ msgstr ""
 msgid "Refresh devices"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:161
+#: src/trafira/tabs/updates/renderCoreVersions.ts:100
+msgid "Refresh required"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:252
 msgid "Refresh status"
 msgstr ""
 
@@ -2811,7 +2965,7 @@ msgstr ""
 msgid "Require a username and password for the local mixed proxy"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:46
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:128
 msgid "Requires sing-box 1.14 or newer"
 msgstr ""
 
@@ -2821,6 +2975,10 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7756
 msgid "Reserve section"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:41
+msgid "Resolve domain"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8012
@@ -2851,8 +3009,8 @@ msgstr ""
 msgid "Restart Trafira"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:40
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:47
+#: src/trafira/tabs/updates/renderCoreVersions.ts:48
 msgid "Restoration failed. Check the service before continuing."
 msgstr ""
 
@@ -2869,6 +3027,10 @@ msgstr ""
 msgid "Route"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:38
+msgid "Route connection"
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:328
 msgid "Route main DNS requests through the selected section."
 msgstr ""
@@ -2883,6 +3045,18 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:599
 msgid "Route router applications"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:18
+msgid "Router application routing has not been applied. Save and apply the Trafira settings first."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:21
+msgid "Router application routing is not active. Restart Trafira and try again."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:24
+msgid "Router routing data is unavailable. Restart Trafira and try again."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:609
@@ -2907,7 +3081,11 @@ msgstr ""
 msgid "Routing section"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:38
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66
+msgid "Rule action"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:61
 msgid "Rule evaluation order"
 msgstr ""
 
@@ -2922,6 +3100,10 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8096
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8125
 msgid "Rule sets"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:97
+msgid "Rule-set copies for startup"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2558
@@ -2968,13 +3150,8 @@ msgstr ""
 msgid "Save up to eight profiles. Applying a profile may restart routing."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:49
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:131
 msgid "Saved configuration unavailable"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:33
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:87
-msgid "Saved rule sets"
 msgstr ""
 
 #: src/trafira/tabs/monitoring/render.ts:47
@@ -3020,6 +3197,10 @@ msgstr ""
 msgid "Select a connection"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/routePresentation.ts:9
+msgid "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:199
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:291
 msgid "Select a known device"
@@ -3046,7 +3227,8 @@ msgstr ""
 msgid "Select a transit section"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:63
+#: src/trafira/tabs/updates/renderCoreVersions.ts:24
+#: src/trafira/tabs/updates/renderCoreVersions.ts:85
 msgid "Select a version"
 msgstr ""
 
@@ -3182,9 +3364,9 @@ msgstr ""
 msgid "Servers on dashboard"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/initController.ts:598
 #: src/trafira/methods/shell/index.ts:376
 #: src/trafira/methods/shell/index.ts:397
+#: src/trafira/tabs/diagnostic/initController.ts:598
 msgid "Service action failed"
 msgstr ""
 
@@ -3234,6 +3416,10 @@ msgstr ""
 msgid "Show only servers with one of the selected transports."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:164
+msgid "Show saved lists and storage"
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3592
 msgid "Show servers from selected groups without repeating their filtering criteria."
 msgstr ""
@@ -3257,6 +3443,10 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runSingBoxCheck.ts:77
 msgid "Sing-box autostart disabled"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:64
+msgid "sing-box could not export a saved list for this calculation. Some binary lists, including AdGuard lists, cannot be exported. Downloading the same copy again may not help."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:69
@@ -3287,24 +3477,20 @@ msgstr ""
 msgid "Sing-box version is compatible (newer than 1.12.4)"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:96
+#: src/trafira/tabs/updates/renderCoreVersions.ts:133
 msgid "Sing-box versions"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:131
-msgid "Snapshot preparation completed"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:132
-msgid "Snapshot preparation failed; check core, configuration, proxy and storage"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:43
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:125
 msgid "Snapshot status unavailable"
 msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:47
 msgid "Some addresses use Trafira; others connect directly"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:75
+msgid "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage."
 msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:77
@@ -3313,6 +3499,10 @@ msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:65
 msgid "Some LAN neighbor entries were invalid and skipped."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:68
+msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
 msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:71
@@ -3327,9 +3517,9 @@ msgstr ""
 msgid "Sorts servers in this section by lowest latency in the dashboard."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:233
 #: src/trafira/tabs/monitoring/initController.ts:831
 #: src/trafira/tabs/monitoring/initController.ts:881
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:170
 msgid "Source"
 msgstr ""
 
@@ -3394,6 +3584,10 @@ msgstr ""
 msgid "Start Trafira"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:122
+msgid "Starting the copy download…"
+msgstr ""
+
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:53
 msgid "State"
 msgstr ""
@@ -3411,16 +3605,12 @@ msgstr ""
 msgid "Stop Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:68
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:169
 msgid "Storage"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:274
 msgid "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:37
-msgid "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:4196
@@ -3488,7 +3678,7 @@ msgstr ""
 msgid "Tailscale hostname"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:145
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:203
 msgid "TCP, unknown protocol"
 msgstr ""
 
@@ -3530,9 +3720,17 @@ msgstr ""
 msgid "The allow list is empty, so no devices use Trafira."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/routePresentation.ts:15
+msgid "The applied routing state is unavailable. Start Trafira and try again."
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5698
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6143
 msgid "The desync fwmark is managed by Trafira for loop prevention and must not be overridden here."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:33
+msgid "The entered address is a FakeIP. Enter the real destination IP instead."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:43
@@ -3540,7 +3738,7 @@ msgstr ""
 msgid "The generated configuration did not pass validation."
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:43
+#: src/trafira/tabs/updates/renderCoreVersions.ts:51
 msgid "The installed version changed. Refresh the version list."
 msgstr ""
 
@@ -3553,7 +3751,7 @@ msgstr ""
 msgid "The operation failed. Refresh the page and review the settings."
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:87
+#: src/trafira/tabs/updates/renderCoreVersions.ts:123
 msgid "The previous version was restored."
 msgstr ""
 
@@ -3561,16 +3759,32 @@ msgstr ""
 msgid "The profile cannot be used with the current configuration and components."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/routePresentation.ts:3
+msgid "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:112
+msgid "The routing configuration changed during the check. Try again."
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8038
 msgid "The rule applies to the domain and all its subdomains. Use full:, keyword:, or regex: prefixes for exact match, keyword match, or regular expression."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:61
+msgid "The rule set is too complex to evaluate within the diagnostic limits."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:39
 msgid "The selected address is no longer known. Refresh the device list."
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:46
-#: src/trafira/tabs/updates/renderCoreVersions.ts:83
+#: src/trafira/tabs/diagnostic/routePresentation.ts:115
+msgid "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again."
+msgstr ""
+
+#: src/trafira/tabs/updates/renderCoreVersions.ts:54
+#: src/trafira/tabs/updates/renderCoreVersions.ts:115
 msgid "The sing-box version operation failed."
 msgstr ""
 
@@ -3592,6 +3806,10 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:33
 msgid "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:42
+msgid "This DNS connection is excluded from router application routing."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1825
@@ -3627,6 +3845,10 @@ msgstr ""
 msgid "This flag does not accept a value."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/routePresentation.ts:27
+msgid "This is a local destination. Its route depends on the router firewall exclusions."
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5907
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6381
 msgid "This option requires a value."
@@ -3636,8 +3858,16 @@ msgstr ""
 msgid "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:117
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:173
 msgid "This router"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:45
+msgid "This time synchronization connection is excluded from router application routing."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:48
+msgid "This VPN transport connection is excluded to prevent a routing loop."
 msgstr ""
 
 #: src/trafira/tabs/monitoring/initController.ts:822
@@ -3681,6 +3911,10 @@ msgstr ""
 
 #: src/trafira/tabs/dashboard/initController.ts:1633
 msgid "Traffic Total"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:39
+msgid "Trafira does not intercept traffic from this incoming interface."
 msgstr ""
 
 #: src/trafira/services/core.service.ts:52
@@ -3814,7 +4048,7 @@ msgstr ""
 msgid "UDP (Unprotected DNS)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:146
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:204
 msgid "UDP, unknown protocol"
 msgstr ""
 
@@ -3838,7 +4072,7 @@ msgstr ""
 msgid "Unavailability timeout"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:71
+#: src/trafira/tabs/updates/renderCoreVersions.ts:101
 msgid "Unavailable for this installation"
 msgstr ""
 
@@ -3905,7 +4139,7 @@ msgstr ""
 msgid "Unknown NFQWS2 flag."
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:37
+#: src/trafira/tabs/updates/renderCoreVersions.ts:45
 msgid "Unpin version"
 msgstr ""
 
@@ -4164,8 +4398,12 @@ msgstr ""
 msgid "When switching to another level, test every server and select the fastest instead of the first working one."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:167
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:230
 msgid "Where will the connection go?"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:30
+msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information."
 msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:68

@@ -99,4 +99,19 @@ describe('saved snapshots controller', () => {
     await vi.advanceTimersByTimeAsync(10000);
     expect(read).toHaveBeenCalledTimes(1);
   });
+  it('keeps the backend reason when starting a copy download is rejected', async () => {
+    const render = vi.fn();
+    const controller = new SnapshotController(
+      vi.fn().mockResolvedValue(report()),
+      vi.fn().mockResolvedValue({
+        success: false,
+        message: 'Failed to write snapshot job',
+      }),
+      render,
+    );
+    await controller.mount();
+    await controller.prepare();
+    expect(render.mock.lastCall?.[1]).toBe('Failed to write snapshot job');
+    expect(render.mock.lastCall?.[2]).toBe(false);
+  });
 });

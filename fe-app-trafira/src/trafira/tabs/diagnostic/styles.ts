@@ -289,4 +289,19 @@ export const styles = `
 .fkp_diagnostic-page p {
     max-width: 80ch;
 }
+
+.fkp_route-decision {
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid var(--border-color-low, #ddd);
+    border-left: 3px solid var(--success-color-medium, #39834a);
+    border-radius: 4px;
+}
+.fkp_route-decision--indeterminate,
+.fkp_route-decision--blocked {
+    border-left-color: var(--warning-color-medium, #b47916);
+}
+.fkp_route-basis {
+    color: var(--text-color-medium, #666);
+}
 `;
