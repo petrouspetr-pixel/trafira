@@ -9276,7 +9276,10 @@ var profilesPanel = {
           ...state.entries.map(
             (entry) => E(
               "option",
-              { value: entry.id, disabled: entry.invalid },
+              {
+                value: entry.id,
+                ...entry.invalid ? { disabled: true } : {}
+              },
               entry.name
             )
           )

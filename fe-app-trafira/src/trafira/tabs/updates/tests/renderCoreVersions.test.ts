@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { executeShellCommand } from '../../../../helpers/executeShellCommand';
 import { coreVersionsPanel } from '../renderCoreVersions';
+import { profilesPanel } from '../../diagnostic/renderProfiles';
 
 vi.mock('../../../../helpers/executeShellCommand', () => ({
   executeShellCommand: vi.fn(),
@@ -64,7 +65,40 @@ beforeEach(() => {
 });
 afterEach(() => {
   coreVersionsPanel.unmount();
+  profilesPanel.unmount();
   vi.unstubAllGlobals();
+});
+
+it('keeps valid saved profiles selectable under LuCI boolean attribute semantics', async () => {
+  vi.mocked(executeShellCommand).mockImplementation(async ({ args }) => ({
+    code: 0,
+    stderr: '',
+    stdout: JSON.stringify(
+      JSON.parse(args[1]).action === 'list'
+        ? {
+            success: true,
+            entries: [
+              { id: 'valid-profile', name: 'Home', invalid: false },
+              { id: 'invalid-profile', name: 'Broken', invalid: true },
+            ],
+          }
+        : { success: true, running: false },
+    ),
+  }));
+  profilesPanel.mount();
+  await vi.waitFor(() =>
+    expect(
+      find(host, (node) => node.attributes.value === 'valid-profile'),
+    ).toBeDefined(),
+  );
+  expect(
+    find(host, (node) => node.attributes.value === 'valid-profile')!
+      .attributes.disabled,
+  ).toBeUndefined();
+  expect(
+    find(host, (node) => node.attributes.value === 'invalid-profile')!
+      .attributes.disabled,
+  ).toBe(true);
 });
 
 it('renders compatible versions as selectable under LuCI boolean attribute semantics', async () => {
