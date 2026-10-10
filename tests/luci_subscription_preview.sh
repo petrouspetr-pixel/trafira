@@ -26,7 +26,7 @@ const [button,result] = view.children;
   await button.attrs.click();
   assert.equal(button.disabled,false);
   const request = JSON.parse(calls[0][1][1]);
-  assert.equal(calls[0][0],'/usr/bin/trafira');
+  assert.equal(calls[0][0],'/usr/bin/trafira-read');
   assert.equal(calls[0][1][0],'subscription_preview');
   assert.equal(request.filter_mode,'include');
   assert.deepEqual(request.include.outbounds,['<script>node</script>']);

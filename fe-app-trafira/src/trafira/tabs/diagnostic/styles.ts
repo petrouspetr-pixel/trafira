@@ -201,15 +201,8 @@ export const styles = `
     height: 16px;
 }
 
-.fkp_diagnostic-page > div,
-.fkp_diagnostic-page__lower > div {
+.fkp_diagnostic-page > div {
     min-width: 0;
-}
-
-.fkp_diagnostic-page__lower {
-    grid-column: 1 / -1;
-    display: grid;
-    gap: 16px;
 }
 
 .fkp_diagnostic-panel,
@@ -226,6 +219,20 @@ export const styles = `
 #trafira-profiles > h3,
 #trafira-gaming-presets > h3 {
     margin-top: 0;
+}
+
+.trafira-feature-slot {
+    margin: 16px 0;
+    width: 100%;
+    min-width: 0;
+}
+
+#cbi-${TRAFIRA_CBI_PREFIX}-profiles > h3 {
+    display: none;
+}
+
+.trafira-feature-slot p {
+    max-width: 90ch;
 }
 
 .fkp_diagnostic-fields {
@@ -288,5 +295,20 @@ export const styles = `
 
 .fkp_diagnostic-page p {
     max-width: 80ch;
+}
+
+.fkp_route-decision {
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid var(--border-color-low, #ddd);
+    border-left: 3px solid var(--success-color-medium, #39834a);
+    border-radius: 4px;
+}
+.fkp_route-decision--indeterminate,
+.fkp_route-decision--blocked {
+    border-left-color: var(--warning-color-medium, #b47916);
+}
+.fkp_route-basis {
+    color: var(--text-color-medium, #666);
 }
 `;

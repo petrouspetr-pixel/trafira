@@ -4,6 +4,5 @@ export function render() {
       id: 'fkp_updates-components',
       class: 'fkp_updates-page__components',
     }),
-    E('div', { id: 'trafira-core-versions' }),
   ]);
 }

@@ -175,6 +175,7 @@ build_backend_root() {
   install -m 0644 "$ROOT_DIR/trafira/files/etc/config/trafira" "$output_root/etc/config/trafira"
   install -m 0755 "$ROOT_DIR/trafira/files/usr/bin/trafira" "$output_root/usr/bin/trafira"
   install -m 0755 "$ROOT_DIR/trafira/files/usr/bin/trafira-config" "$output_root/usr/bin/trafira-config"
+  install -m 0755 "$ROOT_DIR/trafira/files/usr/bin/trafira-read" "$output_root/usr/bin/trafira-read"
   install -m 0644 "$ROOT_DIR/trafira/files/usr/share/trafira/gaming-presets.json" \
     "$output_root/usr/share/trafira/gaming-presets.json"
   cp -a "$ROOT_DIR/trafira/files/usr/lib/." "$output_root/usr/lib/trafira/"
@@ -184,7 +185,7 @@ build_backend_root() {
 
   normalize_package_root_modes "$output_root"
   chmod 0755 "$output_root/etc/init.d/trafira" "$output_root/usr/bin/trafira" \
-    "$output_root/usr/bin/trafira-config"
+    "$output_root/usr/bin/trafira-config" "$output_root/usr/bin/trafira-read"
 }
 
 build_app_root() {

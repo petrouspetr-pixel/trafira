@@ -3,7 +3,12 @@ import {
   ProfilePanelController,
   ProfileRequest,
   ProfileState,
+  profileErrorMessage,
 } from './profilePanel';
+import {
+  confirmConfigurationReplacement,
+  reloadAfterConfigurationCommit,
+} from '../../helpers/configurationSync';
 
 async function command(request: object): Promise<Record<string, unknown>> {
   const result = await executeShellCommand({
@@ -23,7 +28,7 @@ function decode(value: string) {
 let mountId = 0;
 let active: { controller: ProfilePanelController; timer: number } | null = null;
 export const profilesPanel = {
-  mount() {
+  mount(canWrite = true) {
     this.unmount();
     const host = document.getElementById('trafira-profiles');
     if (!host) return;
@@ -43,67 +48,121 @@ export const profilesPanel = {
     const result = E('div', {});
     const message = E('p', {});
     const buttons: HTMLButtonElement[] = [];
+    const writers: HTMLButtonElement[] = [];
+    const needsSelection: HTMLButtonElement[] = [];
+    const needsName: HTMLButtonElement[] = [];
     let apply: HTMLButtonElement;
     let restore: HTMLButtonElement;
     function updateButtons() {
       const disabled = transferring || last?.busy || last?.running;
       for (const button of buttons) button.disabled = disabled;
+      for (const button of writers) button.disabled ||= !canWrite;
+      const selected = last?.entries.some(
+        (entry) => entry.id === select.value && !entry.invalid,
+      );
+      for (const button of needsSelection) button.disabled ||= !selected;
+      for (const button of needsName) button.disabled ||= !name.value.trim();
       apply.disabled =
         disabled ||
+        !canWrite ||
         !last?.preview ||
         last.preview.id !== select.value ||
         !last.preview.applicable;
-      restore.disabled = disabled || !last?.canRestore || !last?.digest;
-      file.disabled = disabled;
-      select.disabled = disabled;
+      restore.disabled =
+        disabled || !canWrite || !last?.canRestore || !last?.digest;
+      file.disabled = disabled || !canWrite;
+      select.disabled = disabled || !last?.entries.length;
+      name.disabled = disabled || !canWrite;
     }
     async function submit(request: ProfileRequest, refresh = false) {
       await controller.submit(request);
       if (refresh && generation === mountId && !last.error)
         await controller.submit({ action: 'list' });
     }
-    function button(label: string, click: () => void) {
+    function button(
+      label: string,
+      click: () => void,
+      writer = false,
+      selection = false,
+      named = false,
+    ) {
       const element = E(
         'button',
-        { class: 'cbi-button cbi-button-action', click },
+        { type: 'button', class: 'cbi-button cbi-button-action', click },
         label,
       ) as HTMLButtonElement;
       buttons.push(element);
+      if (writer) writers.push(element);
+      if (selection) needsSelection.push(element);
+      if (named) needsName.push(element);
       return element;
     }
     const actions = [
-      button(_('Save current settings'), () => {
-        void submit({ action: 'create', name: name.value }, true);
-      }),
-      button(_('Rename profile'), () => {
-        void submit(
-          { action: 'rename', id: select.value, name: name.value },
-          true,
-        );
-      }),
-      button(_('Show differences'), () => {
-        void submit({ action: 'preview', id: select.value });
-      }),
-      (apply = button(_('Apply profile'), () => {
-        void submit({
-          action: 'apply',
-          id: select.value,
-          digest: last.preview?.digest,
-        });
-      })),
-      (restore = button(_('Restore previous settings'), () => {
-        void submit({ action: 'restore', digest: last.digest });
-      })),
-      button(_('Delete profile'), () => {
-        if (
-          window.confirm(
-            _(
-              'Delete the selected saved profile? Current settings will remain unchanged.',
-            ),
+      button(
+        _('Create profile from saved settings'),
+        () => {
+          void submit({ action: 'create', name: name.value }, true);
+        },
+        true,
+        false,
+        true,
+      ),
+      button(
+        _('Rename profile'),
+        () => {
+          void submit(
+            { action: 'rename', id: select.value, name: name.value },
+            true,
+          );
+        },
+        true,
+        true,
+        true,
+      ),
+      button(
+        _('Show differences'),
+        () => {
+          void submit({ action: 'preview', id: select.value });
+        },
+        false,
+        true,
+      ),
+      (apply = button(
+        _('Apply profile'),
+        () => {
+          if (!confirmConfigurationReplacement()) return;
+          void submit({
+            action: 'apply',
+            id: select.value,
+            digest: last.preview?.digest,
+          });
+        },
+        true,
+        true,
+      )),
+      (restore = button(
+        _('Restore previous settings'),
+        () => {
+          if (!confirmConfigurationReplacement()) return;
+          void submit({ action: 'restore', digest: last.digest });
+        },
+        true,
+      )),
+      button(
+        _('Delete profile'),
+        () => {
+          if (
+            window.confirm(
+              _(
+                'Delete the selected saved profile? Current settings will remain unchanged.',
+              ),
+            )
           )
-        )
-          void submit({ action: 'remove', id: select.value }, true);
-      }),
+            void submit({ action: 'remove', id: select.value }, true);
+        },
+        true,
+        true,
+      ),
     ];
     async function transfer(kind: 'import' | 'export') {
       if (transferring || last.busy || last.running) return;
@@ -196,21 +255,44 @@ export const profilesPanel = {
       }
     }
     actions.push(
-      button(_('Import profile'), () => {
-        void transfer('import');
-      }),
-      button(_('Export profile'), () => {
-        void transfer('export');
-      }),
+      button(
+        _('Import profile'),
+        () => {
+          void transfer('import');
+        },
+        true,
+      ),
+      button(
+        _('Export profile'),
+        () => {
+          void transfer('export');
+        },
+        true,
+        true,
+      ),
     );
     select.addEventListener('change', updateButtons);
+    name.addEventListener('input', updateButtons);
     host.replaceChildren(
       E('h3', {}, _('Configuration profiles')),
       E(
         'p',
         {},
-        _('Save up to eight profiles. Applying a profile may restart routing.'),
+        _(
+          'Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile.',
+        ),
       ),
+      ...(!canWrite
+        ? [
+            E(
+              'p',
+              { class: 'alert-message notice' },
+              _(
+                'Read-only access. Configuration changes require write permission.',
+              ),
+            ),
+          ]
+        : []),
       E('div', { class: 'fkp_diagnostic-fields' }, [
         E('label', { class: 'fkp_diagnostic-field' }, [
           E('span', {}, _('Profile name')),
@@ -221,17 +303,36 @@ export const profilesPanel = {
           select,
         ]),
       ]),
-      E('div', { class: 'fkp_diagnostic-actions' }, actions),
-      E(
-        'p',
-        {},
-        _(
-          'Exported profiles contain passwords and keys. Keep the downloaded file private.',
+      E('div', { class: 'fkp_diagnostic-actions' }, [
+        actions[0],
+        actions[2],
+        actions[3],
+        actions[4],
+      ]),
+      E('details', { class: 'fkp_diagnostic-details' }, [
+        E('summary', {}, _('Manage and transfer profiles')),
+        E(
+          'p',
+          {},
+          _('Enter a new profile name above to rename the selected profile.'),
         ),
-      ),
-      E('label', { class: 'fkp_diagnostic-field' }, [
-        E('span', {}, _('Import profile')),
-        file,
+        E('div', { class: 'fkp_diagnostic-actions' }, [
+          actions[1],
+          actions[5],
+          actions[7],
+        ]),
+        E(
+          'p',
+          {},
+          _(
+            'Exported profiles contain passwords and keys. Keep the downloaded file private.',
+          ),
+        ),
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          E('span', {}, _('Import a profile file (JSON, up to 1 MiB)')),
+          file,
+        ]),
+        E('div', { class: 'fkp_diagnostic-actions' }, [actions[6]]),
       ]),
       message,
       result,
@@ -244,7 +345,10 @@ export const profilesPanel = {
           ...state.entries.map((entry) =>
             E(
               'option',
-              { value: entry.id, disabled: entry.invalid },
+              {
+                value: entry.id,
+                ...(entry.invalid ? { disabled: true } : {}),
+              },
               entry.name,
             ),
           ),
@@ -253,8 +357,28 @@ export const profilesPanel = {
           select.value = chosen;
       }
       last = state;
+      if (state.committed) reloadAfterConfigurationCommit();
       result.replaceChildren(
-        ...(state.error ? [E('p', {}, _(state.error))] : []),
+        ...(!state.entries.length && !state.busy && !state.error
+          ? [
+              E(
+                'p',
+                {},
+                _(
+                  'No saved profiles yet. Enter a name and create a profile from the saved configuration.',
+                ),
+              ),
+            ]
+          : []),
+        ...(state.error
+          ? [
+              E(
+                'p',
+                { class: 'alert-message warning', role: 'status' },
+                profileErrorMessage(state.error),
+              ),
+            ]
+          : []),
         ...(state.running
           ? [
               E(

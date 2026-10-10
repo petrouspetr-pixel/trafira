@@ -4,11 +4,12 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 node - "$ROOT_DIR" <<'JS'
 const fs=require('fs'),root=process.argv[2];
 const acl=JSON.parse(fs.readFileSync(root+'/luci-app-trafira/root/usr/share/rpcd/acl.d/luci-app-trafira.json'))['luci-app-trafira'];
-if (acl.read.file['/usr/bin/trafira-config']) throw Error('read-only sessions must not access private profiles');
+if (acl.read.file['/usr/bin/trafira-config']) throw Error('read-only sessions must not access unrestricted profile actions');
+if (!acl.read.file['/usr/bin/trafira-read']?.includes('exec')) throw Error('restricted profile read entrypoint missing');
 if (!acl.write.file['/usr/bin/trafira-config']?.includes('exec')) throw Error('administrative profile entrypoint missing');
 for (const access of [acl.read,acl.write]) for (const key of Object.keys(access.file)) if (key.includes('/profiles') || key.includes('/transactions')) throw Error('broad profile filesystem ACL');
 const cli=fs.readFileSync(root+'/trafira/files/usr/bin/trafira','utf8');
-if (/profile_action\s*:/.test(cli)) throw Error('profile action exposed through legacy read-only exec grant');
+if (/profile_action\s*:/.test(cli)) throw Error('profile action must use the separate configuration dispatcher');
 JS
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT

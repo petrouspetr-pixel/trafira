@@ -705,6 +705,16 @@ function createSettingsContent(section, capabilities) {
     capabilities,
   );
 
+  o = section.option(form.DummyValue, "_list_copies");
+  o.render = function (sectionId) {
+    main.ConfigurationPanels.init("lists", !this.map.readonly);
+    return E(
+      "div",
+      { id: this.cbid(sectionId), class: "trafira-feature-slot" },
+      [E("div", { id: "fkp_diagnostic-page-snapshots" })],
+    );
+  };
+
   o = section.option(
     form.Flag,
     "download_components_via_proxy",

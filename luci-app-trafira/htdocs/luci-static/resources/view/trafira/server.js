@@ -1352,7 +1352,7 @@ function loadGeneratedTlsCertificatePin(sectionId) {
   }
 
   return fs
-    .exec("/usr/bin/trafira", ["get_tls_certificate_sha256", sectionId])
+    .exec("/usr/bin/trafira-read", ["get_tls_certificate_sha256", sectionId])
     .then((response) => {
       if ((response.code ?? 0) !== 0 || !response.stdout) {
         throw new Error(response.stderr || response.stdout || "");

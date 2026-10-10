@@ -15,6 +15,11 @@ export interface SnapshotReport {
   job: { running: boolean; success: boolean; message: string } | null;
 }
 
+export interface SnapshotStartResult {
+  success: boolean;
+  message?: string;
+}
+
 export class SnapshotController {
   private active = false;
   private generation = 0;
@@ -25,7 +30,7 @@ export class SnapshotController {
 
   constructor(
     private read: () => Promise<SnapshotReport>,
-    private start: () => Promise<{ success: boolean }>,
+    private start: () => Promise<SnapshotStartResult>,
     private render: (
       report: SnapshotReport | null,
       error: string,
@@ -73,9 +78,16 @@ export class SnapshotController {
     this.render(this.report, '', true);
     try {
       const result = await this.start();
-      if (!result.success) throw new Error('rejected');
       if (!this.active || generation !== this.generation) return;
       this.starting = false;
+      if (!result.success) {
+        this.render(
+          this.report,
+          result.message || 'Could not start snapshot preparation',
+          false,
+        );
+        return;
+      }
       await this.refresh();
     } catch {
       if (this.active && generation === this.generation) {

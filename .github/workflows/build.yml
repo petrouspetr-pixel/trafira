@@ -44,8 +44,16 @@ jobs:
             echo "Release version must use x.y.z format, got: ${VERSION:-<empty>}" >&2
             exit 1
           fi
+          COMMITISH=$(git rev-parse HEAD)
+          if git show-ref --verify --quiet "refs/tags/$VERSION"; then
+            TAG_COMMIT=$(git rev-parse "refs/tags/$VERSION^{commit}")
+            if [ "$TAG_COMMIT" != "$COMMITISH" ]; then
+              echo "Release tag $VERSION points to $TAG_COMMIT, not the checked-out commit $COMMITISH" >&2
+              exit 1
+            fi
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "commitish=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "commitish=$COMMITISH" >> "$GITHUB_OUTPUT"
           python3 - <<'PY'
           import os
           import uuid
@@ -107,9 +115,9 @@ jobs:
         uses: softprops/action-gh-release@v2.4.0
         with:
           files: ./filtered-bin/release/*
-          draft: false
+          draft: true
           prerelease: false
-          make_latest: true
+          make_latest: false
           name: Trafira ${{ needs.preparation.outputs.version }}
           tag_name: ${{ needs.preparation.outputs.version }}
           target_commitish: ${{ needs.preparation.outputs.commitish }}

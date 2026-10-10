@@ -35,6 +35,13 @@ export interface ExplainReport {
   dns_policy?: ExplainDecision;
   dns_query?: { performed: boolean; origin: string };
   selector?: { tag: string; current: string } | null;
+  rule_sets?: {
+    basis: 'saved_snapshots' | 'local';
+    live_verified: boolean;
+    available: number;
+    unavailable: number;
+    unavailable_reasons?: Array<{ tag: string; reason: string }>;
+  };
   limitations: string[];
 }
 export class RouteExplanationController {
@@ -63,7 +70,18 @@ export class RouteExplanationController {
     this.render(null, '', true);
     try {
       const report = await this.read(request);
-      if (!report.success) throw new Error('rejected');
+      if (!report.success) {
+        const error = [
+          'invalid_request',
+          'configuration_changed_retry',
+          'configuration_unavailable',
+        ].includes(report.error || '')
+          ? report.error!
+          : 'Could not explain route';
+        if (this.active && this.generation === generation)
+          this.render(null, error, false);
+        return;
+      }
       if (this.active && this.generation === generation)
         this.render(report, '', false);
     } catch {

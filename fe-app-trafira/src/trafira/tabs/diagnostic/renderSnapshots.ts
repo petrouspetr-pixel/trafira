@@ -1,5 +1,11 @@
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
-import { SnapshotController, SnapshotReport } from './snapshotPanel';
+import {
+  SnapshotController,
+  SnapshotReport,
+  SnapshotStartResult,
+} from './snapshotPanel';
+
+let canWrite = true;
 
 async function command<T>(name: string): Promise<T> {
   const result = await executeShellCommand({
@@ -15,6 +21,69 @@ function size(bytes: number) {
   return `${(bytes / 1024).toFixed(1)} KiB`;
 }
 
+function startErrorText(error: string) {
+  switch (error) {
+    case 'Could not read snapshot status':
+      return _(
+        'Could not read saved-copy status. Refresh the status to try again.',
+      );
+    case 'Snapshot preparation is already starting':
+      return _(
+        'A copy download is already starting. Wait, then refresh the status.',
+      );
+    case 'Snapshot preparation is running or unavailable':
+      return _(
+        'Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again.',
+      );
+    case 'Failed to write snapshot job':
+      return _(
+        'Could not save the download task. Check free storage on the router.',
+      );
+    case 'Failed to start snapshot worker':
+      return _(
+        'Could not start the download task. Refresh the status and try again.',
+      );
+    default:
+      return _(
+        'Could not start downloading copies. Refresh the status and try again.',
+      );
+  }
+}
+
+function jobStatusText(job: NonNullable<SnapshotReport['job']>) {
+  if (job.running) return _('Downloading and checking list copies…');
+  if (job.success) {
+    return _(
+      'Copies were downloaded and checked. They will be checked again before the next startup.',
+    );
+  }
+  switch (job.message) {
+    case 'Failed to write snapshot job':
+    case 'Failed to start snapshot worker':
+      return startErrorText(job.message);
+    case 'Another lists update is already running':
+      return _(
+        'Another list update is already running. Wait for it to finish, then download the copies again.',
+      );
+    case 'Snapshot preparation unavailable: check core, configuration and lists proxy':
+      return _(
+        'Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads.',
+      );
+    case 'Snapshot worker exited unexpectedly':
+      return _(
+        'Downloading copies was interrupted. Download the copies again.',
+      );
+    case 'Snapshot preparation failed; previous copies preserved':
+      return _(
+        'Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage.',
+      );
+    default:
+      return _(
+        'Could not download copies. Check the internet connection, list-download proxy and router storage.',
+      );
+  }
+}
+
 function render(
   report: SnapshotReport | null,
   error: string,
@@ -24,21 +93,36 @@ function render(
   if (!container) return;
   const expanded = container.querySelector<HTMLDetailsElement>('details')?.open;
   const busy = starting || !!report?.job?.running;
-  const errorText =
-    error === 'Could not start snapshot preparation'
-      ? _('Could not start snapshot preparation')
-      : _('Could not read snapshot status');
+  const stored = report?.entries.filter((entry) => entry.present).length || 0;
   container.replaceChildren(
     E('div', { class: 'fkp_diagnostic-panel' }, [
-      E('h3', {}, _('Saved rule sets')),
+      E('h3', {}, _('Rule-set copies for startup')),
       E(
         'p',
         {},
         _(
-          'Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core.',
+          'Local copies help Trafira start when remote list sources are unavailable.',
         ),
       ),
-      ...(error ? [E('p', { class: 'alert-message warning' }, errorText)] : []),
+      E(
+        'p',
+        {},
+        _(
+          'Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads.',
+        ),
+      ),
+      ...(error
+        ? [
+            E(
+              'p',
+              { class: 'alert-message warning', role: 'status' },
+              startErrorText(error),
+            ),
+          ]
+        : []),
+      ...(starting
+        ? [E('p', { role: 'status' }, _('Starting the copy download…'))]
+        : []),
       ...(!report
         ? [E('p', {}, _('Snapshot status unavailable'))]
         : [
@@ -62,18 +146,13 @@ function render(
                   ),
                 ]
               : []),
-            E(
-              'p',
-              {},
-              `${_('Storage')}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`,
-            ),
-            E(
-              'p',
-              {},
-              `${_('Copy present')}: ${report.entries.filter((entry) => entry.present).length} / ${report.entries.length} · ${_('Copy missing')}: ${report.entries.filter((entry) => !entry.present).length}`,
-            ),
             ...(report.entries.length
               ? [
+                  E(
+                    'p',
+                    {},
+                    `${_('Copies stored on router')}: ${stored} / ${report.entries.length} · ${_('Lists without a saved copy')}: ${report.entries.length - stored}`,
+                  ),
                   E(
                     'details',
                     {
@@ -84,7 +163,19 @@ function render(
                       E(
                         'summary',
                         {},
-                        `${_('Saved rule sets')} (${report.entries.length})`,
+                        `${_('Show saved lists and storage')} (${report.entries.length})`,
+                      ),
+                      E(
+                        'p',
+                        {},
+                        `${_('Storage')}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`,
+                      ),
+                      E(
+                        'p',
+                        {},
+                        _(
+                          'Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them.',
+                        ),
                       ),
                       E(
                         'div',
@@ -124,14 +215,15 @@ function render(
               ? [
                   E(
                     'p',
-                    {},
+                    {
+                      role: 'status',
+                      ...(!report.job.running && !report.job.success
+                        ? { class: 'alert-message warning' }
+                        : {}),
+                    },
                     report.job.running
-                      ? _('Preparing snapshots')
-                      : report.job.success
-                        ? _('Snapshot preparation completed')
-                        : _(
-                            'Snapshot preparation failed; check core, configuration, proxy and storage',
-                          ),
+                      ? jobStatusText(report.job)
+                      : `${_('Last download')}: ${jobStatusText(report.job)}`,
                   ),
                 ]
               : []),
@@ -141,7 +233,8 @@ function render(
           'button',
           {
             class: 'btn cbi-button',
-            ...(busy ||
+            ...(!canWrite ||
+            busy ||
             !report?.supported ||
             !report?.available ||
             !report?.preparable ||
@@ -150,7 +243,7 @@ function render(
               : {}),
             click: () => void snapshots.prepare(),
           },
-          _('Prepare saved copies'),
+          _('Download / update list copies'),
         ),
         E(
           'button',
@@ -166,8 +259,18 @@ function render(
   );
 }
 
-export const snapshots = new SnapshotController(
+const controller = new SnapshotController(
   () => command<SnapshotReport>('ruleset_snapshot_report'),
-  () => command<{ success: boolean }>('ruleset_snapshot_prepare_async'),
+  () => command<SnapshotStartResult>('ruleset_snapshot_prepare_async'),
   render,
 );
+
+export const snapshots = {
+  mount(writable = true) {
+    canWrite = writable;
+    return controller.mount();
+  },
+  unmount: () => controller.unmount(),
+  refresh: () => controller.refresh(),
+  prepare: () => (canWrite ? controller.prepare() : Promise.resolve()),
+};

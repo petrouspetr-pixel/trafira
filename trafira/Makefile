@@ -70,6 +70,7 @@ define Package/trafira/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./files/usr/bin/trafira $(1)/usr/bin/trafira
 	$(INSTALL_BIN) ./files/usr/bin/trafira-config $(1)/usr/bin/trafira-config
+	$(INSTALL_BIN) ./files/usr/bin/trafira-read $(1)/usr/bin/trafira-read
 
 	$(INSTALL_DIR) $(1)/usr/share/trafira
 	$(INSTALL_DATA) ./files/usr/share/trafira/gaming-presets.json $(1)/usr/share/trafira/

@@ -24,10 +24,10 @@ export const styles = `
 
 .fkp_updates-page__components-column {
     display: flex;
-    flex: 1 1 auto;
+    flex: 1 1 360px;
     flex-direction: column;
     gap: 10px;
-    min-width: max-content;
+    min-width: 0;
 }
 
 @media (max-width: 760px) {
@@ -48,7 +48,7 @@ export const styles = `
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-width: max-content;
+    min-width: 0;
 }
 
 .fkp_updates-page__component__header {
@@ -86,7 +86,7 @@ export const styles = `
     align-items: center;
     min-height: 24px;
     gap: 8px;
-    white-space: nowrap;
+    flex-wrap: wrap;
 }
 
 .fkp_updates-page__component__info-label {
@@ -137,7 +137,7 @@ export const styles = `
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
@@ -156,7 +156,56 @@ export const styles = `
 
 .fkp_updates-page__component__variants-buttons {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
+}
+
+.fkp_updates-page__core-versions {
+    border-top: 1px var(--background-color-low, lightgray) solid;
+    padding-top: 8px;
+    font-size: 13px;
+}
+
+.fkp_updates-page__core-versions > summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.fkp_updates-page__core-versions-help,
+.fkp_updates-page__core-versions-info {
+    color: var(--text-color-medium, #666);
+    margin: 8px 0;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.fkp_updates-page__core-versions-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0;
+}
+
+.fkp_updates-page__core-versions-field > select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.fkp_updates-page__core-versions-pin,
+.fkp_updates-page__core-versions-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.fkp_updates-page__core-versions-buttons {
+    flex-wrap: wrap;
+}
+
+.fkp_updates-page__core-versions-message {
+    margin: 8px 0 0;
+    line-height: 1.45;
 }
 `;

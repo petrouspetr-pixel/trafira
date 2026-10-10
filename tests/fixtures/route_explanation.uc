@@ -31,6 +31,8 @@ check(m.explain(config,req,{},sets).status == "indeterminate", "unknown early te
 config.route.rules[0] = {port:80,action:"route",outbound:"bypass-out"};
 let answer = m.explain(config,req,{},sets);
 check(answer.status == "matched" && answer.rule_index == 1 && answer.outbound == "vpn-out", "first matching rule");
+let dns_answer=m.explain({route:{rules:[{domain_suffix:"example",server:"fakeip-server"}],final:"dns-server"}},req,{},sets);
+check(dns_answer.status=="matched" && dns_answer.outbound=="fakeip-server", "DNS server implies route action in the legacy format");
 config.route.rules[0] = {action:"sniff"};
 check(m.explain(config,req,{},sets).status == "matched", "sniff continues");
 config.route.rules[0] = {action:"route-options",override_port:80};

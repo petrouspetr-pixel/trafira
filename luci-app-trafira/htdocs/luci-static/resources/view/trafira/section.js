@@ -191,7 +191,7 @@ const BYEDPI_DEFAULT_CMD_OPTS = "-o 2 --auto=t,r,a,s -d 2";
 const ANNOTATED_TEXTAREA_STYLE_ID = "fkp-annotated-textarea-styles";
 const CONNECTIONS_DYNLIST_STYLE_ID = "fkp-connections-dynlist-styles";
 const NFQWS_REMOTE_VALIDATION_DEBOUNCE_MS = 500;
-const NFQWS_VALIDATION_COMMAND = "/usr/bin/trafira";
+const NFQWS_VALIDATION_COMMAND = "/usr/bin/trafira-read";
 const nfqwsRemoteValidationCache = new Map();
 const nfqwsRemoteValidationInflight = new Map();
 const nfqws2RemoteValidationCache = new Map();
@@ -3344,7 +3344,7 @@ function addSubscriptionPreviewOption(optionSection) {
                   liveValue(`dashboard_${side}_${key}`),
                 );
             }
-            const response = await fs.exec("/usr/bin/trafira", [
+            const response = await fs.exec("/usr/bin/trafira-read", [
               "subscription_preview",
               JSON.stringify(request),
             ]);

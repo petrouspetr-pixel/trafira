@@ -19,7 +19,7 @@ chmod() {
 }
 build_backend_root "$WORK_DIR/root"
 
-for path in etc/init.d/trafira usr/bin/trafira usr/bin/trafira-config; do
+for path in etc/init.d/trafira usr/bin/trafira usr/bin/trafira-config usr/bin/trafira-read; do
   grep -Fxq "$WORK_DIR/root/$path" "$WORK_DIR/executable-grants" || {
     echo "FAIL: packaged $path lacks executable permission restoration" >&2
     exit 1

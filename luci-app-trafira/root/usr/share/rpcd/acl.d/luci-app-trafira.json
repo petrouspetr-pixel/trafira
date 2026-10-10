@@ -3,9 +3,6 @@
     "description": "Grant UCI and RPC access to LuCI app Trafira",
     "read": {
       "file": {
-        "/etc/init.d/trafira": [
-          "exec"
-        ],
         "/var/run/trafira/section-cache/*": [
           "read"
         ],
@@ -36,7 +33,7 @@
         "/tmp/run/trafira/ui-state/latency-actions/*": [
           "read"
         ],
-        "/usr/bin/trafira": [
+        "/usr/bin/trafira-read": [
           "exec"
         ]
       },
@@ -58,6 +55,12 @@
     },
     "write": {
       "file": {
+        "/etc/init.d/trafira": [
+          "exec"
+        ],
+        "/usr/bin/trafira": [
+          "exec"
+        ],
         "/usr/bin/trafira-config": [
           "exec"
         ],

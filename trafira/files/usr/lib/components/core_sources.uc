@@ -25,21 +25,32 @@ function download(url,destination,maximum,timeout) {
     // exec makes the ucode timeout refer to curl itself, not an intermediate shell.
     return system("exec "+command(args)+" </dev/null >/dev/null 2>&1",(timeout+5)*1000)==0;
 }
-function github() {
+function github(env) {
     let info=fs.lstat(ROOT);
     if(info && info.type!="directory")return null;
     if(!info && !fs.mkdir(ROOT,493))return null;
     let dir=ROOT+sprintf("/core-query-%x-%x",clock()[0],clock()[1]);
     if(!fs.mkdir(dir,448))return null;
-    let file=dir+"/response.json",result=null;
+    let file=dir+"/response.json",result=[],started=clock()[0];
     try {
-        if(download("https://api.github.com/repos/shtorm-7/sing-box-extended/releases?per_page=100",file,LIMIT,30)) {
+        // Release assets for every architecture make the full API response exceed
+        // the size bound. Normalize each small page before fetching the next one.
+        // Keep the existing 100-release bound and one shared network deadline.
+        for(let page=1;page<=20;page++) {
+            let remaining=30-(clock()[0]-started);
+            let url="https://api.github.com/repos/shtorm-7/sing-box-extended/releases?per_page=5&page="+page;
+            if(remaining<=0 || !download(url,file,LIMIT,remaining)) {result=null;break;}
             let stat=fs.lstat(file);
-            if(stat && stat.type=="file" && stat.size<=LIMIT) {
-                let f=fs.open(file,"re"),text=f?f.read(LIMIT+1):null;
-                if(f)f.close();
-                if(text!=null && length(text)<=LIMIT)result=json(text);
-            }
+            if(!stat || stat.type!="file" || stat.size>LIMIT) {result=null;break;}
+            let f=fs.open(file,"re"),text=f?f.read(LIMIT+1):null;
+            if(f)f.close();
+            if(text==null || length(text)>LIMIT) {result=null;break;}
+            let releases=json(text);
+            if(type(releases)!="array" || length(releases)>5) {result=null;break;}
+            let normalized=versions.from_github(releases,env);
+            if(normalized==null) {result=null;break;}
+            for(let candidate in normalized)push(result,candidate);
+            if(length(releases)<5)break;
         }
     }catch(e){result=null;}
     fs.unlink(file);fs.rmdir(dir);return result;
@@ -55,7 +66,7 @@ function environment() {
 }
 function fetch(env) {
     if(type(env)!="object")return null;
-    if(index(["extended","extended-compressed"],env.variant)>=0)return versions.from_github(github(),env);
+    if(index(["extended","extended-compressed"],env.variant)>=0)return github(env);
     if(index(["stable","tiny"],env.variant)<0)return null;
     let name=env.variant=="tiny"?"sing-box-tiny":"sing-box",packages=[];
     if(env.package_type=="apk") {

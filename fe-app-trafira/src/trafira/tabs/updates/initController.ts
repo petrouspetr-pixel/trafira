@@ -69,6 +69,7 @@ interface ComponentCard {
 
 let updatesLifecycleRegistered = false;
 let updatesControllerInitialized = false;
+let updatesCanWrite = true;
 let updatesMounted = false;
 let updatesMountId = 0;
 let pageUnloading = false;
@@ -1190,8 +1191,25 @@ function renderComponentCard(card: ComponentCard) {
     cardChildren.push(detailsContainer);
   }
   cardChildren.push(actionsContainer);
+  if (card.component === 'sing_box') {
+    // Keep the mounted picker and its selection when component cards rerender.
+    cardChildren.push(
+      document.getElementById('trafira-core-versions') ||
+        E('div', { id: 'trafira-core-versions' }),
+    );
+  }
 
-  return E('div', { class: 'fkp_updates-page__component' }, cardChildren);
+  const rendered = E(
+    'div',
+    { class: 'fkp_updates-page__component' },
+    cardChildren,
+  );
+  if (!updatesCanWrite) {
+    for (const button of Array.from(rendered.querySelectorAll('button'))) {
+      if (!button.closest('#trafira-core-versions')) button.disabled = true;
+    }
+  }
+  return rendered;
 }
 
 function renderUpdatesComponents() {
@@ -1255,7 +1273,6 @@ async function onPageMount() {
   onPageUnmount();
 
   updatesMounted = true;
-  coreVersionsPanel.mount();
   updatesMountId += 1;
   const mountId = updatesMountId;
   const cachedRuntimeState = getCachedRuntimeUiState();
@@ -1273,6 +1290,7 @@ async function onPageMount() {
   }
 
   renderUpdatesComponents();
+  coreVersionsPanel.mount(updatesCanWrite);
 
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache),
@@ -1336,7 +1354,8 @@ function registerLifecycleListeners() {
   });
 }
 
-export async function initController(): Promise<void> {
+export async function initController(canWrite = true): Promise<void> {
+  updatesCanWrite = canWrite;
   if (updatesControllerInitialized) {
     return;
   }
