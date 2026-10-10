@@ -259,6 +259,10 @@ export const styles = `
     margin: 12px 0;
 }
 
+.fkp_diagnostic-field[hidden] {
+    display: none;
+}
+
 .fkp_diagnostic-field {
     display: flex;
     flex-direction: column;

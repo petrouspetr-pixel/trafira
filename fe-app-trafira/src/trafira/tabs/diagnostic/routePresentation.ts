@@ -1,13 +1,13 @@
 export function routeReason(reason: string): string {
   const messages: Record<string, string> = {
     legacy_router_output_rules: _(
-      'The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira.',
+      'Router application routing is disabled. Select a LAN device to check its route. To analyze router applications, Router application routing must be enabled and applied in Settings. Other firewall and system VPN routes are not calculated here.',
     ),
     router_destination_address_needed: _(
-      'Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route.',
+      'Enter the real destination IP in the form above. A domain alone cannot determine the router firewall route.',
     ),
     incoming_interface_missing: _(
-      'Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information.',
+      'Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface.',
     ),
     alice_device_details_missing: _(
       'Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details.',
@@ -28,7 +28,7 @@ export function routeReason(reason: string): string {
       'This is a local destination. Its route depends on the router firewall exclusions.',
     ),
     wifi_calling_bypass_depends_on_real_destination: _(
-      'Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information.',
+      'Wi-Fi Calling bypass depends on the real destination IP. Enter it in the form above.',
     ),
     fakeip_is_not_real_destination: _(
       'The entered address is a FakeIP. Enter the real destination IP instead.',
@@ -49,11 +49,11 @@ export function routeReason(reason: string): string {
       'This VPN transport connection is excluded to prevent a routing loop.',
     ),
     destination_ip: _(
-      'An earlier rule checks destination addresses. Enter the real destination IP in Additional route information.',
+      'An earlier rule checks destination addresses. Enter the real destination IP in the form above and check again.',
     ),
     source_ip: _('Enter the device IP address, or select a detected device.'),
     source_mac_address: _(
-      'Enter the device MAC address in Additional route information.',
+      'Enter the device MAC address under Device MAC and incoming interface.',
     ),
     protocol: _(
       'An earlier rule checks the application protocol. Select the protocol to continue.',

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 10:36+0300\n"
-"PO-Revision-Date: 2026-10-10 10:36+0300\n"
+"POT-Creation-Date: 2026-10-10 11:20+0300\n"
+"PO-Revision-Date: 2026-10-10 11:20+0300\n"
 "Last-Translator: petrouspetr-pixel <280500603+petrouspetr-pixel@users.noreply.github.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -184,16 +184,12 @@ msgstr ""
 msgid "Add URLTest / Priority group"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:519
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:515
 msgid "Added"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runNftCheck.ts:106
 msgid "Additional marking rules found"
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:241
-msgid "Additional route information (optional)"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2681
@@ -309,7 +305,7 @@ msgid "Alter ID"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:51
-msgid "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information."
+msgid "An earlier rule checks destination addresses. Enter the real destination IP in the form above and check again."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:58
@@ -341,7 +337,7 @@ msgstr ""
 msgid "Another list update is already running. Wait for it to finish, then download the copies again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:182
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:178
 msgid "Apply profile"
 msgstr ""
 
@@ -361,7 +357,7 @@ msgstr ""
 msgid "Applying configuration. You can reconnect to this page."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:461
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:457
 msgid "Applying settings in the background. You can close this page."
 msgstr ""
 
@@ -588,12 +584,12 @@ msgstr ""
 msgid "Certificate pin is unavailable. Apply or restart the server to generate the default certificate, then open this dialog again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:508
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:504
 msgid "Change"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:521
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:523
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:517
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:519
 msgid "Changed"
 msgstr ""
 
@@ -621,6 +617,10 @@ msgstr ""
 msgid "Check URL"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:273
+msgid "Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:89
 msgid "Checking route"
 msgstr ""
@@ -642,14 +642,14 @@ msgstr ""
 msgid "checks"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:26
 #: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10
+#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:26
 msgid "Checks failed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:13
 #: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:23
 #: src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43
+#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:13
 msgid "Checks passed"
 msgstr ""
 
@@ -772,7 +772,7 @@ msgstr ""
 msgid "Configuration for Trafira service"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:362
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:358
 msgid "Configuration profiles"
 msgstr ""
 
@@ -893,11 +893,11 @@ msgstr ""
 msgid "Could not start the download task. Refresh the status and try again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:382
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:378
 msgid "Create a profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:159
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:155
 msgid "Create profile from saved settings"
 msgstr ""
 
@@ -949,7 +949,7 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:199
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:195
 msgid "Delete profile"
 msgstr ""
 
@@ -957,11 +957,11 @@ msgstr ""
 msgid "Delete the edited preset rules? The next step shows the changes."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:203
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:199
 msgid "Delete the selected saved profile? Current settings will remain unchanged."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:237
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:281
 msgid "Destination port"
 msgstr ""
 
@@ -988,13 +988,17 @@ msgid "Device filter"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:236
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:267
 msgid "Device IP address"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:184
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:243
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:293
 msgid "Device MAC (optional)"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:291
+msgid "Device MAC and incoming interface (if needed)"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7017
@@ -1203,7 +1207,7 @@ msgstr ""
 msgid "DoH client certificate authentication"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:234
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:278
 msgid "Domain"
 msgstr ""
 
@@ -1407,12 +1411,16 @@ msgstr ""
 msgid "Enter HWID"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:255
+msgid "Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/routePresentation.ts:54
 msgid "Enter the device IP address, or select a detected device."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:55
-msgid "Enter the device MAC address in Additional route information."
+msgid "Enter the device MAC address under Device MAC and incoming interface."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2398
@@ -1420,7 +1428,7 @@ msgid "Enter the HWID sent with subscription requests"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:6
-msgid "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route."
+msgid "Enter the real destination IP in the form above. A domain alone cannot determine the router firewall route."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7526
@@ -1495,15 +1503,15 @@ msgstr ""
 msgid "Expires"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:252
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:301
 msgid "Explain route"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:334
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:330
 msgid "Export profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:402
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:398
 msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
 msgstr ""
 
@@ -1539,12 +1547,12 @@ msgstr ""
 msgid "Failed to copy!"
 msgstr ""
 
+#: src/trafira/methods/shell/index.ts:170
+#: src/trafira/methods/shell/index.ts:177
 #: src/trafira/tabs/updates/initController.ts:510
 #: src/trafira/tabs/updates/initController.ts:511
 #: src/trafira/tabs/updates/initController.ts:573
 #: src/trafira/tabs/updates/initController.ts:723
-#: src/trafira/methods/shell/index.ts:170
-#: src/trafira/methods/shell/index.ts:177
 msgid "Failed to execute"
 msgstr ""
 
@@ -1606,6 +1614,11 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3720
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2238
 msgid "Fix the highlighted fields and save again."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:251
+msgid "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8203
@@ -1770,11 +1783,11 @@ msgstr ""
 msgid "Idle timeout"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:394
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:390
 msgid "Import a profile file (JSON, up to 1 MiB)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:327
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:323
 msgid "Import profile"
 msgstr ""
 
@@ -1831,7 +1844,7 @@ msgid "Included"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:188
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:244
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:294
 msgid "Incoming interface (optional)"
 msgstr ""
 
@@ -2036,7 +2049,7 @@ msgstr ""
 msgid "Invalid port or range. Use 80 or 1000-2000"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:421
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:417
 msgid "Invalid profile"
 msgstr ""
 
@@ -2166,8 +2179,8 @@ msgstr ""
 msgid "IPv6 only"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:20
 #: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17
+#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:20
 msgid "Issues detected"
 msgstr ""
 
@@ -2334,7 +2347,7 @@ msgstr ""
 msgid "Main DNS server. If multiple servers are selected, a timeout switches to a backup."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:393
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:389
 msgid "Manage and transfer profiles"
 msgstr ""
 
@@ -2446,7 +2459,7 @@ msgstr ""
 msgid "Network interface settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:388
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:384
 msgid "New name for selected profile"
 msgstr ""
 
@@ -2536,7 +2549,7 @@ msgstr ""
 msgid "No other marking rules found"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:138
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:134
 msgid "No previous configuration is available to restore."
 msgstr ""
 
@@ -2560,7 +2573,7 @@ msgstr ""
 msgid "No rules use Zapret2"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:441
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:437
 msgid "No saved profiles yet. Enter a name and create a profile from the saved configuration."
 msgstr ""
 
@@ -2654,7 +2667,7 @@ msgstr ""
 msgid "Offline: %d"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:487
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:483
 msgid "Only changed section and option names are shown; values are hidden."
 msgstr ""
 
@@ -2715,7 +2728,7 @@ msgstr ""
 msgid "Operation timed out"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:507
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:503
 msgid "Option"
 msgstr ""
 
@@ -2896,11 +2909,11 @@ msgstr ""
 msgid "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:406
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:402
 msgid "Previous configuration"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:468
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:464
 msgid "Previous settings were restored."
 msgstr ""
 
@@ -2937,32 +2950,32 @@ msgstr ""
 msgid "Priority settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:152
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:148
 msgid "Profile created."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:154
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:150
 msgid "Profile deleted."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:483
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:479
 msgid "Profile differences"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:383
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:379
 msgid "Profile name"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:153
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:149
 msgid "Profile renamed."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:303
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:299
 msgid "Profile transfer completed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:310
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:353
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:306
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:349
 msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
 msgstr ""
 
@@ -2973,7 +2986,7 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2482
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2516
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:238
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:282
 msgid "Protocol"
 msgstr ""
 
@@ -2994,13 +3007,18 @@ msgstr ""
 msgid "Read-only access: you can preview rules but cannot apply changes."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:375
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:371
 msgid "Read-only access. Configuration changes require write permission."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:192
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:193
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:196
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:246
 msgid "Real destination IP (optional)"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245
+msgid "Real destination IP (required for the router)"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2684
@@ -3047,7 +3065,7 @@ msgstr ""
 msgid "Refresh devices"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:165
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:161
 msgid "Refresh profiles"
 msgstr ""
 
@@ -3079,11 +3097,11 @@ msgstr ""
 msgid "Remove the specified servers from this level."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:520
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:516
 msgid "Removed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:169
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:165
 msgid "Rename profile"
 msgstr ""
 
@@ -3139,13 +3157,13 @@ msgstr ""
 msgid "Restart Trafira"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:62
 #: src/trafira/tabs/diagnostic/profilePanel.ts:77
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:51
+#: src/trafira/tabs/updates/renderCoreVersions.ts:62
 msgid "Restoration failed. Check the service before continuing."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:191
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:187
 msgid "Restore previous settings"
 msgstr ""
 
@@ -3184,6 +3202,10 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:18
 msgid "Router application routing has not been applied. Save and apply the Trafira settings first."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/routePresentation.ts:3
+msgid "Router application routing is disabled. Select a LAN device to check its route. To analyze router applications, Router application routing must be enabled and applied in Settings. Other firewall and system VPN routes are not calculated here."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:21
@@ -3277,7 +3299,7 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:366
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:362
 msgid "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile."
 msgstr ""
 
@@ -3285,7 +3307,7 @@ msgstr ""
 msgid "Saved configuration unavailable"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:385
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:381
 msgid "Saved profiles"
 msgstr ""
 
@@ -3311,7 +3333,7 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:397
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:51
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:506
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:502
 msgid "Section"
 msgstr ""
 
@@ -3338,7 +3360,7 @@ msgid "Select a connection"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:9
-msgid "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information."
+msgid "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:325
@@ -3354,7 +3376,7 @@ msgstr ""
 msgid "Select a predefined domain list"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:415
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:411
 msgid "Select a saved profile"
 msgstr ""
 
@@ -3446,7 +3468,7 @@ msgstr ""
 msgid "Selected"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:384
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:380
 msgid "Selected profile"
 msgstr ""
 
@@ -3512,9 +3534,9 @@ msgstr ""
 msgid "Servers on dashboard"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/initController.ts:595
 #: src/trafira/methods/shell/index.ts:376
 #: src/trafira/methods/shell/index.ts:397
+#: src/trafira/tabs/diagnostic/initController.ts:595
 msgid "Service action failed"
 msgstr ""
 
@@ -3532,11 +3554,11 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:178
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:174
 msgid "Show differences"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:545
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:541
 msgid "Show differences before applying the selected profile."
 msgstr ""
 
@@ -3673,7 +3695,7 @@ msgstr ""
 msgid "Sorts servers in this section by lowest latency in the dashboard."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:235
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279
 #: src/trafira/tabs/monitoring/initController.ts:831
 #: src/trafira/tabs/monitoring/initController.ts:881
 msgid "Source"
@@ -3834,7 +3856,7 @@ msgstr ""
 msgid "Tailscale hostname"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:205
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:222
 msgid "TCP, unknown protocol"
 msgstr ""
 
@@ -3916,7 +3938,7 @@ msgid "The previous version was restored."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/profilePanel.ts:68
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:496
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:492
 msgid "The profile cannot be used with the current configuration and components."
 msgstr ""
 
@@ -3942,10 +3964,6 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:124
 msgid "The route result could not be displayed. Refresh the page; if this repeats, report this display error."
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/routePresentation.ts:3
-msgid "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:130
@@ -4051,7 +4069,7 @@ msgstr ""
 msgid "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:533
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:529
 msgid "This profile matches the saved configuration."
 msgstr ""
 
@@ -4059,8 +4077,12 @@ msgstr ""
 msgid "This router"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:475
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:471
 msgid "This saved profile is invalid. Delete it or import a valid file."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:248
+msgid "This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:45
@@ -4198,7 +4220,7 @@ msgstr ""
 msgid "Trafira-managed nfqws2 runtime is ready"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:217
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:213
 msgid "Transferring profile"
 msgstr ""
 
@@ -4249,7 +4271,7 @@ msgstr ""
 msgid "UDP (Unprotected DNS)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:206
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:223
 msgid "UDP, unknown protocol"
 msgstr ""
 
@@ -4599,12 +4621,12 @@ msgstr ""
 msgid "When switching to another level, test every server and select the fastest instead of the first working one."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:232
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:269
 msgid "Where will the connection go?"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:30
-msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information."
+msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in the form above."
 msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:68
@@ -4625,6 +4647,11 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:381
 msgid "You can select Output Network Interface, by default autodetect"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:207
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:258
+msgid "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5692
