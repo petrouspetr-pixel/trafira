@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 02:31+0300\n"
-"PO-Revision-Date: 2026-10-10 02:31+0300\n"
+"POT-Creation-Date: 2026-10-10 08:48+0300\n"
+"PO-Revision-Date: 2026-10-10 08:48+0300\n"
 "Last-Translator: petrouspetr-pixel <280500603+petrouspetr-pixel@users.noreply.github.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -82,8 +82,12 @@ msgstr ""
 msgid "✘ Stopped"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:29
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:31
 msgid "A copy download is already starting. Wait, then refresh the status."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/profilePanel.ts:65
+msgid "A maximum of eight profiles can be saved."
 msgstr ""
 
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:43
@@ -102,7 +106,7 @@ msgstr ""
 msgid "Absolute path to an existing file on the router. Enter the path, not the file contents."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:408
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:409
 msgid "Accept external proxy connections and route them with sing-box."
 msgstr ""
 
@@ -136,11 +140,11 @@ msgstr ""
 msgid "Add %s to Source Network Interface first"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:397
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:398
 msgid "Add a section"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:414
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:415
 msgid "Add a server inbound"
 msgstr ""
 
@@ -180,7 +184,7 @@ msgstr ""
 msgid "Add URLTest / Priority group"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:420
 msgid "Added"
 msgstr ""
 
@@ -226,16 +230,16 @@ msgstr ""
 msgid "After a connection failure, retry the skipped server after this duration"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:84
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:115
 msgid "After existing device rules"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:437
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:450
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:238
 msgid "Alice Mode"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:30
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:34
 msgid "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
 msgstr ""
 
@@ -320,23 +324,28 @@ msgstr ""
 msgid "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:231
+msgid "An existing device rule may overlap. The selected priority determines which rule takes effect."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:95
 msgid "Analysis of the applied configuration, not a live connection capture."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:46
+#: src/trafira/tabs/diagnostic/profilePanel.ts:52
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:50
 msgid "Another configuration operation is already running."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:63
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:65
 msgid "Another list update is already running. Wait for it to finish, then download the copies again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:87
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:131
 msgid "Apply profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:332
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:470
 msgid "Apply reviewed changes"
 msgstr ""
 
@@ -344,16 +353,20 @@ msgstr ""
 msgid "Apply section rules only to the specified local IP addresses"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:141
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:143
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:119
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:181
 msgid "Applying configuration. You can reconnect to this page."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:263
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:387
 msgid "Applying settings in the background. You can close this page."
+msgstr ""
+
+#: src/trafira/helpers/configurationSync.ts:3
+msgid "Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:5399
@@ -411,7 +424,7 @@ msgstr ""
 msgid "Backend validation failed: %s"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:79
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:110
 msgid "Before existing device rules"
 msgstr ""
 
@@ -524,11 +537,11 @@ msgstr ""
 msgid "Bypass Wi-Fi Calling"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:753
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:761
 msgid "Cache File Path"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:764
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:772
 msgid "Cache file path cannot be empty"
 msgstr ""
 
@@ -575,9 +588,13 @@ msgstr ""
 msgid "Certificate pin is unavailable. Apply or restart the server to generate the default certificate, then open this dialog again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:420
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:420
 msgid "Changed"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:220
+msgid "Changed rules"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2569
@@ -604,7 +621,7 @@ msgstr ""
 msgid "Checking route"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/initController.ts:1027
+#: src/trafira/tabs/diagnostic/initController.ts:1024
 #: src/trafira/tabs/diagnostic/checks/runByedpiCheck.ts:14
 #: src/trafira/tabs/diagnostic/checks/runDnsCheck.ts:15
 #: src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:15
@@ -621,14 +638,14 @@ msgstr ""
 msgid "checks"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:26
 #: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10
+#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:26
 msgid "Checks failed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:13
 #: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:23
 #: src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43
+#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:13
 msgid "Checks passed"
 msgstr ""
 
@@ -636,12 +653,20 @@ msgstr ""
 msgid "Checks passed with manual DHCP"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:319
+msgid "Choose a platform"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:169
+msgid "Choose a platform, device addresses, connection and rule priority before previewing."
+msgstr ""
+
 #: src/trafira/tabs/updates/renderCoreVersions.ts:137
 msgid "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:75
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:299
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:106
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:425
 msgid "Choose rule priority"
 msgstr ""
 
@@ -714,7 +739,7 @@ msgstr ""
 msgid "Component update check interval"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:485
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:498
 msgid "Components"
 msgstr ""
 
@@ -730,24 +755,25 @@ msgstr ""
 msgid "Conditions"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:740
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:748
 msgid "Config File Path"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:29
+#: src/trafira/tabs/diagnostic/profilePanel.ts:49
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:33
 msgid "Configuration changed. Review the differences again."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:343
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:344
 msgid "Configuration for Trafira service"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:208
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:220
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:277
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:302
 msgid "Configuration profiles"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:129
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:191
 msgid "Configuration validation passed. Review the changes below."
 msgstr ""
 
@@ -792,15 +818,15 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:174
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:176
 msgid "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:152
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:154
 msgid "Copies stored on router"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:54
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:56
 msgid "Copies were downloaded and checked. They will be checked again before the next startup."
 msgstr ""
 
@@ -809,11 +835,11 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:189
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:191
 msgid "Copy missing"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:188
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:190
 msgid "Copy present"
 msgstr ""
 
@@ -828,11 +854,11 @@ msgstr ""
 msgid "Could not compare FakeIP and control public IPs"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:79
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:81
 msgid "Could not download copies. Check the internet connection, list-download proxy and router storage."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:67
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:69
 msgid "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads."
 msgstr ""
 
@@ -844,24 +870,28 @@ msgstr ""
 msgid "Could not load available versions. Check the connection and refresh the list."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:25
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:27
 msgid "Could not read saved-copy status. Refresh the status to try again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:37
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:39
 msgid "Could not save the download task. Check free storage on the router."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:33
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:35
 msgid "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:45
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:47
 msgid "Could not start downloading copies. Refresh the status and try again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:41
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:43
 msgid "Could not start the download task. Refresh the status and try again."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:102
+msgid "Create profile from saved settings"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7862
@@ -888,7 +918,7 @@ msgstr ""
 msgid "Custom outbound configurations in JSON format"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:461
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:474
 msgid "Dashboard"
 msgstr ""
 
@@ -912,15 +942,15 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:97
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:152
 msgid "Delete profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:240
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:366
 msgid "Delete the edited preset rules? The next step shows the changes."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:100
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:156
 msgid "Delete the selected saved profile? Current settings will remain unchanged."
 msgstr ""
 
@@ -988,7 +1018,7 @@ msgstr ""
 msgid "DHCP leases are unavailable; device names may be missing."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:449
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:462
 msgid "Diagnostics"
 msgstr ""
 
@@ -998,6 +1028,7 @@ msgid "Direct"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:203
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:22
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:17
 msgid "Direct connection"
@@ -1185,7 +1216,7 @@ msgstr ""
 msgid "Domains"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:731
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:739
 msgid "Dont Touch My DHCP!"
 msgstr ""
 
@@ -1198,19 +1229,19 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:243
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:246
 msgid "Download / update list copies"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:712
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:720
 msgid "Download component packages via the selected section"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:719
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:727
 msgid "Download components through"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:711
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:719
 msgid "Download components through a section"
 msgstr ""
 
@@ -1222,7 +1253,7 @@ msgstr ""
 msgid "Download lists through a section"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:108
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:110
 msgid "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
 msgstr ""
 
@@ -1247,15 +1278,15 @@ msgstr ""
 msgid "Downloaded"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:52
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:54
 msgid "Downloading and checking list copies…"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:71
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:73
 msgid "Downloading copies was interrupted. Download the copies again."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:391
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:392
 msgid "Drag rows to change priority. The rule at the top is checked first."
 msgstr ""
 
@@ -1268,11 +1299,11 @@ msgid "Duplicate value"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1734
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:68
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:69
 msgid "Edit rule action"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:224
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:350
 msgid "Edited"
 msgstr ""
 
@@ -1313,7 +1344,7 @@ msgstr ""
 msgid "Enable Mixed Proxy Authentication"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:306
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:444
 msgid "Enable only these addresses in Alice Mode if required"
 msgstr ""
 
@@ -1347,6 +1378,10 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2810
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2831
 msgid "Enter a level name"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:317
+msgid "Enter a new profile name above to rename the selected profile."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7336
@@ -1411,11 +1446,11 @@ msgstr ""
 msgid "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:802
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:810
 msgid "Exclude NTP"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:803
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:811
 msgid "Exclude NTP protocol traffic from the tunnel to prevent it from being routed through the proxy or VPN"
 msgstr ""
 
@@ -1445,7 +1480,7 @@ msgstr ""
 msgid "Excluded"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:54
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:55
 msgid "Expecting: %s"
 msgstr ""
 
@@ -1457,11 +1492,11 @@ msgstr ""
 msgid "Explain route"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:202
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:266
 msgid "Export profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:228
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:327
 msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
 msgstr ""
 
@@ -1586,8 +1621,8 @@ msgstr ""
 msgid "Fuzzing is not supported here because Trafira needs deterministic runtime validation."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:270
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:287
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:396
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:413
 msgid "Gaming presets"
 msgstr ""
 
@@ -1612,7 +1647,7 @@ msgstr ""
 msgid "Get global check"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/initController.ts:686
+#: src/trafira/tabs/diagnostic/initController.ts:683
 msgid "Global check"
 msgstr ""
 
@@ -1728,8 +1763,11 @@ msgstr ""
 msgid "Idle timeout"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:199
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:233
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:332
+msgid "Import a profile file (JSON, up to 1 MiB)"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:259
 msgid "Import profile"
 msgstr ""
 
@@ -2117,8 +2155,8 @@ msgstr ""
 msgid "IPv6 only"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:20
 #: src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17
+#: src/trafira/tabs/diagnostic/helpers/getMeta.ts:20
 msgid "Issues detected"
 msgstr ""
 
@@ -2149,7 +2187,7 @@ msgstr ""
 msgid "JSON outbound settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:228
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:354
 msgid "Keep as ordinary rules"
 msgstr ""
 
@@ -2177,7 +2215,7 @@ msgstr ""
 msgid "LAN device data is unavailable; LAN devices may be missing."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:224
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:226
 msgid "Last download"
 msgstr ""
 
@@ -2235,7 +2273,7 @@ msgstr ""
 msgid "Listening port"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:152
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:154
 msgid "Lists without a saved copy"
 msgstr ""
 
@@ -2261,11 +2299,11 @@ msgstr ""
 msgid "Loading…"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:101
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:103
 msgid "Local copies help Trafira start when remote list sources are unavailable."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:786
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:794
 msgid "Log Level"
 msgstr ""
 
@@ -2279,6 +2317,10 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:180
 msgid "Main DNS server. If multiple servers are selected, a timeout switches to a backup."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:313
+msgid "Manage and transfer profiles"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:8067
@@ -2349,7 +2391,7 @@ msgstr ""
 msgid "Monitored Interfaces"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:473
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:486
 msgid "Monitoring"
 msgstr ""
 
@@ -2454,8 +2496,21 @@ msgstr ""
 msgid "No DNS query was sent from the selected device."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:161
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:164
+msgid "No enabled connection rules. Add a connection first."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:187
 msgid "No enabled server inbounds configured"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:166
+msgid "No gaming presets are available."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:157
+msgid "No known devices. Connect the device to the router and refresh the list."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runNftCheck.ts:105
@@ -2466,7 +2521,7 @@ msgstr ""
 msgid "No public firewall port required"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:210
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:212
 msgid "No remote rule sets in saved configuration"
 msgstr ""
 
@@ -2480,6 +2535,10 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:82
 msgid "No rules use Zapret2"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:367
+msgid "No saved profiles yet. Enter a name and create a profile from the saved configuration."
 msgstr ""
 
 #: src/trafira/tabs/dashboard/initController.ts:1046
@@ -2545,10 +2604,10 @@ msgid "Not responding"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/diagnostic.store.ts:125
-#: src/trafira/tabs/diagnostic/initController.ts:120
-#: src/trafira/tabs/diagnostic/initController.ts:350
-#: src/trafira/tabs/diagnostic/initController.ts:407
-#: src/trafira/tabs/diagnostic/initController.ts:493
+#: src/trafira/tabs/diagnostic/initController.ts:117
+#: src/trafira/tabs/diagnostic/initController.ts:347
+#: src/trafira/tabs/diagnostic/initController.ts:404
+#: src/trafira/tabs/diagnostic/initController.ts:490
 msgid "Not running"
 msgstr ""
 
@@ -2572,7 +2631,7 @@ msgstr ""
 msgid "Offline: %d"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:277
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:401
 msgid "Only changed section and option names are shown; values are hidden."
 msgstr ""
 
@@ -2650,6 +2709,10 @@ msgstr ""
 msgid "Other devices do the opposite. Match devices by interface, MAC address or IP address."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:210
+msgid "Other traffic"
+msgstr ""
+
 #: src/validators/validateOutboundJson.ts:111
 msgid "outbounds must be a non-empty array of strings"
 msgstr ""
@@ -2682,15 +2745,15 @@ msgstr ""
 msgid "Path cannot be empty"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:768
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:776
 msgid "Path must be absolute (start with /)"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:777
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:785
 msgid "Path must contain at least one directory (like /tmp/cache.db)"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:772
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:780
 msgid "Path must end with cache.db"
 msgstr ""
 
@@ -2766,7 +2829,7 @@ msgstr ""
 msgid "Prefix text"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:236
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:362
 msgid "Preview deletion"
 msgstr ""
 
@@ -2778,7 +2841,7 @@ msgstr ""
 msgid "Preview filters"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:316
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:454
 msgid "Preview gaming rules"
 msgstr ""
 
@@ -2802,7 +2865,7 @@ msgstr ""
 msgid "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:270
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:394
 msgid "Previous settings were restored."
 msgstr ""
 
@@ -2839,17 +2902,21 @@ msgstr ""
 msgid "Priority settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:36
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:216
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:41
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:298
 msgid "Profile name"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:183
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:242
 msgid "Profile transfer completed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:186
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:245
 msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+msgstr ""
+
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:438
+msgid "Profiles"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957
@@ -2870,6 +2937,14 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1609
 msgid "QR code is too large"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:436
+msgid "Read-only access: you can preview rules but cannot apply changes."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:290
+msgid "Read-only access. Configuration changes require write permission."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:190
@@ -2905,7 +2980,7 @@ msgstr ""
 msgid "Reality short ID must contain 1-8 hex digits"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:196
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:198
 msgid "Referenced in saved startup configuration"
 msgstr ""
 
@@ -2917,7 +2992,7 @@ msgstr ""
 msgid "Refresh available versions"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:313
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:451
 msgid "Refresh devices"
 msgstr ""
 
@@ -2925,7 +3000,7 @@ msgstr ""
 msgid "Refresh required"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:252
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:255
 msgid "Refresh status"
 msgstr ""
 
@@ -2949,15 +3024,15 @@ msgstr ""
 msgid "Remove the specified servers from this level."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:420
 msgid "Removed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:78
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:111
 msgid "Rename profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:310
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:448
 msgid "Replace my edits to this preset after preview"
 msgstr ""
 
@@ -2965,7 +3040,7 @@ msgstr ""
 msgid "Require a username and password for the local mixed proxy"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:128
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:130
 msgid "Requires sing-box 1.14 or newer"
 msgstr ""
 
@@ -3009,13 +3084,18 @@ msgstr ""
 msgid "Restart Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:47
+#: src/trafira/tabs/diagnostic/profilePanel.ts:68
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:51
 #: src/trafira/tabs/updates/renderCoreVersions.ts:48
 msgid "Restoration failed. Check the service before continuing."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:94
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:144
 msgid "Restore previous settings"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/profilePanel.ts:55
+msgid "Restore the interrupted operation before continuing."
 msgstr ""
 
 #: src/trafira/tabs/monitoring/initController.ts:691
@@ -3102,7 +3182,7 @@ msgstr ""
 msgid "Rule sets"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:97
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:99
 msgid "Rule-set copies for startup"
 msgstr ""
 
@@ -3142,15 +3222,11 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:75
-msgid "Save current settings"
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:281
+msgid "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:212
-msgid "Save up to eight profiles. Applying a profile may restart routing."
-msgstr ""
-
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:131
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:133
 msgid "Saved configuration unavailable"
 msgstr ""
 
@@ -3170,7 +3246,7 @@ msgstr ""
 msgid "Secret key for authenticating remote access to YACD when WAN access is enabled."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:396
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:397
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:51
 msgid "Section"
 msgstr ""
@@ -3179,7 +3255,7 @@ msgstr ""
 msgid "Section name"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:390
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:391
 msgid "Sections"
 msgstr ""
 
@@ -3192,8 +3268,8 @@ msgstr ""
 msgid "Select a common client profile or enter a custom User-Agent"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:209
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:295
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:335
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:421
 msgid "Select a connection"
 msgstr ""
 
@@ -3201,8 +3277,8 @@ msgstr ""
 msgid "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:199
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:291
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:325
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:417
 msgid "Select a known device"
 msgstr ""
 
@@ -3232,7 +3308,7 @@ msgstr ""
 msgid "Select a version"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:42
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:46
 msgid "Select an enabled connection rule."
 msgstr ""
 
@@ -3256,7 +3332,7 @@ msgstr ""
 msgid "Select DNS protocol to use"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:281
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:407
 msgid "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
 msgstr ""
 
@@ -3268,11 +3344,11 @@ msgstr ""
 msgid "Select or enter a User-Agent"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:754
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:762
 msgid "Select or enter path for sing-box cache file. Change this ONLY if you know what you are doing"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:741
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:749
 msgid "Select path for sing-box config file. Change this ONLY if you know what you are doing"
 msgstr ""
 
@@ -3281,7 +3357,7 @@ msgstr ""
 msgid "Select the fastest node"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:787
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:795
 msgid "Select the log level for sing-box"
 msgstr ""
 
@@ -3314,7 +3390,7 @@ msgstr ""
 msgid "Send recognized BitTorrent traffic from intercepted LAN connections directly, before section rules. Encrypted peers and HTTPS trackers may not be recognized."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:413
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:414
 msgid "Server"
 msgstr ""
 
@@ -3356,7 +3432,7 @@ msgstr ""
 msgid "server_port must be a number from 1 to 65535"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:407
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:408
 msgid "Servers"
 msgstr ""
 
@@ -3366,7 +3442,7 @@ msgstr ""
 
 #: src/trafira/methods/shell/index.ts:376
 #: src/trafira/methods/shell/index.ts:397
-#: src/trafira/tabs/diagnostic/initController.ts:598
+#: src/trafira/tabs/diagnostic/initController.ts:595
 msgid "Service action failed"
 msgstr ""
 
@@ -3380,11 +3456,11 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1125
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7248
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:425
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:426
 msgid "Settings"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:84
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:123
 msgid "Show differences"
 msgstr ""
 
@@ -3416,7 +3492,7 @@ msgstr ""
 msgid "Show only servers with one of the selected transports."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:164
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:166
 msgid "Show saved lists and storage"
 msgstr ""
 
@@ -3432,7 +3508,7 @@ msgstr ""
 msgid "Show servers whose names match the expression."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/initController.ts:756
+#: src/trafira/tabs/diagnostic/initController.ts:753
 #: src/trafira/tabs/diagnostic/partials/renderAvailableActions.ts:116
 msgid "Show sing-box config"
 msgstr ""
@@ -3481,7 +3557,7 @@ msgstr ""
 msgid "Sing-box versions"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:125
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:127
 msgid "Snapshot status unavailable"
 msgstr ""
 
@@ -3489,7 +3565,7 @@ msgstr ""
 msgid "Some addresses use Trafira; others connect directly"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:75
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:77
 msgid "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage."
 msgstr ""
 
@@ -3505,6 +3581,10 @@ msgstr ""
 msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:248
+msgid "Some routes could not be fully verified. Review existing rules and saved list copies."
+msgstr ""
+
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:71
 msgid "Some WireGuard peer entries were invalid and skipped."
 msgstr ""
@@ -3517,9 +3597,9 @@ msgstr ""
 msgid "Sorts servers in this section by lowest latency in the dashboard."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:233
 #: src/trafira/tabs/monitoring/initController.ts:831
 #: src/trafira/tabs/monitoring/initController.ts:881
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:233
 msgid "Source"
 msgstr ""
 
@@ -3584,7 +3664,7 @@ msgstr ""
 msgid "Start Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:122
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:124
 msgid "Starting the copy download…"
 msgstr ""
 
@@ -3605,12 +3685,12 @@ msgstr ""
 msgid "Stop Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:169
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:171
 msgid "Storage"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:274
-msgid "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:400
+msgid "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:4196
@@ -3682,6 +3762,10 @@ msgstr ""
 msgid "TCP, unknown protocol"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:256
+msgid "Technical details"
+msgstr ""
+
 #: src/trafira/tabs/dashboard/partials/renderSections.ts:237
 #: src/trafira/tabs/dashboard/partials/renderSections.ts:245
 #: src/trafira/tabs/dashboard/partials/renderSections.ts:486
@@ -3733,8 +3817,8 @@ msgstr ""
 msgid "The entered address is a FakeIP. Enter the real destination IP instead."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:43
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:130
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:47
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:192
 msgid "The generated configuration did not pass validation."
 msgstr ""
 
@@ -3747,7 +3831,7 @@ msgstr ""
 msgid "The NFQUEUE number is assigned by Trafira for each rule and must not be overridden here."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:53
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:57
 msgid "The operation failed. Refresh the page and review the settings."
 msgstr ""
 
@@ -3755,8 +3839,17 @@ msgstr ""
 msgid "The previous version was restored."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:286
+#: src/trafira/tabs/diagnostic/profilePanel.ts:59
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:410
 msgid "The profile cannot be used with the current configuration and components."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/profilePanel.ts:62
+msgid "The profile format is invalid or unsupported."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/profilePanel.ts:72
+msgid "The profile operation failed."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:3
@@ -3775,8 +3868,12 @@ msgstr ""
 msgid "The rule set is too complex to evaluate within the diagnostic limits."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:39
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:43
 msgid "The selected address is no longer known. Refresh the device list."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:237
+msgid "The selected addresses will be enabled in Alice Mode."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:115
@@ -3800,11 +3897,11 @@ msgstr ""
 msgid "There are rules using Zapret2"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:36
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:40
 msgid "These rules were edited. Confirm replacement or keep them as ordinary rules."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:33
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:37
 msgid "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
 msgstr ""
 
@@ -3945,7 +4042,7 @@ msgstr ""
 msgid "Trafira service is stopped. Start the service to display the dashboard."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:342
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:343
 msgid "Trafira Settings"
 msgstr ""
 
@@ -3953,7 +4050,7 @@ msgstr ""
 msgid "Trafira watchdog"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:732
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:740
 msgid "Trafira will not modify your DHCP configuration"
 msgstr ""
 
@@ -3997,7 +4094,7 @@ msgstr ""
 msgid "Trafira-managed nfqws2 runtime is ready"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:111
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:170
 msgid "Transferring profile"
 msgstr ""
 
@@ -4098,7 +4195,7 @@ msgstr ""
 msgid "Unexpected Trafira-managed nfqws2 runtime is running"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:54
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:55
 msgid "unique UCI identifier"
 msgstr ""
 
@@ -4360,7 +4457,7 @@ msgstr ""
 msgid "Via Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/initController.ts:721
+#: src/trafira/tabs/diagnostic/initController.ts:718
 #: src/trafira/tabs/diagnostic/partials/renderAvailableActions.ts:107
 msgid "View logs"
 msgstr ""

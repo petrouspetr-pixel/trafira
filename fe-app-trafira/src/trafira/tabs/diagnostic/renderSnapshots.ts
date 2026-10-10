@@ -5,6 +5,8 @@ import {
   SnapshotStartResult,
 } from './snapshotPanel';
 
+let canWrite = true;
+
 async function command<T>(name: string): Promise<T> {
   const result = await executeShellCommand({
     command: '/usr/bin/trafira',
@@ -231,7 +233,8 @@ function render(
           'button',
           {
             class: 'btn cbi-button',
-            ...(busy ||
+            ...(!canWrite ||
+            busy ||
             !report?.supported ||
             !report?.available ||
             !report?.preparable ||
@@ -256,8 +259,18 @@ function render(
   );
 }
 
-export const snapshots = new SnapshotController(
+const controller = new SnapshotController(
   () => command<SnapshotReport>('ruleset_snapshot_report'),
   () => command<SnapshotStartResult>('ruleset_snapshot_prepare_async'),
   render,
 );
+
+export const snapshots = {
+  mount(writable = true) {
+    canWrite = writable;
+    return controller.mount();
+  },
+  unmount: () => controller.unmount(),
+  refresh: () => controller.refresh(),
+  prepare: () => (canWrite ? controller.prepare() : Promise.resolve()),
+};

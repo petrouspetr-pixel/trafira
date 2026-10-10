@@ -9,6 +9,7 @@
 // Global settings
 "require view.trafira.settings as settings";
 "require view.trafira.alice as alice";
+"require view.trafira.profiles as profiles";
 
 // Sections
 "require view.trafira.section as section";
@@ -430,6 +431,18 @@ const EntryPoint = {
       return ["settings"];
     };
     settings.createSettingsContent(settingsSection, uiCapabilities);
+
+    const profilesSection = trafiraMap.section(
+      form.TypedSection,
+      "profiles",
+      _("Profiles"),
+    );
+    profilesSection.anonymous = true;
+    profilesSection.addremove = false;
+    profilesSection.cfgsections = function () {
+      return ["profiles"];
+    };
+    profiles.createProfilesContent(profilesSection);
 
     const aliceSection = trafiraMap.section(
       form.TypedSection,

@@ -87,15 +87,11 @@ afterEach(() => {
 });
 
 describe('diagnostics layout', () => {
-  it('keeps long management panels outside the short sidebar', () => {
+  it('keeps configuration management outside diagnostics', () => {
     const page = render() as unknown as NodeView;
     const sidebar = find(
       page,
       (node) => node.attributes.class === 'fkp_diagnostic-page__right-bar',
-    )!;
-    const lower = find(
-      page,
-      (node) => node.attributes.class === 'fkp_diagnostic-page__lower',
     )!;
     for (const id of [
       'fkp_diagnostic-page-snapshots',
@@ -105,7 +101,7 @@ describe('diagnostics layout', () => {
       expect(
         find(sidebar, (node) => node.attributes.id === id),
       ).toBeUndefined();
-      expect(find(lower, (node) => node.attributes.id === id)).toBeDefined();
+      expect(find(page, (node) => node.attributes.id === id)).toBeUndefined();
     }
   });
   function button(label: string) {
@@ -114,6 +110,16 @@ describe('diagnostics layout', () => {
       (node) => node.tag === 'button' && node.children[0] === label,
     )!;
   }
+  it('allows read-only inventory refresh but disables downloads without write access', async () => {
+    await snapshots.mount(false);
+    expect(button('Download / update list copies').attributes.disabled).toBe(
+      'true',
+    );
+    expect(button('Refresh status').attributes).not.toHaveProperty('disabled');
+    const calls = vi.mocked(executeShellCommand).mock.calls.length;
+    await snapshots.prepare();
+    expect(executeShellCommand).toHaveBeenCalledTimes(calls);
+  });
   it('enables both snapshot buttons while idle under LuCI attribute semantics', async () => {
     await snapshots.mount();
     expect(

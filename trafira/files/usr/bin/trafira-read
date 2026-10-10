@@ -1,0 +1,56 @@
+#!/usr/bin/ucode
+
+// RPC readers receive this executable only. Never forward an unknown action,
+// extra arguments, or a mutating subcommand to the privileged dispatchers.
+const READ_COMMANDS = {
+    check_dns_available: 0, check_fakeip: 0, check_nft_rules: 0,
+    check_zapret_runtime: 0, check_zapret2_runtime: 0, check_byedpi_runtime: 0,
+    check_inbounds_config: 0, check_sing_box: 0, check_inbounds: 0,
+    check_logs: 0, check_sing_box_logs: 0, get_status: 0,
+    get_outbound_metadata: 1, get_subscription_metadata: 1,
+    get_sing_box_status: 0, get_zapret_status: 0, get_zapret2_status: 0,
+    get_byedpi_status: 0, get_system_info: 0, get_alice_devices: 0,
+    get_server_capabilities: 0, get_ui_capabilities: 0, get_ui_state: 0,
+    service_action_status: 1, latency_test_status: 1, component_action_status: 1,
+    subscription_update_status: 1, component_update_check_cache: 0,
+    show_version: 0, show_sing_box_version: 0, show_sing_box_config: 1,
+    global_check: 1, route_explain: 1, failure_policy_status: 0,
+    subscription_preview: 1, get_tls_certificate_sha256: 1,
+    ruleset_snapshot_report: 0,
+    validate_nfqws_strategy_json: 1, validate_nfqws2_strategy_json: 1,
+    validate_byedpi_strategy_json: 1
+};
+const READ_CLASH = {
+    get_proxies: 0, get_connections: 0, get_proxy_latency: 2,
+    get_proxy_latencies: 2, get_group_latency: 2
+};
+const READ_CONFIG = {
+    profile_action: [ "list", "status", "preview", "export_begin", "export_read" ],
+    core_action: [ "catalog", "status" ],
+    gaming_preset_action: [ "catalog", "status", "preview", "preview_remove" ]
+};
+function allowed(args) {
+    if (!length(args)) return false;
+    for (let i = 0; i < length(args); i++)
+        if (type(args[i]) != "string" || length(args[i]) > 65536) return false;
+    let name = args[0];
+    if (READ_COMMANDS[name] != null)
+        return length(args) <= READ_COMMANDS[name] + 1;
+    // The optional final latency argument can name a progress file. Readers
+    // may not supply that path or arbitrary probe URL overrides.
+    if (name == "clash_api")
+        return length(args) >= 2 && READ_CLASH[args[1]] != null && length(args) <= READ_CLASH[args[1]] + 2;
+    if (READ_CONFIG[name] == null || length(args) != 2) return false;
+    let request;
+    try { request = json(args[1]); } catch (e) { return false; }
+    return type(request) == "object" && index(READ_CONFIG[name], request.action) >= 0;
+}
+function quote(value) { return "'" + replace(value, /'/g, "'\\''") + "'"; }
+if (!allowed(ARGV)) {
+    print('{"success":false,"error":"permission_denied"}\n');
+    exit(1);
+}
+let command = [ quote(READ_CONFIG[ARGV[0]] != null ? "/usr/bin/trafira-config" : "/usr/bin/trafira") ];
+for (let i = 0; i < length(ARGV); i++) push(command, quote(ARGV[i]));
+let status = system(join(" ", command));
+exit(status > 255 ? status >> 8 : status);

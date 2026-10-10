@@ -27,9 +27,11 @@ assert(fs.existsSync(path.join(root, 'trafira/files/etc/config/trafira')));
 for (const group of entry.depends.acl) {
   for (const access of ['read', 'write']) assert(acl[group][access].uci.includes('trafira'));
   for (const executable of ['/usr/bin/trafira', '/etc/init.d/trafira']) {
-    assert(acl[group].read.file[executable].includes('exec'));
+    assert(!acl[group].read.file[executable]);
+    assert(acl[group].write.file[executable].includes('exec'));
     assert(fs.existsSync(path.join(root, 'trafira/files', executable)));
   }
+  assert(acl[group].read.file['/usr/bin/trafira-read'].includes('exec'));
   for (const prefix of ['/var/run/trafira', '/tmp/run/trafira']) {
     for (const suffix of ['section-cache/*', 'component-actions/*', 'ui-state/*', 'ui-state/service-actions/*', 'ui-state/latency-actions/*'])
       assert(acl[group].read.file[`${prefix}/${suffix}`].includes('read'));
@@ -37,7 +39,8 @@ for (const group of entry.depends.acl) {
 }
 const call = read('fe-app-trafira/src/trafira/methods/shell/callBaseMethod.ts');
 const command = call.match(/command: string = '([^']+)'/)[1];
-assert(acl['luci-app-trafira'].read.file[command].includes('exec'));
+assert(acl['luci-app-trafira'].write.file[command].includes('exec'));
+assert(read('fe-app-trafira/src/helpers/executeShellCommand.ts').includes("command = '/usr/bin/trafira-read'"));
 
 const build = read('build.sh');
 const names = [...new Set([...build.matchAll(/\$output_dir\/((?:trafira|luci-app-trafira|luci-i18n-trafira-ru)_\$\{RELEASE_VERSION\}\.(?:ipk|apk))/g)].map(m => m[1].replace('${RELEASE_VERSION}', '2.0.0')))];

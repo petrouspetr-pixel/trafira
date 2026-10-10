@@ -1273,11 +1273,81 @@ var BOOTSTRAP_DNS_SERVER_OPTIONS = {
 var COMMAND_TIMEOUT = 1e4;
 
 // src/helpers/executeShellCommand.ts
+var readCommands = {
+  check_dns_available: 0,
+  check_fakeip: 0,
+  check_nft_rules: 0,
+  check_zapret_runtime: 0,
+  check_zapret2_runtime: 0,
+  check_byedpi_runtime: 0,
+  check_inbounds_config: 0,
+  check_sing_box: 0,
+  check_inbounds: 0,
+  check_logs: 0,
+  check_sing_box_logs: 0,
+  get_status: 0,
+  get_outbound_metadata: 1,
+  get_subscription_metadata: 1,
+  get_sing_box_status: 0,
+  get_zapret_status: 0,
+  get_zapret2_status: 0,
+  get_byedpi_status: 0,
+  get_system_info: 0,
+  get_alice_devices: 0,
+  get_server_capabilities: 0,
+  get_ui_capabilities: 0,
+  get_ui_state: 0,
+  service_action_status: 1,
+  latency_test_status: 1,
+  component_action_status: 1,
+  subscription_update_status: 1,
+  component_update_check_cache: 0,
+  show_version: 0,
+  show_sing_box_version: 0,
+  show_sing_box_config: 1,
+  global_check: 1,
+  route_explain: 1,
+  subscription_preview: 1,
+  get_tls_certificate_sha256: 1,
+  failure_policy_status: 0,
+  ruleset_snapshot_report: 0,
+  validate_nfqws_strategy_json: 1,
+  validate_nfqws2_strategy_json: 1,
+  validate_byedpi_strategy_json: 1
+};
+var readClash = {
+  get_proxies: 0,
+  get_connections: 0,
+  get_proxy_latency: 2,
+  get_proxy_latencies: 2,
+  get_group_latency: 2
+};
+var readConfig = {
+  profile_action: ["list", "status", "preview", "export_begin", "export_read"],
+  core_action: ["catalog", "status"],
+  gaming_preset_action: ["catalog", "status", "preview", "preview_remove"]
+};
+function readCommand(command5, args) {
+  if (command5 === "/usr/bin/trafira") {
+    if (Object.prototype.hasOwnProperty.call(readCommands, args[0]))
+      return args.length <= readCommands[args[0]] + 1;
+    return args[0] === "clash_api" && Object.prototype.hasOwnProperty.call(readClash, args[1]) && args.length <= readClash[args[1]] + 2;
+  }
+  if (command5 !== "/usr/bin/trafira-config" || args.length !== 2 || !Object.prototype.hasOwnProperty.call(readConfig, args[0]))
+    return false;
+  try {
+    const request = JSON.parse(args[1]);
+    return !!request && typeof request.action === "string" && readConfig[args[0]].includes(request.action);
+  } catch {
+    return false;
+  }
+}
 async function executeShellCommand({
   command: command5,
   args,
   timeout = COMMAND_TIMEOUT
 }) {
+  if (readCommand(command5, args)) command5 = "/usr/bin/trafira-read";
   try {
     return await withTimeout(
       fs.exec(command5, args),
@@ -2094,7 +2164,7 @@ function renderSubscriptionMetadata(metadata) {
   const total = traffic?.isUnlimited ? "\u221E" : formatBytes(traffic?.total) || "0 B";
   const expire = formatDate(metadata.expire);
   const refillDate = formatDate(metadata.refillDate);
-  const rows = [
+  const rows2 = [
     traffic ? {
       label: _("Traffic"),
       value: `${used} / ${total}`
@@ -2119,10 +2189,10 @@ function renderSubscriptionMetadata(metadata) {
         { class: "fkp_dashboard-page__subscription-meta__title" },
         title
       ) : "",
-      rows.length ? E(
+      rows2.length ? E(
         "div",
         { class: "fkp_dashboard-page__subscription-meta__facts" },
-        rows.map(
+        rows2.map(
           (row) => E(
             "div",
             { class: "fkp_dashboard-page__subscription-meta__fact" },
@@ -3352,15 +3422,15 @@ function canFetchClashApiDirectly() {
 async function getClashApiProxies(configSections) {
   if (canFetchClashApiDirectly()) {
     const secret = getClashApiSecret(configSections);
-    const controller2 = new AbortController();
+    const controller3 = new AbortController();
     const timeoutId = setTimeout(
-      () => controller2.abort(),
+      () => controller3.abort(),
       CLASH_API_FETCH_TIMEOUT_MS
     );
     try {
       const response = await fetch(`${getClashHttpUrl()}/proxies`, {
         headers: secret ? { Authorization: `Bearer ${secret}` } : void 0,
-        signal: controller2.signal
+        signal: controller3.signal
       });
       if (response.ok) {
         return {
@@ -5834,8 +5904,8 @@ var failurePoliciesPanel = {
         if (current !== generation) return;
         if (result.code) throw new Error("Status unavailable");
         const report = JSON.parse(result.stdout);
-        const rows = failurePolicyRows(report);
-        host.hidden = rows.length === 0 && !report.guarded;
+        const rows2 = failurePolicyRows(report);
+        host.hidden = rows2.length === 0 && !report.guarded;
         host.replaceChildren(
           E("h3", {}, _("VPN failure policy")),
           ...report.guarded ? [
@@ -5854,7 +5924,7 @@ var failurePoliciesPanel = {
               E("th", {}, _("State")),
               E("th", {}, _("Seconds since last switch"))
             ]),
-            ...rows.map(
+            ...rows2.map(
               (row) => E("tr", {}, [
                 E("td", {}, row.section),
                 E("td", {}, labels[row.policy]),
@@ -8207,298 +8277,9 @@ function render2() {
       E("div", { id: "fkp_diagnostic-page-wiki" }),
       E("div", { id: "fkp_diagnostic-page-actions" }),
       E("div", { id: "fkp_diagnostic-page-system-info" })
-    ]),
-    E("div", { class: "fkp_diagnostic-page__lower" }, [
-      E("div", { id: "fkp_diagnostic-page-snapshots" }),
-      E("div", { id: "trafira-profiles" }),
-      E("div", { id: "trafira-gaming-presets" })
     ])
   ]);
 }
-
-// src/trafira/tabs/diagnostic/snapshotPanel.ts
-var SnapshotController = class {
-  constructor(read, start, render6) {
-    this.read = read;
-    this.start = start;
-    this.render = render6;
-    this.active = false;
-    this.generation = 0;
-    this.failures = 0;
-    this.report = null;
-    this.starting = false;
-  }
-  async mount() {
-    this.unmount();
-    this.active = true;
-    this.failures = 0;
-    await this.refresh();
-  }
-  unmount() {
-    this.active = false;
-    this.starting = false;
-    this.generation++;
-    clearTimeout(this.timer);
-  }
-  async refresh() {
-    clearTimeout(this.timer);
-    const generation3 = this.generation;
-    try {
-      const report = await this.read();
-      if (!this.active || generation3 !== this.generation) return;
-      this.report = report;
-      this.failures = 0;
-      this.render(report, "", this.starting);
-    } catch {
-      if (!this.active || generation3 !== this.generation) return;
-      this.failures++;
-      this.render(this.report, "Could not read snapshot status", this.starting);
-    }
-    if (this.report?.job?.running && this.failures < 3) {
-      this.timer = setTimeout(() => void this.refresh(), 3e3);
-    }
-  }
-  async prepare() {
-    if (this.starting) return;
-    const generation3 = this.generation;
-    this.starting = true;
-    this.render(this.report, "", true);
-    try {
-      const result = await this.start();
-      if (!this.active || generation3 !== this.generation) return;
-      this.starting = false;
-      if (!result.success) {
-        this.render(
-          this.report,
-          result.message || "Could not start snapshot preparation",
-          false
-        );
-        return;
-      }
-      await this.refresh();
-    } catch {
-      if (this.active && generation3 === this.generation) {
-        this.render(this.report, "Could not start snapshot preparation", false);
-      }
-    } finally {
-      if (generation3 === this.generation) this.starting = false;
-    }
-  }
-};
-
-// src/trafira/tabs/diagnostic/renderSnapshots.ts
-async function command(name) {
-  const result = await executeShellCommand({
-    command: "/usr/bin/trafira",
-    args: [name],
-    timeout: 15e3
-  });
-  if (result.code) throw new Error("Snapshot command failed");
-  return JSON.parse(result.stdout);
-}
-function size(bytes) {
-  return `${(bytes / 1024).toFixed(1)} KiB`;
-}
-function startErrorText(error) {
-  switch (error) {
-    case "Could not read snapshot status":
-      return _(
-        "Could not read saved-copy status. Refresh the status to try again."
-      );
-    case "Snapshot preparation is already starting":
-      return _(
-        "A copy download is already starting. Wait, then refresh the status."
-      );
-    case "Snapshot preparation is running or unavailable":
-      return _(
-        "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again."
-      );
-    case "Failed to write snapshot job":
-      return _(
-        "Could not save the download task. Check free storage on the router."
-      );
-    case "Failed to start snapshot worker":
-      return _(
-        "Could not start the download task. Refresh the status and try again."
-      );
-    default:
-      return _(
-        "Could not start downloading copies. Refresh the status and try again."
-      );
-  }
-}
-function jobStatusText(job) {
-  if (job.running) return _("Downloading and checking list copies\u2026");
-  if (job.success) {
-    return _(
-      "Copies were downloaded and checked. They will be checked again before the next startup."
-    );
-  }
-  switch (job.message) {
-    case "Failed to write snapshot job":
-    case "Failed to start snapshot worker":
-      return startErrorText(job.message);
-    case "Another lists update is already running":
-      return _(
-        "Another list update is already running. Wait for it to finish, then download the copies again."
-      );
-    case "Snapshot preparation unavailable: check core, configuration and lists proxy":
-      return _(
-        "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads."
-      );
-    case "Snapshot worker exited unexpectedly":
-      return _(
-        "Downloading copies was interrupted. Download the copies again."
-      );
-    case "Snapshot preparation failed; previous copies preserved":
-      return _(
-        "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage."
-      );
-    default:
-      return _(
-        "Could not download copies. Check the internet connection, list-download proxy and router storage."
-      );
-  }
-}
-function render3(report, error, starting) {
-  const container = document.getElementById("fkp_diagnostic-page-snapshots");
-  if (!container) return;
-  const expanded = container.querySelector("details")?.open;
-  const busy = starting || !!report?.job?.running;
-  const stored = report?.entries.filter((entry) => entry.present).length || 0;
-  container.replaceChildren(
-    E("div", { class: "fkp_diagnostic-panel" }, [
-      E("h3", {}, _("Rule-set copies for startup")),
-      E(
-        "p",
-        {},
-        _(
-          "Local copies help Trafira start when remote list sources are unavailable."
-        )
-      ),
-      E(
-        "p",
-        {},
-        _(
-          "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
-        )
-      ),
-      ...error ? [
-        E(
-          "p",
-          { class: "alert-message warning", role: "status" },
-          startErrorText(error)
-        )
-      ] : [],
-      ...starting ? [E("p", { role: "status" }, _("Starting the copy download\u2026"))] : [],
-      ...!report ? [E("p", {}, _("Snapshot status unavailable"))] : [
-        ...!report.supported ? [E("p", {}, _("Requires sing-box 1.14 or newer"))] : [],
-        ...!report.available ? [E("p", {}, _("Saved configuration unavailable"))] : [],
-        ...report.supported && report.available && report.entries.length > 0 && !report.preparable ? [
-          E(
-            "p",
-            {},
-            _(
-              "Apply the Trafira configuration again to enable saved copies for this core"
-            )
-          )
-        ] : [],
-        ...report.entries.length ? [
-          E(
-            "p",
-            {},
-            `${_("Copies stored on router")}: ${stored} / ${report.entries.length} \xB7 ${_("Lists without a saved copy")}: ${report.entries.length - stored}`
-          ),
-          E(
-            "details",
-            {
-              class: "fkp_diagnostic-details",
-              ...expanded ? { open: true } : {}
-            },
-            [
-              E(
-                "summary",
-                {},
-                `${_("Show saved lists and storage")} (${report.entries.length})`
-              ),
-              E(
-                "p",
-                {},
-                `${_("Storage")}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`
-              ),
-              E(
-                "p",
-                {},
-                _(
-                  "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them."
-                )
-              ),
-              E(
-                "div",
-                { class: "fkp_diagnostic-snapshots" },
-                report.entries.map(
-                  (entry) => E("div", {}, [
-                    E("b", {}, entry.tag),
-                    E(
-                      "p",
-                      {},
-                      entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
-                    ),
-                    ...entry.configured_initial ? [
-                      E(
-                        "p",
-                        {},
-                        _(
-                          "Referenced in saved startup configuration"
-                        )
-                      )
-                    ] : []
-                  ])
-                )
-              )
-            ]
-          )
-        ] : [],
-        ...report.entries.length === 0 ? [E("p", {}, _("No remote rule sets in saved configuration"))] : [],
-        ...report.job ? [
-          E(
-            "p",
-            {
-              role: "status",
-              ...!report.job.running && !report.job.success ? { class: "alert-message warning" } : {}
-            },
-            report.job.running ? jobStatusText(report.job) : `${_("Last download")}: ${jobStatusText(report.job)}`
-          )
-        ] : []
-      ],
-      E("div", { class: "fkp_diagnostic-actions" }, [
-        E(
-          "button",
-          {
-            class: "btn cbi-button",
-            ...busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length ? { disabled: true } : {},
-            click: () => void snapshots.prepare()
-          },
-          _("Download / update list copies")
-        ),
-        E(
-          "button",
-          {
-            class: "btn cbi-button",
-            ...starting ? { disabled: true } : {},
-            click: () => void snapshots.refresh()
-          },
-          _("Refresh status")
-        )
-      ])
-    ])
-  );
-}
-var snapshots = new SnapshotController(
-  () => command("ruleset_snapshot_report"),
-  () => command("ruleset_snapshot_prepare_async"),
-  render3
-);
 
 // src/trafira/tabs/diagnostic/routeExplanation.ts
 var RouteExplanationController = class {
@@ -8655,7 +8436,7 @@ function routeError(error) {
 }
 
 // src/trafira/tabs/diagnostic/renderRouteExplanation.ts
-async function command2(name, args = []) {
+async function command(name, args = []) {
   const result = await executeShellCommand({
     command: "/usr/bin/trafira",
     args: [name, ...args],
@@ -8774,7 +8555,7 @@ function renderRouteExplanationResult(report, error, busy) {
   );
 }
 var controller = new RouteExplanationController(
-  (request) => command2("route_explain", [JSON.stringify(request)]),
+  (request) => command("route_explain", [JSON.stringify(request)]),
   renderRouteExplanationResult
 );
 var mountId = 0;
@@ -8905,7 +8686,7 @@ var routeExplanationPanel = {
       })
     );
     controller.mount();
-    void command2("get_alice_devices").then((report) => {
+    void command("get_alice_devices").then((report) => {
       if (generation3 !== mountId) return;
       devices = [];
       for (const device of report.devices || [])
@@ -8929,830 +8710,6 @@ var routeExplanationPanel = {
   unmount() {
     mountId++;
     controller.unmount();
-  }
-};
-
-// src/trafira/tabs/diagnostic/profilePanel.ts
-var initial = () => ({
-  busy: false,
-  running: false,
-  digest: "",
-  canRestore: false,
-  entries: [],
-  preview: null,
-  jobId: "",
-  error: "",
-  restored: false
-});
-var text = (value) => typeof value === "string" ? value : "";
-var errors = {
-  conflict: "Configuration changed. Review the differences again.",
-  busy: "Another configuration operation is already running.",
-  recovery_required: "Restore the interrupted operation before continuing.",
-  candidate_check_failed: "The profile cannot be used with the current configuration and components.",
-  invalid_profile: "The profile format is invalid or unsupported.",
-  profile_limit: "A maximum of eight profiles can be saved."
-};
-var ProfilePanelController = class {
-  constructor(call, render6) {
-    this.call = call;
-    this.render = render6;
-    this.active = false;
-    this.generation = 0;
-    this.state = initial();
-  }
-  mount() {
-    this.active = true;
-    this.generation++;
-    this.state = initial();
-    this.render(this.state);
-  }
-  unmount() {
-    this.active = false;
-    this.generation++;
-  }
-  async submit(request) {
-    if (!this.active || this.state.busy) return;
-    if (this.state.running && !["status", "list"].includes(request.action))
-      return;
-    const generation3 = ++this.generation;
-    this.state = { ...this.state, busy: true, error: "", restored: false };
-    this.render(this.state);
-    try {
-      const result = await this.call(request);
-      if (!this.active || generation3 !== this.generation) return;
-      if (typeof result.running === "boolean")
-        this.state = { ...this.state, running: result.running };
-      if (typeof result.digest === "string")
-        this.state = { ...this.state, digest: result.digest };
-      if (typeof result.can_restore === "boolean")
-        this.state = { ...this.state, canRestore: result.can_restore };
-      if (result.success === false || result.rollback_error) {
-        this.state = {
-          ...this.state,
-          preview: null,
-          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : errors[text(result.error)] || "The profile operation failed.",
-          restored: result.restored === true
-        };
-      } else {
-        if (Array.isArray(result.entries)) {
-          this.state = {
-            ...this.state,
-            entries: result.entries.filter((item) => item && typeof item === "object").map((item) => ({
-              id: text(item.id),
-              name: text(item.name),
-              invalid: item.invalid === true
-            }))
-          };
-        }
-        if (request.action === "preview") {
-          const changes = Array.isArray(result.changes) ? result.changes : [];
-          this.state = {
-            ...this.state,
-            preview: {
-              id: request.id || "",
-              applicable: result.applicable !== false,
-              digest: text(result.digest),
-              changes: changes.filter((item) => item && typeof item === "object").map((item) => ({
-                section: text(item.section),
-                option: text(item.option),
-                change: text(item.change)
-              }))
-            }
-          };
-        }
-        if (result.job_id)
-          this.state = { ...this.state, jobId: text(result.job_id) };
-        if (["apply", "restore", "remove"].includes(request.action))
-          this.state = { ...this.state, preview: null };
-        this.state = { ...this.state, restored: result.restored === true };
-      }
-    } catch {
-      if (!this.active || generation3 !== this.generation) return;
-      this.state = {
-        ...this.state,
-        error: "The profile operation failed.",
-        preview: null
-      };
-    }
-    if (this.active && generation3 === this.generation) {
-      this.state = { ...this.state, busy: false };
-      this.render(this.state);
-    }
-  }
-};
-
-// src/trafira/tabs/diagnostic/renderProfiles.ts
-async function command3(request) {
-  const result = await executeShellCommand({
-    command: "/usr/bin/trafira-config",
-    args: ["profile_action", JSON.stringify(request)],
-    timeout: 3e4
-  });
-  if (result.code) throw new Error("Profile command failed");
-  return JSON.parse(result.stdout);
-}
-function encode(bytes) {
-  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
-}
-function decode(value) {
-  return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
-}
-var mountId2 = 0;
-var active = null;
-var profilesPanel = {
-  mount() {
-    this.unmount();
-    const host = document.getElementById("trafira-profiles");
-    if (!host) return;
-    const generation3 = mountId2;
-    let last;
-    let transferring = false;
-    const name = E("input", {
-      type: "text",
-      maxLength: 64,
-      placeholder: _("Profile name")
-    });
-    const select = E("select", {});
-    const file = E("input", {
-      type: "file",
-      accept: ".json,application/json"
-    });
-    const result = E("div", {});
-    const message2 = E("p", {});
-    const buttons = [];
-    let apply;
-    let restore;
-    function updateButtons() {
-      const disabled = transferring || last?.busy || last?.running;
-      for (const button2 of buttons) button2.disabled = disabled;
-      apply.disabled = disabled || !last?.preview || last.preview.id !== select.value || !last.preview.applicable;
-      restore.disabled = disabled || !last?.canRestore || !last?.digest;
-      file.disabled = disabled;
-      select.disabled = disabled;
-    }
-    async function submit(request, refresh = false) {
-      await controller2.submit(request);
-      if (refresh && generation3 === mountId2 && !last.error)
-        await controller2.submit({ action: "list" });
-    }
-    function button(label, click) {
-      const element = E(
-        "button",
-        { class: "cbi-button cbi-button-action", click },
-        label
-      );
-      buttons.push(element);
-      return element;
-    }
-    const actions = [
-      button(_("Save current settings"), () => {
-        void submit({ action: "create", name: name.value }, true);
-      }),
-      button(_("Rename profile"), () => {
-        void submit(
-          { action: "rename", id: select.value, name: name.value },
-          true
-        );
-      }),
-      button(_("Show differences"), () => {
-        void submit({ action: "preview", id: select.value });
-      }),
-      apply = button(_("Apply profile"), () => {
-        void submit({
-          action: "apply",
-          id: select.value,
-          digest: last.preview?.digest
-        });
-      }),
-      restore = button(_("Restore previous settings"), () => {
-        void submit({ action: "restore", digest: last.digest });
-      }),
-      button(_("Delete profile"), () => {
-        if (window.confirm(
-          _(
-            "Delete the selected saved profile? Current settings will remain unchanged."
-          )
-        ))
-          void submit({ action: "remove", id: select.value }, true);
-      })
-    ];
-    async function transfer(kind) {
-      if (transferring || last.busy || last.running) return;
-      transferring = true;
-      message2.textContent = _("Transferring profile");
-      updateButtons();
-      let transferId = "";
-      try {
-        if (kind === "import") {
-          const selected = file.files?.[0];
-          if (!selected || selected.size > 1048576) throw new Error("size");
-          const bytes = new Uint8Array(await selected.arrayBuffer());
-          const begin = await command3({ action: "import_begin" });
-          if (!begin.success || typeof begin.id !== "string")
-            throw new Error("begin");
-          transferId = begin.id;
-          for (let offset = 0; offset < bytes.length; offset += 12288) {
-            if (generation3 !== mountId2) throw new Error("closed");
-            const sent = await command3({
-              action: "import_chunk",
-              id: transferId,
-              offset,
-              data: encode(bytes.slice(offset, offset + 12288))
-            });
-            if (!sent.success) throw new Error("chunk");
-          }
-          if (generation3 !== mountId2) throw new Error("closed");
-          const imported = await command3({
-            action: "import_finish",
-            id: transferId
-          });
-          if (!imported.success) throw new Error("import");
-          await controller2.submit({ action: "list" });
-        } else {
-          const begin = await command3({
-            action: "export_begin",
-            id: select.value
-          });
-          if (!begin.success || typeof begin.id !== "string")
-            throw new Error("begin");
-          transferId = begin.id;
-          let offset = 0;
-          const chunks = [];
-          for (; ; ) {
-            if (generation3 !== mountId2) throw new Error("closed");
-            const part = await command3({
-              action: "export_read",
-              id: transferId,
-              offset
-            });
-            if (!part.success || typeof part.data !== "string")
-              throw new Error("read");
-            const bytes2 = decode(part.data);
-            chunks.push(bytes2);
-            offset += bytes2.length;
-            if (offset > 1048576 || !bytes2.length && !part.done)
-              throw new Error("size");
-            if (part.done) break;
-          }
-          if (generation3 !== mountId2) throw new Error("closed");
-          const bytes = new Uint8Array(offset);
-          let position = 0;
-          for (const chunk of chunks) {
-            bytes.set(chunk, position);
-            position += chunk.length;
-          }
-          const url = URL.createObjectURL(
-            new Blob([bytes], { type: "application/json" })
-          );
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "trafira-profile.json";
-          link.click();
-          URL.revokeObjectURL(url);
-        }
-        if (generation3 === mountId2)
-          message2.textContent = _("Profile transfer completed");
-      } catch {
-        if (generation3 === mountId2)
-          message2.textContent = _(
-            "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
-          );
-      } finally {
-        if (transferId)
-          void command3({ action: "transfer_cancel", id: transferId }).catch(
-            () => void 0
-          );
-        transferring = false;
-        if (generation3 === mountId2) updateButtons();
-      }
-    }
-    actions.push(
-      button(_("Import profile"), () => {
-        void transfer("import");
-      }),
-      button(_("Export profile"), () => {
-        void transfer("export");
-      })
-    );
-    select.addEventListener("change", updateButtons);
-    host.replaceChildren(
-      E("h3", {}, _("Configuration profiles")),
-      E(
-        "p",
-        {},
-        _("Save up to eight profiles. Applying a profile may restart routing.")
-      ),
-      E("div", { class: "fkp_diagnostic-fields" }, [
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Profile name")),
-          name
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Configuration profiles")),
-          select
-        ])
-      ]),
-      E("div", { class: "fkp_diagnostic-actions" }, actions),
-      E(
-        "p",
-        {},
-        _(
-          "Exported profiles contain passwords and keys. Keep the downloaded file private."
-        )
-      ),
-      E("label", { class: "fkp_diagnostic-field" }, [
-        E("span", {}, _("Import profile")),
-        file
-      ]),
-      message2,
-      result
-    );
-    const controller2 = new ProfilePanelController(command3, (state) => {
-      if (generation3 !== mountId2) return;
-      if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
-        const chosen = select.value;
-        select.replaceChildren(
-          ...state.entries.map(
-            (entry) => E(
-              "option",
-              {
-                value: entry.id,
-                ...entry.invalid ? { disabled: true } : {}
-              },
-              entry.name
-            )
-          )
-        );
-        if (state.entries.some((entry) => entry.id === chosen))
-          select.value = chosen;
-      }
-      last = state;
-      result.replaceChildren(
-        ...state.error ? [E("p", {}, _(state.error))] : [],
-        ...state.running ? [
-          E(
-            "p",
-            {},
-            _(
-              "Applying settings in the background. You can close this page."
-            )
-          )
-        ] : [],
-        ...state.restored ? [E("p", {}, _("Previous settings were restored."))] : [],
-        ...state.preview ? [
-          E(
-            "p",
-            {},
-            _(
-              "Only changed section and option names are shown; values are hidden."
-            )
-          ),
-          ...!state.preview.applicable ? [
-            E(
-              "p",
-              {},
-              _(
-                "The profile cannot be used with the current configuration and components."
-              )
-            )
-          ] : [],
-          ...state.preview.changes.map(
-            (change) => E(
-              "p",
-              {},
-              `${change.section}${change.option ? ` / ${change.option}` : ""}: ${{ added: _("Added"), removed: _("Removed"), changed: _("Changed") }[change.change] || _("Changed")}`
-            )
-          )
-        ] : []
-      );
-      updateButtons();
-    });
-    controller2.mount();
-    void controller2.submit({ action: "list" }).then(() => controller2.submit({ action: "status" }));
-    const timer2 = window.setInterval(() => {
-      if (!last.running) return;
-      void controller2.submit({ action: "status" }).then(() => {
-        if (!last.running && !last.error)
-          void controller2.submit({ action: "list" });
-      });
-    }, 2e3);
-    active = { controller: controller2, timer: timer2 };
-  },
-  unmount() {
-    mountId2++;
-    if (active) {
-      active.controller.unmount();
-      window.clearInterval(active.timer);
-    }
-    active = null;
-  }
-};
-
-// src/trafira/tabs/diagnostic/gamingPresetPanel.ts
-var GamingPresetController = class {
-  constructor(call, render6) {
-    this.call = call;
-    this.render = render6;
-    this.active = false;
-    this.generation = 0;
-    this.reviewed = null;
-    this.state = {
-      busy: false,
-      running: false,
-      jobId: "",
-      error: "",
-      preview: null
-    };
-  }
-  mount() {
-    this.active = true;
-    this.generation++;
-    this.render(this.state);
-  }
-  unmount() {
-    this.active = false;
-    this.generation++;
-  }
-  invalidate() {
-    this.reviewed = null;
-    this.state.preview = null;
-    this.render({ ...this.state });
-  }
-  async preview(selection, digest) {
-    if (!selection.owner && (!selection.preset || !selection.device_ips?.length || !selection.proxy_section || !["before-device-routes", "after-device-routes"].includes(
-      selection.placement || ""
-    )))
-      return;
-    if (!digest) return;
-    await this.submit({
-      ...selection,
-      action: selection.owner ? "preview_remove" : "preview",
-      expected_digest: digest
-    });
-  }
-  async apply() {
-    if (!this.reviewed || !this.state.preview?.applicable) return;
-    await this.submit({
-      ...this.reviewed,
-      action: this.reviewed.owner ? "remove" : "apply"
-    });
-  }
-  async poll() {
-    await this.submit({ action: "status" });
-  }
-  async submit(request) {
-    if (!this.active || this.state.busy || this.state.running && request.action !== "status")
-      return;
-    const generation3 = ++this.generation;
-    this.state = { ...this.state, busy: true, error: "" };
-    this.render(this.state);
-    try {
-      const result = await this.call(request);
-      if (!this.active || generation3 !== this.generation) return;
-      if (typeof result.running === "boolean")
-        this.state.running = result.running;
-      if (typeof result.job_id === "string") this.state.jobId = result.job_id;
-      if (result.success === false || result.rollback_error) {
-        this.reviewed = null;
-        this.state.preview = null;
-        this.state.error = result.rollback_error ? "rollback_failed" : String(result.error || "operation_failed");
-      } else if (request.action === "preview" || request.action === "preview_remove") {
-        this.state.preview = result;
-        this.reviewed = result.applicable === true ? {
-          ...request,
-          device_ips: Array.isArray(request.device_ips) ? [...request.device_ips] : void 0
-        } : null;
-      } else if (request.action !== "status") {
-        this.reviewed = null;
-        this.state.preview = null;
-      }
-    } catch {
-      if (this.active && generation3 === this.generation) {
-        this.state.error = "request_failed";
-        this.reviewed = null;
-        this.state.preview = null;
-      }
-    } finally {
-      if (this.active && generation3 === this.generation) {
-        this.state = { ...this.state, busy: false };
-        this.render(this.state);
-      }
-    }
-  }
-};
-
-// src/trafira/tabs/diagnostic/renderGamingPresets.ts
-async function command4(request) {
-  const response = await executeShellCommand({
-    command: "/usr/bin/trafira-config",
-    args: ["gaming_preset_action", JSON.stringify(request)],
-    timeout: 3e4
-  });
-  if (response.code) throw new Error("Gaming preset request failed");
-  return JSON.parse(response.stdout);
-}
-function message(code) {
-  const messages = {
-    conflict: _("Configuration changed. Review the differences again."),
-    alice_bypass: _(
-      "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
-    ),
-    alice_broad_bypass: _(
-      "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
-    ),
-    preset_edited: _(
-      "These rules were edited. Confirm replacement or keep them as ordinary rules."
-    ),
-    unknown_device: _(
-      "The selected address is no longer known. Refresh the device list."
-    ),
-    invalid_proxy: _("Select an enabled connection rule."),
-    candidate_check_failed: _(
-      "The generated configuration did not pass validation."
-    ),
-    busy: _("Another configuration operation is already running."),
-    rollback_failed: _(
-      "Restoration failed. Check the service before continuing."
-    )
-  };
-  return messages[code] || _("The operation failed. Refresh the page and review the settings.") + " (" + code + ")";
-}
-var mounted = null;
-var generation2 = 0;
-var gamingPresetsPanel = {
-  mount() {
-    this.unmount();
-    const host = document.getElementById("trafira-gaming-presets");
-    if (!host) return;
-    const mine = generation2;
-    let catalog = null;
-    let state;
-    let loading2 = false;
-    const platform = E("select", {}), device = E("select", {}), proxy = E("select", {});
-    const placement = E("select", {}, [
-      E("option", { value: "" }, _("Choose rule priority")),
-      E(
-        "option",
-        { value: "before-device-routes" },
-        _("Before existing device rules")
-      ),
-      E(
-        "option",
-        { value: "after-device-routes" },
-        _("After existing device rules")
-      )
-    ]);
-    const addresses = E("div", {}), output = E("div", {}), status2 = E("p", {}), existing = E("div", {});
-    const enable = E("input", { type: "checkbox" }), replace = E("input", { type: "checkbox" });
-    const buttons = [];
-    let apply;
-    function button(label, click) {
-      const b = E(
-        "button",
-        { class: "cbi-button cbi-button-action", click },
-        label
-      );
-      buttons.push(b);
-      return b;
-    }
-    function update() {
-      const busy = loading2 || state?.busy || state?.running;
-      for (const b of buttons) b.disabled = !!busy;
-      for (const input of [platform, device, proxy, placement, enable, replace])
-        input.disabled = !!busy;
-      for (const input of Array.from(addresses.querySelectorAll("input")))
-        input.disabled = !!busy;
-      if (apply) apply.disabled = !!busy || state?.preview?.applicable !== true;
-    }
-    const controller2 = new GamingPresetController(command4, (next) => {
-      const wasRunning = state?.running;
-      state = next;
-      status2.textContent = state.error ? message(state.error) : state.running ? _("Applying configuration. You can reconnect to this page.") : "";
-      output.replaceChildren();
-      if (state.preview) {
-        const p = state.preview;
-        output.append(
-          E(
-            "p",
-            {},
-            p.applicable ? _("Configuration validation passed. Review the changes below.") : _("The generated configuration did not pass validation.")
-          )
-        );
-        output.append(
-          E(
-            "pre",
-            {
-              style: "white-space:pre-wrap;overflow-wrap:anywhere;max-height:24em;overflow:auto"
-            },
-            JSON.stringify(
-              {
-                routes: p.routes,
-                changes: p.changes,
-                conflicts: p.conflicts,
-                checks: p.checks
-              },
-              null,
-              2
-            )
-          )
-        );
-      }
-      update();
-      if (wasRunning && !state.running && !state.error) void refresh();
-    });
-    function showAddresses() {
-      controller2.invalidate();
-      addresses.replaceChildren();
-      const selected = catalog?.devices[Number(device.value)];
-      if (!selected) return;
-      const candidates = catalog.devices.filter(
-        (d) => d.mac === selected.mac && d.interface === selected.interface
-      );
-      const values = [...new Set(candidates.flatMap((d) => d.ips))];
-      for (const address of values) {
-        const input = E("input", {
-          type: "checkbox",
-          value: address
-        });
-        input.addEventListener("change", () => controller2.invalidate());
-        addresses.append(
-          E("label", { style: "display:block" }, [input, " " + address])
-        );
-      }
-    }
-    async function refresh() {
-      if (loading2 || state?.busy || state?.running) return;
-      loading2 = true;
-      controller2.invalidate();
-      update();
-      try {
-        const result = await command4({ action: "catalog" });
-        if (mine !== generation2) return;
-        if (result.success !== true)
-          throw new Error(String(result.error || "catalog_unavailable"));
-        catalog = result;
-        platform.replaceChildren(
-          ...catalog.presets.map(
-            (p) => E(
-              "option",
-              { value: p.id },
-              `${p.id} \xB7 ${p.checked_at} \xB7 v${p.revision}`
-            )
-          )
-        );
-        device.replaceChildren(
-          E("option", { value: "" }, _("Select a known device")),
-          ...catalog.devices.map(
-            (d, i) => E(
-              "option",
-              { value: String(i) },
-              `${d.name || d.mac} \xB7 ${d.interface} \xB7 ${d.ips.join(", ")}`
-            )
-          )
-        );
-        proxy.replaceChildren(
-          E("option", { value: "" }, _("Select a connection")),
-          ...catalog.proxies.map(
-            (p) => E("option", { value: p.id }, p.label || p.id)
-          )
-        );
-        addresses.replaceChildren();
-        existing.replaceChildren();
-        for (const owner of catalog.owners) {
-          existing.append(
-            E(
-              "p",
-              {},
-              owner.platform + " \xB7 " + owner.owner + (owner.edited ? " \xB7 " + _("Edited") : "")
-            )
-          );
-          existing.append(
-            button(_("Keep as ordinary rules"), () => {
-              void controller2.preview(
-                { owner: owner.owner, mode: "keep" },
-                catalog.digest
-              );
-            })
-          );
-          existing.append(
-            button(_("Preview deletion"), () => {
-              if (owner.edited && !window.confirm(
-                _(
-                  "Delete the edited preset rules? The next step shows the changes."
-                )
-              ))
-                return;
-              void controller2.preview(
-                { owner: owner.owner, mode: "delete", confirm: owner.edited },
-                catalog.digest
-              );
-            })
-          );
-        }
-        status2.textContent = "";
-      } catch (error) {
-        if (mine === generation2)
-          status2.textContent = message(
-            error instanceof Error ? error.message : "catalog_unavailable"
-          );
-      } finally {
-        if (mine === generation2) {
-          loading2 = false;
-          update();
-        }
-      }
-    }
-    for (const input of [platform, proxy, placement, enable, replace])
-      input.addEventListener("change", () => controller2.invalidate());
-    device.addEventListener("change", showAddresses);
-    host.replaceChildren(
-      E("h3", {}, _("Gaming presets")),
-      E(
-        "p",
-        {},
-        _(
-          "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
-        )
-      ),
-      E(
-        "p",
-        {},
-        _(
-          "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
-        )
-      ),
-      E("div", { class: "fkp_diagnostic-fields" }, [
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Gaming presets")),
-          platform
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Select a known device")),
-          device
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Select a connection")),
-          proxy
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Choose rule priority")),
-          placement
-        ])
-      ]),
-      addresses,
-      E("label", { style: "display:block" }, [
-        enable,
-        " " + _("Enable only these addresses in Alice Mode if required")
-      ]),
-      E("label", { style: "display:block" }, [
-        replace,
-        " " + _("Replace my edits to this preset after preview")
-      ]),
-      E("div", { class: "fkp_diagnostic-actions" }, [
-        button(_("Refresh devices"), () => {
-          void refresh();
-        }),
-        button(_("Preview gaming rules"), () => {
-          if (!catalog || device.value === "") return;
-          void controller2.preview(
-            {
-              preset: platform.value,
-              device_ips: Array.from(
-                addresses.querySelectorAll("input:checked")
-              ).map((i) => i.value),
-              proxy_section: proxy.value,
-              placement: placement.value,
-              enable_device: enable.checked,
-              replace_edited: replace.checked
-            },
-            catalog.digest
-          );
-        }),
-        apply = button(_("Apply reviewed changes"), () => {
-          void controller2.apply();
-        })
-      ]),
-      status2,
-      output,
-      existing
-    );
-    controller2.mount();
-    mounted = {
-      controller: controller2,
-      timer: window.setInterval(() => {
-        void controller2.poll();
-      }, 2e3)
-    };
-    void controller2.poll().then(() => refresh());
-  },
-  unmount() {
-    generation2++;
-    if (mounted) {
-      mounted.controller.unmount();
-      window.clearInterval(mounted.timer);
-    }
-    mounted = null;
   }
 };
 
@@ -12697,10 +11654,7 @@ async function onPageMount2() {
     preservePersistedRun: true
   });
   diagnosticMounted = true;
-  void snapshots.mount();
   routeExplanationPanel.mount();
-  profilesPanel.mount();
-  gamingPresetsPanel.mount();
   diagnosticMountId += 1;
   const mountId3 = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -12739,10 +11693,7 @@ function onPageUnmount2({
   preservePersistedRun = false
 } = {}) {
   diagnosticMounted = false;
-  snapshots.unmount();
   routeExplanationPanel.unmount();
-  profilesPanel.unmount();
-  gamingPresetsPanel.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;
@@ -13003,15 +11954,8 @@ var styles4 = `
     height: 16px;
 }
 
-.fkp_diagnostic-page > div,
-.fkp_diagnostic-page__lower > div {
+.fkp_diagnostic-page > div {
     min-width: 0;
-}
-
-.fkp_diagnostic-page__lower {
-    grid-column: 1 / -1;
-    display: grid;
-    gap: 16px;
 }
 
 .fkp_diagnostic-panel,
@@ -13028,6 +11972,20 @@ var styles4 = `
 #trafira-profiles > h3,
 #trafira-gaming-presets > h3 {
     margin-top: 0;
+}
+
+.trafira-feature-slot {
+    margin: 16px 0;
+    width: 100%;
+    min-width: 0;
+}
+
+#cbi-${TRAFIRA_UCI_PACKAGE}-profiles > h3 {
+    display: none;
+}
+
+.trafira-feature-slot p {
+    max-width: 90ch;
 }
 
 .fkp_diagnostic-fields {
@@ -13116,7 +12074,7 @@ var DiagnosticTab = {
 };
 
 // src/trafira/tabs/monitoring/render.ts
-function render4() {
+function render3() {
   return E(
     "div",
     {
@@ -13825,7 +12783,7 @@ function renderStateRow(text3, className = "") {
   ]);
 }
 function renderConnectionsTable(connections, state) {
-  const rows = state ? [renderStateRow(state.text, state.className)] : connections.map(renderConnectionRow);
+  const rows2 = state ? [renderStateRow(state.text, state.className)] : connections.map(renderConnectionRow);
   return E("div", { class: "fkp_monitoring-page__table-wrap" }, [
     E(
       "table",
@@ -13843,7 +12801,7 @@ function renderConnectionsTable(connections, state) {
             E("th", {}, _("Close"))
           ])
         ]),
-        E("tbody", {}, rows)
+        E("tbody", {}, rows2)
       ]
     )
   ]);
@@ -15072,13 +14030,13 @@ var styles5 = `
 
 // src/trafira/tabs/monitoring/index.ts
 var MonitoringTab = {
-  render: render4,
+  render: render3,
   initController: initController3,
   styles: styles5
 };
 
 // src/trafira/tabs/updates/render.ts
-function render5() {
+function render4() {
   return E("div", { id: "updates-status", class: "fkp_updates-page" }, [
     E("div", {
       id: "fkp_updates-components",
@@ -15119,8 +14077,8 @@ function shouldExposeCheckResults({
 }
 
 // src/trafira/tabs/updates/coreVersionPicker.ts
-var text2 = (value) => typeof value === "string" ? value : "";
-var initial2 = () => ({
+var text = (value) => typeof value === "string" ? value : "";
+var initial = () => ({
   stage: "idle",
   entries: [],
   currentVersion: "",
@@ -15139,13 +14097,13 @@ var CoreVersionPicker = class {
     this.active = false;
     this.generation = 0;
     this.pending = false;
-    this.state = initial2();
+    this.state = initial();
   }
   mount() {
     this.active = true;
     this.generation++;
     this.pending = false;
-    this.state = initial2();
+    this.state = initial();
     this.render(this.state);
   }
   unmount() {
@@ -15212,16 +14170,16 @@ var CoreVersionPicker = class {
           ...this.state,
           stage: result.success === true ? "idle" : "failed",
           selected: "",
-          currentVersion: text2(result.current_version) || this.state.currentVersion,
+          currentVersion: text(result.current_version) || this.state.currentVersion,
           cachedAt: Number(result.cached_at) || 0,
-          pinnedVersion: result.pin && typeof result.pin === "object" ? text2(result.pin.version) : "",
+          pinnedVersion: result.pin && typeof result.pin === "object" ? text(result.pin.version) : "",
           entries: Array.isArray(result.entries) ? result.entries.filter((entry) => entry && typeof entry === "object").map((entry) => ({
-            id: text2(entry.id),
-            version: text2(entry.version),
+            id: text(entry.id),
+            version: text(entry.version),
             available: result.success === true && entry.available === true,
-            reason: text2(entry.reason)
+            reason: text(entry.reason)
           })) : [],
-          unavailableReason: text2(result.unavailable_reason),
+          unavailableReason: text(result.unavailable_reason),
           error: result.success === true ? "" : "Could not load available versions. Check the connection and refresh the list."
         };
       } else if (request.action === "status" && result.running !== true && !this.state.jobId) {
@@ -15237,7 +14195,7 @@ var CoreVersionPicker = class {
         this.state = {
           ...this.state,
           stage: "installing",
-          jobId: text2(result.job_id),
+          jobId: text(result.job_id),
           restored: false,
           error: ""
         };
@@ -15273,7 +14231,7 @@ var CoreVersionPicker = class {
 };
 
 // src/trafira/tabs/updates/renderCoreVersions.ts
-var active2 = null;
+var active = null;
 var coreVersionsPanel = {
   mount() {
     this.unmount();
@@ -15415,14 +14373,14 @@ var coreVersionsPanel = {
         if (last.stage === "done") void picker.load(true);
       });
     }, 2e3);
-    active2 = { picker, timer: timer2 };
+    active = { picker, timer: timer2 };
   },
   unmount() {
-    if (active2) {
-      active2.picker.unmount();
-      window.clearInterval(active2.timer);
+    if (active) {
+      active.picker.unmount();
+      window.clearInterval(active.timer);
     }
-    active2 = null;
+    active = null;
   }
 };
 
@@ -16615,7 +15573,7 @@ var styles6 = `
 
 // src/trafira/tabs/updates/index.ts
 var UpdatesTab = {
-  render: render5,
+  render: render4,
   initController: initController4,
   styles: styles6
 };
@@ -16796,11 +15754,1470 @@ function injectGlobalStyles() {
   );
 }
 
+// src/trafira/helpers/panelLifecycle.ts
+function watchPanel(id, panel, canWrite2 = true) {
+  let mounted2 = null;
+  const refresh = () => {
+    const node = document.getElementById(id);
+    const visible = node?.isConnected && node.offsetParent !== null ? node : null;
+    if (mounted2 === visible) return;
+    if (mounted2) panel.unmount();
+    mounted2 = visible;
+    if (mounted2) void panel.mount(canWrite2);
+  };
+  const observer = new MutationObserver(refresh);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class", "style", "hidden", "data-tab-active"]
+  });
+  refresh();
+  return () => {
+    observer.disconnect();
+    if (mounted2) panel.unmount();
+    mounted2 = null;
+  };
+}
+
+// src/trafira/tabs/diagnostic/snapshotPanel.ts
+var SnapshotController = class {
+  constructor(read, start, render6) {
+    this.read = read;
+    this.start = start;
+    this.render = render6;
+    this.active = false;
+    this.generation = 0;
+    this.failures = 0;
+    this.report = null;
+    this.starting = false;
+  }
+  async mount() {
+    this.unmount();
+    this.active = true;
+    this.failures = 0;
+    await this.refresh();
+  }
+  unmount() {
+    this.active = false;
+    this.starting = false;
+    this.generation++;
+    clearTimeout(this.timer);
+  }
+  async refresh() {
+    clearTimeout(this.timer);
+    const generation3 = this.generation;
+    try {
+      const report = await this.read();
+      if (!this.active || generation3 !== this.generation) return;
+      this.report = report;
+      this.failures = 0;
+      this.render(report, "", this.starting);
+    } catch {
+      if (!this.active || generation3 !== this.generation) return;
+      this.failures++;
+      this.render(this.report, "Could not read snapshot status", this.starting);
+    }
+    if (this.report?.job?.running && this.failures < 3) {
+      this.timer = setTimeout(() => void this.refresh(), 3e3);
+    }
+  }
+  async prepare() {
+    if (this.starting) return;
+    const generation3 = this.generation;
+    this.starting = true;
+    this.render(this.report, "", true);
+    try {
+      const result = await this.start();
+      if (!this.active || generation3 !== this.generation) return;
+      this.starting = false;
+      if (!result.success) {
+        this.render(
+          this.report,
+          result.message || "Could not start snapshot preparation",
+          false
+        );
+        return;
+      }
+      await this.refresh();
+    } catch {
+      if (this.active && generation3 === this.generation) {
+        this.render(this.report, "Could not start snapshot preparation", false);
+      }
+    } finally {
+      if (generation3 === this.generation) this.starting = false;
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderSnapshots.ts
+var canWrite = true;
+async function command2(name) {
+  const result = await executeShellCommand({
+    command: "/usr/bin/trafira",
+    args: [name],
+    timeout: 15e3
+  });
+  if (result.code) throw new Error("Snapshot command failed");
+  return JSON.parse(result.stdout);
+}
+function size(bytes) {
+  return `${(bytes / 1024).toFixed(1)} KiB`;
+}
+function startErrorText(error) {
+  switch (error) {
+    case "Could not read snapshot status":
+      return _(
+        "Could not read saved-copy status. Refresh the status to try again."
+      );
+    case "Snapshot preparation is already starting":
+      return _(
+        "A copy download is already starting. Wait, then refresh the status."
+      );
+    case "Snapshot preparation is running or unavailable":
+      return _(
+        "Could not start downloading copies. Another list update may be running, or the core and saved configuration may be unavailable. Refresh the status and try again."
+      );
+    case "Failed to write snapshot job":
+      return _(
+        "Could not save the download task. Check free storage on the router."
+      );
+    case "Failed to start snapshot worker":
+      return _(
+        "Could not start the download task. Refresh the status and try again."
+      );
+    default:
+      return _(
+        "Could not start downloading copies. Refresh the status and try again."
+      );
+  }
+}
+function jobStatusText(job) {
+  if (job.running) return _("Downloading and checking list copies\u2026");
+  if (job.success) {
+    return _(
+      "Copies were downloaded and checked. They will be checked again before the next startup."
+    );
+  }
+  switch (job.message) {
+    case "Failed to write snapshot job":
+    case "Failed to start snapshot worker":
+      return startErrorText(job.message);
+    case "Another lists update is already running":
+      return _(
+        "Another list update is already running. Wait for it to finish, then download the copies again."
+      );
+    case "Snapshot preparation unavailable: check core, configuration and lists proxy":
+      return _(
+        "Could not download copies. Check the sing-box version, saved configuration and proxy for list downloads."
+      );
+    case "Snapshot worker exited unexpectedly":
+      return _(
+        "Downloading copies was interrupted. Download the copies again."
+      );
+    case "Snapshot preparation failed; previous copies preserved":
+      return _(
+        "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage."
+      );
+    default:
+      return _(
+        "Could not download copies. Check the internet connection, list-download proxy and router storage."
+      );
+  }
+}
+function render5(report, error, starting) {
+  const container = document.getElementById("fkp_diagnostic-page-snapshots");
+  if (!container) return;
+  const expanded = container.querySelector("details")?.open;
+  const busy = starting || !!report?.job?.running;
+  const stored = report?.entries.filter((entry) => entry.present).length || 0;
+  container.replaceChildren(
+    E("div", { class: "fkp_diagnostic-panel" }, [
+      E("h3", {}, _("Rule-set copies for startup")),
+      E(
+        "p",
+        {},
+        _(
+          "Local copies help Trafira start when remote list sources are unavailable."
+        )
+      ),
+      E(
+        "p",
+        {},
+        _(
+          "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
+        )
+      ),
+      ...error ? [
+        E(
+          "p",
+          { class: "alert-message warning", role: "status" },
+          startErrorText(error)
+        )
+      ] : [],
+      ...starting ? [E("p", { role: "status" }, _("Starting the copy download\u2026"))] : [],
+      ...!report ? [E("p", {}, _("Snapshot status unavailable"))] : [
+        ...!report.supported ? [E("p", {}, _("Requires sing-box 1.14 or newer"))] : [],
+        ...!report.available ? [E("p", {}, _("Saved configuration unavailable"))] : [],
+        ...report.supported && report.available && report.entries.length > 0 && !report.preparable ? [
+          E(
+            "p",
+            {},
+            _(
+              "Apply the Trafira configuration again to enable saved copies for this core"
+            )
+          )
+        ] : [],
+        ...report.entries.length ? [
+          E(
+            "p",
+            {},
+            `${_("Copies stored on router")}: ${stored} / ${report.entries.length} \xB7 ${_("Lists without a saved copy")}: ${report.entries.length - stored}`
+          ),
+          E(
+            "details",
+            {
+              class: "fkp_diagnostic-details",
+              ...expanded ? { open: true } : {}
+            },
+            [
+              E(
+                "summary",
+                {},
+                `${_("Show saved lists and storage")} (${report.entries.length})`
+              ),
+              E(
+                "p",
+                {},
+                `${_("Storage")}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`
+              ),
+              E(
+                "p",
+                {},
+                _(
+                  "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them."
+                )
+              ),
+              E(
+                "div",
+                { class: "fkp_diagnostic-snapshots" },
+                report.entries.map(
+                  (entry) => E("div", {}, [
+                    E("b", {}, entry.tag),
+                    E(
+                      "p",
+                      {},
+                      entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
+                    ),
+                    ...entry.configured_initial ? [
+                      E(
+                        "p",
+                        {},
+                        _(
+                          "Referenced in saved startup configuration"
+                        )
+                      )
+                    ] : []
+                  ])
+                )
+              )
+            ]
+          )
+        ] : [],
+        ...report.entries.length === 0 ? [E("p", {}, _("No remote rule sets in saved configuration"))] : [],
+        ...report.job ? [
+          E(
+            "p",
+            {
+              role: "status",
+              ...!report.job.running && !report.job.success ? { class: "alert-message warning" } : {}
+            },
+            report.job.running ? jobStatusText(report.job) : `${_("Last download")}: ${jobStatusText(report.job)}`
+          )
+        ] : []
+      ],
+      E("div", { class: "fkp_diagnostic-actions" }, [
+        E(
+          "button",
+          {
+            class: "btn cbi-button",
+            ...!canWrite || busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length ? { disabled: true } : {},
+            click: () => void snapshots.prepare()
+          },
+          _("Download / update list copies")
+        ),
+        E(
+          "button",
+          {
+            class: "btn cbi-button",
+            ...starting ? { disabled: true } : {},
+            click: () => void snapshots.refresh()
+          },
+          _("Refresh status")
+        )
+      ])
+    ])
+  );
+}
+var controller2 = new SnapshotController(
+  () => command2("ruleset_snapshot_report"),
+  () => command2("ruleset_snapshot_prepare_async"),
+  render5
+);
+var snapshots = {
+  mount(writable = true) {
+    canWrite = writable;
+    return controller2.mount();
+  },
+  unmount: () => controller2.unmount(),
+  refresh: () => controller2.refresh(),
+  prepare: () => canWrite ? controller2.prepare() : Promise.resolve()
+};
+
+// src/trafira/helpers/configurationSync.ts
+function confirmConfigurationReplacement() {
+  return window.confirm(
+    _(
+      "Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?"
+    )
+  );
+}
+var reloadRequested = false;
+function reloadAfterConfigurationCommit() {
+  if (reloadRequested) return;
+  reloadRequested = true;
+  window.location.reload();
+}
+var pendingCommit = null;
+function trackConfigurationCommit(jobId, poll) {
+  if (!jobId || pendingCommit?.jobId === jobId) return;
+  if (pendingCommit?.timer) clearTimeout(pendingCommit.timer);
+  const tracked = { jobId, poll };
+  pendingCommit = tracked;
+  schedule(tracked);
+}
+function observeConfigurationCommit(status2) {
+  if (!pendingCommit || status2.job_id !== pendingCommit.jobId || status2.running !== false)
+    return false;
+  if (pendingCommit.timer) clearTimeout(pendingCommit.timer);
+  pendingCommit = null;
+  const committed = status2.success === true && !status2.rollback_error && !status2.recovery_pending;
+  if (committed) reloadAfterConfigurationCommit();
+  return committed;
+}
+function schedule(tracked) {
+  tracked.timer = setTimeout(async () => {
+    tracked.timer = void 0;
+    try {
+      const status2 = await tracked.poll();
+      if (pendingCommit === tracked) observeConfigurationCommit(status2);
+    } catch {
+    } finally {
+      if (pendingCommit === tracked) schedule(tracked);
+    }
+  }, 2e3);
+}
+
+// src/trafira/tabs/diagnostic/profilePanel.ts
+var initial2 = () => ({
+  busy: false,
+  running: false,
+  digest: "",
+  canRestore: false,
+  entries: [],
+  preview: null,
+  jobId: "",
+  error: "",
+  restored: false,
+  committed: false
+});
+var text2 = (value) => typeof value === "string" ? value : "";
+var errors = {
+  conflict: "Configuration changed. Review the differences again.",
+  busy: "Another configuration operation is already running.",
+  recovery_required: "Restore the interrupted operation before continuing.",
+  candidate_check_failed: "The profile cannot be used with the current configuration and components.",
+  invalid_profile: "The profile format is invalid or unsupported.",
+  profile_limit: "A maximum of eight profiles can be saved."
+};
+function profileErrorMessage(error) {
+  const messages = {
+    "Configuration changed. Review the differences again.": _(
+      "Configuration changed. Review the differences again."
+    ),
+    "Another configuration operation is already running.": _(
+      "Another configuration operation is already running."
+    ),
+    "Restore the interrupted operation before continuing.": _(
+      "Restore the interrupted operation before continuing."
+    ),
+    "The profile cannot be used with the current configuration and components.": _(
+      "The profile cannot be used with the current configuration and components."
+    ),
+    "The profile format is invalid or unsupported.": _(
+      "The profile format is invalid or unsupported."
+    ),
+    "A maximum of eight profiles can be saved.": _(
+      "A maximum of eight profiles can be saved."
+    ),
+    "Restoration failed. Check the service before continuing.": _(
+      "Restoration failed. Check the service before continuing."
+    )
+  };
+  return messages[error] || _("The profile operation failed.");
+}
+var ProfilePanelController = class {
+  constructor(call, render6) {
+    this.call = call;
+    this.render = render6;
+    this.active = false;
+    this.generation = 0;
+    this.state = initial2();
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.state = initial2();
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  async submit(request) {
+    if (!this.active || this.state.busy) return;
+    if (this.state.running && !["status", "list"].includes(request.action))
+      return;
+    const generation3 = ++this.generation;
+    this.state = {
+      ...this.state,
+      busy: true,
+      ...request.action === "status" ? {} : { error: "", restored: false, committed: false }
+    };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (["apply", "restore"].includes(request.action) && result.success === true && result.running === true)
+        trackConfigurationCommit(
+          text2(result.job_id),
+          () => this.call({ action: "status" })
+        );
+      const committed = request.action === "status" && observeConfigurationCommit(result);
+      if (!this.active || generation3 !== this.generation) return;
+      if (request.action === "status" && result.running === false && !this.state.running && !committed && !result.recovery_pending)
+        return;
+      if (committed) this.state = { ...this.state, committed: true };
+      if (typeof result.running === "boolean")
+        this.state = { ...this.state, running: result.running };
+      if (typeof result.digest === "string")
+        this.state = { ...this.state, digest: result.digest };
+      if (typeof result.can_restore === "boolean")
+        this.state = { ...this.state, canRestore: result.can_restore };
+      if (result.success === false || result.rollback_error) {
+        this.state = {
+          ...this.state,
+          preview: null,
+          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : errors[text2(result.error)] || "The profile operation failed.",
+          restored: result.restored === true
+        };
+      } else {
+        if (Array.isArray(result.entries)) {
+          this.state = {
+            ...this.state,
+            entries: result.entries.filter((item) => item && typeof item === "object").map((item) => ({
+              id: text2(item.id),
+              name: text2(item.name),
+              invalid: item.invalid === true
+            }))
+          };
+        }
+        if (request.action === "preview") {
+          const changes = Array.isArray(result.changes) ? result.changes : [];
+          this.state = {
+            ...this.state,
+            preview: {
+              id: request.id || "",
+              applicable: result.applicable !== false,
+              digest: text2(result.digest),
+              changes: changes.filter((item) => item && typeof item === "object").map((item) => ({
+                section: text2(item.section),
+                option: text2(item.option),
+                change: text2(item.change)
+              }))
+            }
+          };
+        }
+        if (result.job_id)
+          this.state = { ...this.state, jobId: text2(result.job_id) };
+        if (["apply", "restore", "remove"].includes(request.action))
+          this.state = { ...this.state, preview: null };
+        this.state = { ...this.state, restored: result.restored === true };
+      }
+    } catch {
+      if (!this.active || generation3 !== this.generation) return;
+      this.state = {
+        ...this.state,
+        error: "The profile operation failed.",
+        preview: null
+      };
+    } finally {
+      if (this.active && generation3 === this.generation) {
+        this.state = { ...this.state, busy: false };
+        this.render(this.state);
+      }
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderProfiles.ts
+async function command3(request) {
+  const result = await executeShellCommand({
+    command: "/usr/bin/trafira-config",
+    args: ["profile_action", JSON.stringify(request)],
+    timeout: 3e4
+  });
+  if (result.code) throw new Error("Profile command failed");
+  return JSON.parse(result.stdout);
+}
+function encode(bytes) {
+  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
+}
+function decode(value) {
+  return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+}
+var mountId2 = 0;
+var active2 = null;
+var profilesPanel = {
+  mount(canWrite2 = true) {
+    this.unmount();
+    const host = document.getElementById("trafira-profiles");
+    if (!host) return;
+    const generation3 = mountId2;
+    let last;
+    let transferring = false;
+    const name = E("input", {
+      type: "text",
+      maxLength: 64,
+      placeholder: _("Profile name")
+    });
+    const select = E("select", {});
+    const file = E("input", {
+      type: "file",
+      accept: ".json,application/json"
+    });
+    const result = E("div", {});
+    const message2 = E("p", {});
+    const buttons = [];
+    const writers = [];
+    const needsSelection = [];
+    const needsName = [];
+    let apply;
+    let restore;
+    function updateButtons() {
+      const disabled = transferring || last?.busy || last?.running;
+      for (const button2 of buttons) button2.disabled = disabled;
+      for (const button2 of writers) button2.disabled || (button2.disabled = !canWrite2);
+      const selected = last?.entries.some(
+        (entry) => entry.id === select.value && !entry.invalid
+      );
+      for (const button2 of needsSelection) button2.disabled || (button2.disabled = !selected);
+      for (const button2 of needsName) button2.disabled || (button2.disabled = !name.value.trim());
+      apply.disabled = disabled || !canWrite2 || !last?.preview || last.preview.id !== select.value || !last.preview.applicable;
+      restore.disabled = disabled || !canWrite2 || !last?.canRestore || !last?.digest;
+      file.disabled = disabled || !canWrite2;
+      select.disabled = disabled || !last?.entries.length;
+      name.disabled = disabled || !canWrite2;
+    }
+    async function submit(request, refresh = false) {
+      await controller3.submit(request);
+      if (refresh && generation3 === mountId2 && !last.error)
+        await controller3.submit({ action: "list" });
+    }
+    function button(label, click, writer = false, selection = false, named = false) {
+      const element = E(
+        "button",
+        { type: "button", class: "cbi-button cbi-button-action", click },
+        label
+      );
+      buttons.push(element);
+      if (writer) writers.push(element);
+      if (selection) needsSelection.push(element);
+      if (named) needsName.push(element);
+      return element;
+    }
+    const actions = [
+      button(
+        _("Create profile from saved settings"),
+        () => {
+          void submit({ action: "create", name: name.value }, true);
+        },
+        true,
+        false,
+        true
+      ),
+      button(
+        _("Rename profile"),
+        () => {
+          void submit(
+            { action: "rename", id: select.value, name: name.value },
+            true
+          );
+        },
+        true,
+        true,
+        true
+      ),
+      button(
+        _("Show differences"),
+        () => {
+          void submit({ action: "preview", id: select.value });
+        },
+        false,
+        true
+      ),
+      apply = button(
+        _("Apply profile"),
+        () => {
+          if (!confirmConfigurationReplacement()) return;
+          void submit({
+            action: "apply",
+            id: select.value,
+            digest: last.preview?.digest
+          });
+        },
+        true,
+        true
+      ),
+      restore = button(
+        _("Restore previous settings"),
+        () => {
+          if (!confirmConfigurationReplacement()) return;
+          void submit({ action: "restore", digest: last.digest });
+        },
+        true
+      ),
+      button(
+        _("Delete profile"),
+        () => {
+          if (window.confirm(
+            _(
+              "Delete the selected saved profile? Current settings will remain unchanged."
+            )
+          ))
+            void submit({ action: "remove", id: select.value }, true);
+        },
+        true,
+        true
+      )
+    ];
+    async function transfer(kind) {
+      if (transferring || last.busy || last.running) return;
+      transferring = true;
+      message2.textContent = _("Transferring profile");
+      updateButtons();
+      let transferId = "";
+      try {
+        if (kind === "import") {
+          const selected = file.files?.[0];
+          if (!selected || selected.size > 1048576) throw new Error("size");
+          const bytes = new Uint8Array(await selected.arrayBuffer());
+          const begin = await command3({ action: "import_begin" });
+          if (!begin.success || typeof begin.id !== "string")
+            throw new Error("begin");
+          transferId = begin.id;
+          for (let offset = 0; offset < bytes.length; offset += 12288) {
+            if (generation3 !== mountId2) throw new Error("closed");
+            const sent = await command3({
+              action: "import_chunk",
+              id: transferId,
+              offset,
+              data: encode(bytes.slice(offset, offset + 12288))
+            });
+            if (!sent.success) throw new Error("chunk");
+          }
+          if (generation3 !== mountId2) throw new Error("closed");
+          const imported = await command3({
+            action: "import_finish",
+            id: transferId
+          });
+          if (!imported.success) throw new Error("import");
+          await controller3.submit({ action: "list" });
+        } else {
+          const begin = await command3({
+            action: "export_begin",
+            id: select.value
+          });
+          if (!begin.success || typeof begin.id !== "string")
+            throw new Error("begin");
+          transferId = begin.id;
+          let offset = 0;
+          const chunks = [];
+          for (; ; ) {
+            if (generation3 !== mountId2) throw new Error("closed");
+            const part = await command3({
+              action: "export_read",
+              id: transferId,
+              offset
+            });
+            if (!part.success || typeof part.data !== "string")
+              throw new Error("read");
+            const bytes2 = decode(part.data);
+            chunks.push(bytes2);
+            offset += bytes2.length;
+            if (offset > 1048576 || !bytes2.length && !part.done)
+              throw new Error("size");
+            if (part.done) break;
+          }
+          if (generation3 !== mountId2) throw new Error("closed");
+          const bytes = new Uint8Array(offset);
+          let position = 0;
+          for (const chunk of chunks) {
+            bytes.set(chunk, position);
+            position += chunk.length;
+          }
+          const url = URL.createObjectURL(
+            new Blob([bytes], { type: "application/json" })
+          );
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "trafira-profile.json";
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+        if (generation3 === mountId2)
+          message2.textContent = _("Profile transfer completed");
+      } catch {
+        if (generation3 === mountId2)
+          message2.textContent = _(
+            "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+          );
+      } finally {
+        if (transferId)
+          void command3({ action: "transfer_cancel", id: transferId }).catch(
+            () => void 0
+          );
+        transferring = false;
+        if (generation3 === mountId2) updateButtons();
+      }
+    }
+    actions.push(
+      button(
+        _("Import profile"),
+        () => {
+          void transfer("import");
+        },
+        true
+      ),
+      button(
+        _("Export profile"),
+        () => {
+          void transfer("export");
+        },
+        true,
+        true
+      )
+    );
+    select.addEventListener("change", updateButtons);
+    name.addEventListener("input", updateButtons);
+    host.replaceChildren(
+      E("h3", {}, _("Configuration profiles")),
+      E(
+        "p",
+        {},
+        _(
+          "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile."
+        )
+      ),
+      ...!canWrite2 ? [
+        E(
+          "p",
+          { class: "alert-message notice" },
+          _(
+            "Read-only access. Configuration changes require write permission."
+          )
+        )
+      ] : [],
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Profile name")),
+          name
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Configuration profiles")),
+          select
+        ])
+      ]),
+      E("div", { class: "fkp_diagnostic-actions" }, [
+        actions[0],
+        actions[2],
+        actions[3],
+        actions[4]
+      ]),
+      E("details", { class: "fkp_diagnostic-details" }, [
+        E("summary", {}, _("Manage and transfer profiles")),
+        E(
+          "p",
+          {},
+          _("Enter a new profile name above to rename the selected profile.")
+        ),
+        E("div", { class: "fkp_diagnostic-actions" }, [
+          actions[1],
+          actions[5],
+          actions[7]
+        ]),
+        E(
+          "p",
+          {},
+          _(
+            "Exported profiles contain passwords and keys. Keep the downloaded file private."
+          )
+        ),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Import a profile file (JSON, up to 1 MiB)")),
+          file
+        ]),
+        E("div", { class: "fkp_diagnostic-actions" }, [actions[6]])
+      ]),
+      message2,
+      result
+    );
+    const controller3 = new ProfilePanelController(command3, (state) => {
+      if (generation3 !== mountId2) return;
+      if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
+        const chosen = select.value;
+        select.replaceChildren(
+          ...state.entries.map(
+            (entry) => E(
+              "option",
+              {
+                value: entry.id,
+                ...entry.invalid ? { disabled: true } : {}
+              },
+              entry.name
+            )
+          )
+        );
+        if (state.entries.some((entry) => entry.id === chosen))
+          select.value = chosen;
+      }
+      last = state;
+      if (state.committed) reloadAfterConfigurationCommit();
+      result.replaceChildren(
+        ...!state.entries.length && !state.busy && !state.error ? [
+          E(
+            "p",
+            {},
+            _(
+              "No saved profiles yet. Enter a name and create a profile from the saved configuration."
+            )
+          )
+        ] : [],
+        ...state.error ? [
+          E(
+            "p",
+            { class: "alert-message warning", role: "status" },
+            profileErrorMessage(state.error)
+          )
+        ] : [],
+        ...state.running ? [
+          E(
+            "p",
+            {},
+            _(
+              "Applying settings in the background. You can close this page."
+            )
+          )
+        ] : [],
+        ...state.restored ? [E("p", {}, _("Previous settings were restored."))] : [],
+        ...state.preview ? [
+          E(
+            "p",
+            {},
+            _(
+              "Only changed section and option names are shown; values are hidden."
+            )
+          ),
+          ...!state.preview.applicable ? [
+            E(
+              "p",
+              {},
+              _(
+                "The profile cannot be used with the current configuration and components."
+              )
+            )
+          ] : [],
+          ...state.preview.changes.map(
+            (change) => E(
+              "p",
+              {},
+              `${change.section}${change.option ? ` / ${change.option}` : ""}: ${{ added: _("Added"), removed: _("Removed"), changed: _("Changed") }[change.change] || _("Changed")}`
+            )
+          )
+        ] : []
+      );
+      updateButtons();
+    });
+    controller3.mount();
+    void controller3.submit({ action: "list" }).then(() => controller3.submit({ action: "status" }));
+    const timer2 = window.setInterval(() => {
+      if (!last.running) return;
+      void controller3.submit({ action: "status" }).then(() => {
+        if (!last.running && !last.error)
+          void controller3.submit({ action: "list" });
+      });
+    }, 2e3);
+    active2 = { controller: controller3, timer: timer2 };
+  },
+  unmount() {
+    mountId2++;
+    if (active2) {
+      active2.controller.unmount();
+      window.clearInterval(active2.timer);
+    }
+    active2 = null;
+  }
+};
+
+// src/trafira/tabs/diagnostic/gamingPresetPanel.ts
+var GamingPresetController = class {
+  constructor(call, render6) {
+    this.call = call;
+    this.render = render6;
+    this.active = false;
+    this.generation = 0;
+    this.reviewed = null;
+    this.state = {
+      busy: false,
+      running: false,
+      jobId: "",
+      error: "",
+      preview: null,
+      committed: false
+    };
+  }
+  mount() {
+    this.active = true;
+    this.generation++;
+    this.render(this.state);
+  }
+  unmount() {
+    this.active = false;
+    this.generation++;
+  }
+  invalidate() {
+    this.reviewed = null;
+    this.state.preview = null;
+    this.render({ ...this.state });
+  }
+  async preview(selection, digest) {
+    if (!selection.owner && (!selection.preset || !selection.device_ips?.length || !selection.proxy_section || !["before-device-routes", "after-device-routes"].includes(
+      selection.placement || ""
+    )))
+      return;
+    if (!digest) return;
+    await this.submit({
+      ...selection,
+      action: selection.owner ? "preview_remove" : "preview",
+      expected_digest: digest
+    });
+  }
+  async apply() {
+    if (!this.reviewed || !this.state.preview?.applicable) return;
+    await this.submit({
+      ...this.reviewed,
+      action: this.reviewed.owner ? "remove" : "apply"
+    });
+  }
+  async poll() {
+    await this.submit({ action: "status" });
+  }
+  async submit(request) {
+    if (!this.active || this.state.busy || this.state.running && request.action !== "status")
+      return;
+    const generation3 = ++this.generation;
+    this.state = {
+      ...this.state,
+      busy: true,
+      error: request.action === "status" ? this.state.error : "",
+      committed: request.action === "status" ? this.state.committed : false
+    };
+    this.render(this.state);
+    try {
+      const result = await this.call(request);
+      if (["apply", "remove"].includes(String(request.action)) && result.success === true && result.running === true && typeof result.job_id === "string")
+        trackConfigurationCommit(
+          result.job_id,
+          () => this.call({ action: "status" })
+        );
+      const committed = request.action === "status" && observeConfigurationCommit(result);
+      if (!this.active || generation3 !== this.generation) return;
+      if (request.action === "status" && result.running === false && !this.state.running && !committed && !result.recovery_pending)
+        return;
+      if (committed) this.state.committed = true;
+      if (typeof result.running === "boolean")
+        this.state.running = result.running;
+      if (typeof result.job_id === "string") this.state.jobId = result.job_id;
+      if (result.success === false || result.rollback_error) {
+        this.reviewed = null;
+        this.state.preview = null;
+        this.state.error = result.rollback_error ? "rollback_failed" : String(result.error || "operation_failed");
+      } else if (request.action === "preview" || request.action === "preview_remove") {
+        this.state.preview = result;
+        this.reviewed = result.applicable === true ? {
+          ...request,
+          device_ips: Array.isArray(request.device_ips) ? [...request.device_ips] : void 0
+        } : null;
+      } else if (request.action !== "status") {
+        this.reviewed = null;
+        this.state.preview = null;
+      }
+    } catch {
+      if (this.active && generation3 === this.generation) {
+        this.state.error = "request_failed";
+        this.reviewed = null;
+        this.state.preview = null;
+      }
+    } finally {
+      if (this.active && generation3 === this.generation) {
+        this.state = { ...this.state, busy: false };
+        this.render(this.state);
+      }
+    }
+  }
+};
+
+// src/trafira/tabs/diagnostic/renderGamingPresets.ts
+async function command4(request) {
+  const response = await executeShellCommand({
+    command: "/usr/bin/trafira-config",
+    args: ["gaming_preset_action", JSON.stringify(request)],
+    timeout: 3e4
+  });
+  if (response.code) throw new Error("Gaming preset request failed");
+  return JSON.parse(response.stdout);
+}
+function message(code) {
+  const messages = {
+    conflict: _("Configuration changed. Review the differences again."),
+    alice_bypass: _(
+      "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
+    ),
+    alice_broad_bypass: _(
+      "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
+    ),
+    preset_edited: _(
+      "These rules were edited. Confirm replacement or keep them as ordinary rules."
+    ),
+    unknown_device: _(
+      "The selected address is no longer known. Refresh the device list."
+    ),
+    invalid_proxy: _("Select an enabled connection rule."),
+    candidate_check_failed: _(
+      "The generated configuration did not pass validation."
+    ),
+    busy: _("Another configuration operation is already running."),
+    rollback_failed: _(
+      "Restoration failed. Check the service before continuing."
+    )
+  };
+  return messages[code] || _("The operation failed. Refresh the page and review the settings.") + " (" + code + ")";
+}
+var mounted = null;
+var generation2 = 0;
+function platformName(id) {
+  return {
+    steam: "Steam",
+    playstation: "PlayStation",
+    xbox: "Xbox",
+    epic: "Epic Games"
+  }[id] || id;
+}
+function rows(value) {
+  return Array.isArray(value) ? value.filter(
+    (row) => !!row && typeof row === "object"
+  ) : [];
+}
+function strings(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+}
+var gamingPresetsPanel = {
+  mount(canWrite2 = true) {
+    this.unmount();
+    const host = document.getElementById("trafira-gaming-presets");
+    if (!host) return;
+    const mine = generation2;
+    let catalog = null;
+    let state;
+    let observedRunning = false;
+    let loading2 = false;
+    let confirming = false;
+    const platform = E("select", {}), device = E("select", {}), proxy = E("select", {});
+    const placement = E("select", {}, [
+      E("option", { value: "" }, _("Choose rule priority")),
+      E(
+        "option",
+        { value: "before-device-routes" },
+        _("Before existing device rules")
+      ),
+      E(
+        "option",
+        { value: "after-device-routes" },
+        _("After existing device rules")
+      )
+    ]);
+    const addresses = E("div", {}), output = E("div", {}), status2 = E("p", {}), existing = E("div", {});
+    const hint = E("p", { role: "status" });
+    const enable = E("input", { type: "checkbox" }), replace = E("input", { type: "checkbox" });
+    let apply;
+    let preview;
+    function button(label, click) {
+      const b = E(
+        "button",
+        { type: "button", class: "cbi-button cbi-button-action", click },
+        label
+      );
+      return b;
+    }
+    function update() {
+      const busy = loading2 || confirming || state?.busy || state?.running;
+      for (const b of Array.from(host.querySelectorAll("button")))
+        b.disabled = !!busy;
+      for (const input of [platform, device, proxy, placement, enable, replace])
+        input.disabled = !!busy;
+      for (const input of Array.from(addresses.querySelectorAll("input")))
+        input.disabled = !!busy;
+      const ready = !!catalog && !!platform.value && device.value !== "" && !!proxy.value && !!placement.value && addresses.querySelectorAll("input:checked").length > 0;
+      if (preview) preview.disabled = !!busy || !ready;
+      if (apply)
+        apply.disabled = !canWrite2 || !!busy || state?.preview?.applicable !== true;
+      hint.textContent = !catalog ? "" : !catalog.devices.length ? _(
+        "No known devices. Connect the device to the router and refresh the list."
+      ) + (!catalog.proxies.length ? " " + _("No enabled connection rules. Add a connection first.") : "") : !catalog.proxies.length ? _("No enabled connection rules. Add a connection first.") : !catalog.presets.length ? _("No gaming presets are available.") : ready ? "" : _(
+        "Choose a platform, device addresses, connection and rule priority before previewing."
+      );
+    }
+    const controller3 = new GamingPresetController(command4, (next) => {
+      if (mine !== generation2) return;
+      const wasRunning = observedRunning;
+      observedRunning = next.running;
+      state = next;
+      status2.textContent = state.error ? message(state.error) : state.running ? _("Applying configuration. You can reconnect to this page.") : "";
+      output.replaceChildren();
+      if (state.preview) {
+        const p = state.preview;
+        output.append(
+          E(
+            "p",
+            {},
+            p.applicable ? _("Configuration validation passed. Review the changes below.") : _("The generated configuration did not pass validation.")
+          )
+        );
+        for (const route of rows(p.routes)) {
+          const domains = [
+            ...strings(route.domain),
+            ...strings(route.domain_suffix).map((name) => "*." + name)
+          ];
+          const target = String(route.target || "");
+          const label = target === "direct" ? _("Direct connection") : catalog?.proxies.find((item) => item.id === target)?.label || target;
+          output.append(
+            E(
+              "p",
+              {},
+              `${strings(route.source).join(", ")}: ${domains.length ? domains.join(", ") : _("Other traffic")} \u2192 ${label}`
+            )
+          );
+        }
+        const changes = rows(p.changes);
+        if (changes.length)
+          output.append(
+            E(
+              "p",
+              {},
+              _("Changed rules") + ": " + [
+                ...new Set(
+                  changes.map((change) => String(change.section || ""))
+                )
+              ].join(", ")
+            )
+          );
+        for (const conflict of strings(p.conflicts)) {
+          const description = conflict.startsWith("existing_device_routes:") ? _(
+            "An existing device rule may overlap. The selected priority determines which rule takes effect."
+          ) + " " + conflict.slice("existing_device_routes:".length) : conflict === "alice_device_enabled" ? _("The selected addresses will be enabled in Alice Mode.") : message(conflict);
+          output.append(
+            E("p", { class: "alert-message warning" }, description)
+          );
+        }
+        if (rows(p.checks).some((check) => check.status === "indeterminate"))
+          output.append(
+            E(
+              "p",
+              {},
+              _(
+                "Some routes could not be fully verified. Review existing rules and saved list copies."
+              )
+            )
+          );
+        output.append(
+          E("details", {}, [
+            E("summary", {}, _("Technical details")),
+            E(
+              "pre",
+              {
+                style: "white-space:pre-wrap;overflow-wrap:anywhere;max-height:24em;overflow:auto"
+              },
+              JSON.stringify(
+                {
+                  routes: p.routes,
+                  changes: p.changes,
+                  conflicts: p.conflicts,
+                  checks: p.checks
+                },
+                null,
+                2
+              )
+            )
+          ])
+        );
+      }
+      update();
+      if (state.committed) reloadAfterConfigurationCommit();
+      else if (wasRunning && !state.running && !state.error) void refresh();
+    });
+    function showAddresses() {
+      controller3.invalidate();
+      addresses.replaceChildren();
+      const selected = catalog?.devices[Number(device.value)];
+      if (device.value === "" || !selected) {
+        update();
+        return;
+      }
+      const candidates = catalog.devices.filter(
+        (d) => d.mac === selected.mac && d.interface === selected.interface
+      );
+      const values = [...new Set(candidates.flatMap((d) => d.ips))];
+      for (const address of values) {
+        const input = E("input", {
+          type: "checkbox",
+          value: address
+        });
+        input.addEventListener("change", () => controller3.invalidate());
+        addresses.append(
+          E("label", { style: "display:block" }, [input, " " + address])
+        );
+      }
+      update();
+    }
+    async function refresh() {
+      if (mine !== generation2 || loading2 || state?.busy || state?.running)
+        return;
+      loading2 = true;
+      controller3.invalidate();
+      update();
+      try {
+        const result = await command4({ action: "catalog" });
+        if (mine !== generation2) return;
+        if (result.success !== true)
+          throw new Error(String(result.error || "catalog_unavailable"));
+        catalog = result;
+        platform.replaceChildren(
+          E("option", { value: "" }, _("Choose a platform")),
+          ...catalog.presets.map(
+            (p) => E("option", { value: p.id }, platformName(p.id))
+          )
+        );
+        device.replaceChildren(
+          E("option", { value: "" }, _("Select a known device")),
+          ...catalog.devices.map(
+            (d, i) => E(
+              "option",
+              { value: String(i) },
+              `${d.name || d.mac} \xB7 ${d.interface} \xB7 ${d.ips.join(", ")}`
+            )
+          )
+        );
+        proxy.replaceChildren(
+          E("option", { value: "" }, _("Select a connection")),
+          ...catalog.proxies.map(
+            (p) => E("option", { value: p.id }, p.label || p.id)
+          )
+        );
+        addresses.replaceChildren();
+        existing.replaceChildren();
+        for (const owner of catalog.owners) {
+          existing.append(
+            E(
+              "p",
+              {},
+              platformName(owner.platform) + " \xB7 " + owner.owner + (owner.edited ? " \xB7 " + _("Edited") : "")
+            )
+          );
+          existing.append(
+            button(_("Keep as ordinary rules"), () => {
+              void controller3.preview(
+                { owner: owner.owner, mode: "keep" },
+                catalog.digest
+              );
+            })
+          );
+          existing.append(
+            button(_("Preview deletion"), () => {
+              if (owner.edited && !window.confirm(
+                _(
+                  "Delete the edited preset rules? The next step shows the changes."
+                )
+              ))
+                return;
+              void controller3.preview(
+                { owner: owner.owner, mode: "delete", confirm: owner.edited },
+                catalog.digest
+              );
+            })
+          );
+        }
+        status2.textContent = "";
+      } catch (error) {
+        if (mine === generation2)
+          status2.textContent = message(
+            error instanceof Error ? error.message : "catalog_unavailable"
+          );
+      } finally {
+        if (mine === generation2) {
+          loading2 = false;
+          update();
+        }
+      }
+    }
+    for (const input of [platform, proxy, placement, enable, replace])
+      input.addEventListener("change", () => controller3.invalidate());
+    device.addEventListener("change", showAddresses);
+    host.replaceChildren(
+      E("h3", {}, _("Gaming presets")),
+      E(
+        "p",
+        {},
+        _(
+          "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic."
+        )
+      ),
+      E(
+        "p",
+        {},
+        _(
+          "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
+        )
+      ),
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Gaming presets")),
+          platform
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Select a known device")),
+          device
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Select a connection")),
+          proxy
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Choose rule priority")),
+          placement
+        ])
+      ]),
+      addresses,
+      hint,
+      ...!canWrite2 ? [
+        E(
+          "p",
+          {},
+          _(
+            "Read-only access: you can preview rules but cannot apply changes."
+          )
+        )
+      ] : [],
+      E("label", { style: "display:block" }, [
+        enable,
+        " " + _("Enable only these addresses in Alice Mode if required")
+      ]),
+      E("label", { style: "display:block" }, [
+        replace,
+        " " + _("Replace my edits to this preset after preview")
+      ]),
+      E("div", { class: "fkp_diagnostic-actions" }, [
+        button(_("Refresh devices"), () => {
+          void refresh();
+        }),
+        preview = button(_("Preview gaming rules"), () => {
+          if (!catalog || preview.disabled) return;
+          void controller3.preview(
+            {
+              preset: platform.value,
+              device_ips: Array.from(
+                addresses.querySelectorAll("input:checked")
+              ).map((i) => i.value),
+              proxy_section: proxy.value,
+              placement: placement.value,
+              enable_device: enable.checked,
+              replace_edited: replace.checked
+            },
+            catalog.digest
+          );
+        }),
+        apply = button(_("Apply reviewed changes"), () => {
+          if (!canWrite2 || apply.disabled || confirming) return;
+          confirming = true;
+          update();
+          const accepted = confirmConfigurationReplacement();
+          confirming = false;
+          update();
+          if (accepted) void controller3.apply();
+        })
+      ]),
+      status2,
+      output,
+      existing
+    );
+    controller3.mount();
+    mounted = {
+      controller: controller3,
+      timer: window.setInterval(() => {
+        if (state?.running) void controller3.poll();
+      }, 2e3)
+    };
+    void controller3.poll().then(() => refresh());
+  },
+  unmount() {
+    generation2++;
+    if (mounted) {
+      mounted.controller.unmount();
+      window.clearInterval(mounted.timer);
+    }
+    mounted = null;
+  }
+};
+
+// src/trafira/tabs/configuration/index.ts
+var panels = {
+  lists: { id: "fkp_diagnostic-page-snapshots", controller: snapshots },
+  profiles: { id: "trafira-profiles", controller: profilesPanel },
+  gaming: { id: "trafira-gaming-presets", controller: gamingPresetsPanel }
+};
+var watchers = /* @__PURE__ */ new Map();
+var ConfigurationPanels = {
+  init(kind, canWrite2 = true) {
+    watchers.get(kind)?.();
+    const panel = panels[kind];
+    watchers.set(kind, watchPanel(panel.id, panel.controller, canWrite2));
+  }
+};
+
 // src/main.ts
 if (typeof structuredClone !== "function")
   globalThis.structuredClone = (obj) => JSON.parse(JSON.stringify(obj));
 return baseclass.extend({
   BOOTSTRAP_DNS_SERVER_OPTIONS,
+  ConfigurationPanels,
   DEFAULT_LATENCY_TEST_URL,
   DNS_SERVER_OPTIONS,
   DOMAIN_LIST_OPTIONS,

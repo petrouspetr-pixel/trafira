@@ -29,6 +29,7 @@ export { DashboardTab } from './trafira/tabs/dashboard';
 export { DiagnosticTab } from './trafira/tabs/diagnostic';
 export { MonitoringTab } from './trafira/tabs/monitoring';
 export { UpdatesTab } from './trafira/tabs/updates';
+export { ConfigurationPanels } from './trafira/tabs/configuration';
 export {
   BOOTSTRAP_DNS_SERVER_OPTIONS,
   DEFAULT_LATENCY_TEST_URL,

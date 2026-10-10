@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 05:31+0300\n"
-"PO-Revision-Date: 2026-10-10 05:31+0300\n"
+"POT-Creation-Date: 2026-10-10 11:48+0300\n"
+"PO-Revision-Date: 2026-10-10 11:48+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -61,6 +61,9 @@ msgstr "✘ Остановлен"
 
 msgid "A copy download is already starting. Wait, then refresh the status."
 msgstr "Загрузка копий уже запускается. Подождите и обновите состояние."
+
+msgid "A maximum of eight profiles can be saved."
+msgstr "Можно сохранить не более восьми профилей."
 
 msgid "A protective traffic block remains after a failed switch. Restart Trafira to recheck the configuration."
 msgstr "После неудачного переключения сохраняется защитная блокировка трафика. Перезапустите Trafira для повторной проверки конфигурации."
@@ -233,6 +236,9 @@ msgstr "Для более раннего правила нужны дополн�
 msgid "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed."
 msgstr "Более раннее правило использует условие, которое эта проверка не рассчитывает. Подтвердить маршрут нельзя."
 
+msgid "An existing device rule may overlap. The selected priority determines which rule takes effect."
+msgstr "Правила устройства могут пересекаться. Выбранный приоритет определяет, какое правило сработает первым."
+
 msgid "Analysis of the applied configuration, not a live connection capture."
 msgstr "Анализ применённой конфигурации. Фактическое соединение может зависеть от дополнительных условий."
 
@@ -259,6 +265,9 @@ msgstr "Применение конфигурации. Можно закрыть
 
 msgid "Applying settings in the background. You can close this page."
 msgstr "Настройки применяются в фоне. Эту страницу можно закрыть."
+
+msgid "Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?"
+msgstr "Применение заменит сохранённые настройки. Несохранённые изменения в открытой странице LuCI будут потеряны. Продолжить?"
 
 msgid "At least one valid domain must be specified."
 msgstr "Нужно указать хотя бы один корректный домен."
@@ -416,6 +425,9 @@ msgstr "Пин сертификата недоступен. Примените �
 msgid "Changed"
 msgstr "Изменено"
 
+msgid "Changed rules"
+msgstr "Изменения правил"
+
 msgid "Check interval"
 msgstr "Интервал проверки"
 
@@ -445,6 +457,12 @@ msgstr "Проверки пройдены"
 
 msgid "Checks passed with manual DHCP"
 msgstr "Проверки пройдены с ручным DHCP"
+
+msgid "Choose a platform"
+msgstr "Выберите платформу"
+
+msgid "Choose a platform, device addresses, connection and rule priority before previewing."
+msgstr "Для предпросмотра выберите платформу, IP-адреса устройства, подключение и приоритет правил."
 
 msgid "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
 msgstr "Выберите доступную версию установленного варианта. Перед заменой проверяется совместимость. Закрепление влияет только на обновления через Trafira."
@@ -604,6 +622,9 @@ msgstr "Не удалось запустить загрузку копий. Об
 
 msgid "Could not start the download task. Refresh the status and try again."
 msgstr "Не удалось запустить задачу загрузки. Обновите состояние и повторите."
+
+msgid "Create profile from saved settings"
+msgstr "Создать профиль из сохранённых настроек"
 
 msgid "Current section cannot be used as its own transit section"
 msgstr "Текущую секцию нельзя использовать как транзит для самой себя"
@@ -950,6 +971,9 @@ msgstr "Введите отображаемое имя"
 msgid "Enter a level name"
 msgstr "Введите название уровня"
 
+msgid "Enter a new profile name above to rename the selected profile."
+msgstr "Для переименования выбранного профиля введите новое название в поле выше."
+
 msgid "Enter a valid DNS server address"
 msgstr "Укажите корректный адрес DNS-сервера"
 
@@ -1210,6 +1234,9 @@ msgstr "HWID"
 
 msgid "Idle timeout"
 msgstr "Таймаут простоя"
+
+msgid "Import a profile file (JSON, up to 1 MiB)"
+msgstr "Файл профиля для импорта (JSON, до 1 МиБ)"
 
 msgid "Import profile"
 msgstr "Импортировать профиль"
@@ -1601,6 +1628,9 @@ msgstr "Основной DNS"
 msgid "Main DNS server. If multiple servers are selected, a timeout switches to a backup."
 msgstr "Основной DNS-сервер. Если выбрать несколько, то при таймауте произойдёт переключение на резервный."
 
+msgid "Manage and transfer profiles"
+msgstr "Управление и перенос профилей"
+
 msgid "Match destination IPs or subnets"
 msgstr "Совпадение по IP-адресам или подсетям назначения"
 
@@ -1724,8 +1754,17 @@ msgstr "Нет устройств"
 msgid "No DNS query was sent from the selected device."
 msgstr "DNS-запрос от выбранного устройства не отправлялся."
 
+msgid "No enabled connection rules. Add a connection first."
+msgstr "Нет включённых правил подключения. Сначала добавьте подключение в разделе «Секции»."
+
 msgid "No enabled server inbounds configured"
 msgstr "Включённые серверные inbounds не настроены"
+
+msgid "No gaming presets are available."
+msgstr "Нет доступных игровых пресетов."
+
+msgid "No known devices. Connect the device to the router and refresh the list."
+msgstr "Нет обнаруженных устройств. Подключите устройство к роутеру и обновите список."
 
 msgid "No other marking rules found"
 msgstr "Другие правила маркировки не найдены"
@@ -1744,6 +1783,9 @@ msgstr "Нет правил, использующих Zapret"
 
 msgid "No rules use Zapret2"
 msgstr "Нет правил, использующих Zapret2"
+
+msgid "No saved profiles yet. Enter a name and create a profile from the saved configuration."
+msgstr "Профили ещё не созданы. Введите название и сохраните текущие настройки в профиль."
 
 msgid "Node list is empty"
 msgstr "Список узлов пуст"
@@ -1852,6 +1894,9 @@ msgstr "Необязательные значения здесь должны з
 
 msgid "Other devices do the opposite. Match devices by interface, MAC address or IP address."
 msgstr "Для остальных устройств действует обратное. Сопоставление выполняется по интерфейсу, MAC- или IP-адресу."
+
+msgid "Other traffic"
+msgstr "Остальной трафик"
 
 msgid "outbounds must be a non-empty array of strings"
 msgstr "outbounds должен быть непустым массивом строк"
@@ -1997,6 +2042,9 @@ msgstr "Передача профиля завершена"
 msgid "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
 msgstr "Не удалось передать профиль. Выберите корректный файл JSON размером до 1 МиБ."
 
+msgid "Profiles"
+msgstr "Профили"
+
 msgid "Protocol"
 msgstr "Протокол"
 
@@ -2008,6 +2056,12 @@ msgstr "Публичный хост"
 
 msgid "QR code is too large"
 msgstr "QR-код слишком большой"
+
+msgid "Read-only access: you can preview rules but cannot apply changes."
+msgstr "Доступ только для чтения: можно просмотреть правила, но нельзя применить изменения."
+
+msgid "Read-only access. Configuration changes require write permission."
+msgstr "Доступ только для чтения. Для изменения настроек нужны права записи."
 
 msgid "Real destination IP (optional)"
 msgstr "Реальный IP назначения (необязательно)"
@@ -2117,6 +2171,9 @@ msgstr "Восстановление не завершено. Перед про�
 msgid "Restore previous settings"
 msgstr "Восстановить предыдущие настройки"
 
+msgid "Restore the interrupted operation before continuing."
+msgstr "Перед продолжением восстановите настройки после прерванной операции."
+
 msgid "Resume updates"
 msgstr "Продолжить обновление"
 
@@ -2207,11 +2264,8 @@ msgstr "Запустить диагностику"
 msgid "Save"
 msgstr "Сохранить"
 
-msgid "Save current settings"
-msgstr "Сохранить текущие настройки"
-
-msgid "Save up to eight profiles. Applying a profile may restart routing."
-msgstr "Можно сохранить до восьми профилей. Применение профиля может перезапустить маршрутизацию."
+msgid "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile."
+msgstr "Сохраните до восьми профилей настроек и переключайтесь между ними. Перед созданием профиля сохраните или примените изменения в форме."
 
 msgid "Saved configuration unavailable"
 msgstr "Сохранённая конфигурация недоступна"
@@ -2468,6 +2522,9 @@ msgstr "Некоторые записи соседей LAN некорректн�
 msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
 msgstr "Часть списков превышает ограничения диагностики по размеру или времени. Эта проверка не может подтвердить их правила."
 
+msgid "Some routes could not be fully verified. Review existing rules and saved list copies."
+msgstr "Некоторые маршруты не удалось проверить полностью. Проверьте существующие правила и сохранённые копии списков."
+
 msgid "Some WireGuard peer entries were invalid and skipped."
 msgstr "Некоторые записи пиров WireGuard некорректны и пропущены."
 
@@ -2543,8 +2600,8 @@ msgstr "Остановить Trafira"
 msgid "Storage"
 msgstr "Занято места"
 
-msgid "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
-msgstr "Магазин и сервисы учётной записи используют выбранный прокси; остальной трафик выбранных адресов идёт напрямую. Общие сервисы могут передавать и игровой трафик. Эти редактируемые списки охватывают не все адреса платформы."
+msgid "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic."
+msgstr "Магазины и вход в учётную запись используют выбранное подключение. Остальной трафик выбранных IP-адресов идёт напрямую. Общие сервисы платформы могут передавать и игровой трафик."
 
 msgid "Subnets from the list will be extracted and added to nftables"
 msgstr "IP-адреса и подсети из списка будут извлечены и добавлены в nftables"
@@ -2596,6 +2653,9 @@ msgstr "Hostname Tailscale"
 
 msgid "TCP, unknown protocol"
 msgstr "TCP, протокол неизвестен"
+
+msgid "Technical details"
+msgstr "Технические подробности"
 
 msgid "Test latency"
 msgstr "Тестирование задержки"
@@ -2651,6 +2711,12 @@ msgstr "Предыдущая версия восстановлена."
 msgid "The profile cannot be used with the current configuration and components."
 msgstr "Профиль несовместим с текущей конфигурацией или установленными компонентами."
 
+msgid "The profile format is invalid or unsupported."
+msgstr "Формат профиля некорректен или не поддерживается."
+
+msgid "The profile operation failed."
+msgstr "Не удалось выполнить операцию с профилем."
+
 msgid "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
 msgstr "Маршрут приложений роутера зависит от правил межсетевого экрана, которые эта проверка не рассчитывает. Выберите устройство локальной сети, чтобы проверить его маршрут через Trafira."
 
@@ -2665,6 +2731,9 @@ msgstr "Список правил слишком сложен для расчё�
 
 msgid "The selected address is no longer known. Refresh the device list."
 msgstr "Выбранный адрес больше не найден. Обновите список устройств."
+
+msgid "The selected addresses will be enabled in Alice Mode."
+msgstr "Выбранные IP-адреса будут включены в Alice Mode."
 
 msgid "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again."
 msgstr "Конфигурация sing-box недоступна. Запустите Trafira или примените настройки и повторите проверку."

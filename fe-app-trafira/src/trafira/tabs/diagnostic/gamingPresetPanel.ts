@@ -1,3 +1,9 @@
+import {
+  isTrackedConfigurationCommit,
+  observeConfigurationCommit,
+  trackConfigurationCommit,
+} from '../../helpers/configurationSync';
+
 export interface GamingSelection {
   preset?: string;
   device_ips?: string[];
@@ -15,6 +21,7 @@ export interface GamingState {
   jobId: string;
   error: string;
   preview: Record<string, unknown> | null;
+  committed: boolean;
 }
 export class GamingPresetController {
   private active = false;
@@ -26,6 +33,7 @@ export class GamingPresetController {
     jobId: '',
     error: '',
     preview: null,
+    committed: false,
   };
   constructor(
     private call: (
@@ -83,11 +91,40 @@ export class GamingPresetController {
     )
       return;
     const generation = ++this.generation;
-    this.state = { ...this.state, busy: true, error: '' };
+    this.state = {
+      ...this.state,
+      busy: true,
+      error: request.action === 'status' ? this.state.error : '',
+      committed: request.action === 'status' ? this.state.committed : false,
+    };
     this.render(this.state);
     try {
       const result = await this.call(request);
+      if (
+        ['apply', 'remove'].includes(String(request.action)) &&
+        result.success === true &&
+        result.running === true &&
+        typeof result.job_id === 'string'
+      )
+        trackConfigurationCommit(result.job_id, () =>
+          this.call({ action: 'status' }),
+        );
+      const ownStatus = request.action === 'status' && isTrackedConfigurationCommit(result.job_id);
+      const committed =
+        request.action === 'status' && observeConfigurationCommit(result);
       if (!this.active || generation !== this.generation) return;
+      // Profiles and presets share a durable last-job record. A finished job
+      // observed before this page's current work must not invalidate its preview.
+      // An unfinished recovery remains actionable even after reconnecting.
+      if (
+        request.action === 'status' &&
+        result.running === false &&
+        !this.state.running &&
+        !ownStatus &&
+        !result.recovery_pending
+      )
+        return;
+      if (committed) this.state.committed = true;
       if (typeof result.running === 'boolean')
         this.state.running = result.running;
       if (typeof result.job_id === 'string') this.state.jobId = result.job_id;

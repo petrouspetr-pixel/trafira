@@ -1,4 +1,8 @@
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
+import {
+  confirmConfigurationReplacement,
+  reloadAfterConfigurationCommit,
+} from '../../helpers/configurationSync';
 import { GamingPresetController, GamingState } from './gamingPresetPanel';
 interface Device {
   name: string;
@@ -59,15 +63,42 @@ function message(code: string) {
 let mounted: { controller: GamingPresetController; timer: number } | null =
   null;
 let generation = 0;
+function platformName(id: string) {
+  return (
+    (
+      {
+        steam: 'Steam',
+        playstation: 'PlayStation',
+        xbox: 'Xbox',
+        epic: 'Epic Games',
+      } as Record<string, string>
+    )[id] || id
+  );
+}
+function rows(value: unknown): Record<string, unknown>[] {
+  return Array.isArray(value)
+    ? value.filter(
+        (row): row is Record<string, unknown> =>
+          !!row && typeof row === 'object',
+      )
+    : [];
+}
+function strings(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
 export const gamingPresetsPanel = {
-  mount() {
+  mount(canWrite = true) {
     this.unmount();
     const host = document.getElementById('trafira-gaming-presets');
     if (!host) return;
     const mine = generation;
     let catalog: Catalog | null = null;
     let state: GamingState;
+    let observedRunning = false;
     let loading = false;
+    let confirming = false;
     const platform = E('select', {}) as HTMLSelectElement,
       device = E('select', {}) as HTMLSelectElement,
       proxy = E('select', {}) as HTMLSelectElement;
@@ -88,30 +119,61 @@ export const gamingPresetsPanel = {
       output = E('div', {}),
       status = E('p', {}),
       existing = E('div', {});
+    const hint = E('p', { role: 'status' });
     const enable = E('input', { type: 'checkbox' }) as HTMLInputElement,
       replace = E('input', { type: 'checkbox' }) as HTMLInputElement;
-    const buttons: HTMLButtonElement[] = [];
     let apply: HTMLButtonElement;
+    let preview: HTMLButtonElement;
     function button(label: string, click: () => void) {
       const b = E(
         'button',
-        { class: 'cbi-button cbi-button-action', click },
+        { type: 'button', class: 'cbi-button cbi-button-action', click },
         label,
       ) as HTMLButtonElement;
-      buttons.push(b);
       return b;
     }
     function update() {
-      const busy = loading || state?.busy || state?.running;
-      for (const b of buttons) b.disabled = !!busy;
+      const busy = loading || confirming || state?.busy || state?.running;
+      for (const b of Array.from(host!.querySelectorAll('button')))
+        b.disabled = !!busy;
       for (const input of [platform, device, proxy, placement, enable, replace])
         input.disabled = !!busy;
       for (const input of Array.from(addresses.querySelectorAll('input')))
         input.disabled = !!busy;
-      if (apply) apply.disabled = !!busy || state?.preview?.applicable !== true;
+      const ready =
+        !!catalog &&
+        !!platform.value &&
+        device.value !== '' &&
+        !!proxy.value &&
+        !!placement.value &&
+        addresses.querySelectorAll('input:checked').length > 0;
+      if (preview) preview.disabled = !!busy || !ready;
+      if (apply)
+        apply.disabled =
+          !canWrite || !!busy || state?.preview?.applicable !== true;
+      hint.textContent = !catalog
+        ? ''
+        : !catalog.devices.length
+          ? _(
+              'No known devices. Connect the device to the router and refresh the list.',
+            ) +
+            (!catalog.proxies.length
+              ? ' ' + _('No enabled connection rules. Add a connection first.')
+              : '')
+          : !catalog.proxies.length
+            ? _('No enabled connection rules. Add a connection first.')
+            : !catalog.presets.length
+              ? _('No gaming presets are available.')
+              : ready
+                ? ''
+                : _(
+                    'Choose a platform, device addresses, connection and rule priority before previewing.',
+                  );
     }
     const controller = new GamingPresetController(command, (next) => {
-      const wasRunning = state?.running;
+      if (mine !== generation) return;
+      const wasRunning = observedRunning;
+      observedRunning = next.running;
       state = next;
       status.textContent = state.error
         ? message(state.error)
@@ -130,35 +192,100 @@ export const gamingPresetsPanel = {
               : _('The generated configuration did not pass validation.'),
           ),
         );
-        // E uses text nodes; device names, domains and errors never enter innerHTML.
-        output.append(
-          E(
-            'pre',
-            {
-              style:
-                'white-space:pre-wrap;overflow-wrap:anywhere;max-height:24em;overflow:auto',
-            },
-            JSON.stringify(
-              {
-                routes: p.routes,
-                changes: p.changes,
-                conflicts: p.conflicts,
-                checks: p.checks,
-              },
-              null,
-              2,
+        for (const route of rows(p.routes)) {
+          const domains = [
+            ...strings(route.domain),
+            ...strings(route.domain_suffix).map((name) => '*.' + name),
+          ];
+          const target = String(route.target || '');
+          const label =
+            target === 'direct'
+              ? _('Direct connection')
+              : catalog?.proxies.find((item) => item.id === target)?.label ||
+                target;
+          output.append(
+            E(
+              'p',
+              {},
+              `${strings(route.source).join(', ')}: ${domains.length ? domains.join(', ') : _('Other traffic')} → ${label}`,
             ),
-          ),
+          );
+        }
+        const changes = rows(p.changes);
+        if (changes.length)
+          output.append(
+            E(
+              'p',
+              {},
+              _('Changed rules') +
+                ': ' +
+                [
+                  ...new Set(
+                    changes.map((change) => String(change.section || '')),
+                  ),
+                ].join(', '),
+            ),
+          );
+        for (const conflict of strings(p.conflicts)) {
+          const description = conflict.startsWith('existing_device_routes:')
+            ? _(
+                'An existing device rule may overlap. The selected priority determines which rule takes effect.',
+              ) +
+              ' ' +
+              conflict.slice('existing_device_routes:'.length)
+            : conflict === 'alice_device_enabled'
+              ? _('The selected addresses will be enabled in Alice Mode.')
+              : message(conflict);
+          output.append(
+            E('p', { class: 'alert-message warning' }, description),
+          );
+        }
+        if (rows(p.checks).some((check) => check.status === 'indeterminate'))
+          output.append(
+            E(
+              'p',
+              {},
+              _(
+                'Some routes could not be fully verified. Review existing rules and saved list copies.',
+              ),
+            ),
+          );
+        // Details remain optional; all backend text goes through text nodes.
+        output.append(
+          E('details', {}, [
+            E('summary', {}, _('Technical details')),
+            E(
+              'pre',
+              {
+                style:
+                  'white-space:pre-wrap;overflow-wrap:anywhere;max-height:24em;overflow:auto',
+              },
+              JSON.stringify(
+                {
+                  routes: p.routes,
+                  changes: p.changes,
+                  conflicts: p.conflicts,
+                  checks: p.checks,
+                },
+                null,
+                2,
+              ),
+            ),
+          ]),
         );
       }
       update();
-      if (wasRunning && !state.running && !state.error) void refresh();
+      if (state.committed) reloadAfterConfigurationCommit();
+      else if (wasRunning && !state.running && !state.error) void refresh();
     });
     function showAddresses() {
       controller.invalidate();
       addresses.replaceChildren();
       const selected = catalog?.devices[Number(device.value)];
-      if (!selected) return;
+      if (device.value === '' || !selected) {
+        update();
+        return;
+      }
       // Never silently group every address with a shared MAC (proxy ARP is possible).
       const candidates = catalog!.devices.filter(
         (d) => d.mac === selected.mac && d.interface === selected.interface,
@@ -174,9 +301,11 @@ export const gamingPresetsPanel = {
           E('label', { style: 'display:block' }, [input, ' ' + address]),
         );
       }
+      update();
     }
     async function refresh() {
-      if (loading || state?.busy || state?.running) return;
+      if (mine !== generation || loading || state?.busy || state?.running)
+        return;
       loading = true;
       controller.invalidate();
       update();
@@ -187,12 +316,9 @@ export const gamingPresetsPanel = {
           throw new Error(String(result.error || 'catalog_unavailable'));
         catalog = result as unknown as Catalog;
         platform.replaceChildren(
+          E('option', { value: '' }, _('Choose a platform')),
           ...catalog.presets.map((p) =>
-            E(
-              'option',
-              { value: p.id },
-              `${p.id} · ${p.checked_at} · v${p.revision}`,
-            ),
+            E('option', { value: p.id }, platformName(p.id)),
           ),
         );
         device.replaceChildren(
@@ -218,7 +344,7 @@ export const gamingPresetsPanel = {
             E(
               'p',
               {},
-              owner.platform +
+              platformName(owner.platform) +
                 ' · ' +
                 owner.owner +
                 (owner.edited ? ' · ' + _('Edited') : ''),
@@ -272,7 +398,7 @@ export const gamingPresetsPanel = {
         'p',
         {},
         _(
-          'Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint.',
+          'Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic.',
         ),
       ),
       E(
@@ -301,6 +427,18 @@ export const gamingPresetsPanel = {
         ]),
       ]),
       addresses,
+      hint,
+      ...(!canWrite
+        ? [
+            E(
+              'p',
+              {},
+              _(
+                'Read-only access: you can preview rules but cannot apply changes.',
+              ),
+            ),
+          ]
+        : []),
       E('label', { style: 'display:block' }, [
         enable,
         ' ' + _('Enable only these addresses in Alice Mode if required'),
@@ -313,8 +451,8 @@ export const gamingPresetsPanel = {
         button(_('Refresh devices'), () => {
           void refresh();
         }),
-        button(_('Preview gaming rules'), () => {
-          if (!catalog || device.value === '') return;
+        (preview = button(_('Preview gaming rules'), () => {
+          if (!catalog || preview.disabled) return;
           void controller.preview(
             {
               preset: platform.value,
@@ -328,9 +466,15 @@ export const gamingPresetsPanel = {
             },
             catalog.digest,
           );
-        }),
+        })),
         (apply = button(_('Apply reviewed changes'), () => {
-          void controller.apply();
+          if (!canWrite || apply.disabled || confirming) return;
+          confirming = true;
+          update();
+          const accepted = confirmConfigurationReplacement();
+          confirming = false;
+          update();
+          if (accepted) void controller.apply();
         })),
       ]),
       status,
@@ -341,7 +485,7 @@ export const gamingPresetsPanel = {
     mounted = {
       controller,
       timer: window.setInterval(() => {
-        void controller.poll();
+        if (state?.running) void controller.poll();
       }, 2000),
     };
     void controller.poll().then(() => refresh());
