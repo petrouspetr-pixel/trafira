@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 12:10+0300\n"
-"PO-Revision-Date: 2026-10-10 12:10+0300\n"
+"POT-Creation-Date: 2026-10-10 12:18+0300\n"
+"PO-Revision-Date: 2026-10-10 12:18+0300\n"
 "Last-Translator: petrouspetr-pixel <280500603+petrouspetr-pixel@users.noreply.github.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -50,6 +50,14 @@ msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:94
 msgid "%s ago"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:23
+msgid "%s has been installed"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:22
+msgid "%s has been removed"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/local_devices.js:187
@@ -326,6 +334,10 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:97
 msgid "Analysis of the applied configuration, not a live connection capture."
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:53
+msgid "Another component action is already running"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/profilePanel.ts:61
@@ -608,7 +620,7 @@ msgstr ""
 msgid "Check timeout after which the server is considered dead"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:744
+#: src/trafira/tabs/updates/initController.ts:748
 msgid "Check update"
 msgstr ""
 
@@ -734,6 +746,10 @@ msgstr ""
 #: src/trafira/tabs/monitoring/initController.ts:674
 #: src/trafira/tabs/monitoring/render.ts:29
 msgid "Closed"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:57
+msgid "Component action job is stale or the worker process exited unexpectedly"
 msgstr ""
 
 #: src/trafira/services/core.service.ts:43
@@ -1533,6 +1549,10 @@ msgstr ""
 msgid "Failed server retry interval"
 msgstr ""
 
+#: src/trafira/tabs/updates/componentMessages.ts:52
+msgid "Failed to check Trafira updates"
+msgstr ""
+
 #: src/trafira/tabs/monitoring/initController.ts:1213
 #: src/trafira/tabs/monitoring/initController.ts:1228
 msgid "Failed to close connection"
@@ -1548,13 +1568,50 @@ msgstr ""
 msgid "Failed to copy!"
 msgstr ""
 
+#: src/trafira/tabs/updates/componentMessages.ts:32
+msgid "Failed to create temporary directory"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:49
+msgid "Failed to download Trafira release packages"
+msgstr ""
+
 #: src/trafira/methods/shell/index.ts:170
 #: src/trafira/methods/shell/index.ts:177
-#: src/trafira/tabs/updates/initController.ts:510
-#: src/trafira/tabs/updates/initController.ts:511
-#: src/trafira/tabs/updates/initController.ts:573
-#: src/trafira/tabs/updates/initController.ts:723
+#: src/trafira/tabs/updates/componentMessages.ts:31
+#: src/trafira/tabs/updates/initController.ts:514
+#: src/trafira/tabs/updates/initController.ts:515
+#: src/trafira/tabs/updates/initController.ts:577
+#: src/trafira/tabs/updates/initController.ts:727
 msgid "Failed to execute"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:71
+msgid "Failed to execute component action"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:40
+msgid "Failed to install LuCI app package"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:43
+msgid "Failed to install LuCI Russian i18n package"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:46
+msgid "Failed to install sing-box-extended packages"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:39
+msgid "Failed to install Trafira package"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:36
+msgid "Failed to install Trafira release packages"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:35
+msgid "Failed to update package lists"
 msgstr ""
 
 #: src/trafira/tabs/dashboard/initController.ts:323
@@ -1853,11 +1910,11 @@ msgstr ""
 msgid "Information"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:758
+#: src/trafira/tabs/updates/initController.ts:762
 msgid "Install"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1163
+#: src/trafira/tabs/updates/initController.ts:1167
 msgid "Install another build:"
 msgstr ""
 
@@ -1869,8 +1926,8 @@ msgstr ""
 msgid "Installed version"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:293
-#: src/trafira/tabs/updates/initController.ts:1021
+#: src/trafira/tabs/updates/initController.ts:297
+#: src/trafira/tabs/updates/initController.ts:1025
 msgid "Installed version is newer than release"
 msgstr ""
 
@@ -2257,12 +2314,12 @@ msgstr ""
 msgid "Latency test URL"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:296
-#: src/trafira/tabs/updates/initController.ts:1019
+#: src/trafira/tabs/updates/initController.ts:300
+#: src/trafira/tabs/updates/initController.ts:1023
 msgid "Latest version is installed"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1021
+#: src/trafira/tabs/updates/initController.ts:1025
 msgid "Latest version:"
 msgstr ""
 
@@ -2311,11 +2368,11 @@ msgstr ""
 msgid "Loading connections"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:909
-#: src/trafira/tabs/updates/initController.ts:920
-#: src/trafira/tabs/updates/initController.ts:931
-#: src/trafira/tabs/updates/initController.ts:944
-#: src/trafira/tabs/updates/initController.ts:957
+#: src/trafira/tabs/updates/initController.ts:913
+#: src/trafira/tabs/updates/initController.ts:924
+#: src/trafira/tabs/updates/initController.ts:935
+#: src/trafira/tabs/updates/initController.ts:948
+#: src/trafira/tabs/updates/initController.ts:961
 #: src/trafira/tabs/updates/renderCoreVersions.ts:97
 msgid "Loading..."
 msgstr ""
@@ -2614,9 +2671,9 @@ msgstr ""
 
 #: src/trafira/helpers/singBoxVariant.ts:29
 #: src/trafira/helpers/singBoxVariant.ts:37
-#: src/trafira/tabs/updates/initController.ts:934
-#: src/trafira/tabs/updates/initController.ts:947
-#: src/trafira/tabs/updates/initController.ts:960
+#: src/trafira/tabs/updates/initController.ts:938
+#: src/trafira/tabs/updates/initController.ts:951
+#: src/trafira/tabs/updates/initController.ts:964
 #: src/trafira/tabs/updates/renderCoreVersions.ts:134
 msgid "Not installed"
 msgstr ""
@@ -2710,8 +2767,8 @@ msgstr ""
 msgid "Only the specified servers."
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1012
-#: src/trafira/tabs/updates/initController.ts:1034
+#: src/trafira/tabs/updates/initController.ts:1016
+#: src/trafira/tabs/updates/initController.ts:1038
 msgid "Open"
 msgstr ""
 
@@ -2824,6 +2881,10 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2631
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3155
 msgid "Pin on dashboard"
+msgstr ""
+
+#: src/trafira/tabs/updates/componentMessages.ts:63
+msgid "Pinned core is unavailable from its configured source"
 msgstr ""
 
 #: src/trafira/tabs/updates/renderCoreVersions.ts:134
@@ -3083,7 +3144,7 @@ msgstr ""
 msgid "Regular expression must not contain spaces or commas"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:803
+#: src/trafira/tabs/updates/initController.ts:807
 msgid "Remove"
 msgstr ""
 
@@ -3159,9 +3220,9 @@ msgstr ""
 msgid "Restart Trafira"
 msgstr ""
 
-#: src/trafira/tabs/updates/renderCoreVersions.ts:62
 #: src/trafira/tabs/diagnostic/profilePanel.ts:77
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:52
+#: src/trafira/tabs/updates/renderCoreVersions.ts:62
 msgid "Restoration failed. Check the service before continuing."
 msgstr ""
 
@@ -3698,9 +3759,9 @@ msgstr ""
 msgid "Sorts servers in this section by lowest latency in the dashboard."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279
 #: src/trafira/tabs/monitoring/initController.ts:831
 #: src/trafira/tabs/monitoring/initController.ts:881
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279
 msgid "Source"
 msgstr ""
 
@@ -4328,7 +4389,6 @@ msgstr ""
 msgid "unique UCI identifier"
 msgstr ""
 
-#: src/trafira/helpers/singBoxVariant.ts:28
 #: src/trafira/services/systemInfo.service.ts:10
 #: src/trafira/services/systemInfo.service.ts:11
 #: src/trafira/services/systemInfo.service.ts:12
@@ -4338,7 +4398,8 @@ msgstr ""
 #: src/trafira/services/systemInfo.service.ts:22
 #: src/trafira/services/systemInfo.service.ts:25
 #: src/trafira/services/systemInfo.service.ts:26
-#: src/trafira/tabs/updates/initController.ts:331
+#: src/trafira/helpers/singBoxVariant.ts:28
+#: src/trafira/tabs/updates/initController.ts:335
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25
 msgid "unknown"
 msgstr ""
@@ -4365,6 +4426,10 @@ msgstr ""
 msgid "Unknown NFQWS2 flag."
 msgstr ""
 
+#: src/trafira/tabs/updates/componentMessages.ts:60
+msgid "Unpin the core before changing its variant"
+msgstr ""
+
 #: src/trafira/tabs/updates/renderCoreVersions.ts:49
 msgid "Unpin version"
 msgstr ""
@@ -4377,15 +4442,15 @@ msgstr ""
 msgid "Unsupported security mode for this protocol"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:758
+#: src/trafira/tabs/updates/initController.ts:762
 msgid "Update"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:289
+#: src/trafira/tabs/updates/initController.ts:293
 msgid "Update is available"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:998
+#: src/trafira/tabs/updates/initController.ts:1002
 msgid "Update is available:"
 msgstr ""
 
