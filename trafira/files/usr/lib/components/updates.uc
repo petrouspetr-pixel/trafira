@@ -1366,7 +1366,7 @@ function normalize_component_name(component) {
 function valid_component_name(component) {
     component = normalize_component_name(component);
     return component == "trafira" || component == "sing_box" || component == "zapret" ||
-        component == "zapret2" || component == "byedpi" || component == "warp";
+        component == "zapret2" || component == "byedpi";
 }
 
 function component_update_check_cache_path(component) {
@@ -1472,7 +1472,7 @@ function component_update_check_cache() {
     let results = [];
 
     if (enabled) {
-        for (let component in [ "trafira", "sing_box", "zapret", "zapret2", "byedpi", "warp" ]) {
+        for (let component in [ "trafira", "sing_box", "zapret", "zapret2", "byedpi" ]) {
             let value = read_json_file(component_update_check_cache_path(component));
             if (component_update_check_result_cacheable(value))
                 push(results, value);
@@ -1912,7 +1912,6 @@ function automatic_component_check_names() {
         push(result, "zapret");
     if (module_success([ LIB_DIR + "/providers/zapret2/runtime.uc", "installed" ]))
         push(result, "zapret2");
-    if (fs.stat("/usr/lib/trafira-warp/warp/runtime.uc"))push(result,"warp");
     if (module_success([ LIB_DIR + "/providers/byedpi/runtime.uc", "installed" ]))
         push(result, "byedpi");
 

@@ -13,12 +13,12 @@ export const styles = `
 
 .fkp_diagnostic-page {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    grid-column-gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+    gap: 16px;
     align-items: start;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 1000px) {
     .fkp_diagnostic-page {
         grid-template-columns: 1fr;
     }
@@ -199,5 +199,94 @@ export const styles = `
 .fkp_diagnostic_alert__summary__item__icon {
     width: 16px;
     height: 16px;
+}
+
+.fkp_diagnostic-page > div,
+.fkp_diagnostic-page__lower > div {
+    min-width: 0;
+}
+
+.fkp_diagnostic-page__lower {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 16px;
+}
+
+.fkp_diagnostic-panel,
+#trafira-profiles,
+#trafira-gaming-presets {
+    border: 1px solid var(--background-color-low, lightgray);
+    border-radius: 4px;
+    padding: 16px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.fkp_diagnostic-panel h3,
+#trafira-profiles > h3,
+#trafira-gaming-presets > h3 {
+    margin-top: 0;
+}
+
+.fkp_diagnostic-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 12px 16px;
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fkp_diagnostic-field > input,
+.fkp_diagnostic-field > select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.fkp_diagnostic-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-actions > button {
+    margin: 0;
+    white-space: normal;
+    max-width: 100%;
+}
+
+.fkp_diagnostic-details {
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-details > summary {
+    cursor: pointer;
+    padding: 6px 0;
+}
+
+.fkp_diagnostic-snapshots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 12px 24px;
+    margin-top: 12px;
+}
+
+.fkp_diagnostic-snapshots > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    border-top: 1px solid var(--background-color-low, lightgray);
+    padding-top: 10px;
+}
+
+.fkp_diagnostic-page p {
+    max-width: 80ch;
 }
 `;

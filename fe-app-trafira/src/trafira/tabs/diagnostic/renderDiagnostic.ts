@@ -12,6 +12,8 @@ export function render() {
       E('div', { id: 'fkp_diagnostic-page-wiki' }),
       E('div', { id: 'fkp_diagnostic-page-actions' }),
       E('div', { id: 'fkp_diagnostic-page-system-info' }),
+    ]),
+    E('div', { class: 'fkp_diagnostic-page__lower' }, [
       E('div', { id: 'fkp_diagnostic-page-snapshots' }),
       E('div', { id: 'trafira-profiles' }),
       E('div', { id: 'trafira-gaming-presets' }),

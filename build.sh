@@ -42,8 +42,8 @@ I18N_DESCRIPTION="Translation for luci-app-trafira - Русский (Russian)"
 MAINTAINER="petrouspetr-pixel"
 PROJECT_URL="https://github.com/petrouspetr-pixel/trafira"
 BACKEND_DEPENDS_IPK="libc, ca-bundle, kmod-inet-diag, kmod-netlink-diag, kmod-tun, curl, ucode, ucode-mod-fs, ucode-mod-uci, kmod-nft-tproxy, coreutils-base64, bind-dig, nftables, kmod-nft-nat, ip-full"
-BACKEND_DEPENDS_APK="bind-dig ca-bundle coreutils-base64 curl ip-full kmod-inet-diag kmod-netlink-diag kmod-nft-nat kmod-nft-tproxy kmod-tun libc nftables ucode ucode-mod-fs ucode-mod-uci !https-dns-proxy !nextdns !luci-app-passwall !luci-app-passwall2 !forkop !podkop-plus !podkop"
-BACKEND_CONFLICTS_IPK="https-dns-proxy, nextdns, luci-app-passwall, luci-app-passwall2, forkop, podkop-plus, podkop"
+BACKEND_DEPENDS_APK="bind-dig ca-bundle coreutils-base64 curl ip-full kmod-inet-diag kmod-netlink-diag kmod-nft-nat kmod-nft-tproxy kmod-tun libc nftables ucode ucode-mod-fs ucode-mod-uci !https-dns-proxy !nextdns !luci-app-passwall !luci-app-passwall2 !forkop !podkop-plus !podkop !luci-app-trafira-warp"
+BACKEND_CONFLICTS_IPK="https-dns-proxy, nextdns, luci-app-passwall, luci-app-passwall2, forkop, podkop-plus, podkop, luci-app-trafira-warp"
 BACKEND_REQUIRE_USER="trafirabyedpi:trafirabyedpi"
 APP_DEPENDS_IPK="libc, luci-base, trafira"
 APP_DEPENDS_APK="libc luci-base trafira"
@@ -169,18 +169,22 @@ build_backend_root() {
   make_dir "$output_root/etc/config"
   make_dir "$output_root/usr/bin"
   make_dir "$output_root/usr/lib/trafira"
+  make_dir "$output_root/usr/share/trafira"
 
   install -m 0755 "$ROOT_DIR/trafira/files/etc/init.d/trafira" "$output_root/etc/init.d/trafira"
   install -m 0644 "$ROOT_DIR/trafira/files/etc/config/trafira" "$output_root/etc/config/trafira"
   install -m 0755 "$ROOT_DIR/trafira/files/usr/bin/trafira" "$output_root/usr/bin/trafira"
   install -m 0755 "$ROOT_DIR/trafira/files/usr/bin/trafira-config" "$output_root/usr/bin/trafira-config"
+  install -m 0644 "$ROOT_DIR/trafira/files/usr/share/trafira/gaming-presets.json" \
+    "$output_root/usr/share/trafira/gaming-presets.json"
   cp -a "$ROOT_DIR/trafira/files/usr/lib/." "$output_root/usr/lib/trafira/"
 
   sed -i -e "s/__COMPILED_VERSION_VARIABLE__/${RELEASE_VERSION}/g" \
     "$output_root/usr/lib/trafira/core/constants.uc"
 
   normalize_package_root_modes "$output_root"
-  chmod 0755 "$output_root/etc/init.d/trafira" "$output_root/usr/bin/trafira"
+  chmod 0755 "$output_root/etc/init.d/trafira" "$output_root/usr/bin/trafira" \
+    "$output_root/usr/bin/trafira-config"
 }
 
 build_app_root() {

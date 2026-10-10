@@ -81,7 +81,7 @@ grep -Fq 'body: ${{ needs.preparation.outputs.release_notes }}' "$BUILD_WORKFLOW
 grep -Fxq '          tag_name: ${{ needs.preparation.outputs.version }}' "$BUILD_WORKFLOW" ||
   fail "release tag must use the validated numeric version without a display-name prefix"
 
-for conflict in https-dns-proxy nextdns luci-app-passwall luci-app-passwall2 forkop podkop-plus podkop; do
+for conflict in https-dns-proxy nextdns luci-app-passwall luci-app-passwall2 forkop podkop-plus podkop luci-app-trafira-warp; do
   grep -E 'CONFLICTS:=' "$TRAFIRA_MAKEFILE" | grep -Fq "$conflict" ||
     fail "trafira/Makefile conflicts are missing $conflict"
   grep -E '^BACKEND_CONFLICTS_IPK=' "$BUILD_SCRIPT" | grep -Fq "$conflict" ||

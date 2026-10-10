@@ -8,8 +8,6 @@ on:
       - 'rc/**'
     paths:
       - 'build.sh'
-      - 'scripts/build-warp.sh'
-      - 'components/warp/**'
       - 'install.sh'
       - 'trafira/files/etc/init.d/**'
       - 'luci-app-trafira/root/etc/uci-defaults/**'
@@ -21,8 +19,6 @@ on:
       - 'rc/**'
     paths:
       - 'build.sh'
-      - 'scripts/build-warp.sh'
-      - 'components/warp/**'
       - 'install.sh'
       - 'trafira/files/etc/init.d/**'
       - 'luci-app-trafira/root/etc/uci-defaults/**'
@@ -53,8 +49,6 @@ jobs:
             find . -type f \
               \( -name '*.sh' -o -path './build.sh' -o -path './install.sh' \
                  -o -path './trafira/files/etc/init.d/*' \
-                 -o -path './components/warp/*/root/etc/init.d/*' \
-                 -o -path './components/warp/*/root/usr/libexec/*' \
                  -o -path './luci-app-trafira/root/etc/uci-defaults/*' \) \
               -print0
           )

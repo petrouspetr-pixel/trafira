@@ -158,21 +158,35 @@ export const routeExplanationPanel = {
       mac.disabled = router;
       iface.disabled = router;
     });
-    const form = E('form', {}, [
+    const field = (label: string, control: HTMLElement) =>
+      E('label', { class: 'fkp_diagnostic-field' }, [
+        E('span', {}, label),
+        control,
+      ]);
+    const form = E('form', { class: 'fkp_diagnostic-panel' }, [
       E('h3', {}, _('Where will the connection go?')),
-      E('label', {}, [_('Domain'), domain]),
-      E('label', {}, [_('Source'), source]),
-      ip,
-      mac,
-      iface,
-      destination,
-      E('label', {}, [_('Destination port'), port]),
-      E('label', {}, [_('Protocol'), protocol]),
-      E(
-        'button',
-        { type: 'submit', class: 'cbi-button cbi-button-action' },
-        _('Explain route'),
-      ),
+      E('div', { class: 'fkp_diagnostic-fields' }, [
+        field(_('Domain'), domain),
+        field(_('Source'), source),
+        field(_('Device IP address'), ip),
+        field(_('Destination port'), port),
+        field(_('Protocol'), protocol),
+      ]),
+      E('details', { class: 'fkp_diagnostic-details' }, [
+        E('summary', {}, _('Additional route information (optional)')),
+        E('div', { class: 'fkp_diagnostic-fields' }, [
+          field(_('Device MAC (optional)'), mac),
+          field(_('Incoming interface (optional)'), iface),
+          field(_('Real destination IP (optional)'), destination),
+        ]),
+      ]),
+      E('div', { class: 'fkp_diagnostic-actions' }, [
+        E(
+          'button',
+          { type: 'submit', class: 'cbi-button cbi-button-action' },
+          _('Explain route'),
+        ),
+      ]),
     ]);
     form.addEventListener('submit', (event) => {
       event.preventDefault();

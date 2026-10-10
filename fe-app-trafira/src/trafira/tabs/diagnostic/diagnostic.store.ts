@@ -138,9 +138,6 @@ export const initialDiagnosticStore: Pick<
     zapret2Check: { loading: false },
     zapret2Install: { loading: false },
     zapret2Remove: { loading: false },
-    warpCheck: { loading: false },
-    warpInstall: { loading: false },
-    warpRemove: { loading: false },
     byedpiCheck: { loading: false },
     byedpiInstall: { loading: false },
     byedpiRemove: { loading: false },
@@ -150,7 +147,6 @@ export const initialDiagnosticStore: Pick<
     sing_box: { status: null, latest_version: '', release_url: '' },
     zapret: { status: null, latest_version: '', release_url: '' },
     zapret2: { status: null, latest_version: '', release_url: '' },
-    warp: { status: null, latest_version: '', release_url: '' },
     byedpi: { status: null, latest_version: '', release_url: '' },
   },
 };

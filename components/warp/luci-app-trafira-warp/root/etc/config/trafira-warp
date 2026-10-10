@@ -1,4 +1,0 @@
-config settings 'main'
-	option enabled '0'
-	option interface_prefix 'tfwarp'
-	option mtu '1280'

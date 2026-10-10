@@ -4621,9 +4621,6 @@ var initialDiagnosticStore = {
     zapret2Check: { loading: false },
     zapret2Install: { loading: false },
     zapret2Remove: { loading: false },
-    warpCheck: { loading: false },
-    warpInstall: { loading: false },
-    warpRemove: { loading: false },
     byedpiCheck: { loading: false },
     byedpiInstall: { loading: false },
     byedpiRemove: { loading: false }
@@ -4633,7 +4630,6 @@ var initialDiagnosticStore = {
     sing_box: { status: null, latest_version: "", release_url: "" },
     zapret: { status: null, latest_version: "", release_url: "" },
     zapret2: { status: null, latest_version: "", release_url: "" },
-    warp: { status: null, latest_version: "", release_url: "" },
     byedpi: { status: null, latest_version: "", release_url: "" }
   }
 };
@@ -4983,9 +4979,6 @@ var componentActionKeyMap = {
   "zapret2:check_update": "zapret2Check",
   "zapret2:install": "zapret2Install",
   "zapret2:remove": "zapret2Remove",
-  "warp:check_update": "warpCheck",
-  "warp:install": "warpInstall",
-  "warp:remove": "warpRemove",
   "byedpi:check_update": "byedpiCheck",
   "byedpi:install": "byedpiInstall",
   "byedpi:remove": "byedpiRemove"
@@ -5093,9 +5086,6 @@ function getEmptyUpdatesActions() {
     zapret2Check: { loading: false },
     zapret2Install: { loading: false },
     zapret2Remove: { loading: false },
-    warpCheck: { loading: false },
-    warpInstall: { loading: false },
-    warpRemove: { loading: false },
     byedpiCheck: { loading: false },
     byedpiInstall: { loading: false },
     byedpiRemove: { loading: false }
@@ -8216,7 +8206,9 @@ function render2() {
     E("div", { class: "fkp_diagnostic-page__right-bar" }, [
       E("div", { id: "fkp_diagnostic-page-wiki" }),
       E("div", { id: "fkp_diagnostic-page-actions" }),
-      E("div", { id: "fkp_diagnostic-page-system-info" }),
+      E("div", { id: "fkp_diagnostic-page-system-info" })
+    ]),
+    E("div", { class: "fkp_diagnostic-page__lower" }, [
       E("div", { id: "fkp_diagnostic-page-snapshots" }),
       E("div", { id: "trafira-profiles" }),
       E("div", { id: "trafira-gaming-presets" })
@@ -8303,11 +8295,12 @@ function size(bytes) {
 function render3(report, error, starting) {
   const container = document.getElementById("fkp_diagnostic-page-snapshots");
   if (!container) return;
+  const expanded = container.querySelector("details")?.open;
   const busy = starting || !!report?.job?.running;
   const errorText = error === "Could not start snapshot preparation" ? _("Could not start snapshot preparation") : _("Could not read snapshot status");
   container.replaceChildren(
-    E("div", { class: "fkp_diagnostic-page__right-bar__system-info" }, [
-      E("b", {}, _("Saved rule sets")),
+    E("div", { class: "fkp_diagnostic-panel" }, [
+      E("h3", {}, _("Saved rule sets")),
       E(
         "p",
         {},
@@ -8333,17 +8326,50 @@ function render3(report, error, starting) {
           {},
           `${_("Storage")}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`
         ),
-        ...report.entries.map(
-          (entry) => E("div", {}, [
-            E("b", {}, entry.tag),
-            E(
-              "p",
-              {},
-              entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
-            ),
-            ...entry.configured_initial ? [E("p", {}, _("Referenced in saved startup configuration"))] : []
-          ])
+        E(
+          "p",
+          {},
+          `${_("Copy present")}: ${report.entries.filter((entry) => entry.present).length} / ${report.entries.length} \xB7 ${_("Copy missing")}: ${report.entries.filter((entry) => !entry.present).length}`
         ),
+        ...report.entries.length ? [
+          E(
+            "details",
+            {
+              class: "fkp_diagnostic-details",
+              ...expanded ? { open: true } : {}
+            },
+            [
+              E(
+                "summary",
+                {},
+                `${_("Saved rule sets")} (${report.entries.length})`
+              ),
+              E(
+                "div",
+                { class: "fkp_diagnostic-snapshots" },
+                report.entries.map(
+                  (entry) => E("div", {}, [
+                    E("b", {}, entry.tag),
+                    E(
+                      "p",
+                      {},
+                      entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
+                    ),
+                    ...entry.configured_initial ? [
+                      E(
+                        "p",
+                        {},
+                        _(
+                          "Referenced in saved startup configuration"
+                        )
+                      )
+                    ] : []
+                  ])
+                )
+              )
+            ]
+          )
+        ] : [],
         ...report.entries.length === 0 ? [E("p", {}, _("No remote rule sets in saved configuration"))] : [],
         ...report.job ? [
           E(
@@ -8355,24 +8381,26 @@ function render3(report, error, starting) {
           )
         ] : []
       ],
-      E(
-        "button",
-        {
-          class: "btn cbi-button",
-          disabled: busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length,
-          click: () => void snapshots.prepare()
-        },
-        _("Prepare saved copies")
-      ),
-      E(
-        "button",
-        {
-          class: "btn cbi-button",
-          disabled: starting,
-          click: () => void snapshots.refresh()
-        },
-        _("Refresh status")
-      )
+      E("div", { class: "fkp_diagnostic-actions" }, [
+        E(
+          "button",
+          {
+            class: "btn cbi-button",
+            disabled: busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length,
+            click: () => void snapshots.prepare()
+          },
+          _("Prepare saved copies")
+        ),
+        E(
+          "button",
+          {
+            class: "btn cbi-button",
+            disabled: starting,
+            click: () => void snapshots.refresh()
+          },
+          _("Refresh status")
+        )
+      ])
     ])
   );
 }
@@ -8553,21 +8581,34 @@ var routeExplanationPanel = {
       mac.disabled = router;
       iface.disabled = router;
     });
-    const form = E("form", {}, [
+    const field = (label, control) => E("label", { class: "fkp_diagnostic-field" }, [
+      E("span", {}, label),
+      control
+    ]);
+    const form = E("form", { class: "fkp_diagnostic-panel" }, [
       E("h3", {}, _("Where will the connection go?")),
-      E("label", {}, [_("Domain"), domain]),
-      E("label", {}, [_("Source"), source]),
-      ip,
-      mac,
-      iface,
-      destination,
-      E("label", {}, [_("Destination port"), port]),
-      E("label", {}, [_("Protocol"), protocol]),
-      E(
-        "button",
-        { type: "submit", class: "cbi-button cbi-button-action" },
-        _("Explain route")
-      )
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        field(_("Domain"), domain),
+        field(_("Source"), source),
+        field(_("Device IP address"), ip),
+        field(_("Destination port"), port),
+        field(_("Protocol"), protocol)
+      ]),
+      E("details", { class: "fkp_diagnostic-details" }, [
+        E("summary", {}, _("Additional route information (optional)")),
+        E("div", { class: "fkp_diagnostic-fields" }, [
+          field(_("Device MAC (optional)"), mac),
+          field(_("Incoming interface (optional)"), iface),
+          field(_("Real destination IP (optional)"), destination)
+        ])
+      ]),
+      E("div", { class: "fkp_diagnostic-actions" }, [
+        E(
+          "button",
+          { type: "submit", class: "cbi-button cbi-button-action" },
+          _("Explain route")
+        )
+      ])
     ]);
     form.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -8932,9 +8973,17 @@ var profilesPanel = {
         {},
         _("Save up to eight profiles. Applying a profile may restart routing.")
       ),
-      name,
-      select,
-      E("div", {}, actions),
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Profile name")),
+          name
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Configuration profiles")),
+          select
+        ])
+      ]),
+      E("div", { class: "fkp_diagnostic-actions" }, actions),
       E(
         "p",
         {},
@@ -8942,7 +8991,10 @@ var profilesPanel = {
           "Exported profiles contain passwords and keys. Keep the downloaded file private."
         )
       ),
-      file,
+      E("label", { class: "fkp_diagnostic-field" }, [
+        E("span", {}, _("Import profile")),
+        file
+      ]),
       message2,
       result
     );
@@ -9357,11 +9409,25 @@ var gamingPresetsPanel = {
           "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
         )
       ),
-      platform,
-      device,
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Gaming presets")),
+          platform
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Select a known device")),
+          device
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Select a connection")),
+          proxy
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Choose rule priority")),
+          placement
+        ])
+      ]),
       addresses,
-      proxy,
-      placement,
       E("label", { style: "display:block" }, [
         enable,
         " " + _("Enable only these addresses in Alice Mode if required")
@@ -9370,7 +9436,7 @@ var gamingPresetsPanel = {
         replace,
         " " + _("Replace my edits to this preset after preview")
       ]),
-      E("div", {}, [
+      E("div", { class: "fkp_diagnostic-actions" }, [
         button(_("Refresh devices"), () => {
           void refresh();
         }),
@@ -12476,12 +12542,12 @@ var styles4 = `
 
 .fkp_diagnostic-page {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    grid-column-gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+    gap: 16px;
     align-items: start;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 1000px) {
     .fkp_diagnostic-page {
         grid-template-columns: 1fr;
     }
@@ -12662,6 +12728,95 @@ var styles4 = `
 .fkp_diagnostic_alert__summary__item__icon {
     width: 16px;
     height: 16px;
+}
+
+.fkp_diagnostic-page > div,
+.fkp_diagnostic-page__lower > div {
+    min-width: 0;
+}
+
+.fkp_diagnostic-page__lower {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 16px;
+}
+
+.fkp_diagnostic-panel,
+#trafira-profiles,
+#trafira-gaming-presets {
+    border: 1px solid var(--background-color-low, lightgray);
+    border-radius: 4px;
+    padding: 16px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.fkp_diagnostic-panel h3,
+#trafira-profiles > h3,
+#trafira-gaming-presets > h3 {
+    margin-top: 0;
+}
+
+.fkp_diagnostic-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 12px 16px;
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fkp_diagnostic-field > input,
+.fkp_diagnostic-field > select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.fkp_diagnostic-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-actions > button {
+    margin: 0;
+    white-space: normal;
+    max-width: 100%;
+}
+
+.fkp_diagnostic-details {
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-details > summary {
+    cursor: pointer;
+    padding: 6px 0;
+}
+
+.fkp_diagnostic-snapshots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 12px 24px;
+    margin-top: 12px;
+}
+
+.fkp_diagnostic-snapshots > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    border-top: 1px solid var(--background-color-low, lightgray);
+    padding-top: 10px;
+}
+
+.fkp_diagnostic-page p {
+    max-width: 80ch;
 }
 `;
 
@@ -14676,14 +14831,6 @@ function shouldExposeCheckResults({
   return mounted2 && cacheResolved;
 }
 
-// src/trafira/tabs/updates/warpComponent.ts
-function warpActions(installed, status2) {
-  const actions = ["check_update"];
-  if (status2 === "outdated") actions.push("install");
-  if (installed) actions.push("remove");
-  return actions;
-}
-
 // src/trafira/tabs/updates/coreVersionPicker.ts
 var text2 = (value) => typeof value === "string" ? value : "";
 var initial2 = () => ({
@@ -15043,7 +15190,7 @@ function resetCheckResult(component) {
 function applyCachedCheckResults(results) {
   results.forEach((result) => {
     const status2 = result.status || null;
-    if (status2 === "latest" || status2 === "outdated" || status2 === "dev" || status2 === "unavailable") {
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
       setCheckResult(
         result.component,
         status2,
@@ -15190,10 +15337,6 @@ function patchSystemInfoAfterMutation(result) {
       nextSystemInfo.byedpi_version = version;
     }
   }
-  if (result.component === "warp") {
-    nextSystemInfo.warp_installed = result.action === "remove" ? 0 : 1;
-    nextSystemInfo.warp_version = result.action === "remove" ? "not installed" : version;
-  }
   const normalizedSystemInfo = normalizeSingBoxVariantFields(nextSystemInfo);
   store.set({
     diagnosticsSystemInfo: normalizedSystemInfo
@@ -15219,7 +15362,7 @@ async function applyCompletedComponentAction({
       preserveCheckResultsOnNextMount = true;
     }
     const status2 = result.status || null;
-    if (status2 === "latest" || status2 === "outdated" || status2 === "dev" || status2 === "unavailable") {
+    if (status2 === "latest" || status2 === "outdated" || status2 === "dev") {
       setCheckResult(
         result.component,
         status2,
@@ -15501,7 +15644,6 @@ function getComponentCards() {
   const zapretInstalled = Boolean(systemInfo.zapret_installed);
   const zapret2Installed = Boolean(systemInfo.zapret2_installed);
   const byedpiInstalled = Boolean(systemInfo.byedpi_installed);
-  const warpInstalled = Boolean(systemInfo.warp_installed);
   const singBoxInstalled = !isNotInstalled(systemInfo.sing_box_version);
   const singBoxStable = singBoxInstalled && !systemInfo.sing_box_extended && !systemInfo.sing_box_tiny;
   const singBoxExtended = Boolean(systemInfo.sing_box_extended) && !systemInfo.sing_box_compressed;
@@ -15575,32 +15717,7 @@ function getComponentCards() {
     installKey: "byedpiInstall",
     removeKey: "byedpiRemove"
   });
-  const warpComponentActions = warpActions(
-    warpInstalled,
-    getVisibleCheckResult("warp")?.status || null
-  ).map((action) => {
-    if (action === "check_update") return getCheckAction("warp", "warpCheck");
-    if (action === "install")
-      return getInstallAction("warp", "warpInstall", warpInstalled);
-    return {
-      key: "warpRemove",
-      text: _("Remove"),
-      icon: renderXIcon24,
-      component: "warp",
-      action: "remove"
-    };
-  });
   return [
-    {
-      component: "warp",
-      column: 1,
-      title: "WARP",
-      version: warpInstalled ? systemInfo.warp_version || _("Installed") : _("Not installed"),
-      latestVersion: getLatestVersion("warp"),
-      releaseUrl: getGitHubReleaseUrl("warp"),
-      managementUrl: warpInstalled ? "/cgi-bin/luci/admin/services/trafira-warp" : void 0,
-      actions: warpComponentActions
-    },
     {
       component: "trafira",
       column: 0,
@@ -15668,16 +15785,10 @@ function renderComponentCard(card) {
   );
   const detailsChildren = [];
   const checkResult = getVisibleCheckResult(card.component);
-  if (card.managementUrl)
-    detailsChildren.push(
-      E("a", { href: card.managementUrl }, [_("Open WARP settings")])
-    );
   if (checkResult && checkResult.status) {
     let labelText = "";
     const latestValueNodes = [];
-    if (checkResult.status === "unavailable") {
-      labelText = _("No compatible WARP release is available yet");
-    } else if (checkResult.status === "outdated") {
+    if (checkResult.status === "outdated") {
       labelText = _("Update is available:");
       const versionToShow = checkResult.latest_version || card.latestVersion || card.version;
       if (checkResult.release_url) {

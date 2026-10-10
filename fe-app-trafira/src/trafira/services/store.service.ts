@@ -209,8 +209,6 @@ export interface StoreType {
     zapret2_installed: number;
     byedpi_version: string;
     byedpi_installed: number;
-    warp_installed?: number;
-    warp_version?: string;
     server_inbounds_enabled_count: number;
     openwrt_version: string;
     device_model: string;
@@ -230,9 +228,6 @@ export interface StoreType {
     zapret2Check: { loading: boolean };
     zapret2Install: { loading: boolean };
     zapret2Remove: { loading: boolean };
-    warpCheck: { loading: boolean };
-    warpInstall: { loading: boolean };
-    warpRemove: { loading: boolean };
     byedpiCheck: { loading: boolean };
     byedpiInstall: { loading: boolean };
     byedpiRemove: { loading: boolean };
@@ -240,7 +235,7 @@ export interface StoreType {
   updatesChecks: Record<
     Trafira.ComponentName,
     {
-      status: 'latest' | 'outdated' | 'dev' | 'unavailable' | null;
+      status: 'latest' | 'outdated' | 'dev' | null;
       latest_version: string;
       release_url: string;
     }
