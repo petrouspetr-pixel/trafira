@@ -92,8 +92,8 @@ it('keeps valid saved profiles selectable under LuCI boolean attribute semantics
     ).toBeDefined(),
   );
   expect(
-    find(host, (node) => node.attributes.value === 'valid-profile')!
-      .attributes.disabled,
+    find(host, (node) => node.attributes.value === 'valid-profile')!.attributes
+      .disabled,
   ).toBeUndefined();
   expect(
     find(host, (node) => node.attributes.value === 'invalid-profile')!
