@@ -14,7 +14,7 @@ export interface ProfileState {
   busy: boolean;
   running: boolean;
   digest: string;
-  canRestore: boolean;
+  canRestore: boolean | null;
   entries: Array<{ id: string; name: string; invalid: boolean }>;
   preview: {
     id: string;
@@ -31,7 +31,7 @@ const initial = (): ProfileState => ({
   busy: false,
   running: false,
   digest: '',
-  canRestore: false,
+  canRestore: null,
   entries: [],
   preview: null,
   jobId: '',
@@ -49,6 +49,9 @@ const errors: Record<string, string> = {
     'The profile cannot be used with the current configuration and components.',
   invalid_profile: 'The profile format is invalid or unsupported.',
   profile_limit: 'A maximum of eight profiles can be saved.',
+  invalid_name: 'Enter a profile name of 1 to 64 characters.',
+  profile_unavailable:
+    'The saved profile is unavailable. Refresh the profile list.',
 };
 export function profileErrorMessage(error: string): string {
   const messages: Record<string, string> = {
@@ -74,8 +77,14 @@ export function profileErrorMessage(error: string): string {
     'Restoration failed. Check the service before continuing.': _(
       'Restoration failed. Check the service before continuing.',
     ),
+    'Enter a profile name of 1 to 64 characters.': _(
+      'Enter a profile name of 1 to 64 characters.',
+    ),
+    'The saved profile is unavailable. Refresh the profile list.': _(
+      'The saved profile is unavailable. Refresh the profile list.',
+    ),
   };
-  return messages[error] || _('The profile operation failed.');
+  return messages[errors[error] || error] || _('The profile operation failed.');
 }
 export class ProfilePanelController {
   private active = false;
@@ -95,7 +104,23 @@ export class ProfilePanelController {
     this.active = false;
     this.generation++;
   }
-  async submit(request: ProfileRequest) {
+  invalidatePreview() {
+    if (!this.active || this.state.busy || this.state.running) return;
+    this.state = { ...this.state, preview: null, error: '', restored: false };
+    this.render(this.state);
+  }
+  async applyReviewed(id: string) {
+    const preview = this.state.preview;
+    if (!preview?.applicable || !preview.digest || preview.id !== id) return;
+    return this.submit({
+      action: 'apply',
+      id: preview.id,
+      digest: preview.digest,
+    });
+  }
+  async submit(
+    request: ProfileRequest,
+  ): Promise<{ success: boolean; id: string } | undefined> {
     if (!this.active || this.state.busy) return;
     if (this.state.running && !['status', 'list'].includes(request.action))
       return;
@@ -135,17 +160,24 @@ export class ProfilePanelController {
       if (committed) this.state = { ...this.state, committed: true };
       if (typeof result.running === 'boolean')
         this.state = { ...this.state, running: result.running };
-      if (typeof result.digest === 'string')
+      if (typeof result.digest === 'string') {
+        if (this.state.preview && this.state.preview.digest !== result.digest)
+          this.state = { ...this.state, preview: null };
         this.state = { ...this.state, digest: result.digest };
+      }
       if (typeof result.can_restore === 'boolean')
         this.state = { ...this.state, canRestore: result.can_restore };
-      if (result.success === false || result.rollback_error) {
+      if (result.success !== true || result.rollback_error) {
         this.state = {
           ...this.state,
           preview: null,
           error: result.rollback_error
             ? 'Restoration failed. Check the service before continuing.'
-            : errors[text(result.error)] || 'The profile operation failed.',
+            : errors[
+                result.recovery_pending
+                  ? 'recovery_required'
+                  : text(result.error)
+              ] || 'The profile operation failed.',
           restored: result.restored === true,
         };
       } else {
@@ -160,14 +192,27 @@ export class ProfilePanelController {
                 invalid: item.invalid === true,
               })),
           };
+          if (
+            this.state.preview &&
+            !this.state.entries.some(
+              (entry) => entry.id === this.state.preview?.id && !entry.invalid,
+            )
+          )
+            this.state = { ...this.state, preview: null };
         }
         if (request.action === 'preview') {
+          if (
+            typeof result.applicable !== 'boolean' ||
+            !text(result.digest) ||
+            !Array.isArray(result.changes)
+          )
+            throw new Error('Incomplete profile preview');
           const changes = Array.isArray(result.changes) ? result.changes : [];
           this.state = {
             ...this.state,
             preview: {
               id: request.id || '',
-              applicable: result.applicable !== false,
+              applicable: result.applicable === true,
               digest: text(result.digest),
               changes: changes
                 .filter((item) => item && typeof item === 'object')
@@ -181,10 +226,18 @@ export class ProfilePanelController {
         }
         if (result.job_id)
           this.state = { ...this.state, jobId: text(result.job_id) };
-        if (['apply', 'restore', 'remove'].includes(request.action))
+        if (
+          ['apply', 'restore', 'remove', 'create', 'rename'].includes(
+            request.action,
+          )
+        )
           this.state = { ...this.state, preview: null };
         this.state = { ...this.state, restored: result.restored === true };
       }
+      return {
+        success: result.success === true && !result.rollback_error,
+        id: text(result.id) || request.id || '',
+      };
     } catch {
       if (!this.active || generation !== this.generation) return;
       this.state = {

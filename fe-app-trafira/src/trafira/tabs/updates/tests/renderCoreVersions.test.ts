@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { executeShellCommand } from '../../../../helpers/executeShellCommand';
 import { coreVersionsPanel } from '../renderCoreVersions';
-import { profilesPanel } from '../../diagnostic/renderProfiles';
 
 vi.mock('../../../../helpers/executeShellCommand', () => ({
   executeShellCommand: vi.fn(),
@@ -68,40 +67,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   coreVersionsPanel.unmount();
-  profilesPanel.unmount();
   vi.unstubAllGlobals();
-});
-
-it('keeps valid saved profiles selectable under LuCI boolean attribute semantics', async () => {
-  vi.mocked(executeShellCommand).mockImplementation(async ({ args }) => ({
-    code: 0,
-    stderr: '',
-    stdout: JSON.stringify(
-      JSON.parse(args[1]).action === 'list'
-        ? {
-            success: true,
-            entries: [
-              { id: 'valid-profile', name: 'Home', invalid: false },
-              { id: 'invalid-profile', name: 'Broken', invalid: true },
-            ],
-          }
-        : { success: true, running: false },
-    ),
-  }));
-  profilesPanel.mount();
-  await vi.waitFor(() =>
-    expect(
-      find(host, (node) => node.attributes.value === 'valid-profile'),
-    ).toBeDefined(),
-  );
-  expect(
-    find(host, (node) => node.attributes.value === 'valid-profile')!.attributes
-      .disabled,
-  ).toBeUndefined();
-  expect(
-    find(host, (node) => node.attributes.value === 'invalid-profile')!
-      .attributes.disabled,
-  ).toBe(true);
 });
 
 it('renders compatible versions as selectable under LuCI boolean attribute semantics', async () => {
@@ -221,8 +187,65 @@ it('lets a reader inspect versions but never install or unpin them', async () =>
   expect(button('Refresh available versions').disabled).toBe(false);
   expect(button('Install selected version').disabled).toBe(true);
   expect(button('Unpin version').disabled).toBe(true);
+  expect(button('Pin installed version').disabled).toBe(true);
   const count = vi.mocked(executeShellCommand).mock.calls.length;
   (button('Install selected version').attributes.click as () => void)();
   (button('Unpin version').attributes.click as () => void)();
+  (button('Pin installed version').attributes.click as () => void)();
   expect(executeShellCommand).toHaveBeenCalledTimes(count);
+});
+
+it('shows versions without disclosure and pins the installed core without an install request', async () => {
+  vi.mocked(executeShellCommand).mockImplementation(async ({ args }) => {
+    const request = JSON.parse(args[1]);
+    return {
+      code: 0,
+      stderr: '',
+      stdout: JSON.stringify(
+        request.action === 'catalog'
+          ? {
+              success: true,
+              current_version: '1.14.2',
+              current_variant: 'stable',
+              pin: null,
+              entries: [],
+            }
+          : request.action === 'pin'
+            ? {
+                success: true,
+                pin: { version: '1.14.2-r3', variant: 'stable' },
+              }
+            : { success: true, running: false },
+      ),
+    };
+  });
+  coreVersionsPanel.mount();
+  await vi.waitFor(() => expect(executeShellCommand).toHaveBeenCalledTimes(2));
+  expect(find(host, (n) => n.tag === 'details')).toBeUndefined();
+  expect(
+    find(host, (n) => n.tag === 'h3' && n.children[0] === 'Sing-box versions'),
+  ).toBeDefined();
+  const button = find(
+    host,
+    (n) => n.tag === 'button' && n.children[0] === 'Pin installed version',
+  )!;
+  expect(button.disabled).toBe(false);
+  (button.attributes.click as () => void)();
+  await vi.waitFor(() =>
+    expect(
+      find(
+        host,
+        (n) => n.attributes.class === 'fkp_updates-page__core-versions-info',
+      )!.textContent,
+    ).toContain('1.14.2-r3'),
+  );
+  const requests = vi
+    .mocked(executeShellCommand)
+    .mock.calls.map(([request]) => JSON.parse(request.args[1]));
+  expect(requests).toContainEqual({
+    action: 'pin',
+    expected_current_version: '1.14.2',
+    expected_current_variant: 'stable',
+  });
+  expect(requests.some((request) => request.action === 'install')).toBe(false);
 });

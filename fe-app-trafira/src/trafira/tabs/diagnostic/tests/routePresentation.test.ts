@@ -34,4 +34,15 @@ describe('route explanation messages', () => {
     expect(messages[0]).toContain('AdGuard');
     expect(messages[0]).not.toContain('Download or update');
   });
+  it.each([
+    ['timeout', 'time limit'],
+    ['permission_denied', 'access'],
+    ['command_failed', 'command'],
+    ['rpc_failed', 'LuCI'],
+    ['invalid_response', 'invalid response'],
+    ['render_failed', 'display'],
+  ])('shows a safe useful explanation for %s', (category, fragment) => {
+    expect(routeError(category)).toContain(fragment);
+    expect(routeError(category)).toContain(`(${category})`);
+  });
 });

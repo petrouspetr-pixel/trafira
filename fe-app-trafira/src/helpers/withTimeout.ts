@@ -10,7 +10,11 @@ export async function withTimeout<T>(
   const start = performance.now();
 
   const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    timeoutId = setTimeout(() => {
+      const error = new Error(timeoutMessage);
+      error.name = 'TimeoutError';
+      reject(error);
+    }, timeoutMs);
   });
 
   try {

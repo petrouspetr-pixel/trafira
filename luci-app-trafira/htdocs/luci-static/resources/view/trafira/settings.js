@@ -705,14 +705,17 @@ function createSettingsContent(section, capabilities) {
     capabilities,
   );
 
-  o = section.option(form.DummyValue, "_list_copies");
-  o.render = function (sectionId) {
+  o = section.option(
+    form.DummyValue,
+    "_list_copies",
+    _("Rule-set copies for startup"),
+    _(
+      "Download and check copies of lists from the saved configuration so Trafira can start when their sources are unavailable. Uses the proxy settings for list downloads.",
+    ),
+  );
+  o.renderWidget = function () {
     main.ConfigurationPanels.init("lists", !this.map.readonly);
-    return E(
-      "div",
-      { id: this.cbid(sectionId), class: "trafira-feature-slot" },
-      [E("div", { id: "fkp_diagnostic-page-snapshots" })],
-    );
+    return E("div", { id: "fkp_diagnostic-page-snapshots" });
   };
 
   o = section.option(

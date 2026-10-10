@@ -118,7 +118,7 @@
     "call": "A maximum of eight profiles can be saved.",
     "key": "A maximum of eight profiles can be saved.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:65"
+      "src/trafira/tabs/diagnostic/profilePanel.ts:74"
     ]
   },
   {
@@ -288,7 +288,7 @@
     "call": "Added",
     "key": "Added",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:420"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:519"
     ]
   },
   {
@@ -302,7 +302,7 @@
     "call": "Additional route information (optional)",
     "key": "Additional route information (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:239"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:241"
     ]
   },
   {
@@ -537,14 +537,14 @@
     "call": "Analysis of the applied configuration, not a live connection capture.",
     "key": "Analysis of the applied configuration, not a live connection capture.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:95"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:97"
     ]
   },
   {
     "call": "Another configuration operation is already running.",
     "key": "Another configuration operation is already running.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:52",
+      "src/trafira/tabs/diagnostic/profilePanel.ts:61",
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:50"
     ]
   },
@@ -559,7 +559,7 @@
     "call": "Apply profile",
     "key": "Apply profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:131"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:182"
     ]
   },
   {
@@ -580,7 +580,7 @@
     "call": "Apply the Trafira configuration again to enable saved copies for this core",
     "key": "Apply the Trafira configuration again to enable saved copies for this core",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:143"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:128"
     ]
   },
   {
@@ -594,7 +594,7 @@
     "call": "Applying settings in the background. You can close this page.",
     "key": "Applying settings in the background. You can close this page.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:387"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:461"
     ]
   },
   {
@@ -709,7 +709,7 @@
     "call": "Block connection",
     "key": "Block connection",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:39"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:41"
     ]
   },
   {
@@ -724,7 +724,7 @@
     "call": "Blocked",
     "key": "Blocked",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:23"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:25"
     ]
   },
   {
@@ -896,14 +896,14 @@
     "call": "Cache File Path",
     "key": "Cache File Path",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:761"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:766"
     ]
   },
   {
     "call": "Cache file path cannot be empty",
     "key": "Cache file path cannot be empty",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:772"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:777"
     ]
   },
   {
@@ -917,7 +917,7 @@
     "call": "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test.",
     "key": "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:113"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:115"
     ]
   },
   {
@@ -959,7 +959,7 @@
     "call": "Catalog checked",
     "key": "Catalog checked",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:134"
     ]
   },
   {
@@ -977,11 +977,18 @@
     ]
   },
   {
+    "call": "Change",
+    "key": "Change",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:508"
+    ]
+  },
+  {
     "call": "Changed",
     "key": "Changed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:420",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:420"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:521",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:523"
     ]
   },
   {
@@ -1011,7 +1018,7 @@
     "call": "Check update",
     "key": "Check update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:743"
+      "src/trafira/tabs/updates/initController.ts:744"
     ]
   },
   {
@@ -1027,7 +1034,7 @@
     "call": "Checking route",
     "key": "Checking route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:87"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:89"
     ]
   },
   {
@@ -1057,17 +1064,17 @@
     "call": "Checks failed",
     "key": "Checks failed",
     "places": [
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10",
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26"
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26",
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10"
     ]
   },
   {
     "call": "Checks passed",
     "key": "Checks passed",
     "places": [
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13",
       "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:23",
-      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43",
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13"
+      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43"
     ]
   },
   {
@@ -1095,7 +1102,7 @@
     "call": "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only.",
     "key": "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:137"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:161"
     ]
   },
   {
@@ -1176,10 +1183,10 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3786",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1714",
       "src/partials/modal/renderModal.ts:263",
-      "src/trafira/tabs/monitoring/initController.ts:832",
-      "src/trafira/tabs/monitoring/initController.ts:882",
       "src/trafira/tabs/dashboard/initController.ts:1061",
-      "src/trafira/tabs/dashboard/initController.ts:1329"
+      "src/trafira/tabs/dashboard/initController.ts:1329",
+      "src/trafira/tabs/monitoring/initController.ts:832",
+      "src/trafira/tabs/monitoring/initController.ts:882"
     ]
   },
   {
@@ -1252,14 +1259,14 @@
     "call": "Config File Path",
     "key": "Config File Path",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:748"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:753"
     ]
   },
   {
     "call": "Configuration changed. Review the differences again.",
     "key": "Configuration changed. Review the differences again.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:49",
+      "src/trafira/tabs/diagnostic/profilePanel.ts:58",
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:33"
     ]
   },
@@ -1274,8 +1281,7 @@
     "call": "Configuration profiles",
     "key": "Configuration profiles",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:277",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:302"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:362"
     ]
   },
   {
@@ -1303,14 +1309,14 @@
     "call": "Connection options",
     "key": "Connection options",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:42"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:44"
     ]
   },
   {
     "call": "Connection route",
     "key": "Connection route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:120"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:122"
     ]
   },
   {
@@ -1360,14 +1366,14 @@
     "call": "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them.",
     "key": "Copies are checked when downloaded and before startup. This inventory does not verify their current contents or whether the running service uses them.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:176"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:161"
     ]
   },
   {
     "call": "Copies stored on router",
     "key": "Copies stored on router",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:154"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:139"
     ]
   },
   {
@@ -1389,14 +1395,14 @@
     "call": "Copy missing",
     "key": "Copy missing",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:191"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:176"
     ]
   },
   {
     "call": "Copy present",
     "key": "Copy present",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:190"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:175"
     ]
   },
   {
@@ -1434,14 +1440,14 @@
     "call": "Could not explain route. Check that Trafira is running, then try again.",
     "key": "Could not explain route. Check that Trafira is running, then try again.",
     "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:121"
+      "src/trafira/tabs/diagnostic/routePresentation.ts:150"
     ]
   },
   {
     "call": "Could not load available versions. Check the connection and refresh the list.",
     "key": "Could not load available versions. Check the connection and refresh the list.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:58"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:72"
     ]
   },
   {
@@ -1480,10 +1486,17 @@
     ]
   },
   {
+    "call": "Create a profile",
+    "key": "Create a profile",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:382"
+    ]
+  },
+  {
     "call": "Create profile from saved settings",
     "key": "Create profile from saved settings",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:102"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:159"
     ]
   },
   {
@@ -1504,7 +1517,7 @@
     "call": "Current selected node",
     "key": "Current selected node",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:146"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:148"
     ]
   },
   {
@@ -1574,7 +1587,7 @@
     "call": "Delete profile",
     "key": "Delete profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:152"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:199"
     ]
   },
   {
@@ -1588,21 +1601,21 @@
     "call": "Delete the selected saved profile? Current settings will remain unchanged.",
     "key": "Delete the selected saved profile? Current settings will remain unchanged.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:156"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:203"
     ]
   },
   {
     "call": "Destination port",
     "key": "Destination port",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:235"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:237"
     ]
   },
   {
     "call": "Detect protocol",
     "key": "Detect protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:40"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:42"
     ]
   },
   {
@@ -1625,7 +1638,7 @@
     "call": "Device by IP address",
     "key": "Device by IP address",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:172"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:174"
     ]
   },
   {
@@ -1639,16 +1652,16 @@
     "call": "Device IP address",
     "key": "Device IP address",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:177",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:234"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:236"
     ]
   },
   {
     "call": "Device MAC (optional)",
     "key": "Device MAC (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:182",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:241"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:184",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:243"
     ]
   },
   {
@@ -1720,9 +1733,9 @@
     "key": "Direct connection",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837",
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17",
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:203",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:22",
-      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:24"
     ]
   },
   {
@@ -1802,8 +1815,8 @@
     "call": "DNS policy (A query)",
     "key": "DNS policy (A query)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:127",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:131"
     ]
   },
   {
@@ -1970,7 +1983,7 @@
     "call": "Does not match",
     "key": "Does not match",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:34"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:36"
     ]
   },
   {
@@ -2005,7 +2018,7 @@
     "call": "Domain",
     "key": "Domain",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:232"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:234"
     ]
   },
   {
@@ -2040,7 +2053,7 @@
     "call": "Dont Touch My DHCP!",
     "key": "Dont Touch My DHCP!",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:739"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:744"
     ]
   },
   {
@@ -2062,28 +2075,35 @@
     "call": "Download / update list copies",
     "key": "Download / update list copies",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:246"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:227"
+    ]
+  },
+  {
+    "call": "Download and check copies of lists from the saved configuration so Trafira can start when their sources are unavailable. Uses the proxy settings for list downloads.",
+    "key": "Download and check copies of lists from the saved configuration so Trafira can start when their sources are unavailable. Uses the proxy settings for list downloads.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:712"
     ]
   },
   {
     "call": "Download component packages via the selected section",
     "key": "Download component packages via the selected section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:720"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:725"
     ]
   },
   {
     "call": "Download components through",
     "key": "Download components through",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:727"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:732"
     ]
   },
   {
     "call": "Download components through a section",
     "key": "Download components through a section",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:719"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:724"
     ]
   },
   {
@@ -2098,13 +2118,6 @@
     "key": "Download lists through a section",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:691"
-    ]
-  },
-  {
-    "call": "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads.",
-    "key": "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:110"
     ]
   },
   {
@@ -2318,10 +2331,10 @@
     ]
   },
   {
-    "call": "Enter a new profile name above to rename the selected profile.",
-    "key": "Enter a new profile name above to rename the selected profile.",
+    "call": "Enter a profile name of 1 to 64 characters.",
+    "key": "Enter a profile name of 1 to 64 characters.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:317"
+      "src/trafira/tabs/diagnostic/profilePanel.ts:80"
     ]
   },
   {
@@ -2335,7 +2348,7 @@
     "call": "Enter a valid domain, destination port and device IP address, or select This router.",
     "key": "Enter a valid domain, destination port and device IP address, or select This router.",
     "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:109"
+      "src/trafira/tabs/diagnostic/routePresentation.ts:127"
     ]
   },
   {
@@ -2432,14 +2445,14 @@
     "call": "Exclude NTP",
     "key": "Exclude NTP",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:810"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:815"
     ]
   },
   {
     "call": "Exclude NTP protocol traffic from the tunnel to prevent it from being routed through the proxy or VPN",
     "key": "Exclude NTP protocol traffic from the tunnel to prevent it from being routed through the proxy or VPN",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:811"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:816"
     ]
   },
   {
@@ -2504,21 +2517,21 @@
     "call": "Explain route",
     "key": "Explain route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:250"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:252"
     ]
   },
   {
     "call": "Export profile",
     "key": "Export profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:266"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:334"
     ]
   },
   {
     "call": "Exported profiles contain passwords and keys. Keep the downloaded file private.",
     "key": "Exported profiles contain passwords and keys. Keep the downloaded file private.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:327"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:402"
     ]
   },
   {
@@ -2578,12 +2591,12 @@
     "call": "Failed to execute",
     "key": "Failed to execute",
     "places": [
-      "src/trafira/methods/shell/index.ts:170",
-      "src/trafira/methods/shell/index.ts:177",
-      "src/trafira/tabs/updates/initController.ts:509",
       "src/trafira/tabs/updates/initController.ts:510",
-      "src/trafira/tabs/updates/initController.ts:572",
-      "src/trafira/tabs/updates/initController.ts:722"
+      "src/trafira/tabs/updates/initController.ts:511",
+      "src/trafira/tabs/updates/initController.ts:573",
+      "src/trafira/tabs/updates/initController.ts:723",
+      "src/trafira/methods/shell/index.ts:170",
+      "src/trafira/methods/shell/index.ts:177"
     ]
   },
   {
@@ -2782,7 +2795,7 @@
     "call": "Handle DNS",
     "key": "Handle DNS",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:43"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:45"
     ]
   },
   {
@@ -2968,14 +2981,14 @@
     "call": "Import a profile file (JSON, up to 1 MiB)",
     "key": "Import a profile file (JSON, up to 1 MiB)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:332"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:394"
     ]
   },
   {
     "call": "Import profile",
     "key": "Import profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:259"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:327"
     ]
   },
   {
@@ -3067,8 +3080,8 @@
     "call": "Incoming interface (optional)",
     "key": "Incoming interface (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:186",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:242"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:188",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:244"
     ]
   },
   {
@@ -3082,50 +3095,50 @@
     "call": "Install",
     "key": "Install",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:757"
+      "src/trafira/tabs/updates/initController.ts:758"
     ]
   },
   {
     "call": "Install another build:",
     "key": "Install another build:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1162"
+      "src/trafira/tabs/updates/initController.ts:1163"
     ]
   },
   {
     "call": "Install selected version",
     "key": "Install selected version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:37"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:39"
     ]
   },
   {
     "call": "Installed version",
     "key": "Installed version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:134"
     ]
   },
   {
     "call": "Installed version is newer than release",
     "key": "Installed version is newer than release",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:292",
-      "src/trafira/tabs/updates/initController.ts:1020"
+      "src/trafira/tabs/updates/initController.ts:293",
+      "src/trafira/tabs/updates/initController.ts:1021"
     ]
   },
   {
     "call": "Installing in the background. You may close this page.",
     "key": "Installing in the background. You may close this page.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:117"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:139"
     ]
   },
   {
     "call": "Insufficient information",
     "key": "Insufficient information",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:24"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:26"
     ]
   },
   {
@@ -3417,6 +3430,13 @@
     ]
   },
   {
+    "call": "Invalid profile",
+    "key": "Invalid profile",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:421"
+    ]
+  },
+  {
     "call": "Invalid regular expression",
     "key": "Invalid regular expression",
     "places": [
@@ -3639,8 +3659,8 @@
     "call": "Issues detected",
     "key": "Issues detected",
     "places": [
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17",
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20"
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20",
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17"
     ]
   },
   {
@@ -3741,7 +3761,7 @@
     "call": "Last download",
     "key": "Last download",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:226"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:207"
     ]
   },
   {
@@ -3770,15 +3790,15 @@
     "call": "Latest version is installed",
     "key": "Latest version is installed",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:295",
-      "src/trafira/tabs/updates/initController.ts:1018"
+      "src/trafira/tabs/updates/initController.ts:296",
+      "src/trafira/tabs/updates/initController.ts:1019"
     ]
   },
   {
     "call": "Latest version:",
     "key": "Latest version:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1020"
+      "src/trafira/tabs/updates/initController.ts:1021"
     ]
   },
   {
@@ -3841,7 +3861,7 @@
     "call": "Lists without a saved copy",
     "key": "Lists without a saved copy",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:154"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:139"
     ]
   },
   {
@@ -3863,12 +3883,12 @@
     "call": "Loading...",
     "key": "Loading...",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:908",
-      "src/trafira/tabs/updates/initController.ts:919",
-      "src/trafira/tabs/updates/initController.ts:930",
-      "src/trafira/tabs/updates/initController.ts:943",
-      "src/trafira/tabs/updates/initController.ts:956",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:83"
+      "src/trafira/tabs/updates/initController.ts:909",
+      "src/trafira/tabs/updates/initController.ts:920",
+      "src/trafira/tabs/updates/initController.ts:931",
+      "src/trafira/tabs/updates/initController.ts:944",
+      "src/trafira/tabs/updates/initController.ts:957",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:97"
     ]
   },
   {
@@ -3879,17 +3899,24 @@
     ]
   },
   {
-    "call": "Local copies help Trafira start when remote list sources are unavailable.",
-    "key": "Local copies help Trafira start when remote list sources are unavailable.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:103"
-    ]
-  },
-  {
     "call": "Log Level",
     "key": "Log Level",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:794"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:799"
+    ]
+  },
+  {
+    "call": "LuCI could not receive the route check result. Refresh the page and try again.",
+    "key": "LuCI could not receive the route check result. Refresh the page and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:118"
+    ]
+  },
+  {
+    "call": "LuCI denied access to the route check. Sign in with an account that has access to Trafira.",
+    "key": "LuCI denied access to the route check. Sign in with an account that has access to Trafira.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:112"
     ]
   },
   {
@@ -3917,7 +3944,7 @@
     "call": "Manage and transfer profiles",
     "key": "Manage and transfer profiles",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:313"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:393"
     ]
   },
   {
@@ -3945,14 +3972,14 @@
     "call": "Matched route",
     "key": "Matched route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:21"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:23"
     ]
   },
   {
     "call": "Matches",
     "key": "Matches",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:33"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:35"
     ]
   },
   {
@@ -4087,8 +4114,8 @@
     "call": "Needs more information",
     "key": "Needs more information",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:35",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:37",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:68"
     ]
   },
   {
@@ -4104,6 +4131,13 @@
     "key": "Network interface settings",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3910"
+    ]
+  },
+  {
+    "call": "New name for selected profile",
+    "key": "New name for selected profile",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:388"
     ]
   },
   {
@@ -4185,14 +4219,14 @@
     "call": "No compatible versions are available",
     "key": "No compatible versions are available",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:86"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:100"
     ]
   },
   {
     "call": "No compatible versions are available for this installation.",
     "key": "No compatible versions are available for this installation.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:119"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:143"
     ]
   },
   {
@@ -4213,7 +4247,7 @@
     "call": "No DNS query was sent from the selected device.",
     "key": "No DNS query was sent from the selected device.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:136"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:138"
     ]
   },
   {
@@ -4253,6 +4287,13 @@
     ]
   },
   {
+    "call": "No previous configuration is available to restore.",
+    "key": "No previous configuration is available to restore.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:138"
+    ]
+  },
+  {
     "call": "No public firewall port required",
     "key": "No public firewall port required",
     "places": [
@@ -4263,7 +4304,7 @@
     "call": "No remote rule sets in saved configuration",
     "key": "No remote rule sets in saved configuration",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:212"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:193"
     ]
   },
   {
@@ -4291,7 +4332,7 @@
     "call": "No saved profiles yet. Enter a name and create a profile from the saved configuration.",
     "key": "No saved profiles yet. Enter a name and create a profile from the saved configuration.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:367"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:441"
     ]
   },
   {
@@ -4355,17 +4396,17 @@
     "places": [
       "src/trafira/helpers/singBoxVariant.ts:29",
       "src/trafira/helpers/singBoxVariant.ts:37",
-      "src/trafira/tabs/updates/initController.ts:933",
-      "src/trafira/tabs/updates/initController.ts:946",
-      "src/trafira/tabs/updates/initController.ts:959",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
+      "src/trafira/tabs/updates/initController.ts:934",
+      "src/trafira/tabs/updates/initController.ts:947",
+      "src/trafira/tabs/updates/initController.ts:960",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:134"
     ]
   },
   {
     "call": "Not pinned",
     "key": "Not pinned",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:134"
     ]
   },
   {
@@ -4442,7 +4483,7 @@
     "call": "Only changed section and option names are shown; values are hidden.",
     "key": "Only changed section and option names are shown; values are hidden.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:401"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:487"
     ]
   },
   {
@@ -4500,7 +4541,7 @@
     "call": "Only the first 200 rules are displayed",
     "key": "Only the first 200 rules are displayed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:70"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:72"
     ]
   },
   {
@@ -4514,8 +4555,8 @@
     "call": "Open",
     "key": "Open",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1011",
-      "src/trafira/tabs/updates/initController.ts:1033"
+      "src/trafira/tabs/updates/initController.ts:1012",
+      "src/trafira/tabs/updates/initController.ts:1034"
     ]
   },
   {
@@ -4539,6 +4580,13 @@
       "src/helpers/withTimeout.ts:7",
       "src/trafira/methods/shell/index.ts:425",
       "src/trafira/methods/shell/index.ts:513"
+    ]
+  },
+  {
+    "call": "Option",
+    "key": "Option",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:507"
     ]
   },
   {
@@ -4595,7 +4643,7 @@
     "call": "Overridden by an earlier rule",
     "key": "Overridden by an earlier rule",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:68"
     ]
   },
   {
@@ -4637,21 +4685,21 @@
     "call": "Path must be absolute (start with /)",
     "key": "Path must be absolute (start with /)",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:776"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:781"
     ]
   },
   {
     "call": "Path must contain at least one directory (like /tmp/cache.db)",
     "key": "Path must contain at least one directory (like /tmp/cache.db)",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:785"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:790"
     ]
   },
   {
     "call": "Path must end with cache.db",
     "key": "Path must end with cache.db",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:780"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:785"
     ]
   },
   {
@@ -4678,6 +4726,20 @@
     ]
   },
   {
+    "call": "Pin after installation",
+    "key": "Pin after installation",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:172"
+    ]
+  },
+  {
+    "call": "Pin installed version",
+    "key": "Pin installed version",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:59"
+    ]
+  },
+  {
     "call": "Pin on dashboard",
     "key": "Pin on dashboard",
     "places": [
@@ -4686,17 +4748,10 @@
     ]
   },
   {
-    "call": "Pin selected version",
-    "key": "Pin selected version",
-    "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:148"
-    ]
-  },
-  {
     "call": "Pinned version",
     "key": "Pinned version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:112"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:134"
     ]
   },
   {
@@ -4841,10 +4896,17 @@
     ]
   },
   {
+    "call": "Previous configuration",
+    "key": "Previous configuration",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:406"
+    ]
+  },
+  {
     "call": "Previous settings were restored.",
     "key": "Previous settings were restored.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:394"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:468"
     ]
   },
   {
@@ -4902,25 +4964,53 @@
     ]
   },
   {
+    "call": "Profile created.",
+    "key": "Profile created.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:152"
+    ]
+  },
+  {
+    "call": "Profile deleted.",
+    "key": "Profile deleted.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:154"
+    ]
+  },
+  {
+    "call": "Profile differences",
+    "key": "Profile differences",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:483"
+    ]
+  },
+  {
     "call": "Profile name",
     "key": "Profile name",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:41",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:298"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:383"
+    ]
+  },
+  {
+    "call": "Profile renamed.",
+    "key": "Profile renamed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:153"
     ]
   },
   {
     "call": "Profile transfer completed",
     "key": "Profile transfer completed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:242"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:303"
     ]
   },
   {
     "call": "Profile transfer failed. Select a valid JSON file of up to 1 MiB.",
     "key": "Profile transfer failed. Select a valid JSON file of up to 1 MiB.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:245"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:310",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:353"
     ]
   },
   {
@@ -4937,7 +5027,7 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2482",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2516",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:236"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:238"
     ]
   },
   {
@@ -4973,15 +5063,15 @@
     "call": "Read-only access. Configuration changes require write permission.",
     "key": "Read-only access. Configuration changes require write permission.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:290"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:375"
     ]
   },
   {
     "call": "Real destination IP (optional)",
     "key": "Real destination IP (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:190",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:243"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:192",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245"
     ]
   },
   {
@@ -5037,7 +5127,7 @@
     "call": "Referenced in saved startup configuration",
     "key": "Referenced in saved startup configuration",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:198"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:182"
     ]
   },
   {
@@ -5062,17 +5152,24 @@
     ]
   },
   {
+    "call": "Refresh profiles",
+    "key": "Refresh profiles",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:165"
+    ]
+  },
+  {
     "call": "Refresh required",
     "key": "Refresh required",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:100"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:114"
     ]
   },
   {
     "call": "Refresh status",
     "key": "Refresh status",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:255"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:236"
     ]
   },
   {
@@ -5086,7 +5183,7 @@
     "call": "Remove",
     "key": "Remove",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:802"
+      "src/trafira/tabs/updates/initController.ts:803"
     ]
   },
   {
@@ -5114,14 +5211,14 @@
     "call": "Removed",
     "key": "Removed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:420"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:520"
     ]
   },
   {
     "call": "Rename profile",
     "key": "Rename profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:111"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:169"
     ]
   },
   {
@@ -5142,7 +5239,7 @@
     "call": "Requires sing-box 1.14 or newer",
     "key": "Requires sing-box 1.14 or newer",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:130"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:115"
     ]
   },
   {
@@ -5163,7 +5260,7 @@
     "call": "Resolve domain",
     "key": "Resolve domain",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:41"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:43"
     ]
   },
   {
@@ -5219,23 +5316,23 @@
     "call": "Restoration failed. Check the service before continuing.",
     "key": "Restoration failed. Check the service before continuing.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:68",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:51",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:48"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:62",
+      "src/trafira/tabs/diagnostic/profilePanel.ts:77",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:51"
     ]
   },
   {
     "call": "Restore previous settings",
     "key": "Restore previous settings",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:144"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:191"
     ]
   },
   {
     "call": "Restore the interrupted operation before continuing.",
     "key": "Restore the interrupted operation before continuing.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:55"
+      "src/trafira/tabs/diagnostic/profilePanel.ts:64"
     ]
   },
   {
@@ -5257,7 +5354,7 @@
     "call": "Route connection",
     "key": "Route connection",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:38"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:40"
     ]
   },
   {
@@ -5350,14 +5447,14 @@
     "call": "Rule action",
     "key": "Rule action",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:66"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:68"
     ]
   },
   {
     "call": "Rule evaluation order",
     "key": "Rule evaluation order",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:61"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:63"
     ]
   },
   {
@@ -5386,7 +5483,7 @@
     "call": "Rule-set copies for startup",
     "key": "Rule-set copies for startup",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:99"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:711"
     ]
   },
   {
@@ -5456,14 +5553,28 @@
     "call": "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile.",
     "key": "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:281"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:366"
     ]
   },
   {
     "call": "Saved configuration unavailable",
     "key": "Saved configuration unavailable",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:133"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:118"
+    ]
+  },
+  {
+    "call": "Saved profiles",
+    "key": "Saved profiles",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:385"
+    ]
+  },
+  {
+    "call": "Saving...",
+    "key": "Saving...",
+    "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:141"
     ]
   },
   {
@@ -5499,7 +5610,8 @@
     "key": "Section",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:397",
-      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:51"
+      "src/trafira/tabs/dashboard/renderFailurePolicies.ts:51",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:506"
     ]
   },
   {
@@ -5569,6 +5681,13 @@
     ]
   },
   {
+    "call": "Select a saved profile",
+    "key": "Select a saved profile",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:415"
+    ]
+  },
+  {
     "call": "Select a section",
     "key": "Select a section",
     "places": [
@@ -5595,7 +5714,7 @@
     "key": "Select a version",
     "places": [
       "src/trafira/tabs/updates/renderCoreVersions.ts:24",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:85"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:99"
     ]
   },
   {
@@ -5665,14 +5784,14 @@
     "call": "Select or enter path for sing-box cache file. Change this ONLY if you know what you are doing",
     "key": "Select or enter path for sing-box cache file. Change this ONLY if you know what you are doing",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:762"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:767"
     ]
   },
   {
     "call": "Select path for sing-box config file. Change this ONLY if you know what you are doing",
     "key": "Select path for sing-box config file. Change this ONLY if you know what you are doing",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:749"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:754"
     ]
   },
   {
@@ -5687,7 +5806,7 @@
     "call": "Select the log level for sing-box",
     "key": "Select the log level for sing-box",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:795"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:800"
     ]
   },
   {
@@ -5717,6 +5836,13 @@
     "places": [
       "src/trafira/tabs/dashboard/initController.ts:944",
       "src/trafira/tabs/dashboard/initController.ts:1165"
+    ]
+  },
+  {
+    "call": "Selected profile",
+    "key": "Selected profile",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:384"
     ]
   },
   {
@@ -5830,9 +5956,9 @@
     "call": "Service action failed",
     "key": "Service action failed",
     "places": [
+      "src/trafira/tabs/diagnostic/initController.ts:595",
       "src/trafira/methods/shell/index.ts:376",
-      "src/trafira/methods/shell/index.ts:397",
-      "src/trafira/tabs/diagnostic/initController.ts:595"
+      "src/trafira/methods/shell/index.ts:397"
     ]
   },
   {
@@ -5862,7 +5988,14 @@
     "call": "Show differences",
     "key": "Show differences",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:123"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:178"
+    ]
+  },
+  {
+    "call": "Show differences before applying the selected profile.",
+    "key": "Show differences before applying the selected profile.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:545"
     ]
   },
   {
@@ -5918,7 +6051,7 @@
     "call": "Show saved lists and storage",
     "key": "Show saved lists and storage",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:166"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:151"
     ]
   },
   {
@@ -6024,14 +6157,14 @@
     "call": "Sing-box versions",
     "key": "Sing-box versions",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:133"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:157"
     ]
   },
   {
     "call": "Snapshot status unavailable",
     "key": "Snapshot status unavailable",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:127"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:112"
     ]
   },
   {
@@ -6101,9 +6234,9 @@
     "call": "Source",
     "key": "Source",
     "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:235",
       "src/trafira/tabs/monitoring/initController.ts:831",
-      "src/trafira/tabs/monitoring/initController.ts:881",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:233"
+      "src/trafira/tabs/monitoring/initController.ts:881"
     ]
   },
   {
@@ -6216,7 +6349,7 @@
     "call": "Starting the copy download…",
     "key": "Starting the copy download…",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:124"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:109"
     ]
   },
   {
@@ -6252,7 +6385,7 @@
     "call": "Storage",
     "key": "Storage",
     "places": [
-      "src/trafira/tabs/diagnostic/renderSnapshots.ts:171"
+      "src/trafira/tabs/diagnostic/renderSnapshots.ts:156"
     ]
   },
   {
@@ -6379,7 +6512,7 @@
     "call": "TCP, unknown protocol",
     "key": "TCP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:203"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:205"
     ]
   },
   {
@@ -6488,7 +6621,7 @@
     "call": "The installed version changed. Refresh the version list.",
     "key": "The installed version changed. Refresh the version list.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:51"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:65"
     ]
   },
   {
@@ -6510,29 +6643,57 @@
     "call": "The previous version was restored.",
     "key": "The previous version was restored.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:123"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:147"
     ]
   },
   {
     "call": "The profile cannot be used with the current configuration and components.",
     "key": "The profile cannot be used with the current configuration and components.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:59",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:410"
+      "src/trafira/tabs/diagnostic/profilePanel.ts:68",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:496"
     ]
   },
   {
     "call": "The profile format is invalid or unsupported.",
     "key": "The profile format is invalid or unsupported.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:62"
+      "src/trafira/tabs/diagnostic/profilePanel.ts:71"
     ]
   },
   {
     "call": "The profile operation failed.",
     "key": "The profile operation failed.",
     "places": [
-      "src/trafira/tabs/diagnostic/profilePanel.ts:72"
+      "src/trafira/tabs/diagnostic/profilePanel.ts:87"
+    ]
+  },
+  {
+    "call": "The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again.",
+    "key": "The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:109"
+    ]
+  },
+  {
+    "call": "The route check returned an invalid response. Check that the Trafira backend and LuCI app versions match.",
+    "key": "The route check returned an invalid response. Check that the Trafira backend and LuCI app versions match.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:121"
+    ]
+  },
+  {
+    "call": "The route diagnostic command failed. Its system output is needed to identify the cause.",
+    "key": "The route diagnostic command failed. Its system output is needed to identify the cause.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:115"
+    ]
+  },
+  {
+    "call": "The route result could not be displayed. Refresh the page; if this repeats, report this display error.",
+    "key": "The route result could not be displayed. Refresh the page; if this repeats, report this display error.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:124"
     ]
   },
   {
@@ -6546,7 +6707,7 @@
     "call": "The routing configuration changed during the check. Try again.",
     "key": "The routing configuration changed during the check. Try again.",
     "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:112"
+      "src/trafira/tabs/diagnostic/routePresentation.ts:130"
     ]
   },
   {
@@ -6561,6 +6722,13 @@
     "key": "The rule set is too complex to evaluate within the diagnostic limits.",
     "places": [
       "src/trafira/tabs/diagnostic/routePresentation.ts:61"
+    ]
+  },
+  {
+    "call": "The saved profile is unavailable. Refresh the profile list.",
+    "key": "The saved profile is unavailable. Refresh the profile list.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profilePanel.ts:83"
     ]
   },
   {
@@ -6581,15 +6749,15 @@
     "call": "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again.",
     "key": "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again.",
     "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:115"
+      "src/trafira/tabs/diagnostic/routePresentation.ts:133"
     ]
   },
   {
     "call": "The sing-box version operation failed.",
     "key": "The sing-box version operation failed.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:54",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:115"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:68",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:137"
     ]
   },
   {
@@ -6711,10 +6879,24 @@
     ]
   },
   {
+    "call": "This profile matches the saved configuration.",
+    "key": "This profile matches the saved configuration.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:533"
+    ]
+  },
+  {
     "call": "This router",
     "key": "This router",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:173"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:175"
+    ]
+  },
+  {
+    "call": "This saved profile is invalid. Delete it or import a valid file.",
+    "key": "This saved profile is invalid. Delete it or import a valid file.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:475"
     ]
   },
   {
@@ -6878,7 +7060,7 @@
     "call": "Trafira will not modify your DHCP configuration",
     "key": "Trafira will not modify your DHCP configuration",
     "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:740"
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:745"
     ]
   },
   {
@@ -6955,7 +7137,7 @@
     "call": "Transferring profile",
     "key": "Transferring profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:170"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:217"
     ]
   },
   {
@@ -7042,7 +7224,7 @@
     "call": "UDP, unknown protocol",
     "key": "UDP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:204"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:206"
     ]
   },
   {
@@ -7081,7 +7263,7 @@
     "call": "Unavailable for this installation",
     "key": "Unavailable for this installation",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:101"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:115"
     ]
   },
   {
@@ -7142,7 +7324,7 @@
       "src/trafira/services/systemInfo.service.ts:22",
       "src/trafira/services/systemInfo.service.ts:25",
       "src/trafira/services/systemInfo.service.ts:26",
-      "src/trafira/tabs/updates/initController.ts:330",
+      "src/trafira/tabs/updates/initController.ts:331",
       "src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25"
     ]
   },
@@ -7187,7 +7369,7 @@
     "call": "Unpin version",
     "key": "Unpin version",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:45"
+      "src/trafira/tabs/updates/renderCoreVersions.ts:49"
     ]
   },
   {
@@ -7208,21 +7390,21 @@
     "call": "Update",
     "key": "Update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:757"
+      "src/trafira/tabs/updates/initController.ts:758"
     ]
   },
   {
     "call": "Update is available",
     "key": "Update is available",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:288"
+      "src/trafira/tabs/updates/initController.ts:289"
     ]
   },
   {
     "call": "Update is available:",
     "key": "Update is available:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:997"
+      "src/trafira/tabs/updates/initController.ts:998"
     ]
   },
   {
@@ -7611,7 +7793,7 @@
     "call": "Where will the connection go?",
     "key": "Where will the connection go?",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:230"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:232"
     ]
   },
   {

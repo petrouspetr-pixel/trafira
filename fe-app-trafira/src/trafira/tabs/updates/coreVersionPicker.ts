@@ -3,6 +3,7 @@ export type VersionStage =
   | 'loading'
   | 'selected'
   | 'installing'
+  | 'saving'
   | 'done'
   | 'failed';
 export interface VersionState {
@@ -14,6 +15,7 @@ export interface VersionState {
     reason: string;
   }>;
   currentVersion: string;
+  currentVariant: string;
   cachedAt: number;
   pinnedVersion: string;
   selected: string;
@@ -23,10 +25,11 @@ export interface VersionState {
   unavailableReason: string;
 }
 export interface VersionRequest {
-  action: 'catalog' | 'install' | 'unpin' | 'status';
+  action: 'catalog' | 'install' | 'pin' | 'unpin' | 'status';
   refresh?: boolean;
   candidate_id?: string;
   expected_current_version?: string;
+  expected_current_variant?: string;
   pin?: boolean;
   job_id?: string;
 }
@@ -35,6 +38,7 @@ const initial = (): VersionState => ({
   stage: 'idle',
   entries: [],
   currentVersion: '',
+  currentVariant: '',
   cachedAt: 0,
   pinnedVersion: '',
   selected: '',
@@ -101,6 +105,19 @@ export class CoreVersionPicker {
       expected_current_version: this.state.currentVersion,
     });
   }
+  async pin() {
+    if (
+      !this.state.currentVersion ||
+      this.state.currentVersion === 'not-installed' ||
+      !this.state.currentVariant
+    )
+      return;
+    await this.request({
+      action: 'pin',
+      expected_current_version: this.state.currentVersion,
+      expected_current_variant: this.state.currentVariant,
+    });
+  }
   async poll() {
     await this.request({
       action: 'status',
@@ -124,7 +141,9 @@ export class CoreVersionPicker {
           ? 'loading'
           : request.action === 'status'
             ? this.state.stage
-            : 'installing',
+            : request.action === 'pin' || request.action === 'unpin'
+              ? 'saving'
+              : 'installing',
     };
     this.render(this.state);
     try {
@@ -137,6 +156,8 @@ export class CoreVersionPicker {
           selected: '',
           currentVersion:
             text(result.current_version) || this.state.currentVersion,
+          currentVariant:
+            text(result.current_variant) || this.state.currentVariant,
           cachedAt: Number(result.cached_at) || 0,
           pinnedVersion:
             result.pin && typeof result.pin === 'object'
@@ -190,6 +211,14 @@ export class CoreVersionPicker {
           ...this.state,
           stage: 'done',
           restored: result.restored === true,
+          ...(request.action === 'pin' || request.action === 'unpin'
+            ? {
+                pinnedVersion:
+                  result.pin && typeof result.pin === 'object'
+                    ? text((result.pin as Record<string, unknown>).version)
+                    : '',
+              }
+            : {}),
         };
       }
     } catch {

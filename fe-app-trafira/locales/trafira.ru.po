@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 11:48+0300\n"
-"PO-Revision-Date: 2026-10-10 11:48+0300\n"
+"POT-Creation-Date: 2026-10-10 13:36+0300\n"
+"PO-Revision-Date: 2026-10-10 13:36+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -422,6 +422,9 @@ msgstr "Путь к сертификату"
 msgid "Certificate pin is unavailable. Apply or restart the server to generate the default certificate, then open this dialog again."
 msgstr "Пин сертификата недоступен. Примените или перезапустите сервер, чтобы сгенерировать дефолтный сертификат, затем откройте это окно снова."
 
+msgid "Change"
+msgstr "Изменение"
+
 msgid "Changed"
 msgstr "Изменено"
 
@@ -622,6 +625,9 @@ msgstr "Не удалось запустить загрузку копий. Об
 
 msgid "Could not start the download task. Refresh the status and try again."
 msgstr "Не удалось запустить задачу загрузки. Обновите состояние и повторите."
+
+msgid "Create a profile"
+msgstr "Создание профиля"
 
 msgid "Create profile from saved settings"
 msgstr "Создать профиль из сохранённых настроек"
@@ -866,6 +872,9 @@ msgstr "Скачать"
 msgid "Download / update list copies"
 msgstr "Скачать или обновить копии списков"
 
+msgid "Download and check copies of lists from the saved configuration so Trafira can start when their sources are unavailable. Uses the proxy settings for list downloads."
+msgstr "Скачать и проверить копии списков из сохранённой конфигурации, чтобы Trafira могла запуститься при недоступности их источников. Для загрузки используются настройки прокси списков."
+
 msgid "Download component packages via the selected section"
 msgstr "Скачивать пакеты компонентов через выбранную секцию"
 
@@ -880,9 +889,6 @@ msgstr "Скачивать списки через"
 
 msgid "Download lists through a section"
 msgstr "Скачивать списки через секцию"
-
-msgid "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
-msgstr "Скачайте или обновите списки из сохранённой конфигурации: Trafira проверит их и сохранит копии на роутере. Для загрузки используются настройки прокси списков."
 
 msgid "Download remote lists and rule sets via the selected section"
 msgstr "Скачивать удаленные списки и наборы правил через выбранную секцию"
@@ -971,8 +977,8 @@ msgstr "Введите отображаемое имя"
 msgid "Enter a level name"
 msgstr "Введите название уровня"
 
-msgid "Enter a new profile name above to rename the selected profile."
-msgstr "Для переименования выбранного профиля введите новое название в поле выше."
+msgid "Enter a profile name of 1 to 64 characters."
+msgstr "Введите название профиля длиной от 1 до 64 символов."
 
 msgid "Enter a valid DNS server address"
 msgstr "Укажите корректный адрес DNS-сервера"
@@ -1421,6 +1427,9 @@ msgstr "Неверный номер порта. Допустимо от 1 до 6
 msgid "Invalid port or range. Use 80 or 1000-2000"
 msgstr "Неверный порт или диапазон. Используйте 80 или 1000-2000"
 
+msgid "Invalid profile"
+msgstr "Повреждённый профиль"
+
 msgid "Invalid regular expression"
 msgstr "Неверное регулярное выражение"
 
@@ -1613,11 +1622,14 @@ msgstr "Загрузка..."
 msgid "Loading…"
 msgstr "Загрузка…"
 
-msgid "Local copies help Trafira start when remote list sources are unavailable."
-msgstr "Локальные копии помогают Trafira запуститься, когда источники списков недоступны."
-
 msgid "Log Level"
 msgstr "Уровень логов"
+
+msgid "LuCI could not receive the route check result. Refresh the page and try again."
+msgstr "LuCI не удалось получить результат проверки маршрута. Обновите страницу и повторите проверку."
+
+msgid "LuCI denied access to the route check. Sign in with an account that has access to Trafira."
+msgstr "LuCI отказал в доступе к проверке маршрута. Войдите с учётной записью, у которой есть доступ к Trafira."
 
 msgid "MAC addresses"
 msgstr "MAC-адреса"
@@ -1709,6 +1721,9 @@ msgstr "Сетевой интерфейс"
 msgid "Network interface settings"
 msgstr "Настройки сетевого интерфейса"
 
+msgid "New name for selected profile"
+msgstr "Новое название выбранного профиля"
+
 msgid "New version %s is available for %s"
 msgstr "Доступна новая версия %s для %s"
 
@@ -1768,6 +1783,9 @@ msgstr "Нет обнаруженных устройств. Подключите
 
 msgid "No other marking rules found"
 msgstr "Другие правила маркировки не найдены"
+
+msgid "No previous configuration is available to restore."
+msgstr "Предыдущие настройки для восстановления ещё не сохранены."
 
 msgid "No public firewall port required"
 msgstr "Публичный порт в firewall не требуется"
@@ -1883,6 +1901,9 @@ msgstr "Открыть страницу проекта"
 msgid "Operation timed out"
 msgstr "Время ожидания истекло"
 
+msgid "Option"
+msgstr "Параметр"
+
 msgid "Option \"%s\" contains an invalid input value."
 msgstr "Параметр \"%s\" содержит некорректное значение."
 
@@ -1940,11 +1961,14 @@ msgstr "Ожидает запуска"
 msgid "Periodically check the current level and switch to a faster server even when the current one works."
 msgstr "Периодически проверять текущий уровень и переключаться на более быстрый сервер, даже если текущий работает."
 
+msgid "Pin after installation"
+msgstr "Закрепить после установки"
+
+msgid "Pin installed version"
+msgstr "Закрепить установленную версию"
+
 msgid "Pin on dashboard"
 msgstr "Закрепить в дашборде"
-
-msgid "Pin selected version"
-msgstr "Закрепить выбранную версию"
 
 msgid "Pinned version"
 msgstr "Закреплённая версия"
@@ -2009,6 +2033,9 @@ msgstr "Предпросмотр недоступен: в кеше нет под
 msgid "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it."
 msgstr "Предпросмотр недоступен: кеш создан до добавления этой функции. Примените сохранённую конфигурацию обычным способом, чтобы пересоздать кеш."
 
+msgid "Previous configuration"
+msgstr "Предыдущие настройки"
+
 msgid "Previous settings were restored."
 msgstr "Предыдущие настройки восстановлены."
 
@@ -2033,8 +2060,20 @@ msgstr "Уровни приоритета"
 msgid "Priority settings"
 msgstr "Настройки приоритета"
 
+msgid "Profile created."
+msgstr "Профиль создан."
+
+msgid "Profile deleted."
+msgstr "Профиль удалён."
+
+msgid "Profile differences"
+msgstr "Различия профиля"
+
 msgid "Profile name"
 msgstr "Название профиля"
+
+msgid "Profile renamed."
+msgstr "Профиль переименован."
 
 msgid "Profile transfer completed"
 msgstr "Передача профиля завершена"
@@ -2098,6 +2137,9 @@ msgstr "Обновить список версий"
 
 msgid "Refresh devices"
 msgstr "Обновить устройства"
+
+msgid "Refresh profiles"
+msgstr "Обновить список"
 
 msgid "Refresh required"
 msgstr "Требуется обновить список"
@@ -2270,6 +2312,12 @@ msgstr "Сохраните до восьми профилей настроек �
 msgid "Saved configuration unavailable"
 msgstr "Сохранённая конфигурация недоступна"
 
+msgid "Saved profiles"
+msgstr "Сохранённые профили"
+
+msgid "Saving..."
+msgstr "Сохранение…"
+
 msgid "Search"
 msgstr "Поиск"
 
@@ -2311,6 +2359,9 @@ msgstr "Выберите сетевой интерфейс"
 
 msgid "Select a predefined domain list"
 msgstr "Выберите готовый список доменов"
+
+msgid "Select a saved profile"
+msgstr "Выберите сохранённый профиль"
 
 msgid "Select a section"
 msgstr "Выберите секцию"
@@ -2375,6 +2426,9 @@ msgstr "Выберите WAN интерфейсы для мониторинга"
 msgid "Selected"
 msgstr "Выбран"
 
+msgid "Selected profile"
+msgstr "Выбранный профиль"
+
 msgid "Selected section"
 msgstr "Выбранная секция"
 
@@ -2434,6 +2488,9 @@ msgstr "Настройки"
 
 msgid "Show differences"
 msgstr "Показать различия"
+
+msgid "Show differences before applying the selected profile."
+msgstr "Перед применением выбранного профиля проверьте различия."
 
 msgid "Show each device's routing status on the dashboard."
 msgstr "Показывать на дашборде, как маршрутизируется каждое устройство."
@@ -2717,6 +2774,18 @@ msgstr "Формат профиля некорректен или не подд�
 msgid "The profile operation failed."
 msgstr "Не удалось выполнить операцию с профилем."
 
+msgid "The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again."
+msgstr "Истекло время проверки маршрута. Роутер может продолжать обработку списков. Подождите перед повторной проверкой."
+
+msgid "The route check returned an invalid response. Check that the Trafira backend and LuCI app versions match."
+msgstr "Проверка маршрута вернула некорректный ответ. Проверьте, что версии Trafira и приложения LuCI совпадают."
+
+msgid "The route diagnostic command failed. Its system output is needed to identify the cause."
+msgstr "Команда проверки маршрута завершилась с ошибкой. Для выяснения причины нужен её вывод из терминала."
+
+msgid "The route result could not be displayed. Refresh the page; if this repeats, report this display error."
+msgstr "Не удалось отобразить результат проверки маршрута. Обновите страницу; если ошибка повторится, сообщите об этом."
+
 msgid "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
 msgstr "Маршрут приложений роутера зависит от правил межсетевого экрана, которые эта проверка не рассчитывает. Выберите устройство локальной сети, чтобы проверить его маршрут через Trafira."
 
@@ -2728,6 +2797,9 @@ msgstr "Правило применяется к домену и всем его
 
 msgid "The rule set is too complex to evaluate within the diagnostic limits."
 msgstr "Список правил слишком сложен для расчёта в пределах ограничений диагностики."
+
+msgid "The saved profile is unavailable. Refresh the profile list."
+msgstr "Сохранённый профиль недоступен. Обновите список профилей."
 
 msgid "The selected address is no longer known. Refresh the device list."
 msgstr "Выбранный адрес больше не найден. Обновите список устройств."
@@ -2789,8 +2861,14 @@ msgstr "Этой опции требуется значение."
 msgid "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected."
 msgstr "Предпросмотр использует последний созданный кеш. Несохранённые адреса подписок, настройки источников и изменения групп не учитываются."
 
+msgid "This profile matches the saved configuration."
+msgstr "Профиль совпадает с сохранёнными настройками."
+
 msgid "This router"
 msgstr "Сам роутер"
+
+msgid "This saved profile is invalid. Delete it or import a valid file."
+msgstr "Сохранённый профиль повреждён. Удалите его или импортируйте исправный файл."
 
 msgid "This time synchronization connection is excluded from router application routing."
 msgstr "Это соединение для синхронизации времени исключено из маршрутизации приложений роутера."

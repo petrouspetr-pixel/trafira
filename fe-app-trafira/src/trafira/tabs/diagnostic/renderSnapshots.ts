@@ -95,22 +95,7 @@ function render(
   const busy = starting || !!report?.job?.running;
   const stored = report?.entries.filter((entry) => entry.present).length || 0;
   container.replaceChildren(
-    E('div', { class: 'fkp_diagnostic-panel' }, [
-      E('h3', {}, _('Rule-set copies for startup')),
-      E(
-        'p',
-        {},
-        _(
-          'Local copies help Trafira start when remote list sources are unavailable.',
-        ),
-      ),
-      E(
-        'p',
-        {},
-        _(
-          'Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads.',
-        ),
-      ),
+    E('div', { class: 'trafira-list-copies' }, [
       ...(error
         ? [
             E(
@@ -179,28 +164,24 @@ function render(
                       ),
                       E(
                         'div',
-                        { class: 'fkp_diagnostic-snapshots' },
+                        { class: 'table trafira-list-copies-table' },
                         report.entries.map((entry) =>
-                          E('div', {}, [
-                            E('b', {}, entry.tag),
+                          E('div', { class: 'tr' }, [
+                            E('div', { class: 'td' }, entry.tag),
                             E(
-                              'p',
-                              {},
+                              'div',
+                              { class: 'td' },
                               entry.present
                                 ? `${_('Copy present')}: ${size(entry.bytes)} · ${entry.mtime ? new Date(entry.mtime * 1000).toLocaleString() : '—'}`
                                 : _('Copy missing'),
                             ),
-                            ...(entry.configured_initial
-                              ? [
-                                  E(
-                                    'p',
-                                    {},
-                                    _(
-                                      'Referenced in saved startup configuration',
-                                    ),
-                                  ),
-                                ]
-                              : []),
+                            E(
+                              'div',
+                              { class: 'td' },
+                              entry.configured_initial
+                                ? _('Referenced in saved startup configuration')
+                                : '—',
+                            ),
                           ]),
                         ),
                       ),

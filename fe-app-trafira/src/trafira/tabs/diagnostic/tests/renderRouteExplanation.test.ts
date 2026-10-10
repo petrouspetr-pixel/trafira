@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderRouteExplanationResult } from '../renderRouteExplanation';
 import { ExplainReport } from '../routeExplanation';
+import { parseRouteExplanationResult } from '../routeExplanation';
+import { routerRouteReport } from './routeRouterReport.fixture';
 
 interface NodeView {
   tag: string;
@@ -36,6 +38,20 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('route diagnostic output', () => {
+  it('renders the full router CLI response with partially available saved lists', () => {
+    const report = parseRouteExplanationResult({
+      code: 0,
+      stdout: JSON.stringify(routerRouteReport),
+    });
+    expect(() => renderRouteExplanationResult(report, '', false)).not.toThrow();
+    expect(text(output)).toContain('Enter the real destination IP');
+    expect(text(output)).toContain(
+      'lists exceed the diagnostic size or time limits',
+    );
+    expect(text(output)).toContain('DNS policy (A query)');
+    expect(text(output)).not.toContain('Could not explain route');
+    expect(text(output)).not.toContain('rule_set:');
+  });
   it('shows useful grouped hints and saved-copy basis instead of raw internal codes', () => {
     const report: ExplainReport = {
       success: true,

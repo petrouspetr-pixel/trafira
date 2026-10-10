@@ -4,12 +4,52 @@ import { CoreVersionPicker } from '../coreVersionPicker';
 const catalog = {
   success: true,
   current_version: '1.14.2',
+  current_variant: 'stable',
   cached_at: 100,
   entries: [
     { id: 'older', version: '1.14.1', available: true },
     { id: 'wrong', version: '1.14.2', available: false },
   ],
 };
+it('pins the installed version without selecting or reinstalling a catalog version', async () => {
+  const call = vi
+    .fn()
+    .mockResolvedValueOnce(catalog)
+    .mockResolvedValueOnce({ success: true, pin: { version: '1.14.2-r1' } });
+  const render = vi.fn();
+  const picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load();
+  await picker.pin();
+  expect(call.mock.lastCall?.[0]).toEqual({
+    action: 'pin',
+    expected_current_version: '1.14.2',
+    expected_current_variant: 'stable',
+  });
+  expect(render.mock.lastCall?.[0]).toMatchObject({
+    stage: 'done',
+    pinnedVersion: '1.14.2-r1',
+  });
+  call.mockResolvedValueOnce({ success: true, pin: null });
+  await picker.unpin();
+  expect(render.mock.lastCall?.[0].pinnedVersion).toBe('');
+});
+it('preserves pin errors instead of replacing them with an automatic catalog reload', async () => {
+  const call = vi
+    .fn()
+    .mockResolvedValueOnce(catalog)
+    .mockResolvedValueOnce({ success: false, error: 'conflict' });
+  const render = vi.fn();
+  const picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load();
+  await picker.pin();
+  expect(render.mock.lastCall?.[0]).toMatchObject({
+    stage: 'failed',
+    error: 'The installed version changed. Refresh the version list.',
+  });
+  expect(call).toHaveBeenCalledTimes(2);
+});
 it('selects a downgrade and blocks duplicate installs and changes during the job', async () => {
   const call = vi
     .fn()

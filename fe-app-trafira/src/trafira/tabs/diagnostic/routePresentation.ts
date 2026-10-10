@@ -106,6 +106,24 @@ export function routeReasons(
 
 export function routeError(error: string): string {
   const messages: Record<string, string> = {
+    timeout: _(
+      'The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again.',
+    ),
+    permission_denied: _(
+      'LuCI denied access to the route check. Sign in with an account that has access to Trafira.',
+    ),
+    command_failed: _(
+      'The route diagnostic command failed. Its system output is needed to identify the cause.',
+    ),
+    rpc_failed: _(
+      'LuCI could not receive the route check result. Refresh the page and try again.',
+    ),
+    invalid_response: _(
+      'The route check returned an invalid response. Check that the Trafira backend and LuCI app versions match.',
+    ),
+    render_failed: _(
+      'The route result could not be displayed. Refresh the page; if this repeats, report this display error.',
+    ),
     invalid_request: _(
       'Enter a valid domain, destination port and device IP address, or select This router.',
     ),
@@ -116,6 +134,17 @@ export function routeError(error: string): string {
       'The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again.',
     ),
   };
+  if (
+    [
+      'timeout',
+      'permission_denied',
+      'command_failed',
+      'rpc_failed',
+      'invalid_response',
+      'render_failed',
+    ].includes(error)
+  )
+    return `${messages[error]} (${error})`;
   return (
     messages[error] ||
     _('Could not explain route. Check that Trafira is running, then try again.')

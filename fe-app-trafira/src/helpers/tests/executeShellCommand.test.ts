@@ -28,6 +28,14 @@ describe('RPC command access routing', () => {
       ['core_action', '{"action":"install"}'],
       '/usr/bin/trafira-config',
     ],
+    [
+      '/usr/bin/trafira-config',
+      [
+        'core_action',
+        '{"action":"pin","expected_current_version":"1.14.2","expected_current_variant":"stable"}',
+      ],
+      '/usr/bin/trafira-config',
+    ],
     ['/etc/init.d/trafira', ['enable'], '/etc/init.d/trafira'],
     [
       '/usr/bin/trafira-config',
