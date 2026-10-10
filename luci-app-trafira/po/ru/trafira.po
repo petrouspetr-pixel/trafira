@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 13:36+0300\n"
-"PO-Revision-Date: 2026-10-10 13:36+0300\n"
+"POT-Creation-Date: 2026-10-10 14:20+0300\n"
+"PO-Revision-Date: 2026-10-10 14:20+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -140,9 +140,6 @@ msgstr "Добавлено"
 msgid "Additional marking rules found"
 msgstr "Найдены дополнительные правила маркировки"
 
-msgid "Additional route information (optional)"
-msgstr "Дополнительные сведения о маршруте (необязательно)"
-
 msgid "Additionally exclude servers by protocol, transport, and security. Exclude only servers matching the specified parameters."
 msgstr "Дополнительно исключать серверы по протоколу, транспорту и защите. Исключать только серверы, совпавшие по указанным параметрам."
 
@@ -224,8 +221,8 @@ msgstr "ALPN"
 msgid "Alter ID"
 msgstr "Alter ID"
 
-msgid "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information."
-msgstr "Более раннее правило проверяет IP назначения. Укажите реальный IP в дополнительных сведениях."
+msgid "An earlier rule checks destination addresses. Enter the real destination IP in the form above and check again."
+msgstr "Более раннее правило проверяет IP назначения. Укажите реальный IP в форме выше и повторите проверку."
 
 msgid "An earlier rule checks the application protocol. Select the protocol to continue."
 msgstr "Более раннее правило проверяет протокол приложения. Выберите протокол для продолжения."
@@ -442,6 +439,9 @@ msgstr "Проверить обновление"
 
 msgid "Check URL"
 msgstr "URL проверки"
+
+msgid "Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device."
+msgstr "Проверьте, какое правило Trafira применяется к соединению. Это не проверка доступности сайта: запросы от имени выбранного устройства не отправляются."
 
 msgid "Checking route"
 msgstr "Проверка маршрута"
@@ -700,6 +700,9 @@ msgstr "IP-адрес устройства"
 
 msgid "Device MAC (optional)"
 msgstr "MAC устройства (необязательно)"
+
+msgid "Device MAC and incoming interface (if needed)"
+msgstr "MAC устройства и входящий интерфейс (при необходимости)"
 
 msgid "Device or IP"
 msgstr "Устройство или IP"
@@ -992,17 +995,20 @@ msgstr "Введите абсолютный путь к файлу"
 msgid "Enter HWID"
 msgstr "Укажите HWID"
 
+msgid "Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address."
+msgstr "Укажите фактический IP сервера для этого домена из соединения, которое хотите проверить. Инструмент не разрешает домен автоматически; DNS может вернуть несколько адресов. Не используйте адрес FakeIP."
+
 msgid "Enter the device IP address, or select a detected device."
 msgstr "Введите IP-адрес устройства или выберите обнаруженное устройство."
 
-msgid "Enter the device MAC address in Additional route information."
-msgstr "Введите MAC-адрес устройства в дополнительных сведениях."
+msgid "Enter the device MAC address under Device MAC and incoming interface."
+msgstr "Укажите MAC устройства в разделе «MAC устройства и входящий интерфейс»."
 
 msgid "Enter the HWID sent with subscription requests"
 msgstr "HWID, который будет отправляться при запросах подписки"
 
-msgid "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route."
-msgstr "Укажите реальный IP назначения в дополнительных сведениях. Одного домена недостаточно для расчёта маршрута приложений роутера."
+msgid "Enter the real destination IP in the form above. A domain alone cannot determine the router firewall route."
+msgstr "Укажите реальный IP назначения в форме выше. Одного домена недостаточно для расчёта маршрута приложений роутера."
 
 msgid "Enter the subscription URL"
 msgstr "Введите URL подписки"
@@ -1123,6 +1129,9 @@ msgstr "Порт в firewall для WAN"
 
 msgid "Fix the highlighted fields and save again."
 msgstr "Исправьте подсвеченные поля и сохраните снова."
+
+msgid "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below."
+msgstr "Для телефона или ПК выберите обнаруженный адрес устройства или введите его IP в локальной сети. При необходимости укажите ниже входящий интерфейс, обычно br-lan."
 
 msgid "Forced device routing"
 msgstr "Принудительная маршрутизация устройств"
@@ -2105,6 +2114,9 @@ msgstr "Доступ только для чтения. Для изменения
 msgid "Real destination IP (optional)"
 msgstr "Реальный IP назначения (необязательно)"
 
+msgid "Real destination IP (required for the router)"
+msgstr "Реальный IP назначения (обязателен для роутера)"
+
 msgid "Reality fake site"
 msgstr "Fake-сайт Reality"
 
@@ -2240,6 +2252,9 @@ msgstr "Маршрутизация приложений роутера"
 msgid "Router application routing has not been applied. Save and apply the Trafira settings first."
 msgstr "Маршрутизация приложений роутера ещё не применена. Сохраните и примените настройки Trafira."
 
+msgid "Router application routing is disabled. Select a LAN device to check its route. To analyze router applications, Router application routing must be enabled and applied in Settings. Other firewall and system VPN routes are not calculated here."
+msgstr "Маршрутизация приложений роутера отключена. Выберите устройство локальной сети для проверки его маршрута. Для анализа приложений самого роутера нужно включить и применить «Маршрутизацию приложений роутера» в настройках. Другие правила межсетевого экрана и системных VPN здесь не рассчитываются."
+
 msgid "Router application routing is not active. Restart Trafira and try again."
 msgstr "Маршрутизация приложений роутера не работает. Перезапустите Trafira и повторите проверку."
 
@@ -2348,8 +2363,8 @@ msgstr "Выберите распространённый профиль кли�
 msgid "Select a connection"
 msgstr "Выберите подключение"
 
-msgid "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information."
-msgstr "Выберите обнаруженное устройство или укажите входящий интерфейс, обычно br-lan, в дополнительных сведениях."
+msgid "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface."
+msgstr "Выберите обнаруженное устройство или укажите его входящий интерфейс, обычно br-lan, в разделе «MAC устройства и входящий интерфейс»."
 
 msgid "Select a known device"
 msgstr "Выберите обнаруженное устройство"
@@ -2786,9 +2801,6 @@ msgstr "Команда проверки маршрута завершилась 
 msgid "The route result could not be displayed. Refresh the page; if this repeats, report this display error."
 msgstr "Не удалось отобразить результат проверки маршрута. Обновите страницу; если ошибка повторится, сообщите об этом."
 
-msgid "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
-msgstr "Маршрут приложений роутера зависит от правил межсетевого экрана, которые эта проверка не рассчитывает. Выберите устройство локальной сети, чтобы проверить его маршрут через Trafira."
-
 msgid "The routing configuration changed during the check. Try again."
 msgstr "Во время проверки изменилась конфигурация маршрутизации. Повторите проверку."
 
@@ -2869,6 +2881,9 @@ msgstr "Сам роутер"
 
 msgid "This saved profile is invalid. Delete it or import a valid file."
 msgstr "Сохранённый профиль повреждён. Удалите его или импортируйте исправный файл."
+
+msgid "This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings."
+msgstr "Этот источник означает приложения, запущенные на самом роутере, а не ваш телефон или ПК. В настройках должна быть включена и применена «Маршрутизация приложений роутера»."
 
 msgid "This time synchronization connection is excluded from router application routing."
 msgstr "Это соединение для синхронизации времени исключено из маршрутизации приложений роутера."
@@ -3227,8 +3242,8 @@ msgstr "При переходе на другой уровень тестиро�
 msgid "Where will the connection go?"
 msgstr "Куда пойдёт соединение?"
 
-msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information."
-msgstr "Обход для Wi-Fi Calling зависит от реального IP назначения. Укажите его в дополнительных сведениях."
+msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in the form above."
+msgstr "Обход Trafira для Wi-Fi Calling зависит от реального IP назначения. Укажите его в форме выше."
 
 msgid "WireGuard peer data is unavailable; peers may be missing."
 msgstr "Данные о пирах WireGuard недоступны — список может быть неполным."
@@ -3244,6 +3259,9 @@ msgstr "Да"
 
 msgid "You can select Output Network Interface, by default autodetect"
 msgstr "Вы можете выбрать выходной сетевой интерфейс, по умолчанию он определяется автоматически."
+
+msgid "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
+msgstr "Можно начать только с домена. Если более раннее правило проверяет IP-адреса, укажите также реальный IP назначения. Адреса FakeIP для этой проверки не подходят."
 
 msgid "Zapret hostlist templates are not supported here because Trafira does not expand them for per-rule NFQWS strategies."
 msgstr "Шаблоны hostlist zapret здесь не поддерживаются, потому что Trafira не разворачивает их для per-rule стратегий NFQWS."

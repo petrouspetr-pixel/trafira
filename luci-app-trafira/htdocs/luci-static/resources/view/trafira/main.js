@@ -8389,13 +8389,13 @@ var RouteExplanationController = class {
 function routeReason(reason) {
   const messages = {
     legacy_router_output_rules: _(
-      "The router uses firewall rules outside this diagnostic. Select a LAN device to check its route through Trafira."
+      "Router application routing is disabled. Select a LAN device to check its route. To analyze router applications, Router application routing must be enabled and applied in Settings. Other firewall and system VPN routes are not calculated here."
     ),
     router_destination_address_needed: _(
-      "Enter the real destination IP in Additional route information. A domain alone cannot determine the router firewall route."
+      "Enter the real destination IP in the form above. A domain alone cannot determine the router firewall route."
     ),
     incoming_interface_missing: _(
-      "Select a detected device, or enter its incoming interface, usually br-lan, in Additional route information."
+      "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface."
     ),
     alice_device_details_missing: _(
       "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
@@ -8416,7 +8416,7 @@ function routeReason(reason) {
       "This is a local destination. Its route depends on the router firewall exclusions."
     ),
     wifi_calling_bypass_depends_on_real_destination: _(
-      "Wi-Fi Calling bypass depends on the real destination IP. Enter it in Additional route information."
+      "Wi-Fi Calling bypass depends on the real destination IP. Enter it in the form above."
     ),
     fakeip_is_not_real_destination: _(
       "The entered address is a FakeIP. Enter the real destination IP instead."
@@ -8437,11 +8437,11 @@ function routeReason(reason) {
       "This VPN transport connection is excluded to prevent a routing loop."
     ),
     destination_ip: _(
-      "An earlier rule checks destination addresses. Enter the real destination IP in Additional route information."
+      "An earlier rule checks destination addresses. Enter the real destination IP in the form above and check again."
     ),
     source_ip: _("Enter the device IP address, or select a detected device."),
     source_mac_address: _(
-      "Enter the device MAC address in Additional route information."
+      "Enter the device MAC address under Device MAC and incoming interface."
     ),
     protocol: _(
       "An earlier rule checks the application protocol. Select the protocol to continue."
@@ -8678,9 +8678,26 @@ var routeExplanationPanel = {
       placeholder: _("Incoming interface (optional)")
     });
     const destination = E("input", {
+      id: "trafira-route-destination",
       type: "text",
-      placeholder: _("Real destination IP (optional)")
+      placeholder: _("Real destination IP (optional)"),
+      required: false
     });
+    const destinationLabel = E("span", {}, _("Real destination IP (optional)"));
+    const sourceHelp = E(
+      "p",
+      { id: "trafira-route-source-help" },
+      _(
+        "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below."
+      )
+    );
+    const destinationHelp = E(
+      "p",
+      {},
+      _(
+        "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
+      )
+    );
     const port = E("input", {
       type: "number",
       min: "1",
@@ -8712,26 +8729,53 @@ var routeExplanationPanel = {
       ip.required = !router;
       mac.disabled = router;
       iface.disabled = router;
+      deviceField.hidden = router;
+      destination.required = router;
+      destinationLabel.textContent = router ? _("Real destination IP (required for the router)") : _("Real destination IP (optional)");
+      destination.placeholder = destinationLabel.textContent || "";
+      sourceHelp.textContent = router ? _(
+        "This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings."
+      ) : _(
+        "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below."
+      );
+      destinationHelp.textContent = router ? _(
+        "Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address."
+      ) : _(
+        "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
+      );
     });
     const field = (label, control) => E("label", { class: "fkp_diagnostic-field" }, [
       E("span", {}, label),
       control
     ]);
+    const deviceField = field(_("Device IP address"), ip);
     const form = E("form", { class: "fkp_diagnostic-panel" }, [
       E("h3", {}, _("Where will the connection go?")),
+      E(
+        "p",
+        {},
+        _(
+          "Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device."
+        )
+      ),
       E("div", { class: "fkp_diagnostic-fields" }, [
         field(_("Domain"), domain),
         field(_("Source"), source),
-        field(_("Device IP address"), ip),
+        deviceField,
         field(_("Destination port"), port),
-        field(_("Protocol"), protocol)
+        field(_("Protocol"), protocol),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          destinationLabel,
+          destination
+        ])
       ]),
+      sourceHelp,
+      destinationHelp,
       E("details", { class: "fkp_diagnostic-details" }, [
-        E("summary", {}, _("Additional route information (optional)")),
+        E("summary", {}, _("Device MAC and incoming interface (if needed)")),
         E("div", { class: "fkp_diagnostic-fields" }, [
           field(_("Device MAC (optional)"), mac),
-          field(_("Incoming interface (optional)"), iface),
-          field(_("Real destination IP (optional)"), destination)
+          field(_("Incoming interface (optional)"), iface)
         ])
       ]),
       E("div", { class: "fkp_diagnostic-actions" }, [
@@ -12100,6 +12144,10 @@ var styles4 = `
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 16px;
     margin: 12px 0;
+}
+
+.fkp_diagnostic-field[hidden] {
+    display: none;
 }
 
 .fkp_diagnostic-field {

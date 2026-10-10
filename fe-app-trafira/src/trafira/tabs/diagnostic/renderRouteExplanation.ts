@@ -188,9 +188,26 @@ export const routeExplanationPanel = {
       placeholder: _('Incoming interface (optional)'),
     }) as HTMLInputElement;
     const destination = E('input', {
+      id: 'trafira-route-destination',
       type: 'text',
       placeholder: _('Real destination IP (optional)'),
+      required: false,
     }) as HTMLInputElement;
+    const destinationLabel = E('span', {}, _('Real destination IP (optional)'));
+    const sourceHelp = E(
+      'p',
+      { id: 'trafira-route-source-help' },
+      _(
+        'For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.',
+      ),
+    );
+    const destinationHelp = E(
+      'p',
+      {},
+      _(
+        'You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.',
+      ),
+    );
     const port = E('input', {
       type: 'number',
       min: '1',
@@ -222,27 +239,60 @@ export const routeExplanationPanel = {
       ip.required = !router;
       mac.disabled = router;
       iface.disabled = router;
+      deviceField.hidden = router;
+      destination.required = router;
+      destinationLabel.textContent = router
+        ? _('Real destination IP (required for the router)')
+        : _('Real destination IP (optional)');
+      destination.placeholder = destinationLabel.textContent || '';
+      sourceHelp.textContent = router
+        ? _(
+            'This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings.',
+          )
+        : _(
+            'For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.',
+          );
+      destinationHelp.textContent = router
+        ? _(
+            'Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address.',
+          )
+        : _(
+            'You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.',
+          );
     });
     const field = (label: string, control: HTMLElement) =>
       E('label', { class: 'fkp_diagnostic-field' }, [
         E('span', {}, label),
         control,
       ]);
+    const deviceField = field(_('Device IP address'), ip);
     const form = E('form', { class: 'fkp_diagnostic-panel' }, [
       E('h3', {}, _('Where will the connection go?')),
+      E(
+        'p',
+        {},
+        _(
+          'Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device.',
+        ),
+      ),
       E('div', { class: 'fkp_diagnostic-fields' }, [
         field(_('Domain'), domain),
         field(_('Source'), source),
-        field(_('Device IP address'), ip),
+        deviceField,
         field(_('Destination port'), port),
         field(_('Protocol'), protocol),
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          destinationLabel,
+          destination,
+        ]),
       ]),
+      sourceHelp,
+      destinationHelp,
       E('details', { class: 'fkp_diagnostic-details' }, [
-        E('summary', {}, _('Additional route information (optional)')),
+        E('summary', {}, _('Device MAC and incoming interface (if needed)')),
         E('div', { class: 'fkp_diagnostic-fields' }, [
           field(_('Device MAC (optional)'), mac),
           field(_('Incoming interface (optional)'), iface),
-          field(_('Real destination IP (optional)'), destination),
         ]),
       ]),
       E('div', { class: 'fkp_diagnostic-actions' }, [
