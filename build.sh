@@ -169,18 +169,22 @@ build_backend_root() {
   make_dir "$output_root/etc/config"
   make_dir "$output_root/usr/bin"
   make_dir "$output_root/usr/lib/trafira"
+  make_dir "$output_root/usr/share/trafira"
 
   install -m 0755 "$ROOT_DIR/trafira/files/etc/init.d/trafira" "$output_root/etc/init.d/trafira"
   install -m 0644 "$ROOT_DIR/trafira/files/etc/config/trafira" "$output_root/etc/config/trafira"
   install -m 0755 "$ROOT_DIR/trafira/files/usr/bin/trafira" "$output_root/usr/bin/trafira"
   install -m 0755 "$ROOT_DIR/trafira/files/usr/bin/trafira-config" "$output_root/usr/bin/trafira-config"
+  install -m 0644 "$ROOT_DIR/trafira/files/usr/share/trafira/gaming-presets.json" \
+    "$output_root/usr/share/trafira/gaming-presets.json"
   cp -a "$ROOT_DIR/trafira/files/usr/lib/." "$output_root/usr/lib/trafira/"
 
   sed -i -e "s/__COMPILED_VERSION_VARIABLE__/${RELEASE_VERSION}/g" \
     "$output_root/usr/lib/trafira/core/constants.uc"
 
   normalize_package_root_modes "$output_root"
-  chmod 0755 "$output_root/etc/init.d/trafira" "$output_root/usr/bin/trafira"
+  chmod 0755 "$output_root/etc/init.d/trafira" "$output_root/usr/bin/trafira" \
+    "$output_root/usr/bin/trafira-config"
 }
 
 build_app_root() {

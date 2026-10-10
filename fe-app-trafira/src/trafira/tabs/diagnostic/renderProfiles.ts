@@ -211,9 +211,17 @@ export const profilesPanel = {
         {},
         _('Save up to eight profiles. Applying a profile may restart routing.'),
       ),
-      name,
-      select,
-      E('div', {}, actions),
+      E('div', { class: 'fkp_diagnostic-fields' }, [
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          E('span', {}, _('Profile name')),
+          name,
+        ]),
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          E('span', {}, _('Configuration profiles')),
+          select,
+        ]),
+      ]),
+      E('div', { class: 'fkp_diagnostic-actions' }, actions),
       E(
         'p',
         {},
@@ -221,7 +229,10 @@ export const profilesPanel = {
           'Exported profiles contain passwords and keys. Keep the downloaded file private.',
         ),
       ),
-      file,
+      E('label', { class: 'fkp_diagnostic-field' }, [
+        E('span', {}, _('Import profile')),
+        file,
+      ]),
       message,
       result,
     );

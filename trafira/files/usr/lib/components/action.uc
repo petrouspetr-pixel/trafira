@@ -2474,7 +2474,7 @@ function dispatch_warp(action) {
     }
     let ctx={work,arch:read_openwrt_release_value("DISTRIB_ARCH"),manager:is_apk()?"apk":"opkg",trafira_version:TRAFIRA_VERSION,
         version:installed_package_version,inspect:rollback_archive_info,
-        check:(files)=>command_success(package_command(files,true)),
+        check:(files)=>run_logged_install("Checking WARP package dependencies (no changes)",package_command(files,true)),
         install:(files)=>run_logged_install("Installing verified WARP family without network",package_command(files,false)),
         remove:(names)=>run_logged_install("Removing WARP package family",command_from_args(is_apk()?["apk","del","--no-network",...names]:["opkg","remove",...reverse([...names])])+" </dev/null"),
         space:(ram,overlay)=>filesystem_available_bytes("/tmp")>=ram && mem_available_bytes()>=ram && filesystem_available_bytes("/overlay")>=overlay,
@@ -2485,7 +2485,7 @@ function dispatch_warp(action) {
     try {result=require("components.warp_package_runtime").execute(action,ctx);}catch(e){result={success:false,error:"warp_operation_failed",rollback_error:file_exists("/etc/trafira/warp-packages/journal.json")};}
     selected_result=result;
     if(result.success)action_success("warp",action,"WARP component operation completed",result.current_version,result.latest_version,result.changed,result.status,result.release_url);
-    action_fail("warp",action,"WARP: "+(result.error||"operation_failed"),result.current_version,result.latest_version,result.status,result.release_url);
+    action_fail("warp",action,"WARP: "+(result.error||"operation_failed")+(result.package?" ("+result.package+")":""),result.current_version,result.latest_version,result.status,result.release_url);
 }
 
 function normalize_component_name(component) {

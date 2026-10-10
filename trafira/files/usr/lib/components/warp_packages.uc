@@ -37,6 +37,7 @@ function release_asset(release,name) {
 function install(selection,hooks) {
     if(!selection?.success)return fail("invalid_selection");
     let staged=hooks.stage(selection);if(!staged)return fail("package_verification_failed");
+    if(staged.success===false)return staged;
     let previous=hooks.stage_previous();if(!previous)return fail("rollback_unavailable");
     let original=hooks.snapshot();if(!original)return fail("snapshot_failed");
     if(hooks.space && !hooks.space(staged,previous,original))return fail("insufficient_space");

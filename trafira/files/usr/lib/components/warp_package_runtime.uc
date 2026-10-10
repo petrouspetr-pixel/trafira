@@ -47,10 +47,12 @@ function fetch_manifest(ctx,release) {
     return load(path);
 }
 function stage(ctx,selected,release,dir) {
-    if(!directory(dir))return null;
+    if(!directory(dir))return fail("storage_unavailable");
     for(let item in selected.packages) {
         let asset=policy.release_asset(release,item.file),path=dir+"/"+item.file;
-        if(!asset || asset.size!=item.size || !sources.download(asset.url,path,item.size,120) || !verify_item(ctx,path,item))return null;
+        if(!asset || asset.size!=item.size)return {...fail("release_asset_mismatch"),package:item.name};
+        if(!sources.download(asset.url,path,item.size,120))return {...fail("package_download_failed"),package:item.name};
+        if(!verify_item(ctx,path,item))return {...fail("package_verification_failed"),package:item.name};
     }
     return {...selected,directory:dir};
 }
@@ -78,7 +80,8 @@ function previous(ctx) {
     if(!sources.download("https://api.github.com/repos/petrouspetr-pixel/trafira/releases/tags/"+version[1],path,2097152,30))return null;
     let release=load(path),manifest=fetch_manifest(ctx,release),selected=policy.select(manifest,ctx.arch,ctx.manager,ctx.trafira_version);
     if(!selected.success || !same_family(selected.packages,installed))return null;
-    return stage(ctx,selected,release,ctx.work+"/old");
+    let staged=stage(ctx,selected,release,ctx.work+"/old");
+    return staged.success?staged:null;
 }
 function install_files(ctx,selected) {
     if(selected.empty) {
@@ -124,9 +127,10 @@ function execute(action,ctx) {
         stage:()=>{
             if(action=="remove")return {empty:true,packages:[]};
             let bytes=0;for(let item in selected.packages)bytes+=item.size+item.installed_size;
-            if(!ctx.space(bytes*2+8388608,bytes+8388608))return null;
+            if(!ctx.space(bytes*2+8388608,bytes+8388608))return fail("insufficient_space");
             let staged=stage(ctx,selected,release,ctx.work+"/new");
-            return staged && ctx.check(map(staged.packages,(item)=>staged.directory+"/"+item.file))?staged:null;
+            if(!staged.success)return staged;
+            return ctx.check(map(staged.packages,(item)=>staged.directory+"/"+item.file))?staged:fail("dependency_check_failed");
         },
         stage_previous:()=>previous(ctx),
         snapshot:()=>{

@@ -4239,3 +4239,6 @@ msgstr ""
 #: src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:107
 msgid "Zapret2 sing-box outbound is not configured"
 msgstr ""
+
+msgid "Additional route information (optional)"
+msgstr ""

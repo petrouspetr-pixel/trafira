@@ -8216,7 +8216,9 @@ function render2() {
     E("div", { class: "fkp_diagnostic-page__right-bar" }, [
       E("div", { id: "fkp_diagnostic-page-wiki" }),
       E("div", { id: "fkp_diagnostic-page-actions" }),
-      E("div", { id: "fkp_diagnostic-page-system-info" }),
+      E("div", { id: "fkp_diagnostic-page-system-info" })
+    ]),
+    E("div", { class: "fkp_diagnostic-page__lower" }, [
       E("div", { id: "fkp_diagnostic-page-snapshots" }),
       E("div", { id: "trafira-profiles" }),
       E("div", { id: "trafira-gaming-presets" })
@@ -8303,11 +8305,12 @@ function size(bytes) {
 function render3(report, error, starting) {
   const container = document.getElementById("fkp_diagnostic-page-snapshots");
   if (!container) return;
+  const expanded = container.querySelector("details")?.open;
   const busy = starting || !!report?.job?.running;
   const errorText = error === "Could not start snapshot preparation" ? _("Could not start snapshot preparation") : _("Could not read snapshot status");
   container.replaceChildren(
-    E("div", { class: "fkp_diagnostic-page__right-bar__system-info" }, [
-      E("b", {}, _("Saved rule sets")),
+    E("div", { class: "fkp_diagnostic-panel" }, [
+      E("h3", {}, _("Saved rule sets")),
       E(
         "p",
         {},
@@ -8333,17 +8336,50 @@ function render3(report, error, starting) {
           {},
           `${_("Storage")}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`
         ),
-        ...report.entries.map(
-          (entry) => E("div", {}, [
-            E("b", {}, entry.tag),
-            E(
-              "p",
-              {},
-              entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
-            ),
-            ...entry.configured_initial ? [E("p", {}, _("Referenced in saved startup configuration"))] : []
-          ])
+        E(
+          "p",
+          {},
+          `${_("Copy present")}: ${report.entries.filter((entry) => entry.present).length} / ${report.entries.length} \uFFFD ${_("Copy missing")}: ${report.entries.filter((entry) => !entry.present).length}`
         ),
+        ...report.entries.length ? [
+          E(
+            "details",
+            {
+              class: "fkp_diagnostic-details",
+              ...expanded ? { open: true } : {}
+            },
+            [
+              E(
+                "summary",
+                {},
+                `${_("Saved rule sets")} (${report.entries.length})`
+              ),
+              E(
+                "div",
+                { class: "fkp_diagnostic-snapshots" },
+                report.entries.map(
+                  (entry) => E("div", {}, [
+                    E("b", {}, entry.tag),
+                    E(
+                      "p",
+                      {},
+                      entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
+                    ),
+                    ...entry.configured_initial ? [
+                      E(
+                        "p",
+                        {},
+                        _(
+                          "Referenced in saved startup configuration"
+                        )
+                      )
+                    ] : []
+                  ])
+                )
+              )
+            ]
+          )
+        ] : [],
         ...report.entries.length === 0 ? [E("p", {}, _("No remote rule sets in saved configuration"))] : [],
         ...report.job ? [
           E(
@@ -8355,24 +8391,26 @@ function render3(report, error, starting) {
           )
         ] : []
       ],
-      E(
-        "button",
-        {
-          class: "btn cbi-button",
-          disabled: busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length,
-          click: () => void snapshots.prepare()
-        },
-        _("Prepare saved copies")
-      ),
-      E(
-        "button",
-        {
-          class: "btn cbi-button",
-          disabled: starting,
-          click: () => void snapshots.refresh()
-        },
-        _("Refresh status")
-      )
+      E("div", { class: "fkp_diagnostic-actions" }, [
+        E(
+          "button",
+          {
+            class: "btn cbi-button",
+            disabled: busy || !report?.supported || !report?.available || !report?.preparable || !report.entries.length,
+            click: () => void snapshots.prepare()
+          },
+          _("Prepare saved copies")
+        ),
+        E(
+          "button",
+          {
+            class: "btn cbi-button",
+            disabled: starting,
+            click: () => void snapshots.refresh()
+          },
+          _("Refresh status")
+        )
+      ])
     ])
   );
 }
@@ -8553,21 +8591,34 @@ var routeExplanationPanel = {
       mac.disabled = router;
       iface.disabled = router;
     });
-    const form = E("form", {}, [
+    const field = (label, control) => E("label", { class: "fkp_diagnostic-field" }, [
+      E("span", {}, label),
+      control
+    ]);
+    const form = E("form", { class: "fkp_diagnostic-panel" }, [
       E("h3", {}, _("Where will the connection go?")),
-      E("label", {}, [_("Domain"), domain]),
-      E("label", {}, [_("Source"), source]),
-      ip,
-      mac,
-      iface,
-      destination,
-      E("label", {}, [_("Destination port"), port]),
-      E("label", {}, [_("Protocol"), protocol]),
-      E(
-        "button",
-        { type: "submit", class: "cbi-button cbi-button-action" },
-        _("Explain route")
-      )
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        field(_("Domain"), domain),
+        field(_("Source"), source),
+        field(_("Device IP address"), ip),
+        field(_("Destination port"), port),
+        field(_("Protocol"), protocol)
+      ]),
+      E("details", { class: "fkp_diagnostic-details" }, [
+        E("summary", {}, _("Additional route information (optional)")),
+        E("div", { class: "fkp_diagnostic-fields" }, [
+          field(_("Device MAC (optional)"), mac),
+          field(_("Incoming interface (optional)"), iface),
+          field(_("Real destination IP (optional)"), destination)
+        ])
+      ]),
+      E("div", { class: "fkp_diagnostic-actions" }, [
+        E(
+          "button",
+          { type: "submit", class: "cbi-button cbi-button-action" },
+          _("Explain route")
+        )
+      ])
     ]);
     form.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -8932,9 +8983,17 @@ var profilesPanel = {
         {},
         _("Save up to eight profiles. Applying a profile may restart routing.")
       ),
-      name,
-      select,
-      E("div", {}, actions),
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Profile name")),
+          name
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Configuration profiles")),
+          select
+        ])
+      ]),
+      E("div", { class: "fkp_diagnostic-actions" }, actions),
       E(
         "p",
         {},
@@ -8942,7 +9001,10 @@ var profilesPanel = {
           "Exported profiles contain passwords and keys. Keep the downloaded file private."
         )
       ),
-      file,
+      E("label", { class: "fkp_diagnostic-field" }, [
+        E("span", {}, _("Import profile")),
+        file
+      ]),
       message2,
       result
     );
@@ -9357,11 +9419,25 @@ var gamingPresetsPanel = {
           "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
         )
       ),
-      platform,
-      device,
+      E("div", { class: "fkp_diagnostic-fields" }, [
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Gaming presets")),
+          platform
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Select a known device")),
+          device
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Select a connection")),
+          proxy
+        ]),
+        E("label", { class: "fkp_diagnostic-field" }, [
+          E("span", {}, _("Choose rule priority")),
+          placement
+        ])
+      ]),
       addresses,
-      proxy,
-      placement,
       E("label", { style: "display:block" }, [
         enable,
         " " + _("Enable only these addresses in Alice Mode if required")
@@ -9370,7 +9446,7 @@ var gamingPresetsPanel = {
         replace,
         " " + _("Replace my edits to this preset after preview")
       ]),
-      E("div", {}, [
+      E("div", { class: "fkp_diagnostic-actions" }, [
         button(_("Refresh devices"), () => {
           void refresh();
         }),
@@ -12476,12 +12552,12 @@ var styles4 = `
 
 .fkp_diagnostic-page {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    grid-column-gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+    gap: 16px;
     align-items: start;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 1000px) {
     .fkp_diagnostic-page {
         grid-template-columns: 1fr;
     }
@@ -12662,6 +12738,95 @@ var styles4 = `
 .fkp_diagnostic_alert__summary__item__icon {
     width: 16px;
     height: 16px;
+}
+
+.fkp_diagnostic-page > div,
+.fkp_diagnostic-page__lower > div {
+    min-width: 0;
+}
+
+.fkp_diagnostic-page__lower {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 16px;
+}
+
+.fkp_diagnostic-panel,
+#trafira-profiles,
+#trafira-gaming-presets {
+    border: 1px solid var(--background-color-low, lightgray);
+    border-radius: 4px;
+    padding: 16px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.fkp_diagnostic-panel h3,
+#trafira-profiles > h3,
+#trafira-gaming-presets > h3 {
+    margin-top: 0;
+}
+
+.fkp_diagnostic-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 12px 16px;
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fkp_diagnostic-field > input,
+.fkp_diagnostic-field > select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.fkp_diagnostic-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-actions > button {
+    margin: 0;
+    white-space: normal;
+    max-width: 100%;
+}
+
+.fkp_diagnostic-details {
+    margin: 12px 0;
+}
+
+.fkp_diagnostic-details > summary {
+    cursor: pointer;
+    padding: 6px 0;
+}
+
+.fkp_diagnostic-snapshots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 12px 24px;
+    margin-top: 12px;
+}
+
+.fkp_diagnostic-snapshots > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    border-top: 1px solid var(--background-color-low, lightgray);
+    padding-top: 10px;
+}
+
+.fkp_diagnostic-page p {
+    max-width: 80ch;
 }
 `;
 

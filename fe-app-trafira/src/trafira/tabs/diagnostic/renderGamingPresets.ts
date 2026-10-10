@@ -282,11 +282,25 @@ export const gamingPresetsPanel = {
           'Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened.',
         ),
       ),
-      platform,
-      device,
+      E('div', { class: 'fkp_diagnostic-fields' }, [
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          E('span', {}, _('Gaming presets')),
+          platform,
+        ]),
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          E('span', {}, _('Select a known device')),
+          device,
+        ]),
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          E('span', {}, _('Select a connection')),
+          proxy,
+        ]),
+        E('label', { class: 'fkp_diagnostic-field' }, [
+          E('span', {}, _('Choose rule priority')),
+          placement,
+        ]),
+      ]),
       addresses,
-      proxy,
-      placement,
       E('label', { style: 'display:block' }, [
         enable,
         ' ' + _('Enable only these addresses in Alice Mode if required'),
@@ -295,7 +309,7 @@ export const gamingPresetsPanel = {
         replace,
         ' ' + _('Replace my edits to this preset after preview'),
       ]),
-      E('div', {}, [
+      E('div', { class: 'fkp_diagnostic-actions' }, [
         button(_('Refresh devices'), () => {
           void refresh();
         }),

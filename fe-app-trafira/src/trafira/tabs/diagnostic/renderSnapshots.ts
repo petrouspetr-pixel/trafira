@@ -22,14 +22,15 @@ function render(
 ) {
   const container = document.getElementById('fkp_diagnostic-page-snapshots');
   if (!container) return;
+  const expanded = container.querySelector<HTMLDetailsElement>('details')?.open;
   const busy = starting || !!report?.job?.running;
   const errorText =
     error === 'Could not start snapshot preparation'
       ? _('Could not start snapshot preparation')
       : _('Could not read snapshot status');
   container.replaceChildren(
-    E('div', { class: 'fkp_diagnostic-page__right-bar__system-info' }, [
-      E('b', {}, _('Saved rule sets')),
+    E('div', { class: 'fkp_diagnostic-panel' }, [
+      E('h3', {}, _('Saved rule sets')),
       E(
         'p',
         {},
@@ -66,21 +67,56 @@ function render(
               {},
               `${_('Storage')}: ${size(report.total_bytes)} / ${size(report.quota_bytes)}`,
             ),
-            ...report.entries.map((entry) =>
-              E('div', {}, [
-                E('b', {}, entry.tag),
-                E(
-                  'p',
-                  {},
-                  entry.present
-                    ? `${_('Copy present')}: ${size(entry.bytes)} · ${entry.mtime ? new Date(entry.mtime * 1000).toLocaleString() : '—'}`
-                    : _('Copy missing'),
-                ),
-                ...(entry.configured_initial
-                  ? [E('p', {}, _('Referenced in saved startup configuration'))]
-                  : []),
-              ]),
+            E(
+              'p',
+              {},
+              `${_('Copy present')}: ${report.entries.filter((entry) => entry.present).length} / ${report.entries.length} · ${_('Copy missing')}: ${report.entries.filter((entry) => !entry.present).length}`,
             ),
+            ...(report.entries.length
+              ? [
+                  E(
+                    'details',
+                    {
+                      class: 'fkp_diagnostic-details',
+                      ...(expanded ? { open: true } : {}),
+                    },
+                    [
+                      E(
+                        'summary',
+                        {},
+                        `${_('Saved rule sets')} (${report.entries.length})`,
+                      ),
+                      E(
+                        'div',
+                        { class: 'fkp_diagnostic-snapshots' },
+                        report.entries.map((entry) =>
+                          E('div', {}, [
+                            E('b', {}, entry.tag),
+                            E(
+                              'p',
+                              {},
+                              entry.present
+                                ? `${_('Copy present')}: ${size(entry.bytes)} · ${entry.mtime ? new Date(entry.mtime * 1000).toLocaleString() : '—'}`
+                                : _('Copy missing'),
+                            ),
+                            ...(entry.configured_initial
+                              ? [
+                                  E(
+                                    'p',
+                                    {},
+                                    _(
+                                      'Referenced in saved startup configuration',
+                                    ),
+                                  ),
+                                ]
+                              : []),
+                          ]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ]
+              : []),
             ...(report.entries.length === 0
               ? [E('p', {}, _('No remote rule sets in saved configuration'))]
               : []),
@@ -100,29 +136,31 @@ function render(
                 ]
               : []),
           ]),
-      E(
-        'button',
-        {
-          class: 'btn cbi-button',
-          disabled:
-            busy ||
-            !report?.supported ||
-            !report?.available ||
-            !report?.preparable ||
-            !report.entries.length,
-          click: () => void snapshots.prepare(),
-        },
-        _('Prepare saved copies'),
-      ),
-      E(
-        'button',
-        {
-          class: 'btn cbi-button',
-          disabled: starting,
-          click: () => void snapshots.refresh(),
-        },
-        _('Refresh status'),
-      ),
+      E('div', { class: 'fkp_diagnostic-actions' }, [
+        E(
+          'button',
+          {
+            class: 'btn cbi-button',
+            disabled:
+              busy ||
+              !report?.supported ||
+              !report?.available ||
+              !report?.preparable ||
+              !report.entries.length,
+            click: () => void snapshots.prepare(),
+          },
+          _('Prepare saved copies'),
+        ),
+        E(
+          'button',
+          {
+            class: 'btn cbi-button',
+            disabled: starting,
+            click: () => void snapshots.refresh(),
+          },
+          _('Refresh status'),
+        ),
+      ]),
     ]),
   );
 }

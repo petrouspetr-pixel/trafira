@@ -2968,3 +2968,6 @@ msgstr "sing-box outbound для Zapret2 настроен"
 
 msgid "Zapret2 sing-box outbound is not configured"
 msgstr "sing-box outbound для Zapret2 не настроен"
+
+msgid "Additional route information (optional)"
+msgstr "Дополнительные сведения о маршруте (необязательно)"
