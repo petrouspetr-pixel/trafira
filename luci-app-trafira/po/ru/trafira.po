@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 15:10+0300\n"
-"PO-Revision-Date: 2026-10-10 15:10+0300\n"
+"POT-Creation-Date: 2026-10-10 15:18+0300\n"
+"PO-Revision-Date: 2026-10-10 15:18+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -37,6 +37,12 @@ msgstr "%d с"
 
 msgid "%s ago"
 msgstr "%s назад"
+
+msgid "%s has been installed"
+msgstr "%s установлен"
+
+msgid "%s has been removed"
+msgstr "%s удалён"
 
 msgid "%s subnet"
 msgstr "подсеть %s"
@@ -238,6 +244,9 @@ msgstr "Правила устройства могут пересекаться.
 
 msgid "Analysis of the applied configuration, not a live connection capture."
 msgstr "Анализ применённой конфигурации. Фактическое соединение может зависеть от дополнительных условий."
+
+msgid "Another component action is already running"
+msgstr "Другое действие с компонентом уже выполняется"
 
 msgid "Another configuration operation is already running."
 msgstr "Уже выполняется другая операция с конфигурацией."
@@ -511,6 +520,9 @@ msgstr "Закрыть подключение"
 
 msgid "Closed"
 msgstr "Закрытые"
+
+msgid "Component action job is stale or the worker process exited unexpectedly"
+msgstr "Задание компонента устарело или его процесс неожиданно завершился"
 
 msgid "Component update available"
 msgstr "Доступно обновление компонента"
@@ -1079,6 +1091,9 @@ msgstr "Внешние конфиги nfqws2 обходят управление
 msgid "Failed server retry interval"
 msgstr "Интервал повторной попытки для недоступного сервера"
 
+msgid "Failed to check Trafira updates"
+msgstr "Не удалось проверить обновления Trafira"
+
 msgid "Failed to close connection"
 msgstr "Не удалось закрыть подключение"
 
@@ -1088,8 +1103,35 @@ msgstr "Не удалось закрыть подключения"
 msgid "Failed to copy!"
 msgstr "Не удалось скопировать!"
 
+msgid "Failed to create temporary directory"
+msgstr "Не удалось создать временный каталог"
+
+msgid "Failed to download Trafira release packages"
+msgstr "Не удалось скачать пакеты релиза Trafira"
+
 msgid "Failed to execute"
 msgstr "Не удалось выполнить"
+
+msgid "Failed to execute component action"
+msgstr "Не удалось выполнить действие с компонентом"
+
+msgid "Failed to install LuCI app package"
+msgstr "Не удалось установить пакет приложения LuCI"
+
+msgid "Failed to install LuCI Russian i18n package"
+msgstr "Не удалось установить пакет русской локализации LuCI"
+
+msgid "Failed to install sing-box-extended packages"
+msgstr "Не удалось установить пакеты sing-box-extended"
+
+msgid "Failed to install Trafira package"
+msgstr "Не удалось установить пакет Trafira"
+
+msgid "Failed to install Trafira release packages"
+msgstr "Не удалось установить пакеты релиза Trafira"
+
+msgid "Failed to update package lists"
+msgstr "Не удалось обновить списки пакетов"
 
 msgid "Failed to update subscriptions"
 msgstr "Не удалось обновить подписки"
@@ -1978,6 +2020,9 @@ msgstr "Закрепить установленную версию"
 
 msgid "Pin on dashboard"
 msgstr "Закрепить в дашборде"
+
+msgid "Pinned core is unavailable from its configured source"
+msgstr "Закреплённая версия sing-box недоступна в выбранном источнике"
 
 msgid "Pinned version"
 msgstr "Закреплённая версия"
@@ -3073,6 +3118,9 @@ msgstr "Неизвестный флаг NFQWS."
 
 msgid "Unknown NFQWS2 flag."
 msgstr "Неизвестный флаг NFQWS2."
+
+msgid "Unpin the core before changing its variant"
+msgstr "Снимите закрепление версии sing-box перед сменой сборки"
 
 msgid "Unpin version"
 msgstr "Снять закрепление версии"

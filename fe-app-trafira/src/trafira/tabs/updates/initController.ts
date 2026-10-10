@@ -46,6 +46,10 @@ import {
 } from '../../services/runtimeUiState.service';
 import { Trafira } from '../../types';
 import { coreVersionsPanel } from './renderCoreVersions';
+import {
+  componentSuccessMessage,
+  componentErrorMessage,
+} from './componentMessages';
 
 type UpdateStatus = StoreType['updatesChecks'][Trafira.ComponentName]['status'];
 
@@ -470,7 +474,7 @@ async function applyCompletedComponentAction({
 
   if (result.component === 'trafira' && result.action === 'install') {
     if (notify && result.message) {
-      showToast(result.message, 'success', 1200);
+      showToast(componentSuccessMessage(result), 'success', 1200);
     }
 
     if (notify) {
@@ -480,7 +484,7 @@ async function applyCompletedComponentAction({
   }
 
   if (notify && result.message) {
-    showToast(result.message, 'success');
+    showToast(componentSuccessMessage(result), 'success');
   }
 
   void refreshSystemInfoAfterMutation();
@@ -519,7 +523,7 @@ async function completeComponentActionJob(
     handledComponentJobs.add(jobId);
     setActionLoading(key, false);
     if (shouldNotify) {
-      showToast(message, 'error');
+      showToast(componentErrorMessage(message), 'error');
     }
     await ackComponentActionJob(jobId);
     return;
@@ -574,7 +578,7 @@ async function followComponentActionState(
 
       setActionLoading(key, false);
       if (!isTransientRpcError(message)) {
-        showToast(message, 'error');
+        showToast(componentErrorMessage(message), 'error');
       }
     }
   } finally {
@@ -724,7 +728,7 @@ async function handleComponentAction(button: ComponentActionButton) {
 
       setActionLoading(button.key, false);
       if (!isTransientRpcError(message)) {
-        showToast(message, 'error');
+        showToast(componentErrorMessage(message), 'error');
       }
       void refreshComponentActionState();
     }

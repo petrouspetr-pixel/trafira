@@ -14579,6 +14579,70 @@ var coreVersionsPanel = {
   }
 };
 
+// src/trafira/tabs/updates/componentMessages.ts
+function componentSuccessMessage(result) {
+  const names = {
+    trafira: "Trafira",
+    sing_box: "sing-box",
+    zapret: "Zapret",
+    zapret2: "Zapret2",
+    byedpi: "ByeDPI"
+  };
+  const variants = {
+    install_stable: "sing-box",
+    install_tiny: "sing-box-tiny",
+    install_extended: "sing-box-extended",
+    install_extended_compressed: "sing-box-extended compressed"
+  };
+  const name = variants[result.action] || names[result.component];
+  return (result.action === "remove" ? _("%s has been removed") : _("%s has been installed")).replace("%s", name);
+}
+function componentErrorMessage(message2) {
+  const translations = {
+    "Failed to execute": _("Failed to execute"),
+    "Failed to create temporary directory": _(
+      "Failed to create temporary directory"
+    ),
+    "Failed to update package lists": _("Failed to update package lists"),
+    "Failed to install Trafira release packages": _(
+      "Failed to install Trafira release packages"
+    ),
+    "Failed to install Trafira package": _("Failed to install Trafira package"),
+    "Failed to install LuCI app package": _(
+      "Failed to install LuCI app package"
+    ),
+    "Failed to install LuCI Russian i18n package": _(
+      "Failed to install LuCI Russian i18n package"
+    ),
+    "Failed to install sing-box-extended packages": _(
+      "Failed to install sing-box-extended packages"
+    ),
+    "Failed to download Trafira release packages": _(
+      "Failed to download Trafira release packages"
+    ),
+    "Failed to check Trafira updates": _("Failed to check Trafira updates"),
+    "Another component action is already running": _(
+      "Another component action is already running"
+    ),
+    "Component action job is stale or the worker process exited unexpectedly": _(
+      "Component action job is stale or the worker process exited unexpectedly"
+    ),
+    "Unpin the core before changing its variant": _(
+      "Unpin the core before changing its variant"
+    ),
+    "Pinned core is unavailable from its configured source": _(
+      "Pinned core is unavailable from its configured source"
+    )
+  };
+  for (const [source, translated] of Object.entries(translations)) {
+    if (message2 === source || message2.startsWith(source + ":"))
+      return translated + message2.slice(source.length);
+  }
+  if (Object.values(translations).includes(message2)) return message2;
+  const fallback = _("Failed to execute component action");
+  return message2 ? fallback + ": " + message2 : fallback;
+}
+
 // src/trafira/tabs/updates/initController.ts
 var updatesLifecycleRegistered = false;
 var updatesControllerInitialized = false;
@@ -14875,7 +14939,7 @@ async function applyCompletedComponentAction({
   setActionLoading(key, false);
   if (result.component === "trafira" && result.action === "install") {
     if (notify && result.message) {
-      showToast(result.message, "success", 1200);
+      showToast(componentSuccessMessage(result), "success", 1200);
     }
     if (notify) {
       reloadPageAfterTrafiraUpdate();
@@ -14883,7 +14947,7 @@ async function applyCompletedComponentAction({
     return;
   }
   if (notify && result.message) {
-    showToast(result.message, "success");
+    showToast(componentSuccessMessage(result), "success");
   }
   void refreshSystemInfoAfterMutation();
 }
@@ -14908,7 +14972,7 @@ async function completeComponentActionJob(key, jobId, response) {
     handledComponentJobs.add(jobId);
     setActionLoading(key, false);
     if (shouldNotify) {
-      showToast(message2, "error");
+      showToast(componentErrorMessage(message2), "error");
     }
     await ackComponentActionJob(jobId);
     return;
@@ -14951,7 +15015,7 @@ async function followComponentActionState(state) {
       const message2 = getErrorMessage(error, _("Failed to execute"));
       setActionLoading(key, false);
       if (!isTransientRpcError(message2)) {
-        showToast(message2, "error");
+        showToast(componentErrorMessage(message2), "error");
       }
     }
   } finally {
@@ -15068,7 +15132,7 @@ async function handleComponentAction(button) {
       const message2 = getErrorMessage(error, _("Failed to execute"));
       setActionLoading(button.key, false);
       if (!isTransientRpcError(message2)) {
-        showToast(message2, "error");
+        showToast(componentErrorMessage(message2), "error");
       }
       void refreshComponentActionState();
     }
