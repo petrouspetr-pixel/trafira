@@ -8339,7 +8339,7 @@ function render3(report, error, starting) {
         E(
           "p",
           {},
-          `${_("Copy present")}: ${report.entries.filter((entry) => entry.present).length} / ${report.entries.length} \uFFFD ${_("Copy missing")}: ${report.entries.filter((entry) => !entry.present).length}`
+          `${_("Copy present")}: ${report.entries.filter((entry) => entry.present).length} / ${report.entries.length} \xB7 ${_("Copy missing")}: ${report.entries.filter((entry) => !entry.present).length}`
         ),
         ...report.entries.length ? [
           E(
