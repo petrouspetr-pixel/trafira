@@ -671,6 +671,18 @@ print_summary() {
   find "$output_dir" -maxdepth 1 -type f \( -name '*.ipk' -o -name '*.apk' \) | sort
 }
 
+write_release_checksums() {
+  local output_dir="$1"
+  (
+    cd "$output_dir"
+    sha256sum -- \
+      "trafira_${RELEASE_VERSION}.apk" "trafira_${RELEASE_VERSION}.ipk" \
+      "luci-app-trafira_${RELEASE_VERSION}.apk" "luci-app-trafira_${RELEASE_VERSION}.ipk" \
+      "luci-i18n-trafira-ru_${RELEASE_VERSION}.apk" "luci-i18n-trafira-ru_${RELEASE_VERSION}.ipk" >SHA256SUMS
+    sha256sum -c SHA256SUMS
+  )
+}
+
 main() {
   local output_dir
   local ipk_archive
@@ -798,6 +810,7 @@ main() {
   verify_apk_metadata "$apk_bin" "$output_dir/luci-app-trafira_${RELEASE_VERSION}.apk" "luci-app-trafira" "$APK_INTERNAL_VERSION"
   verify_apk_metadata "$apk_bin" "$output_dir/luci-i18n-trafira-ru_${RELEASE_VERSION}.apk" "luci-i18n-trafira-ru" "$APK_INTERNAL_VERSION"
 
+  write_release_checksums "$output_dir"
   cleanup_work_dir
   print_summary "$output_dir"
 }
