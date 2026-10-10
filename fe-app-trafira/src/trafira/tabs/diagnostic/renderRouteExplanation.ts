@@ -191,7 +191,6 @@ export const routeExplanationPanel = {
       id: 'trafira-route-destination',
       type: 'text',
       placeholder: _('Real destination IP (optional)'),
-      required: false,
     }) as HTMLInputElement;
     const destinationLabel = E('span', {}, _('Real destination IP (optional)'));
     const sourceHelp = E(
