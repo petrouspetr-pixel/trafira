@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 18:46+0300\n"
-"PO-Revision-Date: 2026-10-09 18:46+0300\n"
+"POT-Creation-Date: 2026-10-10 01:47+0300\n"
+"PO-Revision-Date: 2026-10-10 01:47+0300\n"
 "Last-Translator: petrouspetr-pixel <280500603+petrouspetr-pixel@users.noreply.github.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -168,12 +168,16 @@ msgstr ""
 msgid "Add URLTest / Priority group"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:285
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
 msgid "Added"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runNftCheck.ts:106
 msgid "Additional marking rules found"
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:176
+msgid "Additional route information (optional)"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2681
@@ -292,7 +296,7 @@ msgstr ""
 msgid "Apply profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:318
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:332
 msgid "Apply reviewed changes"
 msgstr ""
 
@@ -300,7 +304,7 @@ msgstr ""
 msgid "Apply section rules only to the specified local IP addresses"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:58
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:59
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr ""
 
@@ -308,7 +312,7 @@ msgstr ""
 msgid "Applying configuration. You can reconnect to this page."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:252
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:263
 msgid "Applying settings in the background. You can close this page."
 msgstr ""
 
@@ -480,7 +484,7 @@ msgstr ""
 msgid "Cache File Path"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:767
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:764
 msgid "Cache file path cannot be empty"
 msgstr ""
 
@@ -523,8 +527,8 @@ msgstr ""
 msgid "Certificate pin is unavailable. Apply or restart the server to generate the default certificate, then open this dialog again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:285
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:285
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
 msgid "Changed"
 msgstr ""
 
@@ -538,7 +542,7 @@ msgstr ""
 msgid "Check timeout after which the server is considered dead"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:761
+#: src/trafira/tabs/updates/initController.ts:743
 msgid "Check update"
 msgstr ""
 
@@ -589,6 +593,7 @@ msgid "Choose an available version of the installed variant. Compatibility is ch
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:75
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:299
 msgid "Choose rule priority"
 msgstr ""
 
@@ -690,6 +695,7 @@ msgid "Configuration for Trafira service"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderProfiles.ts:208
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:220
 msgid "Configuration profiles"
 msgstr ""
 
@@ -739,11 +745,13 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:77
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:73
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:100
 msgid "Copy missing"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:76
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:73
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:99
 msgid "Copy present"
 msgstr ""
 
@@ -762,11 +770,11 @@ msgstr ""
 msgid "Could not explain route"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:29
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:30
 msgid "Could not read snapshot status"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:28
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:29
 msgid "Could not start snapshot preparation"
 msgstr ""
 
@@ -830,7 +838,7 @@ msgstr ""
 msgid "Delete the selected saved profile? Current settings will remain unchanged."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:169
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:172
 msgid "Destination port"
 msgstr ""
 
@@ -853,10 +861,12 @@ msgid "Device filter"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:121
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:171
 msgid "Device IP address"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:125
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:178
 msgid "Device MAC (optional)"
 msgstr ""
 
@@ -1060,7 +1070,7 @@ msgstr ""
 msgid "DoH client certificate authentication"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:163
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:169
 msgid "Domain"
 msgstr ""
 
@@ -1192,7 +1202,7 @@ msgstr ""
 msgid "Enable Mixed Proxy Authentication"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:292
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:306
 msgid "Enable only these addresses in Alice Mode if required"
 msgstr ""
 
@@ -1274,11 +1284,11 @@ msgstr ""
 msgid "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted."
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:805
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:802
 msgid "Exclude NTP"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:806
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:803
 msgid "Exclude NTP protocol traffic from the tunnel to prevent it from being routed through the proxy or VPN"
 msgstr ""
 
@@ -1316,7 +1326,7 @@ msgstr ""
 msgid "Expires"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:174
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:187
 msgid "Explain route"
 msgstr ""
 
@@ -1324,7 +1334,7 @@ msgstr ""
 msgid "Export profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:220
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:228
 msgid "Exported profiles contain passwords and keys. Keep the downloaded file private."
 msgstr ""
 
@@ -1360,12 +1370,12 @@ msgstr ""
 msgid "Failed to copy!"
 msgstr ""
 
+#: src/trafira/tabs/updates/initController.ts:509
+#: src/trafira/tabs/updates/initController.ts:510
+#: src/trafira/tabs/updates/initController.ts:572
+#: src/trafira/tabs/updates/initController.ts:722
 #: src/trafira/methods/shell/index.ts:170
 #: src/trafira/methods/shell/index.ts:177
-#: src/trafira/tabs/updates/initController.ts:527
-#: src/trafira/tabs/updates/initController.ts:528
-#: src/trafira/tabs/updates/initController.ts:590
-#: src/trafira/tabs/updates/initController.ts:740
 msgid "Failed to execute"
 msgstr ""
 
@@ -1450,6 +1460,7 @@ msgid "Fuzzing is not supported here because Trafira needs deterministic runtime
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:270
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:287
 msgid "Gaming presets"
 msgstr ""
 
@@ -1587,6 +1598,7 @@ msgid "Idle timeout"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderProfiles.ts:199
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:233
 msgid "Import profile"
 msgstr ""
 
@@ -1643,6 +1655,7 @@ msgid "Included"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179
 msgid "Incoming interface (optional)"
 msgstr ""
 
@@ -1650,11 +1663,11 @@ msgstr ""
 msgid "Information"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:775
+#: src/trafira/tabs/updates/initController.ts:757
 msgid "Install"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1216
+#: src/trafira/tabs/updates/initController.ts:1162
 msgid "Install another build:"
 msgstr ""
 
@@ -1662,16 +1675,12 @@ msgstr ""
 msgid "Install selected version"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:942
-msgid "Installed"
-msgstr ""
-
 #: src/trafira/tabs/updates/renderCoreVersions.ts:80
 msgid "Installed version"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:299
-#: src/trafira/tabs/updates/initController.ts:1074
+#: src/trafira/tabs/updates/initController.ts:292
+#: src/trafira/tabs/updates/initController.ts:1020
 msgid "Installed version is newer than release"
 msgstr ""
 
@@ -2050,12 +2059,12 @@ msgstr ""
 msgid "Latency test URL"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:302
-#: src/trafira/tabs/updates/initController.ts:1072
+#: src/trafira/tabs/updates/initController.ts:295
+#: src/trafira/tabs/updates/initController.ts:1018
 msgid "Latest version is installed"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1074
+#: src/trafira/tabs/updates/initController.ts:1020
 msgid "Latest version:"
 msgstr ""
 
@@ -2104,11 +2113,11 @@ msgstr ""
 msgid "Loading connections"
 msgstr ""
 
+#: src/trafira/tabs/updates/initController.ts:908
+#: src/trafira/tabs/updates/initController.ts:919
+#: src/trafira/tabs/updates/initController.ts:930
+#: src/trafira/tabs/updates/initController.ts:943
 #: src/trafira/tabs/updates/initController.ts:956
-#: src/trafira/tabs/updates/initController.ts:967
-#: src/trafira/tabs/updates/initController.ts:978
-#: src/trafira/tabs/updates/initController.ts:991
-#: src/trafira/tabs/updates/initController.ts:1004
 msgid "Loading..."
 msgstr ""
 
@@ -2116,7 +2125,7 @@ msgstr ""
 msgid "Loading…"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:789
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:786
 msgid "Log Level"
 msgstr ""
 
@@ -2280,10 +2289,6 @@ msgstr ""
 msgid "No closed connections"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1049
-msgid "No compatible WARP release is available yet"
-msgstr ""
-
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:32
 msgid "No conflict detected"
 msgstr ""
@@ -2308,7 +2313,7 @@ msgstr ""
 msgid "No public firewall port required"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:85
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:121
 msgid "No remote rule sets in saved configuration"
 msgstr ""
 
@@ -2360,10 +2365,9 @@ msgstr ""
 
 #: src/trafira/helpers/singBoxVariant.ts:29
 #: src/trafira/helpers/singBoxVariant.ts:37
-#: src/trafira/tabs/updates/initController.ts:943
-#: src/trafira/tabs/updates/initController.ts:981
-#: src/trafira/tabs/updates/initController.ts:994
-#: src/trafira/tabs/updates/initController.ts:1007
+#: src/trafira/tabs/updates/initController.ts:933
+#: src/trafira/tabs/updates/initController.ts:946
+#: src/trafira/tabs/updates/initController.ts:959
 msgid "Not installed"
 msgstr ""
 
@@ -2410,7 +2414,7 @@ msgstr ""
 msgid "Offline: %d"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:266
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:277
 msgid "Only changed section and option names are shown; values are hidden."
 msgstr ""
 
@@ -2452,8 +2456,8 @@ msgstr ""
 msgid "Only the specified servers."
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1065
-#: src/trafira/tabs/updates/initController.ts:1087
+#: src/trafira/tabs/updates/initController.ts:1011
+#: src/trafira/tabs/updates/initController.ts:1033
 msgid "Open"
 msgstr ""
 
@@ -2463,10 +2467,6 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/partials/renderWikiDisclaimer.ts:31
 msgid "Open Project Page"
-msgstr ""
-
-#: src/trafira/tabs/updates/initController.ts:1041
-msgid "Open WARP settings"
 msgstr ""
 
 #: src/helpers/withTimeout.ts:7
@@ -2524,15 +2524,15 @@ msgstr ""
 msgid "Path cannot be empty"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:771
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:768
 msgid "Path must be absolute (start with /)"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:780
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:777
 msgid "Path must contain at least one directory (like /tmp/cache.db)"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:775
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:772
 msgid "Path must end with cache.db"
 msgstr ""
 
@@ -2608,11 +2608,11 @@ msgstr ""
 msgid "Prefix text"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:115
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:152
 msgid "Prepare saved copies"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:93
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:129
 msgid "Preparing snapshots"
 msgstr ""
 
@@ -2628,7 +2628,7 @@ msgstr ""
 msgid "Preview filters"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:302
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:316
 msgid "Preview gaming rules"
 msgstr ""
 
@@ -2652,7 +2652,7 @@ msgstr ""
 msgid "Preview unavailable: the cache predates preview support. Apply the saved configuration normally to rebuild it."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:259
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:270
 msgid "Previous settings were restored."
 msgstr ""
 
@@ -2690,6 +2690,7 @@ msgid "Priority settings"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderProfiles.ts:36
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:216
 msgid "Profile name"
 msgstr ""
 
@@ -2704,7 +2705,7 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2482
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2516
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:170
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:173
 msgid "Protocol"
 msgstr ""
 
@@ -2722,6 +2723,7 @@ msgid "QR code is too large"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:133
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:180
 msgid "Real destination IP (optional)"
 msgstr ""
 
@@ -2753,7 +2755,7 @@ msgstr ""
 msgid "Reality short ID must contain 1-8 hex digits"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:80
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:107
 msgid "Referenced in saved startup configuration"
 msgstr ""
 
@@ -2765,11 +2767,11 @@ msgstr ""
 msgid "Refresh available versions"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:299
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:313
 msgid "Refresh devices"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:124
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:161
 msgid "Refresh status"
 msgstr ""
 
@@ -2777,8 +2779,7 @@ msgstr ""
 msgid "Regular expression must not contain spaces or commas"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:820
-#: src/trafira/tabs/updates/initController.ts:930
+#: src/trafira/tabs/updates/initController.ts:802
 msgid "Remove"
 msgstr ""
 
@@ -2794,7 +2795,7 @@ msgstr ""
 msgid "Remove the specified servers from this level."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:285
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:296
 msgid "Removed"
 msgstr ""
 
@@ -2802,7 +2803,7 @@ msgstr ""
 msgid "Rename profile"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:296
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:310
 msgid "Replace my edits to this preset after preview"
 msgstr ""
 
@@ -2810,7 +2811,7 @@ msgstr ""
 msgid "Require a username and password for the local mixed proxy"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:45
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:46
 msgid "Requires sing-box 1.14 or newer"
 msgstr ""
 
@@ -2850,8 +2851,8 @@ msgstr ""
 msgid "Restart Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:47
 #: src/trafira/tabs/updates/renderCoreVersions.ts:40
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:47
 msgid "Restoration failed. Check the service before continuing."
 msgstr ""
 
@@ -2967,11 +2968,12 @@ msgstr ""
 msgid "Save up to eight profiles. Applying a profile may restart routing."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:48
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:49
 msgid "Saved configuration unavailable"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:32
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:33
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:87
 msgid "Saved rule sets"
 msgstr ""
 
@@ -3014,10 +3016,12 @@ msgid "Select a common client profile or enter a custom User-Agent"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:209
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:295
 msgid "Select a connection"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:199
+#: src/trafira/tabs/diagnostic/renderGamingPresets.ts:291
 msgid "Select a known device"
 msgstr ""
 
@@ -3095,7 +3099,7 @@ msgstr ""
 msgid "Select the fastest node"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:790
+#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:787
 msgid "Select the log level for sing-box"
 msgstr ""
 
@@ -3178,9 +3182,9 @@ msgstr ""
 msgid "Servers on dashboard"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/initController.ts:598
 #: src/trafira/methods/shell/index.ts:376
 #: src/trafira/methods/shell/index.ts:397
-#: src/trafira/tabs/diagnostic/initController.ts:598
 msgid "Service action failed"
 msgstr ""
 
@@ -3287,15 +3291,15 @@ msgstr ""
 msgid "Sing-box versions"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:95
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:131
 msgid "Snapshot preparation completed"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:96
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:132
 msgid "Snapshot preparation failed; check core, configuration, proxy and storage"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:42
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:43
 msgid "Snapshot status unavailable"
 msgstr ""
 
@@ -3323,9 +3327,9 @@ msgstr ""
 msgid "Sorts servers in this section by lowest latency in the dashboard."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:164
 #: src/trafira/tabs/monitoring/initController.ts:831
 #: src/trafira/tabs/monitoring/initController.ts:881
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:170
 msgid "Source"
 msgstr ""
 
@@ -3407,7 +3411,7 @@ msgstr ""
 msgid "Stop Trafira"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:67
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:68
 msgid "Storage"
 msgstr ""
 
@@ -3415,7 +3419,7 @@ msgstr ""
 msgid "Store and account services use the selected proxy; remaining traffic from the selected addresses goes directly. Shared services may also carry game traffic. These editable lists do not cover every platform endpoint."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderSnapshots.ts:36
+#: src/trafira/tabs/diagnostic/renderSnapshots.ts:37
 msgid "Stored copies are validated when preparing and before startup. Presence does not confirm current validity or use by the running core."
 msgstr ""
 
@@ -3553,7 +3557,7 @@ msgstr ""
 msgid "The previous version was restored."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderProfiles.ts:275
+#: src/trafira/tabs/diagnostic/renderProfiles.ts:286
 msgid "The profile cannot be used with the current configuration and components."
 msgstr ""
 
@@ -3874,7 +3878,7 @@ msgstr ""
 #: src/trafira/services/systemInfo.service.ts:22
 #: src/trafira/services/systemInfo.service.ts:25
 #: src/trafira/services/systemInfo.service.ts:26
-#: src/trafira/tabs/updates/initController.ts:337
+#: src/trafira/tabs/updates/initController.ts:330
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25
 msgid "unknown"
 msgstr ""
@@ -3913,15 +3917,15 @@ msgstr ""
 msgid "Unsupported security mode for this protocol"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:775
+#: src/trafira/tabs/updates/initController.ts:757
 msgid "Update"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:295
+#: src/trafira/tabs/updates/initController.ts:288
 msgid "Update is available"
 msgstr ""
 
-#: src/trafira/tabs/updates/initController.ts:1051
+#: src/trafira/tabs/updates/initController.ts:997
 msgid "Update is available:"
 msgstr ""
 
@@ -4160,7 +4164,7 @@ msgstr ""
 msgid "When switching to another level, test every server and select the fastest instead of the first working one."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:162
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:167
 msgid "Where will the connection go?"
 msgstr ""
 
@@ -4238,7 +4242,4 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:107
 msgid "Zapret2 sing-box outbound is not configured"
-msgstr ""
-
-msgid "Additional route information (optional)"
 msgstr ""

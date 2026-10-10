@@ -12,19 +12,6 @@ function resolve(name) {
     let result=[];for(let line in split(trim(text),"\n"))if(ip.valid_ip(trim(line)))push(result,trim(line));
     return length(result)?result:null;
 }
-function include_warp(result,known,status) {
-    if(status?.schema==1 && status.owner=="trafira-warp" && status.running===false && status.configured===true && match(status.interface||"",/^tfwarp[0-9]$/)) {
-        known[status.interface]=true;
-        result.warp={interface:status.interface,generation:status.generation,running:false};return true;
-    }
-    let warp=require("integrations.warp_transport"),verified=warp.exemptions(status);
-    if(!verified)return false;
-    for(let name in verified.interfaces)known[name]=true;
-    // Audit identity only: the existing explicit SO_MARK excludes this daemon.
-    // Do not exempt other UDP clients by its public peer or local listen port.
-    result.warp={interface:status.interface,endpoint:status.endpoint,listen_port:status.listen_port,fwmark:verified.fwmark,generation:status.generation};
-    return true;
-}
 function snapshot(settings,sections) {
     let prepared=require("singbox.failure_store").read((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-bootstrap-prepared.json");
     let use_prepared=prepared && prepared.config_text==require("service.applied_config").normalized(fs.readfile(getenv("TRAFIRA_CONFIG_FILE")||"/etc/config/trafira")) && require("service.operation_lock").is_live_ancestor(prepared.worker);
@@ -64,8 +51,6 @@ function snapshot(settings,sections) {
             push(result.vpn,{ip:endpoint[1],port:int(endpoint[2])});
         }
     }
-    let addon=getenv("TRAFIRA_WARP_LIB")||"/usr/lib/trafira-warp";
-    if(fs.stat(addon+"/warp/runtime.uc"))include_warp(result,known_interfaces,require("integrations.warp_transport").read());
     // Native interface transports have no sing-box socket mark. Only active
     // WG/AWG sockets can currently be identified safely across endpoint roaming.
     for(let section in sections)if(common.bool_option(section,"enabled",true))
@@ -87,4 +72,4 @@ function install(settings,sections,table,local4,local6,mark) {
     if(ok)require("singbox.failure_store").write((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json",{section:selected.section,...data});
     return ok;
 }
-return {snapshot,install,include_warp};
+return {snapshot,install};

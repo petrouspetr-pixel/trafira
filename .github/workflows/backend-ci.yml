@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - 'trafira/files/**'
-      - 'components/warp/**'
       - 'trafira/Makefile'
       - 'build.sh'
       - 'install.sh'
@@ -16,7 +15,6 @@ on:
       - main
     paths:
       - 'trafira/files/**'
-      - 'components/warp/**'
       - 'trafira/Makefile'
       - 'build.sh'
       - 'install.sh'
@@ -54,8 +52,8 @@ jobs:
       - name: Check ucode syntax
         shell: bash
         run: |
-          find trafira/files/usr/lib components/warp -name '*.uc' -print0 | xargs -0 -n1 ucode -c -o /dev/null
-          find trafira/files/usr/lib components/warp -name '*.uc' -print0 | xargs -0 -n1 ucode -S -c -o /dev/null
+          find trafira/files/usr/lib -name '*.uc' -print0 | xargs -0 -n1 ucode -c -o /dev/null
+          find trafira/files/usr/lib -name '*.uc' -print0 | xargs -0 -n1 ucode -S -c -o /dev/null
 
       - name: Run backend tests
         shell: bash

@@ -740,10 +740,6 @@ if(index(["start-service","stop-service","reload-service","retry-start-on-wan-up
         warn("Another configuration operation is already running\n");
         exit(1);
     }
-    if(mode!="stop-service" && !require("integrations.warp_package_recovery").before_start()) {
-        warn("WARP package recovery failed; startup stopped\n");
-        exit(1);
-    }
     if(mode!="stop-service" && !require("service.config_transaction").before_start().success) {
         warn("Configuration recovery failed; startup stopped\n");
         exit(1);

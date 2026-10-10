@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 21:46+0300\n"
-"PO-Revision-Date: 2026-10-09 21:46+0300\n"
+"POT-Creation-Date: 2026-10-10 04:47+0300\n"
+"PO-Revision-Date: 2026-10-10 04:47+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -127,6 +127,9 @@ msgstr "Добавлено"
 
 msgid "Additional marking rules found"
 msgstr "Найдены дополнительные правила маркировки"
+
+msgid "Additional route information (optional)"
+msgstr "Дополнительные сведения о маршруте (необязательно)"
 
 msgid "Additionally exclude servers by protocol, transport, and security. Exclude only servers matching the specified parameters."
 msgstr "Дополнительно исключать серверы по протоколу, транспорту и защите. Исключать только серверы, совпавшие по указанным параметрам."
@@ -1160,9 +1163,6 @@ msgstr "Установить другую сборку:"
 msgid "Install selected version"
 msgstr "Установить выбранную версию"
 
-msgid "Installed"
-msgstr ""
-
 msgid "Installed version"
 msgstr "Установленная версия"
 
@@ -1601,9 +1601,6 @@ msgstr "Нет активных подключений"
 msgid "No closed connections"
 msgstr "Нет закрытых подключений"
 
-msgid "No compatible WARP release is available yet"
-msgstr "Совместимый релиз WARP пока недоступен"
-
 msgid "No conflict detected"
 msgstr "Конфликт не обнаружен"
 
@@ -1723,9 +1720,6 @@ msgstr "Откройте настройки приоритета и укажит
 
 msgid "Open Project Page"
 msgstr "Открыть страницу проекта"
-
-msgid "Open WARP settings"
-msgstr "Открыть настройки WARP"
 
 msgid "Operation timed out"
 msgstr "Время ожидания истекло"
@@ -2968,6 +2962,3 @@ msgstr "sing-box outbound для Zapret2 настроен"
 
 msgid "Zapret2 sing-box outbound is not configured"
 msgstr "sing-box outbound для Zapret2 не настроен"
-
-msgid "Additional route information (optional)"
-msgstr "Дополнительные сведения о маршруте (необязательно)"

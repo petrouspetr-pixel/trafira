@@ -1070,8 +1070,6 @@ function build_system_info() {
     let zapret2_version = zapret2_installed ? provider_version(ZAPRET2_RUNTIME_UC) : "not installed";
     let byedpi_installed = provider_installed(BYEDPI_RUNTIME_UC) ? 1 : 0;
     let byedpi_version = byedpi_installed ? provider_version(BYEDPI_RUNTIME_UC) : "not installed";
-    let warp_installed=fs.stat("/usr/lib/trafira-warp/warp/runtime.uc")?1:0;
-    let warp_version=warp_installed?trim(command_output_from_args(["ucode","-L",LIB_DIR,LIB_DIR+"/core/packages.uc",command_exists("apk")?"apk-version":"opkg-version","luci-app-trafira-warp"])):"not installed";
     let device_model = first_line_value("/tmp/sysinfo/model", "unknown");
 
     return {
@@ -1089,8 +1087,6 @@ function build_system_info() {
         zapret2_installed,
         byedpi_version,
         byedpi_installed,
-        warp_installed,
-        warp_version,
         openwrt_version: openwrt_release(),
         device_model,
         generated_at: int(clock()[0])
