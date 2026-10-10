@@ -36,7 +36,15 @@ beforeEach(() => {
       children: NodeView[] | string = [],
     ) => ({
       tag,
-      attributes,
+      // LuCI passes non-null attributes to setAttribute; false becomes "false".
+      attributes: Object.fromEntries(
+        Object.entries(attributes)
+          .filter(([, value]) => value != null)
+          .map(([name, value]) => [
+            name,
+            typeof value === 'function' ? value : String(value),
+          ]),
+      ),
       children: Array.isArray(children) ? children : [children],
     }),
   );
@@ -94,6 +102,65 @@ describe('diagnostics layout', () => {
       ).toBeUndefined();
       expect(find(lower, (node) => node.attributes.id === id)).toBeDefined();
     }
+  });
+  function button(label: string) {
+    return find(
+      output,
+      (node) => node.tag === 'button' && node.children[0] === label,
+    )!;
+  }
+  it('enables both snapshot buttons while idle under LuCI attribute semantics', async () => {
+    await snapshots.mount();
+    expect(button('Prepare saved copies').attributes).not.toHaveProperty(
+      'disabled',
+    );
+    expect(button('Refresh status').attributes).not.toHaveProperty('disabled');
+  });
+  it('disables both buttons during start, then enables them after completion', async () => {
+    await snapshots.mount();
+    let finish!: (value: {
+      code: number;
+      stdout: string;
+      stderr: string;
+    }) => void;
+    vi.mocked(executeShellCommand).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const pending = snapshots.prepare();
+    expect(button('Prepare saved copies').attributes).toHaveProperty(
+      'disabled',
+    );
+    expect(button('Refresh status').attributes).toHaveProperty('disabled');
+    finish({ code: 0, stdout: JSON.stringify({ success: true }), stderr: '' });
+    await pending;
+    expect(button('Prepare saved copies').attributes).not.toHaveProperty(
+      'disabled',
+    );
+    expect(button('Refresh status').attributes).not.toHaveProperty('disabled');
+  });
+  it.each([
+    { supported: false },
+    { available: false },
+    { preparable: false },
+    { entries: [] },
+    { job: { running: true, success: false, message: '' } },
+  ])('keeps preparation disabled when report blocks it: %j', async (patch) => {
+    const result = await executeShellCommand({
+      command: '/usr/bin/trafira',
+      args: [],
+    });
+    vi.mocked(executeShellCommand).mockResolvedValue({
+      ...result,
+      stdout: JSON.stringify({ ...JSON.parse(result.stdout), ...patch }),
+    });
+    await snapshots.mount();
+    expect(button('Prepare saved copies').attributes).toHaveProperty(
+      'disabled',
+    );
+    expect(button('Refresh status').attributes).not.toHaveProperty('disabled');
   });
   it('collapses the full rule list initially, exposes counts, and preserves expansion on refresh', async () => {
     await snapshots.mount();
