@@ -1199,7 +1199,11 @@ async function withTimeout(promise, timeoutMs, operationName, timeoutMessage = _
   let timeoutId;
   const start = performance.now();
   const timeoutPromise = new Promise((_2, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    timeoutId = setTimeout(() => {
+      const error = new Error(timeoutMessage);
+      error.name = "TimeoutError";
+      reject(error);
+    }, timeoutMs);
   });
   try {
     return await Promise.race([promise, timeoutPromise]);
@@ -1348,16 +1352,14 @@ async function executeShellCommand({
   timeout = COMMAND_TIMEOUT
 }) {
   if (readCommand(command5, args)) command5 = "/usr/bin/trafira-read";
+  const action = Object.prototype.hasOwnProperty.call(readCommands, args[0]) || Object.prototype.hasOwnProperty.call(readConfig, args[0]) || args[0] === "clash_api" ? ` ${args[0]}` : "";
   try {
-    return await withTimeout(
-      fs.exec(command5, args),
-      timeout,
-      [command5, ...args].join(" ")
-    );
+    return await withTimeout(fs.exec(command5, args), timeout, command5 + action);
   } catch (err) {
     const error = err;
     const code = typeof error?.code === "number" ? error.code : 1;
-    return { stdout: "", stderr: error?.message, code };
+    const failure = error?.name === "TimeoutError" ? "timeout" : error?.name === "PermissionError" ? "permission_denied" : "rpc";
+    return { stdout: "", stderr: error?.message, code, failure };
   }
 }
 
@@ -8282,6 +8284,57 @@ function render2() {
 }
 
 // src/trafira/tabs/diagnostic/routeExplanation.ts
+var RouteExplanationError = class extends Error {
+  constructor(category) {
+    super(category);
+    this.category = category;
+  }
+};
+function record(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function strings(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+function decision(value) {
+  return record(value) && ["matched", "direct", "blocked", "indeterminate"].includes(
+    String(value.status)
+  ) && (value.outbound == null || typeof value.outbound === "string") && strings(value.missing) && Array.isArray(value.trace) && value.trace.length <= 200 && value.trace.every(
+    (row) => record(row) && Number.isInteger(row.index) && Number(row.index) >= 0 && ["yes", "no", "unknown"].includes(String(row.match)) && typeof row.action === "string" && typeof row.shadowed === "boolean" && strings(row.missing) && (row.origin == null || record(row.origin) && (row.origin.section == null || typeof row.origin.section === "string"))
+  );
+}
+function parseRouteExplanationResult(result) {
+  if (result.failure)
+    throw new RouteExplanationError(
+      result.failure === "timeout" ? "timeout" : result.failure === "permission_denied" ? "permission_denied" : "rpc_failed"
+    );
+  let report;
+  if (typeof result.stdout === "string" && result.stdout.length <= 262144) {
+    try {
+      report = JSON.parse(result.stdout);
+    } catch {
+    }
+  }
+  if (record(report) && report.success === false && report.error === "permission_denied")
+    throw new RouteExplanationError("permission_denied");
+  if (result.code) throw new RouteExplanationError("command_failed");
+  if (!record(report) || typeof report.success !== "boolean")
+    throw new RouteExplanationError("invalid_response");
+  if (!report.success) {
+    if (![
+      "invalid_request",
+      "configuration_changed_retry",
+      "configuration_unavailable"
+    ].includes(String(report.error)))
+      throw new RouteExplanationError("command_failed");
+    return report;
+  }
+  if (!decision(report.decision) || !strings(report.limitations) || report.dns_policy != null && !decision(report.dns_policy) || report.generated_at != null && (typeof report.generated_at !== "number" || !Number.isFinite(report.generated_at)) || report.selector != null && (!record(report.selector) || typeof report.selector.current !== "string") || report.rule_sets != null && (!record(report.rule_sets) || report.rule_sets.unavailable_reasons != null && (!Array.isArray(report.rule_sets.unavailable_reasons) || !report.rule_sets.unavailable_reasons.every(
+    (entry) => record(entry) && typeof entry.tag === "string" && typeof entry.reason === "string"
+  ))))
+    throw new RouteExplanationError("invalid_response");
+  return report;
+}
 var RouteExplanationController = class {
   constructor(read, render6) {
     this.read = read;
@@ -8302,23 +8355,32 @@ var RouteExplanationController = class {
     if (!this.active) return;
     const generation3 = ++this.generation;
     this.render(null, "", true);
+    let report;
     try {
-      const report = await this.read(request);
-      if (!report.success) {
-        const error = [
-          "invalid_request",
-          "configuration_changed_retry",
-          "configuration_unavailable"
-        ].includes(report.error || "") ? report.error : "Could not explain route";
-        if (this.active && this.generation === generation3)
-          this.render(null, error, false);
-        return;
-      }
+      report = await this.read(request);
+    } catch (error) {
       if (this.active && this.generation === generation3)
-        this.render(report, "", false);
+        this.render(
+          null,
+          error instanceof RouteExplanationError ? error.category : "Could not explain route",
+          false
+        );
+      return;
+    }
+    if (!this.active || this.generation !== generation3) return;
+    if (!report.success) {
+      const error = [
+        "invalid_request",
+        "configuration_changed_retry",
+        "configuration_unavailable"
+      ].includes(report.error || "") ? report.error : "Could not explain route";
+      this.render(null, error, false);
+      return;
+    }
+    try {
+      this.render(report, "", false);
     } catch {
-      if (this.active && this.generation === generation3)
-        this.render(null, "Could not explain route", false);
+      this.render(null, "render_failed", false);
     }
   }
 };
@@ -8422,6 +8484,24 @@ function routeReasons(reasons, unavailable = []) {
 }
 function routeError(error) {
   const messages = {
+    timeout: _(
+      "The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again."
+    ),
+    permission_denied: _(
+      "LuCI denied access to the route check. Sign in with an account that has access to Trafira."
+    ),
+    command_failed: _(
+      "The route diagnostic command failed. Its system output is needed to identify the cause."
+    ),
+    rpc_failed: _(
+      "LuCI could not receive the route check result. Refresh the page and try again."
+    ),
+    invalid_response: _(
+      "The route check returned an invalid response. Check that the Trafira backend and LuCI app versions match."
+    ),
+    render_failed: _(
+      "The route result could not be displayed. Refresh the page; if this repeats, report this display error."
+    ),
     invalid_request: _(
       "Enter a valid domain, destination port and device IP address, or select This router."
     ),
@@ -8432,6 +8512,15 @@ function routeError(error) {
       "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again."
     )
   };
+  if ([
+    "timeout",
+    "permission_denied",
+    "command_failed",
+    "rpc_failed",
+    "invalid_response",
+    "render_failed"
+  ].includes(error))
+    return `${messages[error]} (${error})`;
   return messages[error] || _("Could not explain route. Check that Trafira is running, then try again.");
 }
 
@@ -8442,6 +8531,7 @@ async function command(name, args = []) {
     args: [name, ...args],
     timeout: 15e3
   });
+  if (name === "route_explain") return parseRouteExplanationResult(result);
   if (result.code) throw new Error("Route command failed");
   return JSON.parse(result.stdout);
 }
@@ -8453,7 +8543,7 @@ function status(value) {
     indeterminate: _("Insufficient information")
   }[value];
 }
-function decisionView(title, decision, unavailable = []) {
+function decisionView(title, decision2, unavailable = []) {
   const matches = {
     yes: _("Matches"),
     no: _("Does not match"),
@@ -8469,28 +8559,28 @@ function decisionView(title, decision, unavailable = []) {
   };
   return E(
     "div",
-    { class: `fkp_route-decision fkp_route-decision--${decision.status}` },
+    { class: `fkp_route-decision fkp_route-decision--${decision2.status}` },
     [
       E("b", {}, title),
       E(
         "p",
         {},
-        `${status(decision.status)}${decision.outbound ? `: ${decision.outbound}` : ""}`
+        `${status(decision2.status)}${decision2.outbound ? `: ${decision2.outbound}` : ""}`
       ),
-      ...routeReasons(decision.missing, unavailable).map(
+      ...routeReasons(decision2.missing, unavailable).map(
         (reason) => E("p", {}, reason)
       ),
-      ...decision.trace.length ? [
+      ...decision2.trace.length ? [
         E("details", { class: "fkp_diagnostic-details" }, [
           E("summary", {}, _("Rule evaluation order")),
-          ...decision.trace.map(
+          ...decision2.trace.map(
             (row) => E(
               "p",
               {},
               `#${row.index + 1}: ${matches[row.match] || _("Needs more information")} \xB7 ${actions[row.action] || _("Rule action")}${row.origin?.section ? ` \xB7 ${row.origin.section}` : ""}${row.shadowed ? ` (${_("Overridden by an earlier rule")})` : ""}`
             )
           ),
-          ...decision.trace_truncated ? [E("p", {}, _("Only the first 200 rules are displayed"))] : []
+          ...decision2.trace_truncated ? [E("p", {}, _("Only the first 200 rules are displayed"))] : []
         ])
       ] : []
     ]
@@ -11771,7 +11861,7 @@ var styles4 = `
     align-items: start;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 700px) {
     .fkp_diagnostic-page {
         grid-template-columns: 1fr;
     }
@@ -11959,7 +12049,6 @@ var styles4 = `
 }
 
 .fkp_diagnostic-panel,
-#trafira-profiles,
 #trafira-gaming-presets {
     border: 1px solid var(--background-color-low, lightgray);
     border-radius: 4px;
@@ -11984,13 +12073,31 @@ var styles4 = `
     display: none;
 }
 
+.trafira-profile-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.trafira-profile-controls > input,
+.trafira-profile-controls > select {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.trafira-profile-controls > button {
+    margin: 0;
+}
+
 .trafira-feature-slot p {
     max-width: 90ch;
 }
 
 .fkp_diagnostic-fields {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 16px;
     margin: 12px 0;
 }
@@ -12005,7 +12112,7 @@ var styles4 = `
 .fkp_diagnostic-field > input,
 .fkp_diagnostic-field > select {
     box-sizing: border-box;
-    width: 100%;
+    width: auto;
     min-width: 0;
     max-width: 100%;
 }
@@ -12019,7 +12126,6 @@ var styles4 = `
 
 .fkp_diagnostic-actions > button {
     margin: 0;
-    white-space: normal;
     max-width: 100%;
 }
 
@@ -12032,18 +12138,37 @@ var styles4 = `
     padding: 6px 0;
 }
 
-.fkp_diagnostic-snapshots {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: 12px 24px;
-    margin-top: 12px;
+.trafira-list-copies > p {
+    margin: 0 0 8px;
 }
 
-.fkp_diagnostic-snapshots > div {
-    min-width: 0;
+.trafira-list-copies-table {
+    width: 100%;
+    margin: 8px 0;
+    font-size: inherit;
+}
+
+.trafira-list-copies-table .td {
     overflow-wrap: anywhere;
-    border-top: 1px solid var(--background-color-low, lightgray);
-    padding-top: 10px;
+}
+
+.trafira-list-copies .fkp_diagnostic-actions {
+    margin: 8px 0;
+}
+
+@media (max-width: 600px) {
+    .fkp_diagnostic-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .fkp_diagnostic-actions > button {
+        white-space: normal;
+    }
+
+    .trafira-profile-controls > button {
+        max-width: 100%;
+        white-space: normal;
+    }
 }
 
 .fkp_diagnostic-page p {
@@ -14082,6 +14207,7 @@ var initial = () => ({
   stage: "idle",
   entries: [],
   currentVersion: "",
+  currentVariant: "",
   cachedAt: 0,
   pinnedVersion: "",
   selected: "",
@@ -14145,6 +14271,15 @@ var CoreVersionPicker = class {
       expected_current_version: this.state.currentVersion
     });
   }
+  async pin() {
+    if (!this.state.currentVersion || this.state.currentVersion === "not-installed" || !this.state.currentVariant)
+      return;
+    await this.request({
+      action: "pin",
+      expected_current_version: this.state.currentVersion,
+      expected_current_variant: this.state.currentVariant
+    });
+  }
   async poll() {
     await this.request({
       action: "status",
@@ -14159,7 +14294,7 @@ var CoreVersionPicker = class {
     this.state = {
       ...this.state,
       error: request.action === "status" ? this.state.error : "",
-      stage: request.action === "catalog" ? "loading" : request.action === "status" ? this.state.stage : "installing"
+      stage: request.action === "catalog" ? "loading" : request.action === "status" ? this.state.stage : request.action === "pin" || request.action === "unpin" ? "saving" : "installing"
     };
     this.render(this.state);
     try {
@@ -14171,6 +14306,7 @@ var CoreVersionPicker = class {
           stage: result.success === true ? "idle" : "failed",
           selected: "",
           currentVersion: text(result.current_version) || this.state.currentVersion,
+          currentVariant: text(result.current_variant) || this.state.currentVariant,
           cachedAt: Number(result.cached_at) || 0,
           pinnedVersion: result.pin && typeof result.pin === "object" ? text(result.pin.version) : "",
           entries: Array.isArray(result.entries) ? result.entries.filter((entry) => entry && typeof entry === "object").map((entry) => ({
@@ -14203,7 +14339,10 @@ var CoreVersionPicker = class {
         this.state = {
           ...this.state,
           stage: "done",
-          restored: result.restored === true
+          restored: result.restored === true,
+          ...request.action === "pin" || request.action === "unpin" ? {
+            pinnedVersion: result.pin && typeof result.pin === "object" ? text(result.pin.version) : ""
+          } : {}
         };
       }
     } catch {
@@ -14273,10 +14412,20 @@ var coreVersionsPanel = {
       {
         class: "cbi-button",
         click: () => {
-          if (canWrite2) void picker.unpin().then(() => picker.load());
+          if (canWrite2) void picker.unpin();
         }
       },
       _("Unpin version")
+    );
+    const pinInstalled = E(
+      "button",
+      {
+        class: "cbi-button",
+        click: () => {
+          if (canWrite2) void picker.pin();
+        }
+      },
+      _("Pin installed version")
     );
     const errors2 = {
       "Restoration failed. Check the service before continuing.": _(
@@ -14326,15 +14475,16 @@ var coreVersionsPanel = {
           )
         );
         select.value = state.selected;
-        const busy = state.stage === "installing" || loading2;
+        const busy = state.stage === "installing" || state.stage === "saving" || loading2;
         select.disabled = busy || !hasAvailableVersions;
         pin.disabled = !canWrite2 || busy || !hasAvailableVersions;
         refresh.disabled = busy;
         install.disabled = !canWrite2 || busy || !state.selected;
         unpin.disabled = !canWrite2 || busy || !state.pinnedVersion;
+        pinInstalled.disabled = !canWrite2 || busy || !state.currentVersion || state.currentVersion === "not-installed" || !state.currentVariant;
         info.textContent = `${_("Installed version")}: ${state.currentVersion === "not-installed" ? _("Not installed") : state.currentVersion || "\u2014"} \xB7 ${_("Pinned version")}: ${state.pinnedVersion || _("Not pinned")}${state.cachedAt ? ` \xB7 ${_("Catalog checked")}: ${new Date(state.cachedAt * 1e3).toLocaleString()}` : ""}`;
         message2.textContent = [
-          state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : state.unavailableReason || !loading2 && !hasAvailableVersions ? _(
+          state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : state.stage === "saving" ? _("Saving...") : state.unavailableReason || !loading2 && !hasAvailableVersions ? _(
             "No compatible versions are available for this installation."
           ) : "",
           state.restored ? _("The previous version was restored.") : ""
@@ -14344,8 +14494,8 @@ var coreVersionsPanel = {
     );
     select.addEventListener("change", () => picker.select(select.value));
     host.replaceChildren(
-      E("details", { class: "fkp_updates-page__core-versions" }, [
-        E("summary", {}, _("Sing-box versions")),
+      E("section", { class: "fkp_updates-page__core-versions" }, [
+        E("h3", {}, _("Sing-box versions")),
         E(
           "p",
           { class: "fkp_updates-page__core-versions-help" },
@@ -14360,11 +14510,12 @@ var coreVersionsPanel = {
         ]),
         E("label", { class: "fkp_updates-page__core-versions-pin" }, [
           pin,
-          _("Pin selected version")
+          _("Pin after installation")
         ]),
         E("div", { class: "fkp_updates-page__core-versions-buttons" }, [
           refresh,
           install,
+          pinInstalled,
           unpin
         ]),
         message2
@@ -15393,24 +15544,23 @@ var styles6 = `
 }
 
 .fkp_updates-page__components {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: flex-start;
     gap: 10px;
     width: 100%;
-    flex-wrap: wrap;
 }
 
 .fkp_updates-page__components-column {
     display: flex;
-    flex: 1 1 360px;
     flex-direction: column;
     gap: 10px;
     min-width: 0;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 600px) {
     .fkp_updates-page__components {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .fkp_updates-page__components-column {
@@ -15544,8 +15694,9 @@ var styles6 = `
     font-size: 13px;
 }
 
-.fkp_updates-page__core-versions > summary {
-    cursor: pointer;
+.fkp_updates-page__core-versions > h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
     font-weight: 600;
 }
 
@@ -15565,8 +15716,9 @@ var styles6 = `
 }
 
 .fkp_updates-page__core-versions-field > select {
-    width: 100%;
-    min-width: 0;
+    width: auto;
+    align-self: flex-start;
+    min-width: 220px;
     max-width: 100%;
 }
 
@@ -15949,22 +16101,7 @@ function render5(report, error, starting) {
   const busy = starting || !!report?.job?.running;
   const stored = report?.entries.filter((entry) => entry.present).length || 0;
   container.replaceChildren(
-    E("div", { class: "fkp_diagnostic-panel" }, [
-      E("h3", {}, _("Rule-set copies for startup")),
-      E(
-        "p",
-        {},
-        _(
-          "Local copies help Trafira start when remote list sources are unavailable."
-        )
-      ),
-      E(
-        "p",
-        {},
-        _(
-          "Download or refresh lists from the saved configuration and check them before storing them on the router. The action uses the configured proxy for list downloads."
-        )
-      ),
+    E("div", { class: "trafira-list-copies" }, [
       ...error ? [
         E(
           "p",
@@ -16017,24 +16154,20 @@ function render5(report, error, starting) {
               ),
               E(
                 "div",
-                { class: "fkp_diagnostic-snapshots" },
+                { class: "table trafira-list-copies-table" },
                 report.entries.map(
-                  (entry) => E("div", {}, [
-                    E("b", {}, entry.tag),
+                  (entry) => E("div", { class: "tr" }, [
+                    E("div", { class: "td" }, entry.tag),
                     E(
-                      "p",
-                      {},
+                      "div",
+                      { class: "td" },
                       entry.present ? `${_("Copy present")}: ${size(entry.bytes)} \xB7 ${entry.mtime ? new Date(entry.mtime * 1e3).toLocaleString() : "\u2014"}` : _("Copy missing")
                     ),
-                    ...entry.configured_initial ? [
-                      E(
-                        "p",
-                        {},
-                        _(
-                          "Referenced in saved startup configuration"
-                        )
-                      )
-                    ] : []
+                    E(
+                      "div",
+                      { class: "td" },
+                      entry.configured_initial ? _("Referenced in saved startup configuration") : "\u2014"
+                    )
                   ])
                 )
               )
@@ -16164,7 +16297,7 @@ var initial2 = () => ({
   busy: false,
   running: false,
   digest: "",
-  canRestore: false,
+  canRestore: null,
   entries: [],
   preview: null,
   jobId: "",
@@ -16179,7 +16312,9 @@ var errors = {
   recovery_required: "Restore the interrupted operation before continuing.",
   candidate_check_failed: "The profile cannot be used with the current configuration and components.",
   invalid_profile: "The profile format is invalid or unsupported.",
-  profile_limit: "A maximum of eight profiles can be saved."
+  profile_limit: "A maximum of eight profiles can be saved.",
+  invalid_name: "Enter a profile name of 1 to 64 characters.",
+  profile_unavailable: "The saved profile is unavailable. Refresh the profile list."
 };
 function profileErrorMessage(error) {
   const messages = {
@@ -16203,9 +16338,15 @@ function profileErrorMessage(error) {
     ),
     "Restoration failed. Check the service before continuing.": _(
       "Restoration failed. Check the service before continuing."
+    ),
+    "Enter a profile name of 1 to 64 characters.": _(
+      "Enter a profile name of 1 to 64 characters."
+    ),
+    "The saved profile is unavailable. Refresh the profile list.": _(
+      "The saved profile is unavailable. Refresh the profile list."
     )
   };
-  return messages[error] || _("The profile operation failed.");
+  return messages[errors[error] || error] || _("The profile operation failed.");
 }
 var ProfilePanelController = class {
   constructor(call, render6) {
@@ -16224,6 +16365,20 @@ var ProfilePanelController = class {
   unmount() {
     this.active = false;
     this.generation++;
+  }
+  invalidatePreview() {
+    if (!this.active || this.state.busy || this.state.running) return;
+    this.state = { ...this.state, preview: null, error: "", restored: false };
+    this.render(this.state);
+  }
+  async applyReviewed(id) {
+    const preview = this.state.preview;
+    if (!preview?.applicable || !preview.digest || preview.id !== id) return;
+    return this.submit({
+      action: "apply",
+      id: preview.id,
+      digest: preview.digest
+    });
   }
   async submit(request) {
     if (!this.active || this.state.busy) return;
@@ -16251,15 +16406,18 @@ var ProfilePanelController = class {
       if (committed) this.state = { ...this.state, committed: true };
       if (typeof result.running === "boolean")
         this.state = { ...this.state, running: result.running };
-      if (typeof result.digest === "string")
+      if (typeof result.digest === "string") {
+        if (this.state.preview && this.state.preview.digest !== result.digest)
+          this.state = { ...this.state, preview: null };
         this.state = { ...this.state, digest: result.digest };
+      }
       if (typeof result.can_restore === "boolean")
         this.state = { ...this.state, canRestore: result.can_restore };
-      if (result.success === false || result.rollback_error) {
+      if (result.success !== true || result.rollback_error) {
         this.state = {
           ...this.state,
           preview: null,
-          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : errors[text2(result.error)] || "The profile operation failed.",
+          error: result.rollback_error ? "Restoration failed. Check the service before continuing." : errors[result.recovery_pending ? "recovery_required" : text2(result.error)] || "The profile operation failed.",
           restored: result.restored === true
         };
       } else {
@@ -16272,14 +16430,20 @@ var ProfilePanelController = class {
               invalid: item.invalid === true
             }))
           };
+          if (this.state.preview && !this.state.entries.some(
+            (entry) => entry.id === this.state.preview?.id && !entry.invalid
+          ))
+            this.state = { ...this.state, preview: null };
         }
         if (request.action === "preview") {
+          if (typeof result.applicable !== "boolean" || !text2(result.digest) || !Array.isArray(result.changes))
+            throw new Error("Incomplete profile preview");
           const changes = Array.isArray(result.changes) ? result.changes : [];
           this.state = {
             ...this.state,
             preview: {
               id: request.id || "",
-              applicable: result.applicable !== false,
+              applicable: result.applicable === true,
               digest: text2(result.digest),
               changes: changes.filter((item) => item && typeof item === "object").map((item) => ({
                 section: text2(item.section),
@@ -16291,10 +16455,16 @@ var ProfilePanelController = class {
         }
         if (result.job_id)
           this.state = { ...this.state, jobId: text2(result.job_id) };
-        if (["apply", "restore", "remove"].includes(request.action))
+        if (["apply", "restore", "remove", "create", "rename"].includes(
+          request.action
+        ))
           this.state = { ...this.state, preview: null };
         this.state = { ...this.state, restored: result.restored === true };
       }
+      return {
+        success: result.success === true && !result.rollback_error,
+        id: text2(result.id) || request.id || ""
+      };
     } catch {
       if (!this.active || generation3 !== this.generation) return;
       this.state = {
@@ -16312,6 +16482,7 @@ var ProfilePanelController = class {
 };
 
 // src/trafira/tabs/diagnostic/renderProfiles.ts
+var MAX_FILE = 1048576;
 async function command3(request) {
   const result = await executeShellCommand({
     command: "/usr/bin/trafira-config",
@@ -16327,6 +16498,12 @@ function encode(bytes) {
 function decode(value) {
   return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
 }
+function requireSuccess(result) {
+  if (result.success !== true)
+    throw new Error(
+      typeof result.error === "string" ? result.error : "transfer_failed"
+    );
+}
 var mountId2 = 0;
 var active2 = null;
 var profilesPanel = {
@@ -16337,160 +16514,199 @@ var profilesPanel = {
     const generation3 = mountId2;
     let last;
     let transferring = false;
-    const name = E("input", {
+    let preferredSelection = "";
+    const createName = E("input", {
+      id: "trafira-profile-create-name",
       type: "text",
-      maxLength: 64,
-      placeholder: _("Profile name")
+      maxLength: 64
     });
-    const select = E("select", {});
+    const renameName = E("input", {
+      id: "trafira-profile-rename-name",
+      type: "text",
+      maxLength: 64
+    });
+    const select = E("select", {
+      id: "trafira-profile-selected"
+    });
     const file = E("input", {
+      id: "trafira-profile-import",
       type: "file",
       accept: ".json,application/json"
     });
-    const result = E("div", {});
-    const message2 = E("p", {});
+    const output = E("div", { role: "status" });
+    const message2 = E("p", { role: "status" });
+    const restoreHint = E("p", { class: "cbi-value-description" });
     const buttons = [];
-    const writers = [];
-    const needsSelection = [];
-    const needsName = [];
-    let apply;
-    let restore;
-    function updateButtons() {
-      const disabled = transferring || last?.busy || last?.running;
-      for (const button2 of buttons) button2.disabled = disabled;
-      for (const button2 of writers) button2.disabled || (button2.disabled = !canWrite2);
-      const selected = last?.entries.some(
-        (entry) => entry.id === select.value && !entry.invalid
-      );
-      for (const button2 of needsSelection) button2.disabled || (button2.disabled = !selected);
-      for (const button2 of needsName) button2.disabled || (button2.disabled = !name.value.trim());
-      apply.disabled = disabled || !canWrite2 || !last?.preview || last.preview.id !== select.value || !last.preview.applicable;
-      restore.disabled = disabled || !canWrite2 || !last?.canRestore || !last?.digest;
-      file.disabled = disabled || !canWrite2;
-      select.disabled = disabled || !last?.entries.length;
-      name.disabled = disabled || !canWrite2;
-    }
-    async function submit(request, refresh = false) {
-      await controller3.submit(request);
-      if (refresh && generation3 === mountId2 && !last.error)
-        await controller3.submit({ action: "list" });
-    }
-    function button(label, click, writer = false, selection = false, named = false) {
+    function button(label, click, writer = false) {
       const element = E(
         "button",
-        { type: "button", class: "cbi-button cbi-button-action", click },
+        {
+          type: "button",
+          class: "cbi-button cbi-button-action",
+          click: () => {
+            if (element.disabled || writer && !canWrite2) return;
+            click();
+          }
+        },
         label
       );
       buttons.push(element);
-      if (writer) writers.push(element);
-      if (selection) needsSelection.push(element);
-      if (named) needsName.push(element);
       return element;
     }
-    const actions = [
-      button(
-        _("Create profile from saved settings"),
-        () => {
-          void submit({ action: "create", name: name.value }, true);
-        },
-        true,
-        false,
-        true
-      ),
-      button(
-        _("Rename profile"),
-        () => {
-          void submit(
-            { action: "rename", id: select.value, name: name.value },
-            true
-          );
-        },
-        true,
-        true,
-        true
-      ),
-      button(
-        _("Show differences"),
-        () => {
-          void submit({ action: "preview", id: select.value });
-        },
-        false,
-        true
-      ),
-      apply = button(
-        _("Apply profile"),
-        () => {
-          if (!confirmConfigurationReplacement()) return;
-          void submit({
-            action: "apply",
-            id: select.value,
-            digest: last.preview?.digest
-          });
-        },
-        true,
-        true
-      ),
-      restore = button(
-        _("Restore previous settings"),
-        () => {
-          if (!confirmConfigurationReplacement()) return;
-          void submit({ action: "restore", digest: last.digest });
-        },
-        true
-      ),
-      button(
-        _("Delete profile"),
-        () => {
-          if (window.confirm(
-            _(
-              "Delete the selected saved profile? Current settings will remain unchanged."
-            )
-          ))
-            void submit({ action: "remove", id: select.value }, true);
-        },
-        true,
-        true
-      )
-    ];
+    function row(label, id, children) {
+      const title = E("label", { class: "cbi-value-title" }, label);
+      if (id) title.htmlFor = id;
+      return E("div", { class: "cbi-value" }, [
+        title,
+        E("div", { class: "cbi-value-field" }, [
+          E("div", { class: "trafira-profile-controls" }, children)
+        ])
+      ]);
+    }
+    function notify(value, error = false) {
+      message2.textContent = value;
+      message2.className = value ? "alert-message " + (error ? "warning" : "notice") : "";
+    }
+    function selectedEntry() {
+      return last?.entries.find((entry) => entry.id === select.value);
+    }
+    function updateButtons() {
+      const disabled = !!(transferring || last?.busy || last?.running);
+      for (const b of buttons) b.disabled = disabled;
+      const selected = selectedEntry();
+      const usable = !!selected && !selected.invalid;
+      create.disabled || (create.disabled = !canWrite2 || !createName.value.trim() || last?.entries.length >= 8);
+      rename.disabled || (rename.disabled = !canWrite2 || !usable || !renameName.value.trim() || renameName.value.trim() === selected?.name);
+      remove.disabled || (remove.disabled = !canWrite2 || !selected);
+      review.disabled || (review.disabled = !usable);
+      apply.disabled || (apply.disabled = !canWrite2 || !usable || !last?.preview?.applicable || !last.preview.digest || last.preview.id !== select.value);
+      restore.disabled || (restore.disabled = !canWrite2 || !last?.canRestore || !last.digest);
+      exportButton.disabled || (exportButton.disabled = !canWrite2 || !usable);
+      const upload = file.files?.[0];
+      importButton.disabled || (importButton.disabled = !canWrite2 || !upload || !upload.size || upload.size > MAX_FILE);
+      file.disabled = disabled || !canWrite2;
+      select.disabled = disabled || !last?.entries.length;
+      createName.disabled = disabled || !canWrite2;
+      renameName.disabled = disabled || !canWrite2 || !usable;
+      restoreHint.textContent = last?.canRestore === false ? _("No previous configuration is available to restore.") : "";
+    }
+    async function submit(request, refresh2 = false) {
+      notify("");
+      const accepted = await controller3.submit(request);
+      if (!accepted?.success || generation3 !== mountId2) return;
+      if (!refresh2) return;
+      preferredSelection = request.action === "remove" ? "" : accepted.id || select.value;
+      if (request.action === "create") createName.value = "";
+      await controller3.submit({ action: "list" });
+      if (generation3 !== mountId2 || last.error) return;
+      const notices = {
+        create: _("Profile created."),
+        rename: _("Profile renamed."),
+        remove: _("Profile deleted.")
+      };
+      if (notices[request.action]) notify(notices[request.action]);
+    }
+    const create = button(
+      _("Create profile from saved settings"),
+      () => {
+        void submit({ action: "create", name: createName.value.trim() }, true);
+      },
+      true
+    );
+    const refresh = button(_("Refresh profiles"), () => {
+      void submit({ action: "list" });
+    });
+    const rename = button(
+      _("Rename profile"),
+      () => {
+        void submit(
+          { action: "rename", id: select.value, name: renameName.value.trim() },
+          true
+        );
+      },
+      true
+    );
+    const review = button(_("Show differences"), () => {
+      void submit({ action: "preview", id: select.value });
+    });
+    const apply = button(
+      _("Apply profile"),
+      () => {
+        if (!confirmConfigurationReplacement()) return;
+        notify("");
+        void controller3.applyReviewed(select.value);
+      },
+      true
+    );
+    const restore = button(
+      _("Restore previous settings"),
+      () => {
+        if (!confirmConfigurationReplacement()) return;
+        void submit({ action: "restore", digest: last.digest });
+      },
+      true
+    );
+    const remove = button(
+      _("Delete profile"),
+      () => {
+        if (window.confirm(
+          _(
+            "Delete the selected saved profile? Current settings will remain unchanged."
+          )
+        ))
+          void submit({ action: "remove", id: select.value }, true);
+      },
+      true
+    );
     async function transfer(kind) {
-      if (transferring || last.busy || last.running) return;
+      if (!canWrite2 || transferring || last.busy || last.running) return;
+      const chosenId = select.value;
       transferring = true;
-      message2.textContent = _("Transferring profile");
+      notify(_("Transferring profile"));
       updateButtons();
       let transferId = "";
       try {
         if (kind === "import") {
           const selected = file.files?.[0];
-          if (!selected || selected.size > 1048576) throw new Error("size");
+          if (!selected || !selected.size || selected.size > MAX_FILE)
+            throw new Error("invalid_file");
           const bytes = new Uint8Array(await selected.arrayBuffer());
+          if (!bytes.length || bytes.length > MAX_FILE)
+            throw new Error("invalid_file");
+          if (generation3 !== mountId2) throw new Error("closed");
           const begin = await command3({ action: "import_begin" });
-          if (!begin.success || typeof begin.id !== "string")
-            throw new Error("begin");
+          requireSuccess(begin);
+          if (typeof begin.id !== "string" || !begin.id)
+            throw new Error("transfer_failed");
           transferId = begin.id;
           for (let offset = 0; offset < bytes.length; offset += 12288) {
             if (generation3 !== mountId2) throw new Error("closed");
-            const sent = await command3({
-              action: "import_chunk",
-              id: transferId,
-              offset,
-              data: encode(bytes.slice(offset, offset + 12288))
-            });
-            if (!sent.success) throw new Error("chunk");
+            requireSuccess(
+              await command3({
+                action: "import_chunk",
+                id: transferId,
+                offset,
+                data: encode(bytes.slice(offset, offset + 12288))
+              })
+            );
           }
           if (generation3 !== mountId2) throw new Error("closed");
           const imported = await command3({
             action: "import_finish",
             id: transferId
           });
-          if (!imported.success) throw new Error("import");
+          requireSuccess(imported);
+          if (generation3 !== mountId2) return;
+          preferredSelection = typeof imported.id === "string" ? imported.id : chosenId;
+          file.value = "";
           await controller3.submit({ action: "list" });
         } else {
-          const begin = await command3({
-            action: "export_begin",
-            id: select.value
-          });
-          if (!begin.success || typeof begin.id !== "string")
-            throw new Error("begin");
+          if (!selectedEntry() || selectedEntry()?.invalid)
+            throw new Error("profile_unavailable");
+          const begin = await command3({ action: "export_begin", id: chosenId });
+          requireSuccess(begin);
+          if (typeof begin.id !== "string" || !begin.id)
+            throw new Error("transfer_failed");
           transferId = begin.id;
           let offset = 0;
           const chunks = [];
@@ -16501,13 +16717,14 @@ var profilesPanel = {
               id: transferId,
               offset
             });
-            if (!part.success || typeof part.data !== "string")
-              throw new Error("read");
+            requireSuccess(part);
+            if (typeof part.data !== "string" || typeof part.done !== "boolean")
+              throw new Error("transfer_failed");
             const bytes2 = decode(part.data);
             chunks.push(bytes2);
             offset += bytes2.length;
-            if (offset > 1048576 || !bytes2.length && !part.done)
-              throw new Error("size");
+            if (offset > MAX_FILE || !bytes2.length)
+              throw new Error("transfer_failed");
             if (part.done) break;
           }
           if (generation3 !== mountId2) throw new Error("closed");
@@ -16520,19 +16737,27 @@ var profilesPanel = {
           const url = URL.createObjectURL(
             new Blob([bytes], { type: "application/json" })
           );
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "trafira-profile.json";
-          link.click();
-          URL.revokeObjectURL(url);
+          try {
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "trafira-profile.json";
+            link.click();
+          } finally {
+            URL.revokeObjectURL(url);
+          }
         }
-        if (generation3 === mountId2)
-          message2.textContent = _("Profile transfer completed");
-      } catch {
-        if (generation3 === mountId2)
-          message2.textContent = _(
-            "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+        if (generation3 === mountId2 && !last.error)
+          notify(_("Profile transfer completed"));
+      } catch (error) {
+        if (generation3 === mountId2) {
+          const code = error instanceof Error ? error.message : "transfer_failed";
+          notify(
+            code === "invalid_file" ? _(
+              "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+            ) : profileErrorMessage(code),
+            true
           );
+        }
       } finally {
         if (transferId)
           void command3({ action: "transfer_cancel", id: transferId }).catch(
@@ -16542,25 +16767,39 @@ var profilesPanel = {
         if (generation3 === mountId2) updateButtons();
       }
     }
-    actions.push(
-      button(
-        _("Import profile"),
-        () => {
-          void transfer("import");
-        },
-        true
-      ),
-      button(
-        _("Export profile"),
-        () => {
-          void transfer("export");
-        },
-        true,
-        true
-      )
+    const importButton = button(
+      _("Import profile"),
+      () => {
+        void transfer("import");
+      },
+      true
     );
-    select.addEventListener("change", updateButtons);
-    name.addEventListener("input", updateButtons);
+    const exportButton = button(
+      _("Export profile"),
+      () => {
+        void transfer("export");
+      },
+      true
+    );
+    select.addEventListener("change", () => {
+      preferredSelection = select.value;
+      renameName.value = selectedEntry()?.name || "";
+      notify("");
+      controller3.invalidatePreview();
+      updateButtons();
+    });
+    createName.addEventListener("input", updateButtons);
+    renameName.addEventListener("input", updateButtons);
+    file.addEventListener("change", () => {
+      const selected = file.files?.[0];
+      notify(
+        selected && (!selected.size || selected.size > MAX_FILE) ? _(
+          "Profile transfer failed. Select a valid JSON file of up to 1 MiB."
+        ) : "",
+        !!selected && (!selected.size || selected.size > MAX_FILE)
+      );
+      updateButtons();
+    });
     host.replaceChildren(
       E("h3", {}, _("Configuration profiles")),
       E(
@@ -16579,72 +16818,57 @@ var profilesPanel = {
           )
         )
       ] : [],
-      E("div", { class: "fkp_diagnostic-fields" }, [
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Profile name")),
-          name
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Configuration profiles")),
-          select
-        ])
-      ]),
-      E("div", { class: "fkp_diagnostic-actions" }, [
-        actions[0],
-        actions[2],
-        actions[3],
-        actions[4]
-      ]),
-      E("details", { class: "fkp_diagnostic-details" }, [
-        E("summary", {}, _("Manage and transfer profiles")),
-        E(
-          "p",
-          {},
-          _("Enter a new profile name above to rename the selected profile.")
-        ),
-        E("div", { class: "fkp_diagnostic-actions" }, [
-          actions[1],
-          actions[5],
-          actions[7]
-        ]),
-        E(
-          "p",
-          {},
-          _(
-            "Exported profiles contain passwords and keys. Keep the downloaded file private."
-          )
-        ),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Import a profile file (JSON, up to 1 MiB)")),
-          file
-        ]),
-        E("div", { class: "fkp_diagnostic-actions" }, [actions[6]])
-      ]),
       message2,
-      result
+      E("h4", {}, _("Create a profile")),
+      row(_("Profile name"), createName.id, [createName, create]),
+      E("h4", {}, _("Selected profile")),
+      row(_("Saved profiles"), select.id, [select, refresh]),
+      row("", "", [review, apply]),
+      output,
+      row(_("New name for selected profile"), renameName.id, [
+        renameName,
+        rename,
+        remove
+      ]),
+      E("h4", {}, _("Manage and transfer profiles")),
+      row(_("Import a profile file (JSON, up to 1 MiB)"), file.id, [
+        file,
+        importButton
+      ]),
+      row("", "", [exportButton]),
+      E(
+        "p",
+        { class: "cbi-section-descr" },
+        _(
+          "Exported profiles contain passwords and keys. Keep the downloaded file private."
+        )
+      ),
+      E("h4", {}, _("Previous configuration")),
+      row("", "", [restore]),
+      restoreHint
     );
     const controller3 = new ProfilePanelController(command3, (state) => {
       if (generation3 !== mountId2) return;
       if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
-        const chosen = select.value;
+        const chosen = preferredSelection || select.value;
         select.replaceChildren(
+          E("option", { value: "" }, _("Select a saved profile")),
           ...state.entries.map(
             (entry) => E(
               "option",
-              {
-                value: entry.id,
-                ...entry.invalid ? { disabled: true } : {}
-              },
-              entry.name
+              { value: entry.id },
+              entry.name + (entry.invalid ? " (" + _("Invalid profile") + ")" : "")
             )
           )
         );
-        if (state.entries.some((entry) => entry.id === chosen))
-          select.value = chosen;
+        select.value = state.entries.some((entry) => entry.id === chosen) ? chosen : "";
+        renameName.value = state.entries.find((entry) => entry.id === select.value)?.name || "";
+        preferredSelection = "";
       }
       last = state;
       if (state.committed) reloadAfterConfigurationCommit();
-      result.replaceChildren(
+      const preview = state.preview;
+      output.replaceChildren(
         ...!state.entries.length && !state.busy && !state.error ? [
           E(
             "p",
@@ -16657,7 +16881,7 @@ var profilesPanel = {
         ...state.error ? [
           E(
             "p",
-            { class: "alert-message warning", role: "status" },
+            { class: "alert-message warning" },
             profileErrorMessage(state.error)
           )
         ] : [],
@@ -16671,7 +16895,17 @@ var profilesPanel = {
           )
         ] : [],
         ...state.restored ? [E("p", {}, _("Previous settings were restored."))] : [],
-        ...state.preview ? [
+        ...selectedEntry()?.invalid ? [
+          E(
+            "p",
+            { class: "alert-message warning" },
+            _(
+              "This saved profile is invalid. Delete it or import a valid file."
+            )
+          )
+        ] : [],
+        ...preview ? [
+          E("h4", {}, _("Profile differences")),
           E(
             "p",
             {},
@@ -16679,21 +16913,50 @@ var profilesPanel = {
               "Only changed section and option names are shown; values are hidden."
             )
           ),
-          ...!state.preview.applicable ? [
+          ...!preview.applicable ? [
             E(
               "p",
-              {},
+              { class: "alert-message warning" },
               _(
                 "The profile cannot be used with the current configuration and components."
               )
             )
           ] : [],
-          ...state.preview.changes.map(
-            (change) => E(
+          ...preview.changes.length ? [
+            E("table", { class: "table cbi-section-table" }, [
+              E("tr", { class: "tr table-titles" }, [
+                E("th", { class: "th" }, _("Section")),
+                E("th", { class: "th" }, _("Option")),
+                E("th", { class: "th" }, _("Change"))
+              ]),
+              ...preview.changes.map(
+                (change) => E("tr", { class: "tr" }, [
+                  E("td", { class: "td" }, change.section),
+                  E("td", { class: "td" }, change.option || "\u2014"),
+                  E(
+                    "td",
+                    { class: "td" },
+                    {
+                      added: _("Added"),
+                      removed: _("Removed"),
+                      changed: _("Changed")
+                    }[change.change] || _("Changed")
+                  )
+                ])
+              )
+            ])
+          ] : [
+            E(
               "p",
               {},
-              `${change.section}${change.option ? ` / ${change.option}` : ""}: ${{ added: _("Added"), removed: _("Removed"), changed: _("Changed") }[change.change] || _("Changed")}`
+              _("This profile matches the saved configuration.")
             )
+          ]
+        ] : !state.error && !state.running && selectedEntry() && !selectedEntry()?.invalid ? [
+          E(
+            "p",
+            { class: "cbi-section-descr" },
+            _("Show differences before applying the selected profile.")
           )
         ] : []
       );
@@ -16704,7 +16967,7 @@ var profilesPanel = {
     const timer2 = window.setInterval(() => {
       if (!last.running) return;
       void controller3.submit({ action: "status" }).then(() => {
-        if (!last.running && !last.error)
+        if (generation3 === mountId2 && !last.running && !last.error)
           void controller3.submit({ action: "list" });
       });
     }, 2e3);
@@ -16880,7 +17143,7 @@ function rows(value) {
     (row) => !!row && typeof row === "object"
   ) : [];
 }
-function strings(value) {
+function strings2(value) {
   return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
 }
 var gamingPresetsPanel = {
@@ -16957,8 +17220,8 @@ var gamingPresetsPanel = {
         );
         for (const route of rows(p.routes)) {
           const domains = [
-            ...strings(route.domain),
-            ...strings(route.domain_suffix).map((name) => "*." + name)
+            ...strings2(route.domain),
+            ...strings2(route.domain_suffix).map((name) => "*." + name)
           ];
           const target = String(route.target || "");
           const label = target === "direct" ? _("Direct connection") : catalog?.proxies.find((item) => item.id === target)?.label || target;
@@ -16966,7 +17229,7 @@ var gamingPresetsPanel = {
             E(
               "p",
               {},
-              `${strings(route.source).join(", ")}: ${domains.length ? domains.join(", ") : _("Other traffic")} \u2192 ${label}`
+              `${strings2(route.source).join(", ")}: ${domains.length ? domains.join(", ") : _("Other traffic")} \u2192 ${label}`
             )
           );
         }
@@ -16983,7 +17246,7 @@ var gamingPresetsPanel = {
               ].join(", ")
             )
           );
-        for (const conflict of strings(p.conflicts)) {
+        for (const conflict of strings2(p.conflicts)) {
           const description = conflict.startsWith("existing_device_routes:") ? _(
             "An existing device rule may overlap. The selected priority determines which rule takes effect."
           ) + " " + conflict.slice("existing_device_routes:".length) : conflict === "alice_device_enabled" ? _("The selected addresses will be enabled in Alice Mode.") : message(conflict);

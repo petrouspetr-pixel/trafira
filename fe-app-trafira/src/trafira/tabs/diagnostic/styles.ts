@@ -18,7 +18,7 @@ export const styles = `
     align-items: start;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 700px) {
     .fkp_diagnostic-page {
         grid-template-columns: 1fr;
     }
@@ -206,7 +206,6 @@ export const styles = `
 }
 
 .fkp_diagnostic-panel,
-#trafira-profiles,
 #trafira-gaming-presets {
     border: 1px solid var(--background-color-low, lightgray);
     border-radius: 4px;
@@ -231,13 +230,31 @@ export const styles = `
     display: none;
 }
 
+.trafira-profile-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.trafira-profile-controls > input,
+.trafira-profile-controls > select {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.trafira-profile-controls > button {
+    margin: 0;
+}
+
 .trafira-feature-slot p {
     max-width: 90ch;
 }
 
 .fkp_diagnostic-fields {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 16px;
     margin: 12px 0;
 }
@@ -252,7 +269,7 @@ export const styles = `
 .fkp_diagnostic-field > input,
 .fkp_diagnostic-field > select {
     box-sizing: border-box;
-    width: 100%;
+    width: auto;
     min-width: 0;
     max-width: 100%;
 }
@@ -266,7 +283,6 @@ export const styles = `
 
 .fkp_diagnostic-actions > button {
     margin: 0;
-    white-space: normal;
     max-width: 100%;
 }
 
@@ -279,18 +295,37 @@ export const styles = `
     padding: 6px 0;
 }
 
-.fkp_diagnostic-snapshots {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: 12px 24px;
-    margin-top: 12px;
+.trafira-list-copies > p {
+    margin: 0 0 8px;
 }
 
-.fkp_diagnostic-snapshots > div {
-    min-width: 0;
+.trafira-list-copies-table {
+    width: 100%;
+    margin: 8px 0;
+    font-size: inherit;
+}
+
+.trafira-list-copies-table .td {
     overflow-wrap: anywhere;
-    border-top: 1px solid var(--background-color-low, lightgray);
-    padding-top: 10px;
+}
+
+.trafira-list-copies .fkp_diagnostic-actions {
+    margin: 8px 0;
+}
+
+@media (max-width: 600px) {
+    .fkp_diagnostic-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .fkp_diagnostic-actions > button {
+        white-space: normal;
+    }
+
+    .trafira-profile-controls > button {
+        max-width: 100%;
+        white-space: normal;
+    }
 }
 
 .fkp_diagnostic-page p {

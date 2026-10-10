@@ -43,10 +43,20 @@ export const coreVersionsPanel = {
       {
         class: 'cbi-button',
         click: () => {
-          if (canWrite) void picker.unpin().then(() => picker.load());
+          if (canWrite) void picker.unpin();
         },
       },
       _('Unpin version'),
+    ) as HTMLButtonElement;
+    const pinInstalled = E(
+      'button',
+      {
+        class: 'cbi-button',
+        click: () => {
+          if (canWrite) void picker.pin();
+        },
+      },
+      _('Pin installed version'),
     ) as HTMLButtonElement;
     const errors: Record<string, string> = {
       'Restoration failed. Check the service before continuing.': _(
@@ -108,23 +118,32 @@ export const coreVersionsPanel = {
           ),
         );
         select.value = state.selected;
-        const busy = state.stage === 'installing' || loading;
+        const busy =
+          state.stage === 'installing' || state.stage === 'saving' || loading;
         select.disabled = busy || !hasAvailableVersions;
         pin.disabled = !canWrite || busy || !hasAvailableVersions;
         refresh.disabled = busy;
         install.disabled = !canWrite || busy || !state.selected;
         unpin.disabled = !canWrite || busy || !state.pinnedVersion;
+        pinInstalled.disabled =
+          !canWrite ||
+          busy ||
+          !state.currentVersion ||
+          state.currentVersion === 'not-installed' ||
+          !state.currentVariant;
         info.textContent = `${_('Installed version')}: ${state.currentVersion === 'not-installed' ? _('Not installed') : state.currentVersion || '—'} · ${_('Pinned version')}: ${state.pinnedVersion || _('Not pinned')}${state.cachedAt ? ` · ${_('Catalog checked')}: ${new Date(state.cachedAt * 1000).toLocaleString()}` : ''}`;
         message.textContent = [
           state.error
             ? errors[state.error] || _('The sing-box version operation failed.')
             : state.stage === 'installing'
               ? _('Installing in the background. You may close this page.')
-              : state.unavailableReason || (!loading && !hasAvailableVersions)
-                ? _(
-                    'No compatible versions are available for this installation.',
-                  )
-                : '',
+              : state.stage === 'saving'
+                ? _('Saving...')
+                : state.unavailableReason || (!loading && !hasAvailableVersions)
+                  ? _(
+                      'No compatible versions are available for this installation.',
+                    )
+                  : '',
           state.restored ? _('The previous version was restored.') : '',
         ]
           .filter(Boolean)
@@ -134,8 +153,8 @@ export const coreVersionsPanel = {
     );
     select.addEventListener('change', () => picker.select(select.value));
     host.replaceChildren(
-      E('details', { class: 'fkp_updates-page__core-versions' }, [
-        E('summary', {}, _('Sing-box versions')),
+      E('section', { class: 'fkp_updates-page__core-versions' }, [
+        E('h3', {}, _('Sing-box versions')),
         E(
           'p',
           { class: 'fkp_updates-page__core-versions-help' },
@@ -150,11 +169,12 @@ export const coreVersionsPanel = {
         ]),
         E('label', { class: 'fkp_updates-page__core-versions-pin' }, [
           pin,
-          _('Pin selected version'),
+          _('Pin after installation'),
         ]),
         E('div', { class: 'fkp_updates-page__core-versions-buttons' }, [
           refresh,
           install,
+          pinInstalled,
           unpin,
         ]),
         message,

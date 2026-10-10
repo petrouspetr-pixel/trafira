@@ -11,6 +11,7 @@ interface ExecuteShellCommandResponse {
   stdout: string;
   stderr: string;
   code?: number;
+  failure?: 'timeout' | 'permission_denied' | 'rpc';
 }
 
 // Mirror the server read dispatcher for routing only; the dispatcher enforces
@@ -103,16 +104,24 @@ export async function executeShellCommand({
   timeout = COMMAND_TIMEOUT,
 }: ExecuteShellCommandParams): Promise<ExecuteShellCommandResponse> {
   if (readCommand(command, args)) command = '/usr/bin/trafira-read';
+  const action =
+    Object.prototype.hasOwnProperty.call(readCommands, args[0]) ||
+    Object.prototype.hasOwnProperty.call(readConfig, args[0]) ||
+    args[0] === 'clash_api'
+      ? ` ${args[0]}`
+      : '';
   try {
-    return await withTimeout(
-      fs.exec(command, args),
-      timeout,
-      [command, ...args].join(' '),
-    );
+    return await withTimeout(fs.exec(command, args), timeout, command + action);
   } catch (err) {
     const error = err as Error & { code?: unknown };
     const code = typeof error?.code === 'number' ? error.code : 1;
 
-    return { stdout: '', stderr: error?.message, code };
+    const failure =
+      error?.name === 'TimeoutError'
+        ? 'timeout'
+        : error?.name === 'PermissionError'
+          ? 'permission_denied'
+          : 'rpc';
+    return { stdout: '', stderr: error?.message, code, failure };
   }
 }

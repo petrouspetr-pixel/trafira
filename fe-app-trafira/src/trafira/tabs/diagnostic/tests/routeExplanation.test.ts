@@ -82,4 +82,17 @@ describe('route explanation controller', () => {
     ]);
     expect(JSON.stringify(render.mock.calls)).not.toContain('secret');
   });
+  it('distinguishes a render failure from a failed route command', async () => {
+    const render = vi.fn((value) => {
+      if (value) throw new Error('token=secret');
+    });
+    const controller = new RouteExplanationController(
+      async () => report('vpn'),
+      render,
+    );
+    controller.mount();
+    await controller.submit(request);
+    expect(render.mock.lastCall).toEqual([null, 'render_failed', false]);
+    expect(JSON.stringify(render.mock.calls)).not.toContain('secret');
+  });
 });

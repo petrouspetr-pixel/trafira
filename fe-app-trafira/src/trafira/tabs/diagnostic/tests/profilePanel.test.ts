@@ -19,6 +19,101 @@ afterEach(() => {
 });
 
 describe('configuration profiles controller', () => {
+  it('does not claim a previous configuration is absent before availability can be checked', async () => {
+    const render = vi.fn();
+    const controller = new ProfilePanelController(
+      vi
+        .fn()
+        .mockResolvedValue({ success: false, error: 'storage_unavailable' }),
+      render,
+    );
+    controller.mount();
+    expect(render.mock.lastCall?.[0].canRestore).toBeNull();
+    await controller.submit({ action: 'list' });
+    expect(render.mock.lastCall?.[0].canRestore).toBeNull();
+  });
+  it('drops a review when its profile disappears from an otherwise unchanged refreshed list', async () => {
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        applicable: true,
+        digest: 'current',
+        changes: [],
+      })
+      .mockResolvedValueOnce({ success: true, digest: 'current', entries: [] });
+    const render = vi.fn();
+    const controller = new ProfilePanelController(call, render);
+    controller.mount();
+    await controller.submit({ action: 'preview', id: 'p-first' });
+    await controller.submit({ action: 'list' });
+    expect(render.mock.lastCall?.[0].preview).toBeNull();
+  });
+  it('applies only the successful preview belonging to the requested profile', async () => {
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        applicable: true,
+        digest: 'reviewed',
+        changes: [],
+      })
+      .mockResolvedValueOnce({ success: true, running: true, job_id: 'owned' });
+    const controller = new ProfilePanelController(call, vi.fn());
+    controller.mount();
+    await controller.applyReviewed('p-first');
+    expect(call).not.toHaveBeenCalled();
+    await controller.submit({ action: 'preview', id: 'p-first' });
+    await controller.applyReviewed('p-second');
+    expect(call).toHaveBeenCalledTimes(1);
+    await controller.applyReviewed('p-first');
+    expect(call.mock.lastCall?.[0]).toEqual({
+      action: 'apply',
+      id: 'p-first',
+      digest: 'reviewed',
+    });
+  });
+  it('invalidates a reviewed profile when the refreshed saved configuration digest changes', async () => {
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        applicable: true,
+        digest: 'old',
+        changes: [],
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        entries: [{ id: 'p-first', name: 'Home' }],
+        digest: 'new',
+      });
+    const render = vi.fn();
+    const controller = new ProfilePanelController(call, render);
+    controller.mount();
+    await controller.submit({ action: 'preview', id: 'p-first' });
+    await controller.submit({ action: 'list' });
+    await controller.applyReviewed('p-first');
+    expect(call).toHaveBeenCalledTimes(2);
+    expect(render.mock.lastCall?.[0].preview).toBeNull();
+  });
+  it('keeps an unsuccessful validation visible without allowing its profile to be applied', async () => {
+    const call = vi.fn().mockResolvedValue({
+      success: true,
+      applicable: false,
+      digest: 'current',
+      changes: [],
+    });
+    const render = vi.fn();
+    const controller = new ProfilePanelController(call, render);
+    controller.mount();
+    await controller.submit({ action: 'preview', id: 'p-first' });
+    await controller.applyReviewed('p-first');
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(render.mock.lastCall?.[0].preview).toMatchObject({
+      id: 'p-first',
+      applicable: false,
+    });
+  });
   it('does not consume a failure when a status response arrives after unmount', async () => {
     const failed = {
       success: false,

@@ -10,6 +10,7 @@ import {
   reloadAfterConfigurationCommit,
 } from '../../helpers/configurationSync';
 
+const MAX_FILE = 1048576;
 async function command(request: object): Promise<Record<string, unknown>> {
   const result = await executeShellCommand({
     command: '/usr/bin/trafira-config',
@@ -25,6 +26,12 @@ function encode(bytes: Uint8Array) {
 function decode(value: string) {
   return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
 }
+function requireSuccess(result: Record<string, unknown>) {
+  if (result.success !== true)
+    throw new Error(
+      typeof result.error === 'string' ? result.error : 'transfer_failed',
+    );
+}
 let mountId = 0;
 let active: { controller: ProfilePanelController; timer: number } | null = null;
 export const profilesPanel = {
@@ -35,174 +42,220 @@ export const profilesPanel = {
     const generation = mountId;
     let last: ProfileState;
     let transferring = false;
-    const name = E('input', {
+    let preferredSelection = '';
+    const createName = E('input', {
+      id: 'trafira-profile-create-name',
       type: 'text',
       maxLength: 64,
-      placeholder: _('Profile name'),
     }) as HTMLInputElement;
-    const select = E('select', {}) as HTMLSelectElement;
+    const renameName = E('input', {
+      id: 'trafira-profile-rename-name',
+      type: 'text',
+      maxLength: 64,
+    }) as HTMLInputElement;
+    const select = E('select', {
+      id: 'trafira-profile-selected',
+    }) as HTMLSelectElement;
     const file = E('input', {
+      id: 'trafira-profile-import',
       type: 'file',
       accept: '.json,application/json',
     }) as HTMLInputElement;
-    const result = E('div', {});
-    const message = E('p', {});
+    const output = E('div', { role: 'status' });
+    const message = E('p', { role: 'status' });
+    const restoreHint = E('p', { class: 'cbi-value-description' });
     const buttons: HTMLButtonElement[] = [];
-    const writers: HTMLButtonElement[] = [];
-    const needsSelection: HTMLButtonElement[] = [];
-    const needsName: HTMLButtonElement[] = [];
-    let apply: HTMLButtonElement;
-    let restore: HTMLButtonElement;
-    function updateButtons() {
-      const disabled = transferring || last?.busy || last?.running;
-      for (const button of buttons) button.disabled = disabled;
-      for (const button of writers) button.disabled ||= !canWrite;
-      const selected = last?.entries.some(
-        (entry) => entry.id === select.value && !entry.invalid,
-      );
-      for (const button of needsSelection) button.disabled ||= !selected;
-      for (const button of needsName) button.disabled ||= !name.value.trim();
-      apply.disabled =
-        disabled ||
-        !canWrite ||
-        !last?.preview ||
-        last.preview.id !== select.value ||
-        !last.preview.applicable;
-      restore.disabled =
-        disabled || !canWrite || !last?.canRestore || !last?.digest;
-      file.disabled = disabled || !canWrite;
-      select.disabled = disabled || !last?.entries.length;
-      name.disabled = disabled || !canWrite;
-    }
-    async function submit(request: ProfileRequest, refresh = false) {
-      await controller.submit(request);
-      if (refresh && generation === mountId && !last.error)
-        await controller.submit({ action: 'list' });
-    }
-    function button(
-      label: string,
-      click: () => void,
-      writer = false,
-      selection = false,
-      named = false,
-    ) {
+    function button(label: string, click: () => void, writer = false) {
       const element = E(
         'button',
-        { type: 'button', class: 'cbi-button cbi-button-action', click },
+        {
+          type: 'button',
+          class: 'cbi-button cbi-button-action',
+          click: () => {
+            if (element.disabled || (writer && !canWrite)) return;
+            click();
+          },
+        },
         label,
       ) as HTMLButtonElement;
       buttons.push(element);
-      if (writer) writers.push(element);
-      if (selection) needsSelection.push(element);
-      if (named) needsName.push(element);
       return element;
     }
-    const actions = [
-      button(
-        _('Create profile from saved settings'),
-        () => {
-          void submit({ action: 'create', name: name.value }, true);
-        },
-        true,
-        false,
-        true,
-      ),
-      button(
-        _('Rename profile'),
-        () => {
-          void submit(
-            { action: 'rename', id: select.value, name: name.value },
-            true,
-          );
-        },
-        true,
-        true,
-        true,
-      ),
-      button(
-        _('Show differences'),
-        () => {
-          void submit({ action: 'preview', id: select.value });
-        },
-        false,
-        true,
-      ),
-      (apply = button(
-        _('Apply profile'),
-        () => {
-          if (!confirmConfigurationReplacement()) return;
-          void submit({
-            action: 'apply',
-            id: select.value,
-            digest: last.preview?.digest,
-          });
-        },
-        true,
-        true,
-      )),
-      (restore = button(
-        _('Restore previous settings'),
-        () => {
-          if (!confirmConfigurationReplacement()) return;
-          void submit({ action: 'restore', digest: last.digest });
-        },
-        true,
-      )),
-      button(
-        _('Delete profile'),
-        () => {
-          if (
-            window.confirm(
-              _(
-                'Delete the selected saved profile? Current settings will remain unchanged.',
-              ),
-            )
+    function row(label: string, id: string, children: Node[]) {
+      const title = E('label', { class: 'cbi-value-title' }, label);
+      if (id) (title as HTMLLabelElement).htmlFor = id;
+      return E('div', { class: 'cbi-value' }, [
+        title,
+        E('div', { class: 'cbi-value-field' }, [
+          E('div', { class: 'trafira-profile-controls' }, children),
+        ]),
+      ]);
+    }
+    function notify(value: string, error = false) {
+      message.textContent = value;
+      message.className = value
+        ? 'alert-message ' + (error ? 'warning' : 'notice')
+        : '';
+    }
+    function selectedEntry() {
+      return last?.entries.find((entry) => entry.id === select.value);
+    }
+    function updateButtons() {
+      const disabled = !!(transferring || last?.busy || last?.running);
+      for (const b of buttons) b.disabled = disabled;
+      const selected = selectedEntry();
+      const usable = !!selected && !selected.invalid;
+      create.disabled ||=
+        !canWrite || !createName.value.trim() || last?.entries.length >= 8;
+      rename.disabled ||=
+        !canWrite ||
+        !usable ||
+        !renameName.value.trim() ||
+        renameName.value.trim() === selected?.name;
+      remove.disabled ||= !canWrite || !selected;
+      review.disabled ||= !usable;
+      apply.disabled ||=
+        !canWrite ||
+        !usable ||
+        !last?.preview?.applicable ||
+        !last.preview.digest ||
+        last.preview.id !== select.value;
+      restore.disabled ||= !canWrite || !last?.canRestore || !last.digest;
+      exportButton.disabled ||= !canWrite || !usable;
+      const upload = file.files?.[0];
+      importButton.disabled ||=
+        !canWrite || !upload || !upload.size || upload.size > MAX_FILE;
+      file.disabled = disabled || !canWrite;
+      select.disabled = disabled || !last?.entries.length;
+      createName.disabled = disabled || !canWrite;
+      renameName.disabled = disabled || !canWrite || !usable;
+      restoreHint.textContent =
+        last?.canRestore === false
+          ? _('No previous configuration is available to restore.')
+          : '';
+    }
+    async function submit(request: ProfileRequest, refresh = false) {
+      notify('');
+      const accepted = await controller.submit(request);
+      if (!accepted?.success || generation !== mountId) return;
+      if (!refresh) return;
+      preferredSelection =
+        request.action === 'remove' ? '' : accepted.id || select.value;
+      if (request.action === 'create') createName.value = '';
+      await controller.submit({ action: 'list' });
+      if (generation !== mountId || last.error) return;
+      const notices: Record<string, string> = {
+        create: _('Profile created.'),
+        rename: _('Profile renamed.'),
+        remove: _('Profile deleted.'),
+      };
+      if (notices[request.action]) notify(notices[request.action]);
+    }
+    const create = button(
+      _('Create profile from saved settings'),
+      () => {
+        void submit({ action: 'create', name: createName.value.trim() }, true);
+      },
+      true,
+    );
+    const refresh = button(_('Refresh profiles'), () => {
+      void submit({ action: 'list' });
+    });
+    const rename = button(
+      _('Rename profile'),
+      () => {
+        void submit(
+          { action: 'rename', id: select.value, name: renameName.value.trim() },
+          true,
+        );
+      },
+      true,
+    );
+    const review = button(_('Show differences'), () => {
+      void submit({ action: 'preview', id: select.value });
+    });
+    const apply = button(
+      _('Apply profile'),
+      () => {
+        if (!confirmConfigurationReplacement()) return;
+        notify('');
+        void controller.applyReviewed(select.value);
+      },
+      true,
+    );
+    const restore = button(
+      _('Restore previous settings'),
+      () => {
+        if (!confirmConfigurationReplacement()) return;
+        void submit({ action: 'restore', digest: last.digest });
+      },
+      true,
+    );
+    const remove = button(
+      _('Delete profile'),
+      () => {
+        if (
+          window.confirm(
+            _(
+              'Delete the selected saved profile? Current settings will remain unchanged.',
+            ),
           )
-            void submit({ action: 'remove', id: select.value }, true);
-        },
-        true,
-        true,
-      ),
-    ];
+        )
+          void submit({ action: 'remove', id: select.value }, true);
+      },
+      true,
+    );
+
     async function transfer(kind: 'import' | 'export') {
-      if (transferring || last.busy || last.running) return;
+      if (!canWrite || transferring || last.busy || last.running) return;
+      const chosenId = select.value;
       transferring = true;
-      message.textContent = _('Transferring profile');
+      notify(_('Transferring profile'));
       updateButtons();
       let transferId = '';
       try {
         if (kind === 'import') {
           const selected = file.files?.[0];
-          if (!selected || selected.size > 1048576) throw new Error('size');
+          if (!selected || !selected.size || selected.size > MAX_FILE)
+            throw new Error('invalid_file');
           const bytes = new Uint8Array(await selected.arrayBuffer());
+          if (!bytes.length || bytes.length > MAX_FILE)
+            throw new Error('invalid_file');
+          if (generation !== mountId) throw new Error('closed');
           const begin = await command({ action: 'import_begin' });
-          if (!begin.success || typeof begin.id !== 'string')
-            throw new Error('begin');
+          requireSuccess(begin);
+          if (typeof begin.id !== 'string' || !begin.id)
+            throw new Error('transfer_failed');
           transferId = begin.id;
           for (let offset = 0; offset < bytes.length; offset += 12288) {
             if (generation !== mountId) throw new Error('closed');
-            const sent = await command({
-              action: 'import_chunk',
-              id: transferId,
-              offset,
-              data: encode(bytes.slice(offset, offset + 12288)),
-            });
-            if (!sent.success) throw new Error('chunk');
+            requireSuccess(
+              await command({
+                action: 'import_chunk',
+                id: transferId,
+                offset,
+                data: encode(bytes.slice(offset, offset + 12288)),
+              }),
+            );
           }
           if (generation !== mountId) throw new Error('closed');
           const imported = await command({
             action: 'import_finish',
             id: transferId,
           });
-          if (!imported.success) throw new Error('import');
+          requireSuccess(imported);
+          if (generation !== mountId) return;
+          preferredSelection =
+            typeof imported.id === 'string' ? imported.id : chosenId;
+          file.value = '';
           await controller.submit({ action: 'list' });
         } else {
-          const begin = await command({
-            action: 'export_begin',
-            id: select.value,
-          });
-          if (!begin.success || typeof begin.id !== 'string')
-            throw new Error('begin');
+          if (!selectedEntry() || selectedEntry()?.invalid)
+            throw new Error('profile_unavailable');
+          const begin = await command({ action: 'export_begin', id: chosenId });
+          requireSuccess(begin);
+          if (typeof begin.id !== 'string' || !begin.id)
+            throw new Error('transfer_failed');
           transferId = begin.id;
           let offset = 0;
           const chunks: Uint8Array[] = [];
@@ -213,13 +266,14 @@ export const profilesPanel = {
               id: transferId,
               offset,
             });
-            if (!part.success || typeof part.data !== 'string')
-              throw new Error('read');
+            requireSuccess(part);
+            if (typeof part.data !== 'string' || typeof part.done !== 'boolean')
+              throw new Error('transfer_failed');
             const bytes = decode(part.data);
             chunks.push(bytes);
             offset += bytes.length;
-            if (offset > 1048576 || (!bytes.length && !part.done))
-              throw new Error('size');
+            if (offset > MAX_FILE || !bytes.length)
+              throw new Error('transfer_failed');
             if (part.done) break;
           }
           if (generation !== mountId) throw new Error('closed');
@@ -232,19 +286,30 @@ export const profilesPanel = {
           const url = URL.createObjectURL(
             new Blob([bytes], { type: 'application/json' }),
           );
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = 'trafira-profile.json';
-          link.click();
-          URL.revokeObjectURL(url);
+          try {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'trafira-profile.json';
+            link.click();
+          } finally {
+            URL.revokeObjectURL(url);
+          }
         }
-        if (generation === mountId)
-          message.textContent = _('Profile transfer completed');
-      } catch {
-        if (generation === mountId)
-          message.textContent = _(
-            'Profile transfer failed. Select a valid JSON file of up to 1 MiB.',
+        if (generation === mountId && !last.error)
+          notify(_('Profile transfer completed'));
+      } catch (error) {
+        if (generation === mountId) {
+          const code =
+            error instanceof Error ? error.message : 'transfer_failed';
+          notify(
+            code === 'invalid_file'
+              ? _(
+                  'Profile transfer failed. Select a valid JSON file of up to 1 MiB.',
+                )
+              : profileErrorMessage(code),
+            true,
           );
+        }
       } finally {
         if (transferId)
           void command({ action: 'transfer_cancel', id: transferId }).catch(
@@ -254,25 +319,41 @@ export const profilesPanel = {
         if (generation === mountId) updateButtons();
       }
     }
-    actions.push(
-      button(
-        _('Import profile'),
-        () => {
-          void transfer('import');
-        },
-        true,
-      ),
-      button(
-        _('Export profile'),
-        () => {
-          void transfer('export');
-        },
-        true,
-        true,
-      ),
+    const importButton = button(
+      _('Import profile'),
+      () => {
+        void transfer('import');
+      },
+      true,
     );
-    select.addEventListener('change', updateButtons);
-    name.addEventListener('input', updateButtons);
+    const exportButton = button(
+      _('Export profile'),
+      () => {
+        void transfer('export');
+      },
+      true,
+    );
+    select.addEventListener('change', () => {
+      preferredSelection = select.value;
+      renameName.value = selectedEntry()?.name || '';
+      notify('');
+      controller.invalidatePreview();
+      updateButtons();
+    });
+    createName.addEventListener('input', updateButtons);
+    renameName.addEventListener('input', updateButtons);
+    file.addEventListener('change', () => {
+      const selected = file.files?.[0];
+      notify(
+        selected && (!selected.size || selected.size > MAX_FILE)
+          ? _(
+              'Profile transfer failed. Select a valid JSON file of up to 1 MiB.',
+            )
+          : '',
+        !!selected && (!selected.size || selected.size > MAX_FILE),
+      );
+      updateButtons();
+    });
     host.replaceChildren(
       E('h3', {}, _('Configuration profiles')),
       E(
@@ -293,72 +374,61 @@ export const profilesPanel = {
             ),
           ]
         : []),
-      E('div', { class: 'fkp_diagnostic-fields' }, [
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          E('span', {}, _('Profile name')),
-          name,
-        ]),
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          E('span', {}, _('Configuration profiles')),
-          select,
-        ]),
-      ]),
-      E('div', { class: 'fkp_diagnostic-actions' }, [
-        actions[0],
-        actions[2],
-        actions[3],
-        actions[4],
-      ]),
-      E('details', { class: 'fkp_diagnostic-details' }, [
-        E('summary', {}, _('Manage and transfer profiles')),
-        E(
-          'p',
-          {},
-          _('Enter a new profile name above to rename the selected profile.'),
-        ),
-        E('div', { class: 'fkp_diagnostic-actions' }, [
-          actions[1],
-          actions[5],
-          actions[7],
-        ]),
-        E(
-          'p',
-          {},
-          _(
-            'Exported profiles contain passwords and keys. Keep the downloaded file private.',
-          ),
-        ),
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          E('span', {}, _('Import a profile file (JSON, up to 1 MiB)')),
-          file,
-        ]),
-        E('div', { class: 'fkp_diagnostic-actions' }, [actions[6]]),
-      ]),
       message,
-      result,
+      E('h4', {}, _('Create a profile')),
+      row(_('Profile name'), createName.id, [createName, create]),
+      E('h4', {}, _('Selected profile')),
+      row(_('Saved profiles'), select.id, [select, refresh]),
+      row('', '', [review, apply]),
+      output,
+      row(_('New name for selected profile'), renameName.id, [
+        renameName,
+        rename,
+        remove,
+      ]),
+      E('h4', {}, _('Manage and transfer profiles')),
+      row(_('Import a profile file (JSON, up to 1 MiB)'), file.id, [
+        file,
+        importButton,
+      ]),
+      row('', '', [exportButton]),
+      E(
+        'p',
+        { class: 'cbi-section-descr' },
+        _(
+          'Exported profiles contain passwords and keys. Keep the downloaded file private.',
+        ),
+      ),
+      E('h4', {}, _('Previous configuration')),
+      row('', '', [restore]),
+      restoreHint,
     );
     const controller = new ProfilePanelController(command, (state) => {
       if (generation !== mountId) return;
       if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
-        const chosen = select.value;
+        const chosen = preferredSelection || select.value;
         select.replaceChildren(
+          E('option', { value: '' }, _('Select a saved profile')),
           ...state.entries.map((entry) =>
             E(
               'option',
-              {
-                value: entry.id,
-                ...(entry.invalid ? { disabled: true } : {}),
-              },
-              entry.name,
+              { value: entry.id },
+              entry.name +
+                (entry.invalid ? ' (' + _('Invalid profile') + ')' : ''),
             ),
           ),
         );
-        if (state.entries.some((entry) => entry.id === chosen))
-          select.value = chosen;
+        select.value = state.entries.some((entry) => entry.id === chosen)
+          ? chosen
+          : '';
+        renameName.value =
+          state.entries.find((entry) => entry.id === select.value)?.name || '';
+        preferredSelection = '';
       }
       last = state;
       if (state.committed) reloadAfterConfigurationCommit();
-      result.replaceChildren(
+      const preview = state.preview;
+      output.replaceChildren(
         ...(!state.entries.length && !state.busy && !state.error
           ? [
               E(
@@ -374,7 +444,7 @@ export const profilesPanel = {
           ? [
               E(
                 'p',
-                { class: 'alert-message warning', role: 'status' },
+                { class: 'alert-message warning' },
                 profileErrorMessage(state.error),
               ),
             ]
@@ -393,8 +463,20 @@ export const profilesPanel = {
         ...(state.restored
           ? [E('p', {}, _('Previous settings were restored.'))]
           : []),
-        ...(state.preview
+        ...(selectedEntry()?.invalid
           ? [
+              E(
+                'p',
+                { class: 'alert-message warning' },
+                _(
+                  'This saved profile is invalid. Delete it or import a valid file.',
+                ),
+              ),
+            ]
+          : []),
+        ...(preview
+          ? [
+              E('h4', {}, _('Profile differences')),
               E(
                 'p',
                 {},
@@ -402,26 +484,64 @@ export const profilesPanel = {
                   'Only changed section and option names are shown; values are hidden.',
                 ),
               ),
-              ...(!state.preview.applicable
+              ...(!preview.applicable
                 ? [
                     E(
                       'p',
-                      {},
+                      { class: 'alert-message warning' },
                       _(
                         'The profile cannot be used with the current configuration and components.',
                       ),
                     ),
                   ]
                 : []),
-              ...state.preview.changes.map((change) =>
+              ...(preview.changes.length
+                ? [
+                    E('table', { class: 'table cbi-section-table' }, [
+                      E('tr', { class: 'tr table-titles' }, [
+                        E('th', { class: 'th' }, _('Section')),
+                        E('th', { class: 'th' }, _('Option')),
+                        E('th', { class: 'th' }, _('Change')),
+                      ]),
+                      ...preview.changes.map((change) =>
+                        E('tr', { class: 'tr' }, [
+                          E('td', { class: 'td' }, change.section),
+                          E('td', { class: 'td' }, change.option || '—'),
+                          E(
+                            'td',
+                            { class: 'td' },
+                            (
+                              {
+                                added: _('Added'),
+                                removed: _('Removed'),
+                                changed: _('Changed'),
+                              } as Record<string, string>
+                            )[change.change] || _('Changed'),
+                          ),
+                        ]),
+                      ),
+                    ]),
+                  ]
+                : [
+                    E(
+                      'p',
+                      {},
+                      _('This profile matches the saved configuration.'),
+                    ),
+                  ]),
+            ]
+          : !state.error &&
+              !state.running &&
+              selectedEntry() &&
+              !selectedEntry()?.invalid
+            ? [
                 E(
                   'p',
-                  {},
-                  `${change.section}${change.option ? ` / ${change.option}` : ''}: ${{ added: _('Added'), removed: _('Removed'), changed: _('Changed') }[change.change] || _('Changed')}`,
+                  { class: 'cbi-section-descr' },
+                  _('Show differences before applying the selected profile.'),
                 ),
-              ),
-            ]
-          : []),
+              ]
+            : []),
       );
       updateButtons();
     });
@@ -432,7 +552,7 @@ export const profilesPanel = {
     const timer = window.setInterval(() => {
       if (!last.running) return;
       void controller.submit({ action: 'status' }).then(() => {
-        if (!last.running && !last.error)
+        if (generation === mountId && !last.running && !last.error)
           void controller.submit({ action: 'list' });
       });
     }, 2000);

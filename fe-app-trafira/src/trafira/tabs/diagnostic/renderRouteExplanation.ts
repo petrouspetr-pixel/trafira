@@ -3,6 +3,7 @@ import {
   ExplainDecision,
   ExplainReport,
   ExplainRequest,
+  parseRouteExplanationResult,
   RouteExplanationController,
 } from './routeExplanation';
 import { routeError, routeReasons } from './routePresentation';
@@ -13,6 +14,7 @@ async function command<T>(name: string, args: string[] = []): Promise<T> {
     args: [name, ...args],
     timeout: 15000,
   });
+  if (name === 'route_explain') return parseRouteExplanationResult(result) as T;
   if (result.code) throw new Error('Route command failed');
   return JSON.parse(result.stdout) as T;
 }
