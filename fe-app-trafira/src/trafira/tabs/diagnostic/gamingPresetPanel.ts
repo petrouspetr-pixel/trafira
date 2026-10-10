@@ -109,10 +109,12 @@ export class GamingPresetController {
         trackConfigurationCommit(result.job_id, () =>
           this.call({ action: 'status' }),
         );
-      const ownStatus = request.action === 'status' && isTrackedConfigurationCommit(result.job_id);
+      if (!this.active || generation !== this.generation) return;
+      const ownStatus =
+        request.action === 'status' &&
+        isTrackedConfigurationCommit(result.job_id);
       const committed =
         request.action === 'status' && observeConfigurationCommit(result);
-      if (!this.active || generation !== this.generation) return;
       // Profiles and presets share a durable last-job record. A finished job
       // observed before this page's current work must not invalidate its preview.
       // An unfinished recovery remains actionable even after reconnecting.

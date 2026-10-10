@@ -118,10 +118,12 @@ export class ProfilePanelController {
         trackConfigurationCommit(text(result.job_id), () =>
           this.call({ action: 'status' }),
         );
-      const ownStatus = request.action === 'status' && isTrackedConfigurationCommit(result.job_id);
+      if (!this.active || generation !== this.generation) return;
+      const ownStatus =
+        request.action === 'status' &&
+        isTrackedConfigurationCommit(result.job_id);
       const committed =
         request.action === 'status' && observeConfigurationCommit(result);
-      if (!this.active || generation !== this.generation) return;
       if (
         request.action === 'status' &&
         result.running === false &&

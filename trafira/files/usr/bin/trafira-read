@@ -25,7 +25,7 @@ const READ_CLASH = {
     get_proxy_latencies: 2, get_group_latency: 2
 };
 const READ_CONFIG = {
-    profile_action: [ "list", "status", "preview", "export_begin", "export_read" ],
+    profile_action: [ "list", "status", "preview" ],
     core_action: [ "catalog", "status" ],
     gaming_preset_action: [ "catalog", "status", "preview", "preview_remove" ]
 };

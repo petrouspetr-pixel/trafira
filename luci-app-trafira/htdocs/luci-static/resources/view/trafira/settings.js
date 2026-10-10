@@ -708,9 +708,11 @@ function createSettingsContent(section, capabilities) {
   o = section.option(form.DummyValue, "_list_copies");
   o.render = function (sectionId) {
     main.ConfigurationPanels.init("lists", !this.map.readonly);
-    return E("div", { id: this.cbid(sectionId), class: "trafira-feature-slot" }, [
-      E("div", { id: "fkp_diagnostic-page-snapshots" }),
-    ]);
+    return E(
+      "div",
+      { id: this.cbid(sectionId), class: "trafira-feature-slot" },
+      [E("div", { id: "fkp_diagnostic-page-snapshots" })],
+    );
   };
 
   o = section.option(

@@ -20,10 +20,59 @@ const selection = {
   placement: 'before-device-routes',
 };
 describe('gaming preset preview', () => {
+  it('shows an own background failure once on return and preserves the next reviewed preview', async () => {
+    const failed = {
+      success: false,
+      running: false,
+      job_id: 'own-preset',
+      error: 'activation_failed',
+    };
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({ success: true, applicable: true })
+      .mockResolvedValueOnce({
+        success: true,
+        running: true,
+        job_id: 'own-preset',
+      })
+      .mockResolvedValueOnce(failed)
+      .mockResolvedValueOnce(failed)
+      .mockResolvedValueOnce({ success: true, applicable: true })
+      .mockResolvedValueOnce(failed);
+    const first = new GamingPresetController(call, vi.fn());
+    first.mount();
+    await first.preview(selection, 'current');
+    await first.apply();
+    first.unmount();
+    await vi.advanceTimersByTimeAsync(2000);
+    const render = vi.fn();
+    const second = new GamingPresetController(call, render);
+    second.mount();
+    await second.poll();
+    expect(render.mock.lastCall?.[0].error).toBe('activation_failed');
+    await second.preview(selection, 'current');
+    await second.poll();
+    expect(render.mock.lastCall?.[0]).toMatchObject({
+      error: '',
+      preview: { applicable: true },
+    });
+    expect(reload).not.toHaveBeenCalled();
+  });
   it('reports an own failed preset job after mounting a new controller', async () => {
-    const call = vi.fn().mockResolvedValueOnce({ success: true, applicable: true })
-      .mockResolvedValueOnce({ success: true, running: true, job_id: 'own-preset' })
-      .mockResolvedValueOnce({ success: false, running: false, job_id: 'own-preset', error: 'activation_failed' });
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({ success: true, applicable: true })
+      .mockResolvedValueOnce({
+        success: true,
+        running: true,
+        job_id: 'own-preset',
+      })
+      .mockResolvedValueOnce({
+        success: false,
+        running: false,
+        job_id: 'own-preset',
+        error: 'activation_failed',
+      });
     const first = new GamingPresetController(call, vi.fn());
     first.mount();
     await first.preview(selection, 'current');

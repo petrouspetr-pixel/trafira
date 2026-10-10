@@ -112,3 +112,42 @@ it('retries a status transport failure without overlapping requests', async () =
   await vi.advanceTimersByTimeAsync(0);
   expect(reload).toHaveBeenCalledTimes(1);
 });
+
+it('stops polling without guessing a commit when another terminal job permanently replaces its record', async () => {
+  const { trackConfigurationCommit } = await import('../configurationSync');
+  const poll = vi
+    .fn()
+    .mockResolvedValue({ success: true, running: false, job_id: 'other' });
+  trackConfigurationCommit('own', poll);
+  await vi.advanceTimersByTimeAsync(12000);
+  expect(poll).toHaveBeenCalledTimes(3);
+  expect(reload).not.toHaveBeenCalled();
+});
+
+it('does not lose a newer accepted job when an older start response arrives late', async () => {
+  const { trackConfigurationCommit } = await import('../configurationSync');
+  const poll = vi
+    .fn()
+    .mockResolvedValue({ success: true, running: false, job_id: 'newer' });
+  trackConfigurationCommit('newer', poll);
+  trackConfigurationCommit('older', poll);
+  await vi.advanceTimersByTimeAsync(2000);
+  expect(reload).toHaveBeenCalledTimes(1);
+});
+
+it('counts only consecutive mismatches when deciding whether its job record disappeared', async () => {
+  const { trackConfigurationCommit } = await import('../configurationSync');
+  const other = { success: true, running: false, job_id: 'other' };
+  const poll = vi
+    .fn()
+    .mockResolvedValueOnce(other)
+    .mockResolvedValueOnce(other)
+    .mockResolvedValueOnce({ success: true, running: true, job_id: 'own' })
+    .mockResolvedValueOnce(other)
+    .mockResolvedValueOnce(other)
+    .mockResolvedValueOnce({ success: true, running: false, job_id: 'own' });
+  trackConfigurationCommit('own', poll);
+  await vi.advanceTimersByTimeAsync(12000);
+  expect(poll).toHaveBeenCalledTimes(6);
+  expect(reload).toHaveBeenCalledTimes(1);
+});

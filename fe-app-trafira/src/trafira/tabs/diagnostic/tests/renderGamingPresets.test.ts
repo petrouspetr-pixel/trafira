@@ -14,6 +14,7 @@ vi.mock('../../../helpers/configurationSync', () => ({
   reloadAfterConfigurationCommit: vi.fn(),
   observeConfigurationCommit: vi.fn(() => false),
   trackConfigurationCommit: vi.fn(),
+  isTrackedConfigurationCommit: vi.fn(() => false),
 }));
 class Node {
   children: Array<Node | string> = [];

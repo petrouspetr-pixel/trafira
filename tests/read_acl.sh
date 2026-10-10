@@ -41,6 +41,8 @@ for (const args of [
   ['clash_api', 'set_group_proxy', 'group', 'node'], ['clash_api', 'close_all_connections'],
   ['clash_api', 'get_proxy_latencies', '[]', '5000', '/etc/config/trafira'],
   ['profile_action', '{"action":"apply"}'], ['core_action', '{"action":"install"}'],
+  ['profile_action', '{"action":"export_begin","id":"home"}'],
+  ['profile_action', '{"action":"export_read","id":"transfer","offset":0}'],
   ['core_action', '{"action":"unpin"}'], ['gaming_preset_action', '{"action":"remove"}'],
   ['core_action', 'not-json'], ['core_action', '{"action":"catalog"}', 'install']
 ]) {

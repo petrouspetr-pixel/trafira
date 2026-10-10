@@ -29,6 +29,16 @@ describe('RPC command access routing', () => {
       '/usr/bin/trafira-config',
     ],
     ['/etc/init.d/trafira', ['enable'], '/etc/init.d/trafira'],
+    [
+      '/usr/bin/trafira-config',
+      ['profile_action', '{"action":"export_begin","id":"home"}'],
+      '/usr/bin/trafira-config',
+    ],
+    [
+      '/usr/bin/trafira-config',
+      ['profile_action', '{"action":"export_read","id":"transfer","offset":0}'],
+      '/usr/bin/trafira-config',
+    ],
   ])(
     'routes %s %j using the correct RPC permission',
     async (command, args, target) => {

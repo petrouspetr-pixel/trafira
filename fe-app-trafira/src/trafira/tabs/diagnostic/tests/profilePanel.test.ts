@@ -19,9 +19,102 @@ afterEach(() => {
 });
 
 describe('configuration profiles controller', () => {
+  it('does not consume a failure when a status response arrives after unmount', async () => {
+    const failed = {
+      success: false,
+      running: false,
+      job_id: 'own-profile',
+      error: 'candidate_check_failed',
+    };
+    let finish!: (status: object) => void;
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        running: true,
+        job_id: 'own-profile',
+      })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve;
+          }),
+      )
+      .mockResolvedValue(failed);
+    const first = new ProfilePanelController(call, vi.fn());
+    first.mount();
+    await first.submit({ action: 'apply', id: 'profile', digest: 'current' });
+    const pending = first.submit({ action: 'status' });
+    first.unmount();
+    finish(failed);
+    await pending;
+    await vi.advanceTimersByTimeAsync(2000);
+    const render = vi.fn();
+    const second = new ProfilePanelController(call, render);
+    second.mount();
+    await second.submit({ action: 'status' });
+    expect(render.mock.lastCall?.[0].error).toBe(
+      'The profile cannot be used with the current configuration and components.',
+    );
+    expect(reload).not.toHaveBeenCalled();
+  });
+  it('shows an own failure already observed in the background once without erasing a later preview', async () => {
+    const failed = {
+      success: false,
+      running: false,
+      job_id: 'own-profile',
+      error: 'candidate_check_failed',
+    };
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        running: true,
+        job_id: 'own-profile',
+      })
+      .mockResolvedValueOnce(failed)
+      .mockResolvedValueOnce(failed)
+      .mockResolvedValueOnce({
+        success: true,
+        applicable: true,
+        digest: 'current',
+        changes: [],
+      })
+      .mockResolvedValueOnce(failed);
+    const first = new ProfilePanelController(call, vi.fn());
+    first.mount();
+    await first.submit({ action: 'apply', id: 'profile', digest: 'current' });
+    first.unmount();
+    await vi.advanceTimersByTimeAsync(2000);
+    const render = vi.fn();
+    const second = new ProfilePanelController(call, render);
+    second.mount();
+    await second.submit({ action: 'status' });
+    expect(render.mock.lastCall?.[0].error).toBe(
+      'The profile cannot be used with the current configuration and components.',
+    );
+    await second.submit({ action: 'preview', id: 'profile' });
+    await second.submit({ action: 'status' });
+    expect(render.mock.lastCall?.[0]).toMatchObject({
+      error: '',
+      preview: { id: 'profile' },
+    });
+    expect(reload).not.toHaveBeenCalled();
+  });
   it('reports an own failed job when a new controller first observes its completion', async () => {
-    const call = vi.fn().mockResolvedValueOnce({ success: true, running: true, job_id: 'own-profile' })
-      .mockResolvedValueOnce({ success: false, running: false, job_id: 'own-profile', error: 'candidate_check_failed' });
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        running: true,
+        job_id: 'own-profile',
+      })
+      .mockResolvedValueOnce({
+        success: false,
+        running: false,
+        job_id: 'own-profile',
+        error: 'candidate_check_failed',
+      });
     const first = new ProfilePanelController(call, vi.fn());
     first.mount();
     await first.submit({ action: 'apply', id: 'profile', digest: 'current' });
@@ -30,7 +123,9 @@ describe('configuration profiles controller', () => {
     const second = new ProfilePanelController(call, render);
     second.mount();
     await second.submit({ action: 'status' });
-    expect(render.mock.lastCall?.[0].error).toBe('The profile cannot be used with the current configuration and components.');
+    expect(render.mock.lastCall?.[0].error).toBe(
+      'The profile cannot be used with the current configuration and components.',
+    );
     expect(reload).not.toHaveBeenCalled();
   });
   it('keeps the own apply job across unmount and a new controller instance', async () => {

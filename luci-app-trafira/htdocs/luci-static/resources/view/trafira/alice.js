@@ -148,9 +148,11 @@ function createAliceContent(section) {
   option = section.option(form.DummyValue, "_gaming_presets");
   option.render = function (sectionId) {
     main.ConfigurationPanels.init("gaming", !this.map.readonly);
-    return E("div", { id: this.cbid(sectionId), class: "trafira-feature-slot" }, [
-      E("div", { id: "trafira-gaming-presets" }),
-    ]);
+    return E(
+      "div",
+      { id: this.cbid(sectionId), class: "trafira-feature-slot" },
+      [E("div", { id: "trafira-gaming-presets" })],
+    );
   };
 }
 

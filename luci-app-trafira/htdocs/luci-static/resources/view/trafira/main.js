@@ -1323,7 +1323,7 @@ var readClash = {
   get_group_latency: 2
 };
 var readConfig = {
-  profile_action: ["list", "status", "preview", "export_begin", "export_read"],
+  profile_action: ["list", "status", "preview"],
   core_action: ["catalog", "status"],
   gaming_preset_action: ["catalog", "status", "preview", "preview_remove"]
 };
@@ -16088,32 +16088,56 @@ function reloadAfterConfigurationCommit() {
   reloadRequested = true;
   window.location.reload();
 }
-var pendingCommit = null;
+var pendingCommits = /* @__PURE__ */ new Map();
+var unreportedFailures = /* @__PURE__ */ new Set();
 function trackConfigurationCommit(jobId, poll) {
-  if (!jobId || pendingCommit?.jobId === jobId) return;
-  if (pendingCommit?.timer) clearTimeout(pendingCommit.timer);
-  const tracked = { jobId, poll };
-  pendingCommit = tracked;
+  if (!jobId || pendingCommits.has(jobId)) return;
+  const tracked = { jobId, poll, unmatchedStatuses: 0 };
+  pendingCommits.set(jobId, tracked);
   schedule(tracked);
 }
+function isTrackedConfigurationCommit(jobId) {
+  return typeof jobId === "string" && (pendingCommits.has(jobId) || unreportedFailures.has(jobId));
+}
 function observeConfigurationCommit(status2) {
-  if (!pendingCommit || status2.job_id !== pendingCommit.jobId || status2.running !== false)
-    return false;
-  if (pendingCommit.timer) clearTimeout(pendingCommit.timer);
-  pendingCommit = null;
+  return observeStatus(status2, true);
+}
+function observeStatus(status2, reportFailure) {
+  if (reportFailure && typeof status2.job_id === "string")
+    unreportedFailures.delete(status2.job_id);
+  if (status2.running === false && typeof status2.success === "boolean") {
+    for (const jobId of unreportedFailures)
+      if (jobId !== status2.job_id) unreportedFailures.delete(jobId);
+  }
+  const tracked = typeof status2.job_id === "string" ? pendingCommits.get(status2.job_id) : void 0;
+  for (const other of pendingCommits.values()) {
+    if (other === tracked) other.unmatchedStatuses = 0;
+    else if (status2.running === false && typeof status2.success === "boolean") {
+      if (++other.unmatchedStatuses >= 3) forget(other);
+    }
+  }
+  if (!tracked || status2.running !== false) return false;
+  forget(tracked);
   const committed = status2.success === true && !status2.rollback_error && !status2.recovery_pending;
   if (committed) reloadAfterConfigurationCommit();
+  else if (!reportFailure && (status2.success === false || status2.rollback_error || status2.recovery_pending))
+    unreportedFailures.add(tracked.jobId);
   return committed;
+}
+function forget(tracked) {
+  if (tracked.timer) clearTimeout(tracked.timer);
+  pendingCommits.delete(tracked.jobId);
 }
 function schedule(tracked) {
   tracked.timer = setTimeout(async () => {
     tracked.timer = void 0;
     try {
       const status2 = await tracked.poll();
-      if (pendingCommit === tracked) observeConfigurationCommit(status2);
+      if (pendingCommits.get(tracked.jobId) === tracked)
+        observeStatus(status2, false);
     } catch {
     } finally {
-      if (pendingCommit === tracked) schedule(tracked);
+      if (pendingCommits.get(tracked.jobId) === tracked) schedule(tracked);
     }
   }, 2e3);
 }
@@ -16202,9 +16226,10 @@ var ProfilePanelController = class {
           text2(result.job_id),
           () => this.call({ action: "status" })
         );
-      const committed = request.action === "status" && observeConfigurationCommit(result);
       if (!this.active || generation3 !== this.generation) return;
-      if (request.action === "status" && result.running === false && !this.state.running && !committed && !result.recovery_pending)
+      const ownStatus = request.action === "status" && isTrackedConfigurationCommit(result.job_id);
+      const committed = request.action === "status" && observeConfigurationCommit(result);
+      if (request.action === "status" && result.running === false && !this.state.running && !ownStatus && !result.recovery_pending)
         return;
       if (committed) this.state = { ...this.state, committed: true };
       if (typeof result.running === "boolean")
@@ -16749,9 +16774,10 @@ var GamingPresetController = class {
           result.job_id,
           () => this.call({ action: "status" })
         );
-      const committed = request.action === "status" && observeConfigurationCommit(result);
       if (!this.active || generation3 !== this.generation) return;
-      if (request.action === "status" && result.running === false && !this.state.running && !committed && !result.recovery_pending)
+      const ownStatus = request.action === "status" && isTrackedConfigurationCommit(result.job_id);
+      const committed = request.action === "status" && observeConfigurationCommit(result);
+      if (request.action === "status" && result.running === false && !this.state.running && !ownStatus && !result.recovery_pending)
         return;
       if (committed) this.state.committed = true;
       if (typeof result.running === "boolean")

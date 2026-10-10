@@ -65,7 +65,7 @@ const readClash: Record<string, number> = {
   get_group_latency: 2,
 };
 const readConfig: Record<string, string[]> = {
-  profile_action: ['list', 'status', 'preview', 'export_begin', 'export_read'],
+  profile_action: ['list', 'status', 'preview'],
   core_action: ['catalog', 'status'],
   gaming_preset_action: ['catalog', 'status', 'preview', 'preview_remove'],
 };
