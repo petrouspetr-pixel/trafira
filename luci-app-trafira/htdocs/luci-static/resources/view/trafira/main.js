@@ -12091,8 +12091,7 @@ var styles4 = `
     min-width: 0;
 }
 
-.fkp_diagnostic-panel,
-#trafira-gaming-presets {
+.fkp_diagnostic-panel {
     border: 1px solid var(--background-color-low, lightgray);
     border-radius: 4px;
     padding: 16px;
@@ -12100,23 +12099,16 @@ var styles4 = `
     overflow-wrap: anywhere;
 }
 
-.fkp_diagnostic-panel h3,
-#trafira-profiles > h3,
-#trafira-gaming-presets > h3 {
+.fkp_diagnostic-panel h3 {
     margin-top: 0;
 }
 
 .trafira-feature-slot {
-    margin: 16px 0;
     width: 100%;
     min-width: 0;
 }
 
-#cbi-${TRAFIRA_UCI_PACKAGE}-profiles > h3 {
-    display: none;
-}
-
-.trafira-profile-controls {
+.trafira-form-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -12124,18 +12116,18 @@ var styles4 = `
     min-width: 0;
 }
 
-.trafira-profile-controls > input,
-.trafira-profile-controls > select {
+.trafira-form-controls > input,
+.trafira-form-controls > select {
     max-width: 100%;
     box-sizing: border-box;
 }
 
-.trafira-profile-controls > button {
-    margin: 0;
+.trafira-form-controls > select {
+    width: auto;
 }
 
-.trafira-feature-slot p {
-    max-width: 90ch;
+.trafira-form-controls > button {
+    margin: 0;
 }
 
 .fkp_diagnostic-fields {
@@ -12212,7 +12204,7 @@ var styles4 = `
         white-space: normal;
     }
 
-    .trafira-profile-controls > button {
+    .trafira-form-controls > button {
         max-width: 100%;
         white-space: normal;
     }
@@ -16271,6 +16263,18 @@ var snapshots = {
   prepare: () => canWrite ? controller2.prepare() : Promise.resolve()
 };
 
+// src/trafira/helpers/renderConfigurationRow.ts
+function renderConfigurationRow(label, id, children) {
+  const title = E("label", { class: "cbi-value-title" }, label);
+  if (id) title.htmlFor = id;
+  return E("div", { class: "cbi-value" }, [
+    title,
+    E("div", { class: "cbi-value-field" }, [
+      E("div", { class: "trafira-form-controls" }, children)
+    ])
+  ]);
+}
+
 // src/trafira/helpers/configurationSync.ts
 function confirmConfigurationReplacement() {
   return window.confirm(
@@ -16583,6 +16587,8 @@ var profilesPanel = {
     const output = E("div", { role: "status" });
     const message2 = E("p", { role: "status" });
     const restoreHint = E("p", { class: "cbi-value-description" });
+    const outputRow = renderConfigurationRow("", "", [output]);
+    const restoreHintRow = renderConfigurationRow("", "", [restoreHint]);
     const buttons = [];
     function button(label, click, writer = false) {
       const element = E(
@@ -16599,16 +16605,6 @@ var profilesPanel = {
       );
       buttons.push(element);
       return element;
-    }
-    function row(label, id, children) {
-      const title = E("label", { class: "cbi-value-title" }, label);
-      if (id) title.htmlFor = id;
-      return E("div", { class: "cbi-value" }, [
-        title,
-        E("div", { class: "cbi-value-field" }, [
-          E("div", { class: "trafira-profile-controls" }, children)
-        ])
-      ]);
     }
     function notify(value, error = false) {
       message2.textContent = value;
@@ -16636,6 +16632,7 @@ var profilesPanel = {
       createName.disabled = disabled || !canWrite2;
       renameName.disabled = disabled || !canWrite2 || !usable;
       restoreHint.textContent = last?.canRestore === false ? _("No previous configuration is available to restore.") : "";
+      restoreHintRow.className = "cbi-value" + (restoreHint.textContent ? "" : " hidden");
     }
     async function submit(request, refresh2 = false) {
       notify("");
@@ -16848,10 +16845,9 @@ var profilesPanel = {
       updateButtons();
     });
     host.replaceChildren(
-      E("h3", {}, _("Configuration profiles")),
       E(
         "p",
-        {},
+        { class: "cbi-section-descr" },
         _(
           "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile."
         )
@@ -16867,32 +16863,34 @@ var profilesPanel = {
       ] : [],
       message2,
       E("h4", {}, _("Create a profile")),
-      row(_("Profile name"), createName.id, [createName, create]),
+      renderConfigurationRow(_("Profile name"), createName.id, [createName, create]),
       E("h4", {}, _("Selected profile")),
-      row(_("Saved profiles"), select.id, [select, refresh]),
-      row("", "", [review, apply]),
-      output,
-      row(_("New name for selected profile"), renameName.id, [
+      renderConfigurationRow(_("Saved profiles"), select.id, [select, refresh]),
+      renderConfigurationRow("", "", [review, apply]),
+      outputRow,
+      renderConfigurationRow(_("New name for selected profile"), renameName.id, [
         renameName,
         rename,
         remove
       ]),
       E("h4", {}, _("Manage and transfer profiles")),
-      row(_("Import a profile file (JSON, up to 1 MiB)"), file.id, [
+      renderConfigurationRow(_("Import a profile file (JSON, up to 1 MiB)"), file.id, [
         file,
         importButton
       ]),
-      row("", "", [exportButton]),
-      E(
-        "p",
-        { class: "cbi-section-descr" },
-        _(
-          "Exported profiles contain passwords and keys. Keep the downloaded file private."
+      renderConfigurationRow("", "", [exportButton]),
+      renderConfigurationRow("", "", [
+        E(
+          "p",
+          { class: "cbi-value-description" },
+          _(
+            "Exported profiles contain passwords and keys. Keep the downloaded file private."
+          )
         )
-      ),
+      ]),
       E("h4", {}, _("Previous configuration")),
-      row("", "", [restore]),
-      restoreHint
+      renderConfigurationRow("", "", [restore]),
+      restoreHintRow
     );
     const controller3 = new ProfilePanelController(command3, (state) => {
       if (generation3 !== mountId2) return;
@@ -16978,11 +16976,19 @@ var profilesPanel = {
               ]),
               ...preview.changes.map(
                 (change) => E("tr", { class: "tr" }, [
-                  E("td", { class: "td" }, change.section),
-                  E("td", { class: "td" }, change.option || "\u2014"),
                   E(
                     "td",
-                    { class: "td" },
+                    { class: "td", "data-title": _("Section") },
+                    change.section
+                  ),
+                  E(
+                    "td",
+                    { class: "td", "data-title": _("Option") },
+                    change.option || "\u2014"
+                  ),
+                  E(
+                    "td",
+                    { class: "td", "data-title": _("Change") },
                     {
                       added: _("Added"),
                       removed: _("Removed"),
@@ -17007,6 +17013,7 @@ var profilesPanel = {
           )
         ] : []
       );
+      outputRow.className = "cbi-value" + (output.children.length ? "" : " hidden");
       updateButtons();
     });
     controller3.mount();
@@ -17204,8 +17211,10 @@ var gamingPresetsPanel = {
     let observedRunning = false;
     let loading2 = false;
     let confirming = false;
-    const platform = E("select", {}), device = E("select", {}), proxy = E("select", {});
-    const placement = E("select", {}, [
+    const platform = E("select", {
+      id: "trafira-game-platform"
+    }), device = E("select", { id: "trafira-game-device" }), proxy = E("select", { id: "trafira-game-proxy" });
+    const placement = E("select", { id: "trafira-game-priority" }, [
       E("option", { value: "" }, _("Choose rule priority")),
       E(
         "option",
@@ -17218,8 +17227,11 @@ var gamingPresetsPanel = {
         _("After existing device rules")
       )
     ]);
-    const addresses = E("div", {}), output = E("div", {}), status2 = E("p", {}), existing = E("div", {});
+    const addresses = E("div", { class: "trafira-form-controls" }), output = E("div", {}), status2 = E("p", {}), existing = E("div", {});
     const hint = E("p", { role: "status" });
+    const addressRow = renderConfigurationRow(_("Device IP addresses"), "", [addresses]);
+    const hintRow = renderConfigurationRow("", "", [hint]);
+    const resultRow = renderConfigurationRow("", "", [E("div", {}, [status2, output, existing])]);
     const enable = E("input", { type: "checkbox" }), replace = E("input", { type: "checkbox" });
     let apply;
     let preview;
@@ -17248,6 +17260,9 @@ var gamingPresetsPanel = {
       ) + (!catalog.proxies.length ? " " + _("No enabled connection rules. Add a connection first.") : "") : !catalog.proxies.length ? _("No enabled connection rules. Add a connection first.") : !catalog.presets.length ? _("No gaming presets are available.") : ready ? "" : _(
         "Choose a platform, device addresses, connection and rule priority before previewing."
       );
+      addressRow.className = "cbi-value" + (addresses.querySelectorAll("input").length ? "" : " hidden");
+      hintRow.className = "cbi-value" + (hint.textContent ? "" : " hidden");
+      resultRow.className = "cbi-value" + (status2.textContent || output.children.length || existing.children.length ? "" : " hidden");
     }
     const controller3 = new GamingPresetController(command4, (next) => {
       if (mine !== generation2) return;
@@ -17356,7 +17371,7 @@ var gamingPresetsPanel = {
         });
         input.addEventListener("change", () => controller3.invalidate());
         addresses.append(
-          E("label", { style: "display:block" }, [input, " " + address])
+          E("label", { class: "cbi-checkbox" }, [input, " " + address])
         );
       }
       update();
@@ -17448,38 +17463,29 @@ var gamingPresetsPanel = {
       E("h3", {}, _("Gaming presets")),
       E(
         "p",
-        {},
+        { class: "cbi-section-descr" },
         _(
           "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic."
         )
       ),
       E(
         "p",
-        {},
+        { class: "cbi-section-descr" },
         _(
           "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
         )
       ),
-      E("div", { class: "fkp_diagnostic-fields" }, [
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Gaming presets")),
-          platform
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Select a known device")),
-          device
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Select a connection")),
-          proxy
-        ]),
-        E("label", { class: "fkp_diagnostic-field" }, [
-          E("span", {}, _("Choose rule priority")),
-          placement
-        ])
+      renderConfigurationRow(_("Gaming presets"), "trafira-game-platform", [platform]),
+      renderConfigurationRow(_("Select a known device"), "trafira-game-device", [
+        device,
+        button(_("Refresh devices"), () => {
+          void refresh();
+        })
       ]),
-      addresses,
-      hint,
+      addressRow,
+      renderConfigurationRow(_("Select a connection"), "trafira-game-proxy", [proxy]),
+      renderConfigurationRow(_("Choose rule priority"), "trafira-game-priority", [placement]),
+      hintRow,
       ...!canWrite2 ? [
         E(
           "p",
@@ -17489,18 +17495,19 @@ var gamingPresetsPanel = {
           )
         )
       ] : [],
-      E("label", { style: "display:block" }, [
-        enable,
-        " " + _("Enable only these addresses in Alice Mode if required")
+      renderConfigurationRow("", "", [
+        E("label", { class: "cbi-checkbox" }, [
+          enable,
+          " " + _("Enable only these addresses in Alice Mode if required")
+        ])
       ]),
-      E("label", { style: "display:block" }, [
-        replace,
-        " " + _("Replace my edits to this preset after preview")
+      renderConfigurationRow("", "", [
+        E("label", { class: "cbi-checkbox" }, [
+          replace,
+          " " + _("Replace my edits to this preset after preview")
+        ])
       ]),
-      E("div", { class: "fkp_diagnostic-actions" }, [
-        button(_("Refresh devices"), () => {
-          void refresh();
-        }),
+      renderConfigurationRow("", "", [
         preview = button(_("Preview gaming rules"), () => {
           if (!catalog || preview.disabled) return;
           void controller3.preview(
@@ -17527,9 +17534,7 @@ var gamingPresetsPanel = {
           if (accepted) void controller3.apply();
         })
       ]),
-      status2,
-      output,
-      existing
+      resultRow
     );
     controller3.mount();
     mounted = {

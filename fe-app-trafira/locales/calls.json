@@ -288,7 +288,7 @@
     "call": "Added",
     "key": "Added",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:515"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:519"
     ]
   },
   {
@@ -360,7 +360,7 @@
     "call": "After existing device rules",
     "key": "After existing device rules",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:115"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:118"
     ]
   },
   {
@@ -375,7 +375,7 @@
     "call": "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying.",
     "key": "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:34"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:35"
     ]
   },
   {
@@ -523,7 +523,7 @@
     "call": "An existing device rule may overlap. The selected priority determines which rule takes effect.",
     "key": "An existing device rule may overlap. The selected priority determines which rule takes effect.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:231"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:248"
     ]
   },
   {
@@ -538,7 +538,7 @@
     "key": "Another configuration operation is already running.",
     "places": [
       "src/trafira/tabs/diagnostic/profilePanel.ts:61",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:50"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:51"
     ]
   },
   {
@@ -552,14 +552,14 @@
     "call": "Apply profile",
     "key": "Apply profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:178"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:173"
     ]
   },
   {
     "call": "Apply reviewed changes",
     "key": "Apply reviewed changes",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:470"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:479"
     ]
   },
   {
@@ -580,14 +580,14 @@
     "call": "Applying configuration. You can reconnect to this page.",
     "key": "Applying configuration. You can reconnect to this page.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:181"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:198"
     ]
   },
   {
     "call": "Applying settings in the background. You can close this page.",
     "key": "Applying settings in the background. You can close this page.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:457"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:453"
     ]
   },
   {
@@ -695,7 +695,7 @@
     "call": "Before existing device rules",
     "key": "Before existing device rules",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:110"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:113"
     ]
   },
   {
@@ -973,22 +973,23 @@
     "call": "Change",
     "key": "Change",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:504"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:500",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:516"
     ]
   },
   {
     "call": "Changed",
     "key": "Changed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:517",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:519"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:521",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:523"
     ]
   },
   {
     "call": "Changed rules",
     "key": "Changed rules",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:220"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:237"
     ]
   },
   {
@@ -1088,14 +1089,14 @@
     "call": "Choose a platform",
     "key": "Choose a platform",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:319"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:336"
     ]
   },
   {
     "call": "Choose a platform, device addresses, connection and rule priority before previewing.",
     "key": "Choose a platform, device addresses, connection and rule priority before previewing.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:169"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:175"
     ]
   },
   {
@@ -1109,8 +1110,8 @@
     "call": "Choose rule priority",
     "key": "Choose rule priority",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:106",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:425"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:109",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:437"
     ]
   },
   {
@@ -1267,7 +1268,7 @@
     "key": "Configuration changed. Review the differences again.",
     "places": [
       "src/trafira/tabs/diagnostic/profilePanel.ts:58",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:33"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:34"
     ]
   },
   {
@@ -1278,17 +1279,10 @@
     ]
   },
   {
-    "call": "Configuration profiles",
-    "key": "Configuration profiles",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:358"
-    ]
-  },
-  {
     "call": "Configuration validation passed. Review the changes below.",
     "key": "Configuration validation passed. Review the changes below.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:191"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:208"
     ]
   },
   {
@@ -1489,14 +1483,14 @@
     "call": "Create a profile",
     "key": "Create a profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:378"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:372"
     ]
   },
   {
     "call": "Create profile from saved settings",
     "key": "Create profile from saved settings",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:155"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:150"
     ]
   },
   {
@@ -1587,21 +1581,21 @@
     "call": "Delete profile",
     "key": "Delete profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:195"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:190"
     ]
   },
   {
     "call": "Delete the edited preset rules? The next step shows the changes.",
     "key": "Delete the edited preset rules? The next step shows the changes.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:366"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:383"
     ]
   },
   {
     "call": "Delete the selected saved profile? Current settings will remain unchanged.",
     "key": "Delete the selected saved profile? Current settings will remain unchanged.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:199"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:194"
     ]
   },
   {
@@ -1654,6 +1648,13 @@
     "places": [
       "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179",
       "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:267"
+    ]
+  },
+  {
+    "call": "Device IP addresses",
+    "key": "Device IP addresses",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:126"
     ]
   },
   {
@@ -1741,7 +1742,7 @@
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2837",
       "src/trafira/tabs/dashboard/renderFailurePolicies.ts:17",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:203",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:220",
       "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:24"
     ]
   },
@@ -2210,7 +2211,7 @@
     "call": "Edited",
     "key": "Edited",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:350"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:367"
     ]
   },
   {
@@ -2281,7 +2282,7 @@
     "call": "Enable only these addresses in Alice Mode if required",
     "key": "Enable only these addresses in Alice Mode if required",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:444"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:453"
     ]
   },
   {
@@ -2538,14 +2539,14 @@
     "call": "Export profile",
     "key": "Export profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:330"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:325"
     ]
   },
   {
     "call": "Exported profiles contain passwords and keys. Keep the downloaded file private.",
     "key": "Exported profiles contain passwords and keys. Keep the downloaded file private.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:398"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:393"
     ]
   },
   {
@@ -2716,7 +2717,7 @@
     "call": "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.",
     "key": "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:199",
       "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:251"
     ]
   },
@@ -2759,8 +2760,8 @@
     "call": "Gaming presets",
     "key": "Gaming presets",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:396",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:413"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:413",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:428"
     ]
   },
   {
@@ -3003,14 +3004,14 @@
     "call": "Import a profile file (JSON, up to 1 MiB)",
     "key": "Import a profile file (JSON, up to 1 MiB)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:390"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:384"
     ]
   },
   {
     "call": "Import profile",
     "key": "Import profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:323"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:318"
     ]
   },
   {
@@ -3455,7 +3456,7 @@
     "call": "Invalid profile",
     "key": "Invalid profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:417"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:413"
     ]
   },
   {
@@ -3734,7 +3735,7 @@
     "call": "Keep as ordinary rules",
     "key": "Keep as ordinary rules",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:354"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:371"
     ]
   },
   {
@@ -3966,7 +3967,7 @@
     "call": "Manage and transfer profiles",
     "key": "Manage and transfer profiles",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:389"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:383"
     ]
   },
   {
@@ -4159,7 +4160,7 @@
     "call": "New name for selected profile",
     "key": "New name for selected profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:384"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:378"
     ]
   },
   {
@@ -4276,8 +4277,8 @@
     "call": "No enabled connection rules. Add a connection first.",
     "key": "No enabled connection rules. Add a connection first.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:161",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:164"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:167",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:170"
     ]
   },
   {
@@ -4291,14 +4292,14 @@
     "call": "No gaming presets are available.",
     "key": "No gaming presets are available.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:166"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:172"
     ]
   },
   {
     "call": "No known devices. Connect the device to the router and refresh the list.",
     "key": "No known devices. Connect the device to the router and refresh the list.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:157"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:163"
     ]
   },
   {
@@ -4312,7 +4313,7 @@
     "call": "No previous configuration is available to restore.",
     "key": "No previous configuration is available to restore.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:134"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:127"
     ]
   },
   {
@@ -4354,7 +4355,7 @@
     "call": "No saved profiles yet. Enter a name and create a profile from the saved configuration.",
     "key": "No saved profiles yet. Enter a name and create a profile from the saved configuration.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:437"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:433"
     ]
   },
   {
@@ -4505,7 +4506,7 @@
     "call": "Only changed section and option names are shown; values are hidden.",
     "key": "Only changed section and option names are shown; values are hidden.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:483"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:479"
     ]
   },
   {
@@ -4608,7 +4609,8 @@
     "call": "Option",
     "key": "Option",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:503"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:499",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:511"
     ]
   },
   {
@@ -4644,7 +4646,7 @@
     "call": "Other traffic",
     "key": "Other traffic",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:210"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:227"
     ]
   },
   {
@@ -4858,7 +4860,7 @@
     "call": "Preview deletion",
     "key": "Preview deletion",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:362"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:379"
     ]
   },
   {
@@ -4879,7 +4881,7 @@
     "call": "Preview gaming rules",
     "key": "Preview gaming rules",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:454"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:463"
     ]
   },
   {
@@ -4921,14 +4923,14 @@
     "call": "Previous configuration",
     "key": "Previous configuration",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:402"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:398"
     ]
   },
   {
     "call": "Previous settings were restored.",
     "key": "Previous settings were restored.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:464"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:460"
     ]
   },
   {
@@ -4989,50 +4991,50 @@
     "call": "Profile created.",
     "key": "Profile created.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:148"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:143"
     ]
   },
   {
     "call": "Profile deleted.",
     "key": "Profile deleted.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:150"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:145"
     ]
   },
   {
     "call": "Profile differences",
     "key": "Profile differences",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:479"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:475"
     ]
   },
   {
     "call": "Profile name",
     "key": "Profile name",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:379"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:373"
     ]
   },
   {
     "call": "Profile renamed.",
     "key": "Profile renamed.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:149"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:144"
     ]
   },
   {
     "call": "Profile transfer completed",
     "key": "Profile transfer completed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:299"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:294"
     ]
   },
   {
     "call": "Profile transfer failed. Select a valid JSON file of up to 1 MiB.",
     "key": "Profile transfer failed. Select a valid JSON file of up to 1 MiB.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:306",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:349"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:301",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:344"
     ]
   },
   {
@@ -5078,14 +5080,14 @@
     "call": "Read-only access: you can preview rules but cannot apply changes.",
     "key": "Read-only access: you can preview rules but cannot apply changes.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:436"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:444"
     ]
   },
   {
     "call": "Read-only access. Configuration changes require write permission.",
     "key": "Read-only access. Configuration changes require write permission.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:371"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:365"
     ]
   },
   {
@@ -5093,15 +5095,15 @@
     "key": "Real destination IP (optional)",
     "places": [
       "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:193",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:196",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:246"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:195",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245"
     ]
   },
   {
     "call": "Real destination IP (required for the router)",
     "key": "Real destination IP (required for the router)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:244"
     ]
   },
   {
@@ -5178,14 +5180,14 @@
     "call": "Refresh devices",
     "key": "Refresh devices",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:451"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:431"
     ]
   },
   {
     "call": "Refresh profiles",
     "key": "Refresh profiles",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:161"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:156"
     ]
   },
   {
@@ -5241,21 +5243,21 @@
     "call": "Removed",
     "key": "Removed",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:516"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:520"
     ]
   },
   {
     "call": "Rename profile",
     "key": "Rename profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:165"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:160"
     ]
   },
   {
     "call": "Replace my edits to this preset after preview",
     "key": "Replace my edits to this preset after preview",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:448"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:459"
     ]
   },
   {
@@ -5346,16 +5348,16 @@
     "call": "Restoration failed. Check the service before continuing.",
     "key": "Restoration failed. Check the service before continuing.",
     "places": [
+      "src/trafira/tabs/updates/renderCoreVersions.ts:62",
       "src/trafira/tabs/diagnostic/profilePanel.ts:77",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:51",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:62"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:52"
     ]
   },
   {
     "call": "Restore previous settings",
     "key": "Restore previous settings",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:187"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:182"
     ]
   },
   {
@@ -5590,7 +5592,7 @@
     "call": "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile.",
     "key": "Save up to eight configuration profiles and switch between them. Apply or save form changes before creating a profile.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:362"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:356"
     ]
   },
   {
@@ -5604,7 +5606,7 @@
     "call": "Saved profiles",
     "key": "Saved profiles",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:381"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:375"
     ]
   },
   {
@@ -5648,7 +5650,8 @@
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:397",
       "src/trafira/tabs/dashboard/renderFailurePolicies.ts:51",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:502"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:498",
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:506"
     ]
   },
   {
@@ -5684,8 +5687,8 @@
     "call": "Select a connection",
     "key": "Select a connection",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:335",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:421"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:352",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:436"
     ]
   },
   {
@@ -5699,8 +5702,8 @@
     "call": "Select a known device",
     "key": "Select a known device",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:325",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:417"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:342",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:429"
     ]
   },
   {
@@ -5721,7 +5724,7 @@
     "call": "Select a saved profile",
     "key": "Select a saved profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:411"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:407"
     ]
   },
   {
@@ -5758,7 +5761,7 @@
     "call": "Select an enabled connection rule.",
     "key": "Select an enabled connection rule.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:46"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:47"
     ]
   },
   {
@@ -5800,7 +5803,7 @@
     "call": "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened.",
     "key": "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:407"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:424"
     ]
   },
   {
@@ -5879,7 +5882,7 @@
     "call": "Selected profile",
     "key": "Selected profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:380"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:374"
     ]
   },
   {
@@ -6025,14 +6028,14 @@
     "call": "Show differences",
     "key": "Show differences",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:174"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:169"
     ]
   },
   {
     "call": "Show differences before applying the selected profile.",
     "key": "Show differences before applying the selected profile.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:541"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:545"
     ]
   },
   {
@@ -6243,7 +6246,7 @@
     "call": "Some routes could not be fully verified. Review existing rules and saved list copies.",
     "key": "Some routes could not be fully verified. Review existing rules and saved list copies.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:248"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:265"
     ]
   },
   {
@@ -6271,9 +6274,9 @@
     "call": "Source",
     "key": "Source",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279",
       "src/trafira/tabs/monitoring/initController.ts:831",
-      "src/trafira/tabs/monitoring/initController.ts:881"
+      "src/trafira/tabs/monitoring/initController.ts:881",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279"
     ]
   },
   {
@@ -6429,7 +6432,7 @@
     "call": "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic.",
     "key": "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:400"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:417"
     ]
   },
   {
@@ -6549,14 +6552,14 @@
     "call": "TCP, unknown protocol",
     "key": "TCP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:222"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:221"
     ]
   },
   {
     "call": "Technical details",
     "key": "Technical details",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:256"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:273"
     ]
   },
   {
@@ -6650,8 +6653,8 @@
     "call": "The generated configuration did not pass validation.",
     "key": "The generated configuration did not pass validation.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:47",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:192"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:48",
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:209"
     ]
   },
   {
@@ -6673,7 +6676,7 @@
     "call": "The operation failed. Refresh the page and review the settings.",
     "key": "The operation failed. Refresh the page and review the settings.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:57"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:58"
     ]
   },
   {
@@ -6688,7 +6691,7 @@
     "key": "The profile cannot be used with the current configuration and components.",
     "places": [
       "src/trafira/tabs/diagnostic/profilePanel.ts:68",
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:492"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:488"
     ]
   },
   {
@@ -6765,14 +6768,14 @@
     "call": "The selected address is no longer known. Refresh the device list.",
     "key": "The selected address is no longer known. Refresh the device list.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:43"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:44"
     ]
   },
   {
     "call": "The selected addresses will be enabled in Alice Mode.",
     "key": "The selected addresses will be enabled in Alice Mode.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:237"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:254"
     ]
   },
   {
@@ -6815,14 +6818,14 @@
     "call": "These rules were edited. Confirm replacement or keep them as ordinary rules.",
     "key": "These rules were edited. Confirm replacement or keep them as ordinary rules.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:40"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:41"
     ]
   },
   {
     "call": "This Alice Mode exception also covers other devices. Edit it manually before applying this preset.",
     "key": "This Alice Mode exception also covers other devices. Edit it manually before applying this preset.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:37"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:38"
     ]
   },
   {
@@ -6912,7 +6915,7 @@
     "call": "This profile matches the saved configuration.",
     "key": "This profile matches the saved configuration.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:529"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:533"
     ]
   },
   {
@@ -6926,7 +6929,7 @@
     "call": "This saved profile is invalid. Delete it or import a valid file.",
     "key": "This saved profile is invalid. Delete it or import a valid file.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:471"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:467"
     ]
   },
   {
@@ -7174,7 +7177,7 @@
     "call": "Transferring profile",
     "key": "Transferring profile",
     "places": [
-      "src/trafira/tabs/diagnostic/renderProfiles.ts:213"
+      "src/trafira/tabs/diagnostic/renderProfiles.ts:208"
     ]
   },
   {
@@ -7261,7 +7264,7 @@
     "call": "UDP, unknown protocol",
     "key": "UDP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:223"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:222"
     ]
   },
   {
@@ -7879,7 +7882,7 @@
     "call": "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.",
     "key": "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:207",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:206",
       "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:258"
     ]
   },
