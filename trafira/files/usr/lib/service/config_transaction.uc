@@ -77,6 +77,16 @@ function apply_locked(candidate_path,expected_digest,reason,hooks) {
     let original=hooks.original!=null?hooks.original:read(TARGET,MAX_FILE),candidate=read(candidate_path,MAX_FILE);
     if(type(original)!="string" || length(original)>MAX_FILE)return failure("invalid_original_config");
     if(original==null || candidate==null)return failure("invalid_config_file");
+    // Network/runtime reloads may reapply identical user settings (with only
+    // lifecycle's shutdown hint changed). Keep the user's previous profile in
+    // that case. Explicit profile operations and actual configuration changes
+    // still establish a new restoration point. BACKUP/JOURNAL remain mandatory
+    // below, independently of whether PREVIOUS needs to change.
+    let keep_previous=false;
+    if(reason=="runtime-reload") {
+        let normalized=require("service.applied_config").normalized;
+        keep_previous=normalized(original)==normalized(candidate);
+    }
     if(!hooks.validate(candidate_path))return failure("candidate_check_failed");
     if(read(candidate_path,MAX_FILE)!=candidate)return failure("candidate_changed");
     if(hash(TARGET)!=expected_digest)return failure("conflict");
@@ -98,7 +108,7 @@ function apply_locked(candidate_path,expected_digest,reason,hooks) {
     state.stage="replaced";
     if(!journal(state))return rollback_failure("journal_write_failed",hooks,state.job_id);
     if(service.running && !hooks.activate(service))return rollback_failure("activation_failed",hooks,state.job_id);
-    if(!durable_write(PREVIOUS,original))return rollback_failure("previous_backup_failed",hooks,state.job_id);
+    if(!keep_previous && !durable_write(PREVIOUS,original))return rollback_failure("previous_backup_failed",hooks,state.job_id);
     return finish({success:true,restored:false,job_id:state.job_id});
 }
 function apply(candidate_path,expected_digest,reason,hooks) {
