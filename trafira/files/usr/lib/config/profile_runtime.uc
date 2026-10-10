@@ -53,7 +53,7 @@ function validate(document,directory,path,core){
     let address=fixture.settings.service_listen_address||output(module_args("singbox/runtime.uc",["service-listen-address"]));
     if(!address)return false;
     let mwan3=run(module_args("config/validator.uc",["mwan3-is-active"]))?"1":"0";
-    if(!run(module_args("singbox/generator.uc",["generate-config-fixture",fixture_path,generated,address,mwan3,index(variant,"extended")>=0?"1":"0","",version])))return false;
+    if(!run(module_args("singbox/generator.uc",["generate-config-fixture",fixture_path,generated,address,mwan3,index(variant,"extended")>=0?"1":"0","",version,"check-only"])))return false;
     let config;
     try {config=json(fs.readfile(generated));}catch(e){return false;}
     if(!dependencies(config))return false;

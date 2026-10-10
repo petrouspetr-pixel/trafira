@@ -3108,7 +3108,7 @@ function add_server_routes(config, servers, sections) {
     }
 }
 
-function generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version) {
+function generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version, validation_only) {
     runtime_subscription_tags = {};
     runtime_section_states = {};
     runtime_response_rulesets = {};
@@ -3151,8 +3151,10 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
 
     require("config.router_origin").attach(config, settings, sections);
     apply_ruleset_http_clients(config);
-    let startup_cache = require("singbox.ruleset_cache");
-    startup_cache.apply(config, runtime_sing_box_version);
+    // Candidate checks validate configuration, not startup snapshot contents.
+    // Startup still validates each snapshot before attaching initial_path.
+    if (!validation_only)
+        require("singbox.ruleset_cache").apply(config, runtime_sing_box_version);
     assert_unique_outbound_tags(config);
     let removed = runtime_prune.prune_config(config, runtime_subscription_tags);
     for (let section_name, state in runtime_section_states) {
@@ -3179,11 +3181,11 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
         runtime_generate_unsupported("failed to save private failure-policy baseline");
 }
 
-function generate_config_fixture(fixture_path, output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version) {
+function generate_config_fixture(fixture_path, output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version, validation_only) {
     use_fixture_cursor(fixture_path);
     runtime_subscription.set_section_cache_dir(output_path + ".section-cache");
     runtime_ruleset_folder = output_path + ".rulesets";
-    generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version);
+    generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version, validation_only);
 }
 
 function stdin_length() {
@@ -3299,7 +3301,7 @@ let mode = ARGV[0] || "";
 if (mode == "generate-config")
     generate_config(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5] || "", ARGV[6] || "");
 else if (mode == "generate-config-fixture")
-    generate_config_fixture(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6] || "", ARGV[7] || "");
+    generate_config_fixture(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6] || "", ARGV[7] || "", ARGV[8] == "check-only");
 else if (mode == "stdin-length")
     stdin_length();
 else if (mode == "stdin-contains")
