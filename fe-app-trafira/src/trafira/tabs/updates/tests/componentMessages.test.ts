@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import catalog from '../../../../../locales/trafira.ru.po?raw';
 import {
   componentSuccessMessage,
   componentErrorMessage,
@@ -48,10 +48,6 @@ it('keeps unknown diagnostic details with a localized introduction', () => {
 });
 
 it('uses the shipped Russian catalog for component notifications', () => {
-  const catalog = readFileSync(
-    new URL('../../../../../locales/trafira.ru.po', import.meta.url),
-    'utf8',
-  );
   const translations = Object.fromEntries(
     [...catalog.matchAll(/msgid "([^"\n]+)"\nmsgstr "([^"\n]+)"/g)].map(
       (match) => [match[1], match[2]],
