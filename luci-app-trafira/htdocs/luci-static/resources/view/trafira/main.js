@@ -14233,7 +14233,7 @@ var CoreVersionPicker = class {
 // src/trafira/tabs/updates/renderCoreVersions.ts
 var active = null;
 var coreVersionsPanel = {
-  mount() {
+  mount(canWrite2 = true) {
     this.unmount();
     const host = document.getElementById("trafira-core-versions");
     if (!host) return;
@@ -14262,7 +14262,9 @@ var coreVersionsPanel = {
       "button",
       {
         class: "cbi-button cbi-button-action",
-        click: () => void picker.install(pin.checked)
+        click: () => {
+          if (canWrite2) void picker.install(pin.checked);
+        }
       },
       _("Install selected version")
     );
@@ -14270,7 +14272,9 @@ var coreVersionsPanel = {
       "button",
       {
         class: "cbi-button",
-        click: () => void picker.unpin().then(() => picker.load())
+        click: () => {
+          if (canWrite2) void picker.unpin().then(() => picker.load());
+        }
       },
       _("Unpin version")
     );
@@ -14323,10 +14327,11 @@ var coreVersionsPanel = {
         );
         select.value = state.selected;
         const busy = state.stage === "installing" || loading2;
-        select.disabled = pin.disabled = busy || !hasAvailableVersions;
+        select.disabled = busy || !hasAvailableVersions;
+        pin.disabled = !canWrite2 || busy || !hasAvailableVersions;
         refresh.disabled = busy;
-        install.disabled = busy || !state.selected;
-        unpin.disabled = busy || !state.pinnedVersion;
+        install.disabled = !canWrite2 || busy || !state.selected;
+        unpin.disabled = !canWrite2 || busy || !state.pinnedVersion;
         info.textContent = `${_("Installed version")}: ${state.currentVersion === "not-installed" ? _("Not installed") : state.currentVersion || "\u2014"} \xB7 ${_("Pinned version")}: ${state.pinnedVersion || _("Not pinned")}${state.cachedAt ? ` \xB7 ${_("Catalog checked")}: ${new Date(state.cachedAt * 1e3).toLocaleString()}` : ""}`;
         message2.textContent = [
           state.error ? errors2[state.error] || _("The sing-box version operation failed.") : state.stage === "installing" ? _("Installing in the background. You may close this page.") : state.unavailableReason || !loading2 && !hasAvailableVersions ? _(
@@ -14387,6 +14392,7 @@ var coreVersionsPanel = {
 // src/trafira/tabs/updates/initController.ts
 var updatesLifecycleRegistered = false;
 var updatesControllerInitialized = false;
+var updatesCanWrite = true;
 var updatesMounted = false;
 var updatesMountId = 0;
 var pageUnloading2 = false;
@@ -15247,7 +15253,17 @@ function renderComponentCard(card) {
       document.getElementById("trafira-core-versions") || E("div", { id: "trafira-core-versions" })
     );
   }
-  return E("div", { class: "fkp_updates-page__component" }, cardChildren);
+  const rendered = E(
+    "div",
+    { class: "fkp_updates-page__component" },
+    cardChildren
+  );
+  if (!updatesCanWrite) {
+    for (const button of Array.from(rendered.querySelectorAll("button"))) {
+      if (!button.closest("#trafira-core-versions")) button.disabled = true;
+    }
+  }
+  return rendered;
 }
 function renderUpdatesComponents() {
   const container = document.getElementById("fkp_updates-components");
@@ -15298,7 +15314,7 @@ async function onPageMount4() {
     applyComponentUpdateCheckCache(prefetchedComponentUpdateCheckCache);
   }
   renderUpdatesComponents();
-  coreVersionsPanel.mount();
+  coreVersionsPanel.mount(updatesCanWrite);
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache)
   });
@@ -15346,7 +15362,8 @@ function registerLifecycleListeners4() {
     }
   });
 }
-async function initController4() {
+async function initController4(canWrite2 = true) {
+  updatesCanWrite = canWrite2;
   if (updatesControllerInitialized) {
     return;
   }

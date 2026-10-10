@@ -69,6 +69,7 @@ interface ComponentCard {
 
 let updatesLifecycleRegistered = false;
 let updatesControllerInitialized = false;
+let updatesCanWrite = true;
 let updatesMounted = false;
 let updatesMountId = 0;
 let pageUnloading = false;
@@ -1198,7 +1199,17 @@ function renderComponentCard(card: ComponentCard) {
     );
   }
 
-  return E('div', { class: 'fkp_updates-page__component' }, cardChildren);
+  const rendered = E(
+    'div',
+    { class: 'fkp_updates-page__component' },
+    cardChildren,
+  );
+  if (!updatesCanWrite) {
+    for (const button of Array.from(rendered.querySelectorAll('button'))) {
+      if (!button.closest('#trafira-core-versions')) button.disabled = true;
+    }
+  }
+  return rendered;
 }
 
 function renderUpdatesComponents() {
@@ -1279,7 +1290,7 @@ async function onPageMount() {
   }
 
   renderUpdatesComponents();
-  coreVersionsPanel.mount();
+  coreVersionsPanel.mount(updatesCanWrite);
 
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache),
@@ -1343,7 +1354,8 @@ function registerLifecycleListeners() {
   });
 }
 
-export async function initController(): Promise<void> {
+export async function initController(canWrite = true): Promise<void> {
+  updatesCanWrite = canWrite;
   if (updatesControllerInitialized) {
     return;
   }

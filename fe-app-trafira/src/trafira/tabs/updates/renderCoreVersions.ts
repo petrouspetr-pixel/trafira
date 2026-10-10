@@ -3,7 +3,7 @@ import { CoreVersionPicker, VersionState } from './coreVersionPicker';
 
 let active: { picker: CoreVersionPicker; timer: number } | null = null;
 export const coreVersionsPanel = {
-  mount() {
+  mount(canWrite = true) {
     this.unmount();
     const host = document.getElementById('trafira-core-versions');
     if (!host) return;
@@ -32,7 +32,9 @@ export const coreVersionsPanel = {
       'button',
       {
         class: 'cbi-button cbi-button-action',
-        click: () => void picker.install(pin.checked),
+        click: () => {
+          if (canWrite) void picker.install(pin.checked);
+        },
       },
       _('Install selected version'),
     ) as HTMLButtonElement;
@@ -40,7 +42,9 @@ export const coreVersionsPanel = {
       'button',
       {
         class: 'cbi-button',
-        click: () => void picker.unpin().then(() => picker.load()),
+        click: () => {
+          if (canWrite) void picker.unpin().then(() => picker.load());
+        },
       },
       _('Unpin version'),
     ) as HTMLButtonElement;
@@ -105,10 +109,11 @@ export const coreVersionsPanel = {
         );
         select.value = state.selected;
         const busy = state.stage === 'installing' || loading;
-        select.disabled = pin.disabled = busy || !hasAvailableVersions;
+        select.disabled = busy || !hasAvailableVersions;
+        pin.disabled = !canWrite || busy || !hasAvailableVersions;
         refresh.disabled = busy;
-        install.disabled = busy || !state.selected;
-        unpin.disabled = busy || !state.pinnedVersion;
+        install.disabled = !canWrite || busy || !state.selected;
+        unpin.disabled = !canWrite || busy || !state.pinnedVersion;
         info.textContent = `${_('Installed version')}: ${state.currentVersion === 'not-installed' ? _('Not installed') : state.currentVersion || '—'} · ${_('Pinned version')}: ${state.pinnedVersion || _('Not pinned')}${state.cachedAt ? ` · ${_('Catalog checked')}: ${new Date(state.cachedAt * 1000).toLocaleString()}` : ''}`;
         message.textContent = [
           state.error

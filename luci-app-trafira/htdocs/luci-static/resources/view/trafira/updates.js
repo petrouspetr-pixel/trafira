@@ -10,7 +10,7 @@ function createUpdatesContent(section) {
   const o = section.option(form.DummyValue, "_mount_node");
   o.rawhtml = true;
   o.cfgvalue = () => {
-    main.UpdatesTab.initController();
+    main.UpdatesTab.initController(!section.map.readonly);
     return main.UpdatesTab.render();
   };
 }

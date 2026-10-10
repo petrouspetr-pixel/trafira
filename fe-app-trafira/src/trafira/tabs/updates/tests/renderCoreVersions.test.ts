@@ -14,6 +14,7 @@ class ElementView {
   checked = false;
   textContent = '';
   htmlFor = '';
+  events: Record<string, () => void> = {};
   constructor(
     public tag: string,
     public attributes: Record<string, unknown>,
@@ -21,7 +22,9 @@ class ElementView {
   replaceChildren(...children: Array<ElementView | string>) {
     this.children = children;
   }
-  addEventListener() {}
+  addEventListener(event: string, listener: () => void) {
+    this.events[event] = listener;
+  }
   setAttribute(name: string, value: string) {
     this.attributes[name] = value;
   }
@@ -186,4 +189,40 @@ it('keeps a catalog error visible after the mount status check', async () => {
     find(host, (node) => node.attributes.role === 'status')!.textContent,
   ).toContain('Could not load available versions');
   expect(find(host, (node) => node.tag === 'select')!.disabled).toBe(true);
+});
+
+it('lets a reader inspect versions but never install or unpin them', async () => {
+  vi.mocked(executeShellCommand).mockImplementation(async ({ args }) => ({
+    code: 0,
+    stderr: '',
+    stdout: JSON.stringify(
+      JSON.parse(args[1]).action === 'catalog'
+        ? {
+            success: true,
+            current_version: '1.14.1',
+            pin: { version: '1.14.1' },
+            entries: [{ id: 'version', version: '1.14.2', available: true }],
+          }
+        : { success: true, running: false, job_id: '' },
+    ),
+  }));
+  coreVersionsPanel.mount(false);
+  await vi.waitFor(() =>
+    expect(
+      find(host, (n) => n.tag === 'option' && n.attributes.value === 'version'),
+    ).toBeDefined(),
+  );
+  const select = find(host, (n) => n.tag === 'select')!;
+  select.value = 'version';
+  select.events.change();
+  const button = (label: string) =>
+    find(host, (n) => n.tag === 'button' && n.children[0] === label)!;
+  expect(select.disabled).toBe(false);
+  expect(button('Refresh available versions').disabled).toBe(false);
+  expect(button('Install selected version').disabled).toBe(true);
+  expect(button('Unpin version').disabled).toBe(true);
+  const count = vi.mocked(executeShellCommand).mock.calls.length;
+  (button('Install selected version').attributes.click as () => void)();
+  (button('Unpin version').attributes.click as () => void)();
+  expect(executeShellCommand).toHaveBeenCalledTimes(count);
 });
