@@ -141,12 +141,13 @@ function render(
           'button',
           {
             class: 'btn cbi-button',
-            disabled:
-              busy ||
-              !report?.supported ||
-              !report?.available ||
-              !report?.preparable ||
-              !report.entries.length,
+            ...(busy ||
+            !report?.supported ||
+            !report?.available ||
+            !report?.preparable ||
+            !report.entries.length
+              ? { disabled: true }
+              : {}),
             click: () => void snapshots.prepare(),
           },
           _('Prepare saved copies'),
@@ -155,7 +156,7 @@ function render(
           'button',
           {
             class: 'btn cbi-button',
-            disabled: starting,
+            ...(starting ? { disabled: true } : {}),
             click: () => void snapshots.refresh(),
           },
           _('Refresh status'),
