@@ -77,7 +77,7 @@ id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 91
 # Corrupt a cached export: it is rebuilt rather than used as a negative match.
 first_cache="$(ls -t "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache/"*.json | sed -n '1p')"
-printf 'not json' >"$first_cache"
+printf '{"schema":1,"data":{"rules":[]}}' >"$first_cache"
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 92
 run route_explain_status '../escape'  >"$WORK_DIR/invalid" || true
@@ -85,6 +85,10 @@ node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.su
 test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/network-attempted"
 # Refuse a verified cache entry before parsing when its budget is exhausted.
 ucode -L "$TRAFIRA_LIB" -e 'let c=require("diagnostics.route_decode_cache"),f=require("fs"),root=getenv("TRAFIRA_RUNTIME_STATE_DIR")+"/route-decode-cache";let name=filter(f.lsdir(root),(n)=>match(n,/^[a-f0-9]{64}[.]json$/))[0];assert(c.get(substr(name,0,64),1).error=="size_limit","budget before parse");'
+# Refuse a cache directory replaced by a symlink without touching its target.
+mkdir "$WORK_DIR/symlink-runtime"
+ln -s "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache" "$WORK_DIR/symlink-runtime/route-decode-cache"
+TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/symlink-runtime" ucode -L "$TRAFIRA_LIB" -e 'let c=require("diagnostics.route_decode_cache");assert(c.get("a",1024)==null,"symlink cache rejected");assert(!c.put("a",{rules:[]},ARGV[0]),"symlink publication rejected");' "$WORK_DIR"
 # Source data over the remaining budget never invokes the codec.
 before="$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")"
 ucode -L "$TRAFIRA_LIB" -e 'let c=require("diagnostics.route_decode_cache");assert(c.decode(ARGV[0],"source",1000,1,ARGV[1]).error=="size_limit","budget before codec");' "$WORK_DIR/set-0.json" "$WORK_DIR"
