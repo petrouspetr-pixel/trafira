@@ -77,7 +77,7 @@ function assert(condition, message) {
 
 assert(out.changed === true, '1.0.1 config should require migration');
 assert(out.config.settings.config_version === '1.0.5', 'config schema version should advance to 1.0.5');
-assert(out.config.settings.component_update_check_enabled === '1', 'updates from 1.0.1 and below should enable component update checks');
+assert(out.config.settings.component_update_check_enabled === '0', 'even 1.0.1 must preserve explicitly disabled component update checks');
 assert(JSON.stringify(out.config.settings.applied_migrations) === JSON.stringify(['interface_sections', 'enable_component_checks', 'http_connection_urls']), 'named migrations should be recorded');
 assert(!Object.prototype.hasOwnProperty.call(section, 'interfaces'), 'parent interface list should be removed');
 assert(JSON.stringify(interfaces.map(item => item.name)) === JSON.stringify(['awg0', 'tun0']), 'interfaces should keep their order');
@@ -235,8 +235,8 @@ ucode -L "$TRAFIRA_LIB" "$MIGRATION" migrate
 
 grep -Fxq 'trafira.settings.config_version=1.0.5' "$WORK_DIR/runtime-version.state" ||
   fail "runtime version migration must advance config_version"
-grep -Fxq 'trafira.settings.component_update_check_enabled=1' "$WORK_DIR/runtime-version.state" ||
-  fail "runtime version migration must enable component update checks"
+grep -Fxq 'trafira.settings.component_update_check_enabled=0' "$WORK_DIR/runtime-version.state" ||
+  fail "runtime version migration must preserve disabled component update checks"
 grep -Fq 'trafira.settings.applied_migrations=interface_sections enable_component_checks http_connection_urls' "$WORK_DIR/runtime-version.state" ||
   fail "runtime migration must record stable migration names"
 grep -Eq '^trafira\.main\.outbound_jsons=\{ "type": "http", "tag": "http", "server": "proxy\.example", "server_port": 8080 \}$' "$WORK_DIR/runtime-version.state" ||
@@ -321,3 +321,21 @@ grep -Fxq 'commit trafira' "$WORK_DIR/uci-commit.log" ||
   fail "commit mode must commit trafira through core.uci"
 
 printf 'installer config migration checks passed\n'
+
+# Defaults belong to fresh installs, not to upgraded routing policies.
+for state in missing off on; do
+  node - "$state" >"$WORK_DIR/defaults-$state.json" <<'NODE'
+const state = process.argv[2];
+const settings = {'.name':'settings','.type':'settings',config_version:'1.0.5',applied_migrations:['interface_sections','enable_component_checks','http_connection_urls']};
+if (state !== 'missing') for (const key of ['exclude_ntp','exclude_wifi_calling','component_update_check_enabled']) settings[key] = state === 'on' ? '1' : '0';
+console.log(JSON.stringify({settings,section:[]}));
+NODE
+  TRAFIRA_LIB="$TRAFIRA_LIB" ucode -L "$TRAFIRA_LIB" "$MIGRATION" migrate-fixture "$WORK_DIR/defaults-$state.json" >"$WORK_DIR/defaults-$state-out.json"
+  node - "$WORK_DIR/defaults-$state.json" "$WORK_DIR/defaults-$state-out.json" <<'NODE'
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const before = JSON.parse(fs.readFileSync(process.argv[2])).settings;
+const after = JSON.parse(fs.readFileSync(process.argv[3])).config.settings;
+for (const key of ['exclude_ntp','exclude_wifi_calling','component_update_check_enabled']) assert.equal(after[key],before[key], `migration preserves ${key}`);
+NODE
+done

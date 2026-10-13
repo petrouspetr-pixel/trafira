@@ -321,7 +321,7 @@ function migrate_enable_component_checks(ctx) {
     if (!release_at_most(ctx, "1.0.1"))
         return;
 
-    set_option(ctx, ctx.model.settings, "component_update_check_enabled", "1");
+    set_option_if_missing(ctx, ctx.model.settings, "component_update_check_enabled", "1");
 }
 
 function migration_port(value) {

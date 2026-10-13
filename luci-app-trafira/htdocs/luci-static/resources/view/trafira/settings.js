@@ -160,6 +160,16 @@ function configureDnsThreshold(option, dnsOption, bootstrapOption) {
   configureDnsFailoverVisibility(option, dnsOption, bootstrapOption);
 }
 
+// New installs have explicit values in the packaged configuration. Missing
+// options in an existing configuration retain their previous disabled behavior.
+function configureFreshInstallFlag(option) {
+  option.default = "1";
+  option.rmempty = false;
+  option.cfgvalue = function (section_id) {
+    return uci.get(UCI_PACKAGE, section_id, this.option) ?? "0";
+  };
+}
+
 function createSettingsContent(section, capabilities) {
   let o = section.option(
     form.ListValue,
@@ -546,8 +556,7 @@ function createSettingsContent(section, capabilities) {
       "Exclude LAN UDP destination ports 500 and 4500 from Trafira interception for Wi-Fi Calling. System firewall rules still apply; FakeIP destinations remain intercepted.",
     ),
   );
-  o.default = "0";
-  o.rmempty = false;
+  configureFreshInstallFlag(o);
 
   o = section.option(
     form.Flag,
@@ -643,8 +652,7 @@ function createSettingsContent(section, capabilities) {
     _("Automatic component update checks"),
     _("Automatically check installed components for new versions"),
   );
-  o.default = "0";
-  o.rmempty = false;
+  configureFreshInstallFlag(o);
 
   o = section.option(
     form.Value,
@@ -829,8 +837,7 @@ function createSettingsContent(section, capabilities) {
       "Exclude NTP protocol traffic from the tunnel to prevent it from being routed through the proxy or VPN",
     ),
   );
-  o.default = "0";
-  o.rmempty = false;
+  configureFreshInstallFlag(o);
 }
 
 const EntryPoint = {
