@@ -75,7 +75,12 @@ test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 46
 printf '\n# replacement codec\n' >>"$WORK_DIR/bin/sing-box"
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 91
-run route_explain_status '../escape' >"$WORK_DIR/invalid" || true
+# Corrupt a cached export: it is rebuilt rather than used as a negative match.
+first_cache="$(ls -t "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache/"*.json | head -1)"
+printf 'not json' >"$first_cache"
+id="$(start)"; finish "$id"
+test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 92
+run route_explain_status '../escape'  >"$WORK_DIR/invalid" || true
 node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success)throw Error("accepted path traversal");' "$WORK_DIR/invalid"
 test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/network-attempted"
 printf 'background route cold/warm/invalidation checks passed\n'

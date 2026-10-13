@@ -5,6 +5,10 @@ import {
   ExplainRequest,
   parseRouteExplanationResult,
   RouteExplanationController,
+  PreparationProgress,
+  RouteJobStatus,
+  parseRouteJobCommandResult,
+  runRoutePreparation,
 } from './routeExplanation';
 import { routeError, routeReasons } from './routePresentation';
 
@@ -15,6 +19,8 @@ async function command<T>(name: string, args: string[] = []): Promise<T> {
     timeout: 15000,
   });
   if (name === 'route_explain') return parseRouteExplanationResult(result) as T;
+  if (name === 'route_explain_start' || name === 'route_explain_status')
+    return parseRouteJobCommandResult(result) as T;
   if (result.code) throw new Error('Route command failed');
   return JSON.parse(result.stdout) as T;
 }
@@ -57,6 +63,26 @@ function decisionView(
       ...routeReasons(decision.missing, unavailable).map((reason) =>
         E('p', {}, reason),
       ),
+      ...(unavailable.some((item) =>
+        decision.missing.includes('rule_set:' + item.tag),
+      )
+        ? [
+            E('details', { class: 'fkp_diagnostic-details' }, [
+              E('summary', {}, _('Lists preventing a confirmed result')),
+              ...unavailable
+                .filter((item) =>
+                  decision.missing.includes('rule_set:' + item.tag),
+                )
+                .map((item) =>
+                  E(
+                    'p',
+                    {},
+                    `${item.tag}: ${routeReasons(['rule_set:' + item.tag], [item]).join(' ')}`,
+                  ),
+                ),
+            ]),
+          ]
+        : []),
       ...(decision.trace.length
         ? [
             E('details', { class: 'fkp_diagnostic-details' }, [
@@ -81,12 +107,30 @@ export function renderRouteExplanationResult(
   report: ExplainReport | null,
   error: string,
   busy: boolean,
+  progress?: PreparationProgress,
 ) {
   const result = document.getElementById('trafira-route-explanation-result');
   if (!result) return;
   result.replaceChildren(
     ...(busy
-      ? [E('p', {}, _('Checking route'))]
+      ? [
+          E(
+            'p',
+            { role: 'status' },
+            progress?.phase === 'evaluating'
+              ? _('Calculating route from prepared lists')
+              : progress?.total
+                ? `${_('Preparing rule sets')}: ${progress.completed} / ${progress.total}`
+                : _('Starting route analysis'),
+          ),
+          E(
+            'p',
+            {},
+            _(
+              'The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.',
+            ),
+          ),
+        ]
       : error
         ? [E('p', { class: 'alert-message warning' }, routeError(error))]
         : report
@@ -148,6 +192,15 @@ export function renderRouteExplanationResult(
                     ),
                   ]
                 : []),
+              ...(report.rule_sets?.cached != null
+                ? [
+                    E(
+                      'p',
+                      {},
+                      `${_('Lists available for calculation')}: ${report.rule_sets.available} / ${report.rule_sets.available + report.rule_sets.unavailable} · ${_('Reused from RAM')}: ${report.rule_sets.cached}`,
+                    ),
+                  ]
+                : []),
               decisionView(
                 _('Connection route'),
                 report.decision,
@@ -184,8 +237,13 @@ export function renderRouteExplanationResult(
   );
 }
 const controller = new RouteExplanationController(
-  (request) =>
-    command<ExplainReport>('route_explain', [JSON.stringify(request)]),
+  (request, progress, active) =>
+    runRoutePreparation(
+      (name, args) => command<RouteJobStatus>(name, args),
+      request,
+      progress || (() => {}),
+      active || (() => true),
+    ),
   renderRouteExplanationResult,
 );
 let mountId = 0;

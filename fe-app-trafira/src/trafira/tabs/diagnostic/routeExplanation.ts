@@ -40,6 +40,7 @@ export interface ExplainReport {
     live_verified: boolean;
     available: number;
     unavailable: number;
+    cached?: number;
     unavailable_reasons?: Array<{ tag: string; reason: string }>;
   };
   limitations: string[];
@@ -50,7 +51,11 @@ type RouteFailure =
   | 'command_failed'
   | 'rpc_failed'
   | 'invalid_response'
-  | 'render_failed';
+  | 'render_failed'
+  | 'busy'
+  | 'worker_timeout'
+  | 'worker_interrupted'
+  | 'storage_unavailable';
 export class RouteExplanationError extends Error {
   constructor(public readonly category: RouteFailure) {
     super(category);
@@ -128,6 +133,7 @@ export function parseRouteExplanationResult(result: {
         'invalid_request',
         'configuration_changed_retry',
         'configuration_unavailable',
+        'resource_limit',
       ].includes(String(report.error))
     )
       throw new RouteExplanationError('command_failed');
@@ -157,15 +163,117 @@ export function parseRouteExplanationResult(result: {
     throw new RouteExplanationError('invalid_response');
   return report as unknown as ExplainReport;
 }
+export interface PreparationProgress {
+  completed: number;
+  total: number;
+  phase?: 'preparing' | 'evaluating';
+}
+export interface RouteJobStatus {
+  success: boolean;
+  running: boolean;
+  job_id?: string;
+  progress?: PreparationProgress;
+  report?: unknown;
+  error?: string;
+}
+export function parseRouteJobCommandResult(result: {
+  stdout: string;
+  code?: number;
+  failure?: string;
+}): RouteJobStatus {
+  if (result.failure)
+    throw new RouteExplanationError(
+      result.failure === 'timeout'
+        ? 'timeout'
+        : result.failure === 'permission_denied'
+          ? 'permission_denied'
+          : 'rpc_failed',
+    );
+  let value: unknown;
+  try {
+    value = JSON.parse(result.stdout);
+  } catch {
+    throw new RouteExplanationError('invalid_response');
+  }
+  if (
+    !record(value) ||
+    typeof value.success !== 'boolean' ||
+    typeof value.running !== 'boolean'
+  )
+    throw new RouteExplanationError('invalid_response');
+  if (!value.success) {
+    const allowed = [
+      'busy',
+      'worker_timeout',
+      'worker_interrupted',
+      'storage_unavailable',
+    ];
+    if (allowed.includes(String(value.error)))
+      throw new RouteExplanationError(value.error as RouteFailure);
+    throw new RouteExplanationError('command_failed');
+  }
+  if (
+    result.code ||
+    typeof value.job_id !== 'string' ||
+    !/^r-[a-f0-9-]{1,60}$/.test(value.job_id)
+  )
+    throw new RouteExplanationError('invalid_response');
+  const progress = value.progress;
+  if (
+    progress != null &&
+    (!record(progress) ||
+      !Number.isInteger(progress.completed) ||
+      !Number.isInteger(progress.total) ||
+      Number(progress.completed) < 0 ||
+      Number(progress.total) < Number(progress.completed) ||
+      Number(progress.total) > 256 ||
+      !['preparing', 'evaluating'].includes(String(progress.phase)))
+  )
+    throw new RouteExplanationError('invalid_response');
+  return value as unknown as RouteJobStatus;
+}
+export async function runRoutePreparation(
+  invoke: (name: string, args: string[]) => Promise<RouteJobStatus>,
+  request: ExplainRequest,
+  notify: (progress: PreparationProgress) => void,
+  active: () => boolean,
+  wait: () => Promise<void> = () =>
+    new Promise((resolve) => setTimeout(resolve, 500)),
+): Promise<ExplainReport> {
+  let state = await invoke('route_explain_start', [JSON.stringify(request)]);
+  const id = state.job_id,
+    deadline = Date.now() + 150000;
+  for (let polls = 0; polls < 300; polls++) {
+    if (!active()) throw new Error('Route view no longer active');
+    if (state.job_id !== id)
+      throw new RouteExplanationError('invalid_response');
+    if (!state.running)
+      return parseRouteExplanationResult({
+        stdout: JSON.stringify(state.report),
+        code: 0,
+      });
+    if (state.progress) notify(state.progress);
+    if (Date.now() >= deadline) break;
+    await wait();
+    if (!active()) throw new Error('Route view no longer active');
+    state = await invoke('route_explain_status', [id!]);
+  }
+  throw new RouteExplanationError('worker_timeout');
+}
 export class RouteExplanationController {
   private active = false;
   private generation = 0;
   constructor(
-    private read: (request: ExplainRequest) => Promise<ExplainReport>,
+    private read: (
+      request: ExplainRequest,
+      progress?: (value: PreparationProgress) => void,
+      active?: () => boolean,
+    ) => Promise<ExplainReport>,
     private render: (
       report: ExplainReport | null,
       error: string,
       busy: boolean,
+      progress?: PreparationProgress,
     ) => void,
   ) {}
   mount() {
@@ -183,7 +291,14 @@ export class RouteExplanationController {
     this.render(null, '', true);
     let report: ExplainReport;
     try {
-      report = await this.read(request);
+      const active = () => this.active && this.generation === generation;
+      report = await this.read(
+        request,
+        (progress) => {
+          if (active()) this.render(null, '', true, progress);
+        },
+        active,
+      );
     } catch (error) {
       if (this.active && this.generation === generation)
         this.render(
@@ -201,6 +316,7 @@ export class RouteExplanationController {
         'invalid_request',
         'configuration_changed_retry',
         'configuration_unavailable',
+        'resource_limit',
       ].includes(report.error || '')
         ? report.error!
         : 'Could not explain route';

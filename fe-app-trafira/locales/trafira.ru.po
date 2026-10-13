@@ -3379,3 +3379,48 @@ msgstr "sing-box outbound для Zapret2 не настроен"
 
 msgid "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure."
 msgstr "Роутер возвращает адреса FakeIP. Отдельная проверка из браузера может быть заблокирована или недоступна. Само по себе это предупреждение не означает сбой DNS роутера."
+
+msgid "Lists preventing a confirmed result"
+msgstr "Списки, мешающие подтвердить результат"
+
+msgid "Calculating route from prepared lists"
+msgstr "Расчёт маршрута по подготовленным спискам"
+
+msgid "Preparing rule sets"
+msgstr "Подготовка списков"
+
+msgid "Starting route analysis"
+msgstr "Запуск анализа маршрута"
+
+msgid "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes."
+msgstr "Первая проверка подготавливает сохранённые списки и может занять больше времени. Проверенные данные повторно используются из RAM, пока список или sing-box не изменится."
+
+msgid "Lists available for calculation"
+msgstr "Доступно списков для расчёта"
+
+msgid "Reused from RAM"
+msgstr "Повторно использовано из RAM"
+
+msgid "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed."
+msgstr "Не удалось обработать этот список за отведённое время подготовки. Его правила не были пропущены; маршрут остаётся неподтверждённым."
+
+msgid "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed."
+msgstr "Этот список превышает допустимый объём данных для диагностики. Его правила нельзя достоверно проверить."
+
+msgid "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists."
+msgstr "Время фоновой подготовки истекло до обработки этого списка. Повторите проверку: уже подготовленные списки будут использованы из кэша."
+
+msgid "Another route calculation is preparing lists. Wait for it to finish, then try again."
+msgstr "Другой расчёт маршрута подготавливает списки. Дождитесь его завершения и повторите проверку."
+
+msgid "The background route calculation reached its time limit. Already verified lists remain cached for another attempt."
+msgstr "Истекло время фонового расчёта маршрута. Уже проверенные списки сохранены в кэше для повторной проверки."
+
+msgid "The background route worker stopped unexpectedly. Try again."
+msgstr "Фоновый расчёт маршрута неожиданно остановился. Повторите проверку."
+
+msgid "There is not enough available RAM storage to prepare this route check."
+msgstr "Для подготовки этой проверки недостаточно свободного места в RAM."
+
+msgid "The configuration has more rule sets than this diagnostic can process safely."
+msgstr "В конфигурации больше списков, чем эта диагностика может безопасно обработать."

@@ -14,7 +14,7 @@ const READ_COMMANDS = {
     service_action_status: 1, latency_test_status: 1, component_action_status: 1,
     subscription_update_status: 1, component_update_check_cache: 0,
     show_version: 0, show_sing_box_version: 0, show_sing_box_config: 1,
-    global_check: 1, route_explain: 1, failure_policy_status: 0,
+    global_check: 1, route_explain: 1, route_explain_start: 1, route_explain_status: 1, failure_policy_status: 0,
     subscription_preview: 1, get_tls_certificate_sha256: 1,
     ruleset_snapshot_report: 0,
     validate_nfqws_strategy_json: 1, validate_nfqws2_strategy_json: 1,

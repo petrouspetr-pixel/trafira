@@ -188,7 +188,7 @@ it('includes detected MAC and interface when a known IP is entered manually', as
     .listeners.submit({ preventDefault() {} });
   const call = vi
     .mocked(executeShellCommand)
-    .mock.calls.filter(([request]) => request.args[0] === 'route_explain')
+    .mock.calls.filter(([request]) => request.args[0] === 'route_explain_start')
     .pop()!;
   expect(JSON.parse(call[0].args[1]).source).toEqual({
     kind: 'device',

@@ -8162,5 +8162,110 @@
     "places": [
       "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:86"
     ]
+  },
+  {
+    "call": "Lists preventing a confirmed result",
+    "key": "Lists preventing a confirmed result",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:71"
+    ]
+  },
+  {
+    "call": "Calculating route from prepared lists",
+    "key": "Calculating route from prepared lists",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:121"
+    ]
+  },
+  {
+    "call": "Preparing rule sets",
+    "key": "Preparing rule sets",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:123"
+    ]
+  },
+  {
+    "call": "Starting route analysis",
+    "key": "Starting route analysis",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:124"
+    ]
+  },
+  {
+    "call": "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.",
+    "key": "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129"
+    ]
+  },
+  {
+    "call": "Lists available for calculation",
+    "key": "Lists available for calculation",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200"
+    ]
+  },
+  {
+    "call": "Reused from RAM",
+    "key": "Reused from RAM",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200"
+    ]
+  },
+  {
+    "call": "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed.",
+    "key": "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:68"
+    ]
+  },
+  {
+    "call": "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed.",
+    "key": "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:71"
+    ]
+  },
+  {
+    "call": "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists.",
+    "key": "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:74"
+    ]
+  },
+  {
+    "call": "Another route calculation is preparing lists. Wait for it to finish, then try again.",
+    "key": "Another route calculation is preparing lists. Wait for it to finish, then try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:149"
+    ]
+  },
+  {
+    "call": "The background route calculation reached its time limit. Already verified lists remain cached for another attempt.",
+    "key": "The background route calculation reached its time limit. Already verified lists remain cached for another attempt.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:152"
+    ]
+  },
+  {
+    "call": "The background route worker stopped unexpectedly. Try again.",
+    "key": "The background route worker stopped unexpectedly. Try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:155"
+    ]
+  },
+  {
+    "call": "There is not enough available RAM storage to prepare this route check.",
+    "key": "There is not enough available RAM storage to prepare this route check.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:158"
+    ]
+  },
+  {
+    "call": "The configuration has more rule sets than this diagnostic can process safely.",
+    "key": "The configuration has more rule sets than this diagnostic can process safely.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:161"
+    ]
   }
 ]

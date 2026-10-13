@@ -51,6 +51,8 @@ const readCommands: Record<string, number> = {
   show_sing_box_config: 1,
   global_check: 1,
   route_explain: 1,
+  route_explain_start: 1,
+  route_explain_status: 1,
   subscription_preview: 1,
   get_tls_certificate_sha256: 1,
   failure_policy_status: 0,
