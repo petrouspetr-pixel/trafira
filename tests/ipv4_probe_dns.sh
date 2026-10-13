@@ -23,7 +23,8 @@ node - "$WORK_DIR" <<'JS'
 const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
 assert(!JSON.parse(fs.readFileSync(dir+'/default.json')).dns.rules.some(r=>r.action==='predefined'),'off by default');
 const alice=JSON.parse(fs.readFileSync(dir+'/alice.json')).dns.rules;
-assert(alice.findIndex(r=>r.inbound==='alice-dns-in')<alice.findIndex(r=>r.action==='predefined'),'Alice bypass before probe filter');
+const bypass=alice.findIndex(r=>r.inbound==='alice-dns-in'),filterIndex=alice.findIndex(r=>r.action==='predefined');
+assert(bypass>=0&&filterIndex>=0&&bypass<filterIndex,'Alice bypass before probe filter');
 const yes=['v6.xy.fbcdn.net','fa4e35f8-5be3-4814-af28-573a3fe281ed-netseer-ipaddr-assoc.xy.fbcdn.net','sonar6.fhrk1-1.fna.fbcdn.net','sonar6.fppk1-1.fna.fbcdn.net','sonar6.frix7-1.fna.fbcdn.net','brunhild.challenges.cloudflare.com'];
 const no=['fbcdn.net','scontent.xy.fbcdn.net','video.xx.fbcdn.net','challenges.cloudflare.com','other.challenges.cloudflare.com','brunhild.challenges.cloudflare.com.evil.test','v6.xy.fbcdn.net.evil.test','csp.yandex.net','sonar6.unverified.fna.fbcdn.net'];
 for(const mode of ['ipv4_only','prefer_ipv4','ipv6_only','prefer_ipv6'])for(const enabled of ['0','1']){
@@ -40,4 +41,12 @@ for(const mode of ['ipv4_only','prefer_ipv4','ipv6_only','prefer_ipv6'])for(cons
 }
 JS
 ucode -L "$LIB" -e 'let m=require("diagnostics.route_match");let r=m.explain({route:{rules:[{action:"predefined",rcode:"NXDOMAIN",domain:"v6.xy.fbcdn.net"}]}},{domain:"v6.xy.fbcdn.net"},{},{});assert(r.status=="blocked","DNS explanation must recognize probe filter");'
+ucode -L "$LIB" -e '
+let m=require("diagnostics.route_match"),f=require("fs"),c=json(f.readfile(ARGV[0])),rule=filter(c.dns.rules,(r)=>r.action=="predefined")[0];
+let config={route:{rules:[rule,{action:"route",server:"allowed"}]}};
+for(let name in ["v6.xy.fbcdn.net","fa4e35f8-5be3-4814-af28-573a3fe281ed-netseer-ipaddr-assoc.xy.fbcdn.net","sonar6.fhrk1-1.fna.fbcdn.net","brunhild.challenges.cloudflare.com"])
+ assert(m.explain(config,{domain:name},{},{}).status=="blocked","probe DNS explanation: "+name);
+for(let name in ["ya.ru","scontent.xy.fbcdn.net","challenges.cloudflare.com","brunhild.challenges.cloudflare.com.evil.test","v6.xy.fbcdn.net.evil.test"])
+ assert(m.explain(config,{domain:name},{},{}).outbound=="allowed","ordinary DNS must fall through: "+name);
+' "$WORK_DIR/ipv4_only-1.json"
 printf 'IPv4 probe DNS filtering checks passed\n'

@@ -471,7 +471,8 @@ function base_config(settings, service_address, runtime_context) {
         push(dns_rules, { action: "route", inbound: runtime_constants.ALICE_DNS_INBOUND_TAG, server: runtime_constants.DNS_SERVER_TAG, rewrite_ttl });
     // Exact IPv6 probe endpoints only; bypassed Alice clients keep real DNS above.
     if (option(settings, "dns_strategy", "prefer_ipv4") == "ipv4_only" &&
-        bool_option(settings, "disable_ipv6_probes", false))
+        bool_option(settings, "disable_ipv6_probes", false)) {
+        let hex4 = "[0-9a-f][0-9a-f][0-9a-f][0-9a-f]";
         push(dns_rules, {
             action: "predefined", rcode: "NXDOMAIN",
             domain: [
@@ -481,8 +482,9 @@ function base_config(settings, service_address, runtime_context) {
                 "sonar6.frix7-1.fna.fbcdn.net",
                 "brunhild.challenges.cloudflare.com"
             ],
-            domain_regex: [ "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-netseer-ipaddr-assoc[.]xy[.]fbcdn[.]net$" ]
+            domain_regex: [ "^" + hex4 + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + hex4 + hex4 + "-netseer-ipaddr-assoc[.]xy[.]fbcdn[.]net$" ]
         });
+    }
     for (let rule in [
         { action: "reject", query_type: "HTTPS" },
         { action: "reject", domain_suffix: "use-application-dns.net" },
