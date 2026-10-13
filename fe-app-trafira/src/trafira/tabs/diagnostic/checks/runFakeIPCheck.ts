@@ -80,7 +80,17 @@ export async function runFakeIPCheck() {
           : checks.browserFakeIP
             ? _('Browser is using FakeIP correctly')
             : _('Browser is not using FakeIP'),
-        value: browserFakeIPCheckMessage,
+        value:
+          browserFakeIPCheckUnavailable && checks.singBoxFakeIP
+            ? [
+                _(
+                  'The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure.',
+                ),
+                browserFakeIPCheckMessage,
+              ]
+                .filter(Boolean)
+                .join(' ')
+            : browserFakeIPCheckMessage,
       },
       ...insertIf<IDiagnosticsChecksItem>(checks.browserFakeIP, [
         {

@@ -179,6 +179,8 @@ build_backend_root() {
   install -m 0644 "$ROOT_DIR/trafira/files/usr/share/trafira/gaming-presets.json" \
     "$output_root/usr/share/trafira/gaming-presets.json"
   cp -a "$ROOT_DIR/trafira/files/usr/lib/." "$output_root/usr/lib/trafira/"
+  # Retain the historical helper in source tests, not in router packages.
+  rm -f "$output_root/usr/lib/trafira/providers/rules.uc"
 
   sed -i -e "s/__COMPILED_VERSION_VARIABLE__/${RELEASE_VERSION}/g" \
     "$output_root/usr/lib/trafira/core/constants.uc"
