@@ -109,4 +109,25 @@ node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.su
 test ! -e "$jobdir/codec.pid"
 test ! -e "$jobdir/decode-output"
 test ! -e "$jobdir/cache.stage"
-printf 'background route cold/warm/invalidation/budget/interruption checks passed\n' 
+printf 'background route cold/warm/invalidation/budget/interruption checks passed\n'
+
+# Killing the supervisor must not permit the old calculator to coexist with a new one.
+id="$(start)"
+jobdir="$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id"
+for n in $(seq 1 200); do
+ [ ! -s "$jobdir/calculator.json" ] || break
+ sleep 0.01
+done
+supervisor="$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).worker.pid)' "$jobdir/state.json")"
+old_calculator="$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).pid)' "$jobdir/calculator.json")"
+kill -KILL "$supervisor"
+sleep 0.1
+new_id="$(start)"
+finish "$new_id"
+if [ -f "/proc/$old_calculator/stat" ]; then
+ test "$(awk '{print $3}' "/proc/$old_calculator/stat")" = Z
+fi
+test ! -e "$jobdir/codec.pid"
+test ! -e "$jobdir/decode-output"
+test ! -e "$jobdir/calculator.json"
+printf 'supervisor interruption cleanup passed\n'
