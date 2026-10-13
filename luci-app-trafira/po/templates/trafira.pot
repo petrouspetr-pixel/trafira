@@ -4860,3 +4860,9 @@ msgstr ""
 
 msgid "The configuration has more rule sets than this diagnostic can process safely."
 msgstr ""
+
+msgid "Disable selected IPv6 probes"
+msgstr ""
+
+msgid "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected."
+msgstr ""

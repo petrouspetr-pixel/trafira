@@ -8267,5 +8267,19 @@
     "places": [
       "src/trafira/tabs/diagnostic/routePresentation.ts:161"
     ]
+  },
+  {
+    "call": "Disable selected IPv6 probes",
+    "key": "Disable selected IPv6 probes",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js"
+    ]
+  },
+  {
+    "call": "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected.",
+    "key": "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js"
+    ]
   }
 ]
