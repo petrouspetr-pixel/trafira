@@ -8155,5 +8155,12 @@
     "places": [
       "src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:107"
     ]
+  },
+  {
+    "call": "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure.",
+    "key": "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure.",
+    "places": [
+      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:86"
+    ]
   }
 ]

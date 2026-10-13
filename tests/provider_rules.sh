@@ -2,7 +2,7 @@
 set -eo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-RULES_UC="$ROOT_DIR/trafira/files/usr/lib/providers/rules.uc"
+RULES_UC="$ROOT_DIR/tests/fixtures/provider_rules.uc"
 TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 
 fail() {

@@ -8,7 +8,7 @@
     "format:js": "prettier --write ../luci-app-trafira/htdocs/luci-static/resources/view/trafira",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "build": "tsc --noEmit && tsup src/main.ts",
+    "build": "tsc --noEmit && tsup src/main.ts && node scripts/check-luci-bundle.mjs",
     "dev": "tsup src/main.ts --watch",
     "test": "vitest",
     "ci": "yarn format && yarn lint --max-warnings=0 && yarn test --run && yarn build",

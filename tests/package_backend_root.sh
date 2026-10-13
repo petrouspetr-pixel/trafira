@@ -38,4 +38,12 @@ done
 cmp "$ROOT_DIR/trafira/files/usr/share/trafira/gaming-presets.json" \
   "$WORK_DIR/root/usr/share/trafira/gaming-presets.json"
 grep -Fq "$RELEASE_VERSION" "$WORK_DIR/root/usr/lib/trafira/core/constants.uc"
+# The historical provider helper is retained for source tests, not router runtime.
+test ! -e "$WORK_DIR/root/usr/lib/trafira/providers/rules.uc" || {
+  echo "FAIL: source-test-only provider helper must not be packaged" >&2
+  exit 1
+}
+for source in "$ROOT_DIR"/trafira/files/usr/lib/providers/*/runtime.uc; do
+  test -f "$WORK_DIR/root/usr/lib/trafira/${source#"$ROOT_DIR/trafira/files/usr/lib/"}"
+done
 printf 'backend package staging checks passed\n'

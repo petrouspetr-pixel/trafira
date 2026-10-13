@@ -3376,3 +3376,6 @@ msgstr "sing-box outbound для Zapret2 настроен"
 
 msgid "Zapret2 sing-box outbound is not configured"
 msgstr "sing-box outbound для Zapret2 не настроен"
+
+msgid "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure."
+msgstr "Роутер возвращает адреса FakeIP. Отдельная проверка из браузера может быть заблокирована или недоступна. Само по себе это предупреждение не означает сбой DNS роутера."
