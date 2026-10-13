@@ -1,22 +1,24 @@
 // Independent RSS monitor: virtual-address limits cannot bound Go's resident heap.
 let fs=require("fs"),identity=require("service.operation_lock").identity;
 const MAX_MEMORY=48*1024*1024,RESERVE=32*1024*1024;
-function over_budget(s){return s.rss+s.temporary>MAX_MEMORY || (s.available!=null && s.available<RESERVE);}
+function over_budget(s){return s.unsupported===true || s.rss+s.temporary>MAX_MEMORY || (s.available!=null && s.available<RESERVE);}
 function tree(owner,seen){
     let alive=owner?identity(owner.pid):null;
     if(!alive || alive.ticks!=owner.ticks || seen[alive.pid])return [];
     seen[alive.pid]=true;let list=[alive];
-    for(let pid in split(trim(fs.readfile("/proc/"+alive.pid+"/task/"+alive.pid+"/children")||""),/\s+/)) {
+    let children=fs.readfile("/proc/"+alive.pid+"/task/"+alive.pid+"/children");
+    if(children==null){seen.unavailable=true;return list;}
+    for(let pid in split(trim(children),/\s+/)) {
         let child=identity(pid);if(child && child.parent==alive.pid)for(let item in tree(child,seen))push(list,item);
     }
     return list;
 }
 function sample(owner,workspace){
-    let processes=tree(owner,{}),rss=0,temporary=0;
+    let seen={},processes=tree(owner,seen),rss=0,temporary=0;
     for(let item in processes){let value=match(fs.readfile("/proc/"+item.pid+"/status")||"",/VmRSS:[ \t]+([0-9]+)/);if(value)rss+=int(value[1])*1024;}
     for(let name in ["decode-output","cache.stage","cache.stage.meta"]){let info=workspace?fs.lstat(workspace+"/"+name):null;if(info && info.type=="file")temporary+=info.size;}
     let available=match(fs.readfile("/proc/meminfo")||"",/MemAvailable:[ \t]+([0-9]+)/);
-    return {rss,temporary,available:available?int(available[1])*1024:null,processes};
+    return {rss,temporary,unsupported:seen.unavailable===true,available:available?int(available[1])*1024:null,processes};
 }
 function stop(processes){
     // Descendants first, with start-time verification to avoid reused PIDs.
@@ -45,5 +47,5 @@ function watch(dir,pid,ticks){
     }
     fs.unlink(dir+"/memory-monitor.json");
 }
-if(sourcepath(1)!=null && sourcepath(1)!="")return {over_budget,sample,identity,cleanup};
-if(ARGV[0]=="watch" && match(ARGV[1]||"",/^.*\/r-[a-f0-9-]+$/))watch(ARGV[1],ARGV[2],ARGV[3]);
+if(ARGV[0]=="watch" && match(ARGV[1]||"",/^.*\/r-[a-f0-9-]+$/)){watch(ARGV[1],ARGV[2],ARGV[3]);exit(0);}
+return {over_budget,sample,identity,cleanup,stop,tree};
