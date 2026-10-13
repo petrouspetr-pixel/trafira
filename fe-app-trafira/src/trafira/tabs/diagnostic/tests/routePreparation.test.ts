@@ -140,3 +140,8 @@ it('preserves validation errors from the background worker', () => {
     job({ success: false, running: false, error: 'invalid_request' }),
   ).toThrow('invalid_request');
 });
+
+it('preserves resource limit errors from background jobs', () => {
+  expect(() => job({ success: false, running: false, error: 'resource_limit' }))
+    .toThrow(expect.objectContaining({ category: 'resource_limit' }));
+});
