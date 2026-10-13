@@ -321,7 +321,9 @@ function migrate_enable_component_checks(ctx) {
     if (!release_at_most(ctx, "1.0.1"))
         return;
 
-    set_option_if_missing(ctx, ctx.model.settings, "component_update_check_enabled", "1");
+    // Preserve the old disabled behavior when upgrading a configuration
+    // without this option; fresh installs already contain an explicit 1.
+    set_option_if_missing(ctx, ctx.model.settings, "component_update_check_enabled", "0");
 }
 
 function migration_port(value) {

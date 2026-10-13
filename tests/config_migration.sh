@@ -320,13 +320,12 @@ ucode -L "$TRAFIRA_LIB" "$MIGRATION" commit
 grep -Fxq 'commit trafira' "$WORK_DIR/uci-commit.log" ||
   fail "commit mode must commit trafira through core.uci"
 
-printf 'installer config migration checks passed\n'
-
 # Defaults belong to fresh installs, not to upgraded routing policies.
+for version in 1.0.1 1.0.5; do
 for state in missing off on; do
-  node - "$state" >"$WORK_DIR/defaults-$state.json" <<'NODE'
+  node - "$state" "$version" >"$WORK_DIR/defaults-$state.json" <<'NODE'
 const state = process.argv[2];
-const settings = {'.name':'settings','.type':'settings',config_version:'1.0.5',applied_migrations:['interface_sections','enable_component_checks','http_connection_urls']};
+const settings = {'.name':'settings','.type':'settings',config_version:process.argv[3]};
 if (state !== 'missing') for (const key of ['exclude_ntp','exclude_wifi_calling','component_update_check_enabled']) settings[key] = state === 'on' ? '1' : '0';
 console.log(JSON.stringify({settings,section:[]}));
 NODE
@@ -336,6 +335,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const before = JSON.parse(fs.readFileSync(process.argv[2])).settings;
 const after = JSON.parse(fs.readFileSync(process.argv[3])).config.settings;
-for (const key of ['exclude_ntp','exclude_wifi_calling','component_update_check_enabled']) assert.equal(after[key],before[key], `migration preserves ${key}`);
+for (const key of ['exclude_ntp','exclude_wifi_calling','component_update_check_enabled']) assert.equal(after[key] ?? '0',before[key] ?? '0', `migration preserves ${key}`);
 NODE
 done
+done
+printf 'installer config migration checks passed\n'
