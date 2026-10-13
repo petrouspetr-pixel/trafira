@@ -76,7 +76,7 @@ printf '\n# replacement codec\n' >>"$WORK_DIR/bin/sing-box"
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 91
 # Corrupt a cached export: it is rebuilt rather than used as a negative match.
-first_cache="$(ls -t "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache/"*.json | head -1)"
+first_cache="$(ls -t "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache/"*.json | sed -n '1p')"
 printf 'not json' >"$first_cache"
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 92
