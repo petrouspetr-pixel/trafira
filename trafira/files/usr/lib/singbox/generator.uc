@@ -424,22 +424,7 @@ function ensure_custom_ruleset(config, reference) {
 }
 
 function clash_api_config(settings, service_address) {
-    let controller = as_string(service_address || "");
-    if (bool_option(settings, "enable_yacd", false) && bool_option(settings, "enable_yacd_wan_access", false))
-        controller = "0.0.0.0";
-    else if (controller == "")
-        controller = "127.0.0.1";
-
-    let result = {
-        external_controller: controller + ":9090"
-    };
-    if (bool_option(settings, "enable_yacd", false)) {
-        result.external_ui = "ui";
-        let secret = option(settings, "yacd_secret_key", "");
-        if (secret != "")
-            result.secret = secret;
-    }
-    return result;
+    return require("singbox.clash_ui").config(settings, service_address);
 }
 
 function cli_bool(value) {
