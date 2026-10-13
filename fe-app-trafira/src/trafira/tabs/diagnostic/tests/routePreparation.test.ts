@@ -142,6 +142,7 @@ it('preserves validation errors from the background worker', () => {
 });
 
 it('preserves resource limit errors from background jobs', () => {
-  expect(() => job({ success: false, running: false, error: 'resource_limit' }))
-    .toThrow(expect.objectContaining({ category: 'resource_limit' }));
+  expect(() =>
+    job({ success: false, running: false, error: 'resource_limit' }),
+  ).toThrow(expect.objectContaining({ category: 'resource_limit' }));
 });
