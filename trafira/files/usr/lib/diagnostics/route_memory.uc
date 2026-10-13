@@ -19,6 +19,8 @@ function tree(owner,seen){
         }
         children=join(" ",pids);
     }
+    let parent_now=identity(alive.pid);
+    if(!parent_now || parent_now.ticks!=alive.ticks)return [];
     for(let pid in split(trim(children),/\s+/)) {
         let child=identity(pid);if(child && child.parent==alive.pid)for(let item in tree(child,seen))push(list,item);
     }
