@@ -135,3 +135,28 @@ test ! -e "$jobdir/codec.pid"
 test ! -e "$jobdir/decode-output"
 test ! -e "$jobdir/calculator.json"
 printf 'supervisor interruption cleanup passed\n'
+
+# Delay registration and kill the supervisor in the launch/registration window.
+cat >"$WORK_DIR/bin/ucode" <<'SH'
+#!/bin/sh
+case "$*" in *service/state.uc*sing-box-service-running*) exit 0;; esac
+case "$*" in *route_job.uc*calculate*) sleep 0.5;; esac
+exec "$REAL_UCODE" "$@"
+SH
+id="$(start)"
+jobdir="$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id"
+for n in $(seq 1 100); do
+ supervisor="$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).worker?.pid||"")' "$jobdir/state.json")"
+ [ -z "$supervisor" ] || break
+ sleep 0.01
+done
+test ! -e "$jobdir/calculator.json"
+kill -KILL "$supervisor"
+sleep 0.05
+new_id="$(start)"
+finish "$new_id"
+sleep 0.6
+test ! -e "$jobdir/calculator.json"
+test ! -e "$jobdir/codec.pid"
+test ! -e "$jobdir/decode-output"
+printf 'supervisor launch race cleanup passed\n'

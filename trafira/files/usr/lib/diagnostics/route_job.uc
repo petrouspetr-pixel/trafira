@@ -89,6 +89,9 @@ function calculate(id){
     let dir=ROOT+"/"+id,request=read(dir+"/request.json",16384),state=read(dir+"/state.json",4096);
     if(!request || !state || !state.running || state.job_id!=id || !analysis.validate(request.raw))return false;
     if(!write(dir+"/calculator.json",identity()))return false;
+    // Registration comes first: a new owner either sees us or we observe its takeover.
+    let owner=state.worker?identity(state.worker.pid):null,current=read(ROOT+"/active.json",1024);
+    if(!owner || owner.ticks!=state.worker.ticks || owner.state=="Z" || !current || current.id!=id){fs.unlink(dir+"/calculator.json");return false;}
     let report=analysis.explain(request.raw,{background:true,workspace:dir,progress:(progress)=>{
         state.progress=progress;write(dir+"/state.json",state);
     }});
