@@ -7,14 +7,15 @@ function tree(owner,seen){
     if(!alive || alive.ticks!=owner.ticks || seen[alive.pid])return [];
     seen[alive.pid]=true;let list=[alive];
     let children=fs.readfile("/proc/"+alive.pid+"/task/"+alive.pid+"/children");
-    if(children==null){seen.unavailable=true;return list;}
+    if(children==null){let again=identity(alive.pid);if(again && again.ticks==alive.ticks && again.state!="Z")seen.unavailable=true;return list;}
     for(let pid in split(trim(children),/\s+/)) {
         let child=identity(pid);if(child && child.parent==alive.pid)for(let item in tree(child,seen))push(list,item);
     }
     return list;
 }
-function sample(owner,workspace){
+function sample(owner,workspace,extra){
     let seen={},processes=tree(owner,seen),rss=0,temporary=0;
+    for(let additional in extra||[])for(let item in tree(additional,seen))push(processes,item);
     for(let item in processes){let value=match(fs.readfile("/proc/"+item.pid+"/status")||"",/VmRSS:[ \t]+([0-9]+)/);if(value)rss+=int(value[1])*1024;}
     for(let name in ["decode-output","cache.stage","cache.stage.meta"]){let info=workspace?fs.lstat(workspace+"/"+name):null;if(info && info.type=="file")temporary+=info.size;}
     let available=match(fs.readfile("/proc/meminfo")||"",/MemAvailable:[ \t]+([0-9]+)/);
@@ -36,7 +37,7 @@ function watch(dir,pid,ticks){
     marker.write(sprintf("%J",identity()));marker.close();
     for(let i=0;i<1300;i++) {
         let calculator=read(dir+"/calculator.json"),alive=identity(pid),state=read(dir+"/state.json");
-        let stats=calculator?sample(owner,dir):null;
+        let stats=calculator?sample(calculator,dir,[owner,identity()]):null;
         if(!alive || alive.ticks!=ticks || alive.state=="Z" || !state || !state.running){if(calculator)stop(tree(calculator,{}));break;}
         if(stats && over_budget(stats)) {
             let error=fs.open(dir+"/memory.error","wex",384);

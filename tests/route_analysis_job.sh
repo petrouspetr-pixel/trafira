@@ -193,6 +193,22 @@ test ! -e "$jobdir/codec.pid"
 test ! -e "$jobdir/decode-output"
 printf 'codec launch race cleanup passed\n'
 
+# Exercise the actual supervisor -> orphan launcher -> codec memory chain.
+cat >"$WORK_DIR/bin/sing-box" <<'SH'
+#!/bin/sh
+exec node -e 'const b=Buffer.alloc(60*1024*1024,1);setInterval(()=>console.log(b.length),1000)'
+SH
+id="$(start)"
+for n in $(seq 1 100); do
+ run route_explain_status "$id" >"$WORK_DIR/memory-stop"
+ if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));process.exit(r.running?1:0)' "$WORK_DIR/memory-stop"; then break; fi
+ sleep 0.1
+done
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success||r.running||r.error!=="resource_limit")throw Error(JSON.stringify(r));' "$WORK_DIR/memory-stop"
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id/codec.pid"
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id/decode-output"
+printf 'actual route supervisor limits decoder RSS\n'
+
 # Refuse to start a calculator when its mandatory RSS monitor cannot launch.
 cat >"$WORK_DIR/bin/ucode" <<'SH'
 #!/bin/sh
