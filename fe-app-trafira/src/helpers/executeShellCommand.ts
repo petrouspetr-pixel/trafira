@@ -37,6 +37,7 @@ const readCommands: Record<string, number> = {
   get_byedpi_status: 0,
   get_system_info: 0,
   get_alice_devices: 0,
+  get_known_devices: 0,
   get_server_capabilities: 0,
   get_ui_capabilities: 0,
   get_ui_state: 0,

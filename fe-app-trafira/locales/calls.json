@@ -1049,7 +1049,7 @@
     "call": "Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device.",
     "key": "Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:273"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:331"
     ]
   },
   {
@@ -1338,7 +1338,7 @@
     "call": "Connection route",
     "key": "Connection route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:122"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:152"
     ]
   },
   {
@@ -1473,6 +1473,13 @@
     ]
   },
   {
+    "call": "Could not load detected devices. Enter the address manually or refresh the list.",
+    "key": "Could not load detected devices. Enter the address manually or refresh the list.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:464"
+    ]
+  },
+  {
     "call": "Could not read saved-copy status. Refresh the status to try again.",
     "key": "Could not read saved-copy status. Refresh the status to try again.",
     "places": [
@@ -1539,7 +1546,7 @@
     "call": "Current selected node",
     "key": "Current selected node",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:148"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:178"
     ]
   },
   {
@@ -1630,7 +1637,7 @@
     "call": "Destination port",
     "key": "Destination port",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:281"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:340"
     ]
   },
   {
@@ -1650,6 +1657,13 @@
     ]
   },
   {
+    "call": "Detected device",
+    "key": "Detected device",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:325"
+    ]
+  },
+  {
     "call": "detour must be a non-empty string",
     "key": "detour must be a non-empty string",
     "places": [
@@ -1660,7 +1674,7 @@
     "call": "Device by IP address",
     "key": "Device by IP address",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:174"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:204"
     ]
   },
   {
@@ -1674,8 +1688,8 @@
     "call": "Device IP address",
     "key": "Device IP address",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:267"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:224",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:324"
     ]
   },
   {
@@ -1689,15 +1703,15 @@
     "call": "Device MAC (optional)",
     "key": "Device MAC (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:184",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:293"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:229",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:356"
     ]
   },
   {
     "call": "Device MAC and incoming interface (if needed)",
     "key": "Device MAC and incoming interface (if needed)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:291"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:354"
     ]
   },
   {
@@ -1851,8 +1865,8 @@
     "call": "DNS policy (A query)",
     "key": "DNS policy (A query)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:131"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:159",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:161"
     ]
   },
   {
@@ -2054,7 +2068,7 @@
     "call": "Domain",
     "key": "Domain",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:278"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:336"
     ]
   },
   {
@@ -2395,6 +2409,14 @@
     ]
   },
   {
+    "call": "Enter an address manually",
+    "key": "Enter an address manually",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:208",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:419"
+    ]
+  },
+  {
     "call": "Enter HWID",
     "key": "Enter HWID",
     "places": [
@@ -2405,7 +2427,7 @@
     "call": "Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address.",
     "key": "Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:255"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:293"
     ]
   },
   {
@@ -2560,7 +2582,7 @@
     "call": "Explain route",
     "key": "Explain route",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:301"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:364"
     ]
   },
   {
@@ -2668,7 +2690,7 @@
     "call": "Failed to execute component action",
     "key": "Failed to execute component action",
     "places": [
-      "src/trafira/tabs/updates/componentMessages.ts:71"
+      "src/trafira/tabs/updates/componentMessages.ts:72"
     ]
   },
   {
@@ -2816,8 +2838,8 @@
     "call": "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.",
     "key": "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:199",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:251"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:246",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:289"
     ]
   },
   {
@@ -3202,8 +3224,8 @@
     "call": "Incoming interface (optional)",
     "key": "Incoming interface (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:188",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:294"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:234",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:357"
     ]
   },
   {
@@ -4002,6 +4024,14 @@
     ]
   },
   {
+    "call": "Loading detected devices",
+    "key": "Loading detected devices",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:213",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:405"
+    ]
+  },
+  {
     "call": "Loading...",
     "key": "Loading...",
     "places": [
@@ -4359,6 +4389,13 @@
     ]
   },
   {
+    "call": "No detected devices. Enter the address manually or refresh the list.",
+    "key": "No detected devices. Enter the address manually or refresh the list.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:458"
+    ]
+  },
+  {
     "call": "No devices",
     "key": "No devices",
     "places": [
@@ -4369,7 +4406,7 @@
     "call": "No DNS query was sent from the selected device.",
     "key": "No DNS query was sent from the selected device.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:138"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:168"
     ]
   },
   {
@@ -5157,7 +5194,7 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2482",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2516",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:282"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:341"
     ]
   },
   {
@@ -5200,16 +5237,16 @@
     "call": "Real destination IP (optional)",
     "key": "Real destination IP (optional)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:193",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:195",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:240",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:242",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:283"
     ]
   },
   {
     "call": "Real destination IP (required for the router)",
     "key": "Real destination IP (required for the router)",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:244"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:282"
     ]
   },
   {
@@ -5286,7 +5323,8 @@
     "call": "Refresh devices",
     "key": "Refresh devices",
     "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:431"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:431",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:220"
     ]
   },
   {
@@ -5802,6 +5840,13 @@
     "key": "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface.",
     "places": [
       "src/trafira/tabs/diagnostic/routePresentation.ts:9"
+    ]
+  },
+  {
+    "call": "Select a device to fill its IP, MAC and incoming interface. You can also enter them manually.",
+    "key": "Select a device to fill its IP, MAC and incoming interface. You can also enter them manually.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:455"
     ]
   },
   {
@@ -6349,6 +6394,13 @@
     ]
   },
   {
+    "call": "Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation.",
+    "key": "Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:145"
+    ]
+  },
+  {
     "call": "Some routes could not be fully verified. Review existing rules and saved list copies.",
     "key": "Some routes could not be fully verified. Review existing rules and saved list copies.",
     "places": [
@@ -6380,7 +6432,7 @@
     "call": "Source",
     "key": "Source",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:337",
       "src/trafira/tabs/monitoring/initController.ts:831",
       "src/trafira/tabs/monitoring/initController.ts:881"
     ]
@@ -6658,7 +6710,7 @@
     "call": "TCP, unknown protocol",
     "key": "TCP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:221"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:268"
     ]
   },
   {
@@ -6812,6 +6864,13 @@
     "key": "The profile operation failed.",
     "places": [
       "src/trafira/tabs/diagnostic/profilePanel.ts:87"
+    ]
+  },
+  {
+    "call": "The request completed, but the route cannot be confirmed with the available data. This is not a website availability failure. See the reasons below.",
+    "key": "The request completed, but the route cannot be confirmed with the available data. This is not a website availability failure. See the reasons below.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:126"
     ]
   },
   {
@@ -7028,7 +7087,7 @@
     "call": "This router",
     "key": "This router",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:175"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:205"
     ]
   },
   {
@@ -7042,7 +7101,7 @@
     "call": "This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings.",
     "key": "This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:248"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:286"
     ]
   },
   {
@@ -7370,7 +7429,7 @@
     "call": "UDP, unknown protocol",
     "key": "UDP, unknown protocol",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:222"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:269"
     ]
   },
   {
@@ -7460,6 +7519,7 @@
     "call": "unknown",
     "key": "unknown",
     "places": [
+      "src/trafira/helpers/singBoxVariant.ts:28",
       "src/trafira/services/systemInfo.service.ts:10",
       "src/trafira/services/systemInfo.service.ts:11",
       "src/trafira/services/systemInfo.service.ts:12",
@@ -7469,7 +7529,6 @@
       "src/trafira/services/systemInfo.service.ts:22",
       "src/trafira/services/systemInfo.service.ts:25",
       "src/trafira/services/systemInfo.service.ts:26",
-      "src/trafira/helpers/singBoxVariant.ts:28",
       "src/trafira/tabs/updates/initController.ts:335",
       "src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25"
     ]
@@ -7946,7 +8005,7 @@
     "call": "Where will the connection go?",
     "key": "Where will the connection go?",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:269"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:327"
     ]
   },
   {
@@ -7995,8 +8054,8 @@
     "call": "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.",
     "key": "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.",
     "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:206",
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:258"
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:253",
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:296"
     ]
   },
   {

@@ -103,6 +103,7 @@ function show_help() {
     print("    get_zapret2_status      Get zapret2 provider and Trafira-managed nfqws2 status\n");
     print("    get_byedpi_status       Get ByeDPI provider and Trafira-managed ciadpi status\n");
     print("    get_system_info         Get system information in JSON format\n");
+    print("    get_known_devices       Discover devices independently of Alice Mode (JSON)\n");
     print("    get_alice_devices       Get Alice Mode device routing report in JSON format\n");
     print("    get_server_capabilities Get server UI capabilities in JSON format\n");
     print("    get_ui_capabilities     Get lightweight UI capabilities in JSON format\n");
@@ -180,6 +181,7 @@ function command_spec(command) {
         get_zapret2_status: [ "diagnostics/runtime.uc", "get-zapret2-status", 0 ],
         get_byedpi_status: [ "diagnostics/runtime.uc", "get-byedpi-status", 0 ],
         get_system_info: [ "diagnostics/runtime.uc", "get-system-info", 0 ],
+        get_known_devices: [ "diagnostics/alice.uc", "get-known-devices", 0 ],
         get_alice_devices: [ "diagnostics/alice.uc", "get-alice-devices", 0 ],
         get_server_capabilities: [ "diagnostics/runtime.uc", "get-server-capabilities", 0 ],
         get_ui_capabilities: [ "service/ui.uc", "get-ui-capabilities", 0 ],

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 15:18+0300\n"
-"PO-Revision-Date: 2026-10-10 15:18+0300\n"
+"POT-Creation-Date: 2026-10-13 12:52+0300\n"
+"PO-Revision-Date: 2026-10-13 12:52+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -620,6 +620,9 @@ msgstr "Не удалось проверить маршрут. Убедитес�
 msgid "Could not load available versions. Check the connection and refresh the list."
 msgstr "Не удалось загрузить доступные версии. Проверьте подключение и обновите список."
 
+msgid "Could not load detected devices. Enter the address manually or refresh the list."
+msgstr "Не удалось загрузить устройства. Введите адрес вручную или обновите список."
+
 msgid "Could not read saved-copy status. Refresh the status to try again."
 msgstr "Не удалось прочитать состояние копий. Нажмите «Обновить состояние», чтобы повторить."
 
@@ -694,6 +697,9 @@ msgstr "Определить протокол"
 
 msgid "Detect server country"
 msgstr "Определять страну сервера"
+
+msgid "Detected device"
+msgstr "Обнаруженное устройство"
 
 msgid "detour must be a non-empty string"
 msgstr "detour должен быть непустой строкой"
@@ -1003,6 +1009,9 @@ msgstr "Укажите корректный домен, порт назначе�
 
 msgid "Enter an absolute file path"
 msgstr "Введите абсолютный путь к файлу"
+
+msgid "Enter an address manually"
+msgstr "Ввести адрес вручную"
 
 msgid "Enter HWID"
 msgstr "Укажите HWID"
@@ -1667,6 +1676,9 @@ msgstr "Загрузка клиентской ссылки..."
 msgid "Loading connections"
 msgstr "Загрузка подключений"
 
+msgid "Loading detected devices"
+msgstr "Загрузка обнаруженных устройств"
+
 msgid "Loading..."
 msgstr "Загрузка..."
 
@@ -1813,6 +1825,9 @@ msgstr "Для этой установки нет совместимых вер�
 
 msgid "No conflict detected"
 msgstr "Конфликт не обнаружен"
+
+msgid "No detected devices. Enter the address manually or refresh the list."
+msgstr "Устройства не обнаружены. Введите адрес вручную или обновите список."
 
 msgid "No devices"
 msgstr "Нет устройств"
@@ -2411,6 +2426,9 @@ msgstr "Выберите подключение"
 msgid "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface."
 msgstr "Выберите обнаруженное устройство или укажите его входящий интерфейс, обычно br-lan, в разделе «MAC устройства и входящий интерфейс»."
 
+msgid "Select a device to fill its IP, MAC and incoming interface. You can also enter them manually."
+msgstr "Выберите устройство для заполнения IP, MAC и входящего интерфейса. Эти данные также можно ввести вручную."
+
 msgid "Select a known device"
 msgstr "Выберите обнаруженное устройство"
 
@@ -2639,6 +2657,9 @@ msgstr "Некоторые записи соседей LAN некорректн�
 msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
 msgstr "Часть списков превышает ограничения диагностики по размеру или времени. Эта проверка не может подтвердить их правила."
 
+msgid "Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation."
+msgstr "Некоторые необходимые списки не удалось обработать в пределах ограничений диагностики. Выбор устройства не устранит это ограничение."
+
 msgid "Some routes could not be fully verified. Review existing rules and saved list copies."
 msgstr "Некоторые маршруты не удалось проверить полностью. Проверьте существующие правила и сохранённые копии списков."
 
@@ -2833,6 +2854,9 @@ msgstr "Формат профиля некорректен или не подд�
 
 msgid "The profile operation failed."
 msgstr "Не удалось выполнить операцию с профилем."
+
+msgid "The request completed, but the route cannot be confirmed with the available data. This is not a website availability failure. See the reasons below."
+msgstr "Запрос выполнен, но имеющихся данных недостаточно для подтверждения маршрута. Это не ошибка доступности сайта. Причины указаны ниже."
 
 msgid "The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again."
 msgstr "Истекло время проверки маршрута. Роутер может продолжать обработку списков. Подождите перед повторной проверкой."

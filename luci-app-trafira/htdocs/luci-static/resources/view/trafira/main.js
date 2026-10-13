@@ -1298,6 +1298,7 @@ var readCommands = {
   get_byedpi_status: 0,
   get_system_info: 0,
   get_alice_devices: 0,
+  get_known_devices: 0,
   get_server_capabilities: 0,
   get_ui_capabilities: 0,
   get_ui_state: 0,
@@ -8614,6 +8615,28 @@ function renderRouteExplanationResult(report, error, busy) {
           )
         )
       ] : [],
+      ...report.decision.status === "indeterminate" ? [
+        E(
+          "p",
+          { class: "alert-message notice" },
+          _(
+            "The request completed, but the route cannot be confirmed with the available data. This is not a website availability failure. See the reasons below."
+          )
+        )
+      ] : [],
+      ...report.decision.status === "indeterminate" && report.decision.missing.some(
+        (reason) => reason.startsWith("rule_set:")
+      ) && report.rule_sets?.unavailable_reasons?.some(
+        (item) => item.reason === "limit" && report.decision.missing.includes("rule_set:" + item.tag)
+      ) ? [
+        E(
+          "p",
+          {},
+          _(
+            "Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation."
+          )
+        )
+      ] : [],
       decisionView(
         _("Connection route"),
         report.decision,
@@ -8664,6 +8687,21 @@ var routeExplanationPanel = {
       E("option", { value: "device" }, _("Device by IP address")),
       E("option", { value: "router" }, _("This router"))
     ]);
+    const devicePicker = E("select", { id: "trafira-route-device" }, [
+      E("option", { value: "" }, _("Enter an address manually"))
+    ]);
+    const deviceStatus = E(
+      "p",
+      { role: "status" },
+      _("Loading detected devices")
+    );
+    const macOptions = E("datalist", { id: "trafira-route-macs" });
+    const interfaceOptions = E("datalist", { id: "trafira-route-interfaces" });
+    const refreshDevices = E(
+      "button",
+      { type: "button", class: "cbi-button" },
+      _("Refresh devices")
+    );
     const ip = E("input", {
       type: "text",
       placeholder: _("Device IP address"),
@@ -8671,11 +8709,13 @@ var routeExplanationPanel = {
     });
     const mac = E("input", {
       type: "text",
-      placeholder: _("Device MAC (optional)")
+      placeholder: _("Device MAC (optional)"),
+      list: "trafira-route-macs"
     });
     const iface = E("input", {
       type: "text",
-      placeholder: _("Incoming interface (optional)")
+      placeholder: _("Incoming interface (optional)"),
+      list: "trafira-route-interfaces"
     });
     const destination = E("input", {
       id: "trafira-route-destination",
@@ -8712,23 +8752,14 @@ var routeExplanationPanel = {
       E("option", { value: "udp" }, _("UDP, unknown protocol"))
     ]);
     let devices = [];
-    source.addEventListener("change", () => {
-      const device = devices[Number(source.value)];
-      if (device) {
-        ip.value = device.ip;
-        mac.value = device.mac || "";
-        iface.value = device.interface || "";
-      } else if (source.value === "device") {
-        mac.value = "";
-        iface.value = "";
-      }
-      ip.readOnly = mac.readOnly = iface.readOnly = !!device;
+    const updateSource = () => {
       const router = source.value === "router";
       ip.disabled = router;
       ip.required = !router;
       mac.disabled = router;
       iface.disabled = router;
       deviceField.hidden = router;
+      pickerField.hidden = router;
       destination.required = router;
       destinationLabel.textContent = router ? _("Real destination IP (required for the router)") : _("Real destination IP (optional)");
       destination.placeholder = destinationLabel.textContent || "";
@@ -8742,12 +8773,29 @@ var routeExplanationPanel = {
       ) : _(
         "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
       );
+    };
+    source.addEventListener("change", updateSource);
+    devicePicker.addEventListener("change", () => {
+      const device = devicePicker.value === "" ? void 0 : devices[Number(devicePicker.value)];
+      if (device) {
+        source.value = "device";
+        updateSource();
+        ip.value = device.ip;
+        mac.value = device.mac || "";
+        iface.value = device.interface || "";
+      }
+    });
+    ip.addEventListener("input", () => {
+      devicePicker.value = "";
+      mac.value = "";
+      iface.value = "";
     });
     const field = (label, control) => E("label", { class: "fkp_diagnostic-field" }, [
       E("span", {}, label),
       control
     ]);
     const deviceField = field(_("Device IP address"), ip);
+    const pickerField = field(_("Detected device"), devicePicker);
     const form = E("form", { class: "fkp_diagnostic-panel" }, [
       E("h3", {}, _("Where will the connection go?")),
       E(
@@ -8760,6 +8808,7 @@ var routeExplanationPanel = {
       E("div", { class: "fkp_diagnostic-fields" }, [
         field(_("Domain"), domain),
         field(_("Source"), source),
+        pickerField,
         deviceField,
         field(_("Destination port"), port),
         field(_("Protocol"), protocol),
@@ -8768,6 +8817,10 @@ var routeExplanationPanel = {
           destination
         ])
       ]),
+      refreshDevices,
+      deviceStatus,
+      macOptions,
+      interfaceOptions,
       sourceHelp,
       destinationHelp,
       E("details", { class: "fkp_diagnostic-details" }, [
@@ -8819,26 +8872,63 @@ var routeExplanationPanel = {
       })
     );
     controller.mount();
-    void command("get_alice_devices").then((report) => {
-      if (generation3 !== mountId) return;
-      devices = [];
-      for (const device of report.devices || [])
-        for (const address of device.ips || []) {
-          const index = devices.push({
-            ip: address,
-            mac: device.mac,
-            interface: device.interface
-          }) - 1;
-          source.append(
-            E(
-              "option",
-              { value: String(index) },
-              `${device.name || address} \u2014 ${address}`
+    const loadDevices = () => {
+      refreshDevices.disabled = true;
+      deviceStatus.textContent = _("Loading detected devices");
+      return command("get_known_devices").then((report) => {
+        if (generation3 !== mountId) return;
+        devices = [];
+        devicePicker.replaceChildren(
+          E("option", { value: "" }, _("Enter an address manually"))
+        );
+        macOptions.replaceChildren(
+          ...[
+            ...new Set(
+              (report.devices || []).map((d) => d.mac).filter(Boolean)
             )
+          ].map((value) => E("option", { value }))
+        );
+        interfaceOptions.replaceChildren(
+          ...[
+            .../* @__PURE__ */ new Set([
+              ...report.source_interfaces || [],
+              ...(report.devices || []).map((d) => d.interface).filter(Boolean)
+            ])
+          ].map((value) => E("option", { value }))
+        );
+        for (const device of report.devices || [])
+          for (const address of device.ips || []) {
+            const index = devices.push({
+              ip: address,
+              mac: device.mac,
+              interface: device.interface
+            }) - 1;
+            devicePicker.append(
+              E(
+                "option",
+                { value: String(index) },
+                `${device.name || address} \u2014 ${address}`
+              )
+            );
+          }
+        deviceStatus.textContent = devices.length ? _(
+          "Select a device to fill its IP, MAC and incoming interface. You can also enter them manually."
+        ) : _(
+          "No detected devices. Enter the address manually or refresh the list."
+        );
+      }).catch(() => {
+        if (generation3 === mountId)
+          deviceStatus.textContent = _(
+            "Could not load detected devices. Enter the address manually or refresh the list."
           );
-        }
-    }).catch(() => {
+      }).finally(() => {
+        if (generation3 === mountId) refreshDevices.disabled = false;
+      });
+    };
+    refreshDevices.addEventListener("click", () => {
+      void loadDevices();
     });
+    void loadDevices();
   },
   unmount() {
     mountId++;
