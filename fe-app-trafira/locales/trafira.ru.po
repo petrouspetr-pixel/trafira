@@ -3424,3 +3424,9 @@ msgstr "Для подготовки этой проверки недостато
 
 msgid "The configuration has more rule sets than this diagnostic can process safely."
 msgstr "В конфигурации больше списков, чем эта диагностика может безопасно обработать."
+
+msgid "Disable selected IPv6 probes"
+msgstr "Отключить отдельные IPv6-проверки"
+
+msgid "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected."
+msgstr "Возвращать DNS-ответ «домен не найден» для отдельных IPv6-проверок Meta и Cloudflare до выдачи FakeIP. Действует только при «Только IPv4». Остальные домены CDN и устройства в обход Trafira не затрагиваются."

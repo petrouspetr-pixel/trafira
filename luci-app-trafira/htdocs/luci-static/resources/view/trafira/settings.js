@@ -323,6 +323,18 @@ function createSettingsContent(section, capabilities) {
 
   o = section.option(
     form.Flag,
+    "disable_ipv6_probes",
+    _("Disable selected IPv6 probes"),
+    _(
+      "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected.",
+    ),
+  );
+  o.depends("dns_strategy", "ipv4_only");
+  o.default = "0";
+  o.rmempty = false;
+
+  o = section.option(
+    form.Flag,
     "dns_detour_enabled",
     _("DNS through proxy"),
     _("Route main DNS requests through the selected section."),

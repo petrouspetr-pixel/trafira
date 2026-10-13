@@ -88,7 +88,7 @@ function evaluate(rule, request, rulesets, budget, depth, source_mode) {
     let groups = { destination:[], source:[], port:[], source_port:[] };
     let ignored = ["type", "mode", "rules", "invert", "action", "outbound", "server", "timeout",
         "sniffer", "override_address", "override_port", "strategy", "disable_cache", "rewrite_ttl",
-        "reject", "method", "no_drop", "rule_set_ip_cidr_match_source", "rule_set_ipcidr_match_source"];
+        "reject", "method", "no_drop", "rcode", "rule_set_ip_cidr_match_source", "rule_set_ipcidr_match_source"];
     for (let key, expected in rule) {
         if (index(ignored, key) >= 0) continue;
         if (key == "rule_set") {
@@ -146,7 +146,7 @@ function explain(config, request, sources, rulesets) {
             }
             continue;
         }
-        if (action == "reject") selected = {status:"blocked",rule_index:i};
+        if (action == "reject" || (action == "predefined" && rule.rcode == "NXDOMAIN")) selected = {status:"blocked",rule_index:i};
         else if (action == "route" && (rule.outbound || rule.server)) selected = {status:"matched",rule_index:i,outbound:rule.outbound || rule.server};
         else if (action == "hijack-dns") selected = {status:"matched",rule_index:i,outbound:"dns"};
         else return {status:"indeterminate",rule_index:i,trace,missing:["unsupported_action:" + action]};
