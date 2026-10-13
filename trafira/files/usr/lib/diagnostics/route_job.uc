@@ -29,7 +29,7 @@ function lock(){
     let info=fs.lstat(ROOT+"/lock");if(info && info.type!="file")return null;
     let file=fs.open(ROOT+"/lock","ae",384);
     if(!file)return null;
-    if(!file.lock("en")){file.close();return null;}
+    if(!file.lock("xn")){file.close();return null;}
     return file;
 }
 function cleanup(id){
