@@ -1,8 +1,8 @@
 // Independent RSS monitor: virtual-address limits cannot bound Go's resident heap.
 let fs=require("fs"),identity=require("service.operation_lock").identity;
-const MAX_MEMORY=48*1024*1024,RESERVE=32*1024*1024;
+const MAX_MEMORY=48*1024*1024,RESERVE=64*1024*1024;
 function memory_budget(total){return total>0?min(128*1024*1024,int(total/4)):MAX_MEMORY;}
-function over_budget(s){return s.unsupported===true || s.rss+s.temporary>(s.budget||MAX_MEMORY) || (s.available!=null && s.available<RESERVE);}
+function over_budget(s){return s.unsupported===true || (s.private_rss!=null?s.private_rss:s.rss)+s.temporary>(s.budget||MAX_MEMORY) || (s.available!=null && s.available<RESERVE);}
 function tree(owner,seen){
     let alive=owner?identity(owner.pid):null;
     if(!alive || alive.ticks!=owner.ticks || seen[alive.pid])return [];
@@ -25,13 +25,16 @@ function tree(owner,seen){
     return list;
 }
 function sample(owner,workspace,extra){
-    let seen={},processes=tree(owner,seen),rss=0,temporary=0;
+    let seen={},processes=tree(owner,seen),rss=0,private_rss=0,temporary=0;
     for(let additional in extra||[])for(let item in tree(additional,seen))push(processes,item);
-    for(let item in processes){let value=match(fs.readfile("/proc/"+item.pid+"/status")||"",/VmRSS:[ \t]+([0-9]+)/);if(value)rss+=int(value[1])*1024;}
+    for(let item in processes){
+        let status=fs.readfile("/proc/"+item.pid+"/status")||"",value=match(status,/VmRSS:[ \t]+([0-9]+)/),anonymous=match(status,/RssAnon:[ \t]+([0-9]+)/),shared=match(status,/RssShmem:[ \t]+([0-9]+)/);
+        if(value){rss+=int(value[1])*1024;private_rss+=(anonymous && shared?int(anonymous[1])+int(shared[1]):int(value[1]))*1024;}
+    }
     for(let name in ["decode-output","cache.stage","cache.stage.meta"]){let info=workspace?fs.lstat(workspace+"/"+name):null;if(info && info.type=="file")temporary+=info.size;}
     let meminfo=fs.readfile("/proc/meminfo")||"",total=match(meminfo,/MemTotal:[ \t]+([0-9]+)/);
     let available=match(meminfo,/MemAvailable:[ \t]+([0-9]+)/);
-    return {rss,temporary,budget:memory_budget(total?int(total[1])*1024:0),unsupported:seen.unavailable===true,available:available?int(available[1])*1024:null,processes};
+    return {rss,private_rss,temporary,budget:memory_budget(total?int(total[1])*1024:0),unsupported:seen.unavailable===true,available:available?int(available[1])*1024:null,processes};
 }
 function stop(processes){
     // Descendants first, with start-time verification to avoid reused PIDs.
