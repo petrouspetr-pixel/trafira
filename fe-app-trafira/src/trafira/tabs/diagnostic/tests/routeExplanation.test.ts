@@ -47,7 +47,8 @@ describe('route explanation controller', () => {
     await controller.submit(request);
     finishOld(report('old'));
     await old;
-    expect(render.mock.lastCall?.[0]?.decision.outbound).toBe('new');
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(render.mock.lastCall?.[0]?.decision.outbound).toBe('old');
   });
   it('discards results after unmount and clears old state on mount', async () => {
     let finish!: (value: ExplainReport) => void;

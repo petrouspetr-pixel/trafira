@@ -151,7 +151,7 @@ function load_background_sets(config,limitations,options) {
         let rule=rules[i],reason=null,data=null,bytes=0;
         if(type(rule.tag)!="string")continue;
         if(options.progress)options.progress({completed:i,total,phase:"preparing"});
-        if(rule.type=="inline")data=type(rule.rules)=="array"?{rules:rule.rules}:null;
+        if(rule.type=="inline"){bytes=length(sprintf("%J",rule.rules));if(used+bytes>codec.MAX_TOTAL)reason="size_limit";else {data=type(rule.rules)=="array"?{rules:rule.rules}:null;used+=bytes;}}
         else {
             let path=rule.type=="remote"?cache.path(rule):rule.type=="local"?rule.path:null,format=rule.format||"binary";
             if(rule.type=="remote")remote=true;
@@ -161,15 +161,17 @@ function load_background_sets(config,limitations,options) {
             else {
                 let digest=provenance.hash_file(path),key=digest && core?codec.cache_key(digest,format,core.digest):null;
                 if(digest)push(checked,{path,digest});
-                data=key?codec.get(key):null;
-                if(data){bytes=length(sprintf("%J",data));cached++;}
+                let hit=key?codec.get(key,codec.MAX_TOTAL-used):null;
+                if(hit && hit.error)reason=hit.error;
+                else if(hit){data=hit.data;bytes=hit.bytes;cached++;}
+                else if(used>=codec.MAX_TOTAL)reason="size_limit";
                 else if(!digest)reason="decode_failed";
                 else if(clock()[0]>=deadline)reason="job_timeout";
                 else {
-                    let result=codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)));
+                    let result=codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_TOTAL-used,options.workspace);
                     data=result.data;bytes=result.bytes||0;reason=result.error;
                     if(digest!=provenance.hash_file(path)){data=null;reason="changed";}
-                    if(data && key && core.digest==provenance.hash_file(core.path))codec.put(key,data);
+                    if(data && key && core.digest==provenance.hash_file(core.path))codec.put(key,data,options.workspace);
                 }
                 if(used+bytes>codec.MAX_TOTAL){data=null;reason="size_limit";}
                 else used+=bytes;
@@ -253,7 +255,7 @@ function explain(raw,options) {
     let dns=active?matcher.explain({route:obj(config.dns)},dns_request,{route:obj(origins).dns},sets):decision("indeterminate","applied_capture_state_unavailable");
     let selected=route.outbound ? selected_node(config,route.outbound) : null;
     if (digest!=provenance.hash_file(path)) return error("configuration_changed_retry");
-    if(options.background) {
+    if(options.background && locked) {
         read_guard=fs.open(root+"/operation.lock","re");
         if(!read_guard || !read_guard.lock("sn"))return error("configuration_changed_retry");
         if(active && (system("exec ucode -L "+quote(lib)+" "+quote(lib+"/service/state.uc")+" sing-box-service-running >/dev/null 2>&1",3000)!=0 || system("nft list table inet "+quote(require("core.constants").NFT_TABLE_NAME)+" >/dev/null 2>&1",2000)!=0))return error("configuration_changed_retry");

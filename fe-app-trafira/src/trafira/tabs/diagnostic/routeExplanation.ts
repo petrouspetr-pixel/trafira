@@ -52,6 +52,7 @@ type RouteFailure =
   | 'rpc_failed'
   | 'invalid_response'
   | 'render_failed'
+  | 'invalid_request'
   | 'busy'
   | 'worker_timeout'
   | 'worker_interrupted'
@@ -203,6 +204,7 @@ export function parseRouteJobCommandResult(result: {
     throw new RouteExplanationError('invalid_response');
   if (!value.success) {
     const allowed = [
+      'invalid_request',
       'busy',
       'worker_timeout',
       'worker_interrupted',
@@ -263,6 +265,7 @@ export async function runRoutePreparation(
 export class RouteExplanationController {
   private active = false;
   private generation = 0;
+  private pending = false;
   constructor(
     private read: (
       request: ExplainRequest,
@@ -278,6 +281,7 @@ export class RouteExplanationController {
   ) {}
   mount() {
     this.active = true;
+    this.pending = false;
     this.generation++;
     this.render(null, '', false);
   }
@@ -286,7 +290,8 @@ export class RouteExplanationController {
     this.generation++;
   }
   async submit(request: ExplainRequest) {
-    if (!this.active) return;
+    if (!this.active || this.pending) return;
+    this.pending = true;
     const generation = ++this.generation;
     this.render(null, '', true);
     let report: ExplainReport;
@@ -300,6 +305,7 @@ export class RouteExplanationController {
         active,
       );
     } catch (error) {
+      if (this.generation === generation) this.pending = false;
       if (this.active && this.generation === generation)
         this.render(
           null,
@@ -311,6 +317,7 @@ export class RouteExplanationController {
       return;
     }
     if (!this.active || this.generation !== generation) return;
+    this.pending = false;
     if (!report.success) {
       const error = [
         'invalid_request',

@@ -27,14 +27,15 @@ function cache_key(digest,format,core){
     let output=pipe.read(128),status=pipe.close(),found=match(output||"",/^([a-f0-9]{64}) /);
     return status==0 && found?found[1]:null;
 }
-function get(key){
+function get(key,budget){
     if(!key || !ensure())return null;
     let path=ROOT+"/"+key+".json",info=fs.lstat(path),metadata=read(ROOT+"/"+key+".meta",256);
     if(!info || info.type!="file" || !metadata || type(metadata.digest)!="string" || !match(metadata.digest,/^[a-f0-9]{64}$/) || hash(path)!=metadata.digest)return null;
-    let entry=read(path,MAX_FILE+1024);
-    return entry && entry.schema==1 && entry.key==key && type(entry.data)=="object" && type(entry.data.rules)=="array"?entry.data:null;
+    if(info.size>budget)return {error:"size_limit"};
+    let entry=read(path,min(MAX_FILE+1024,budget));
+    return entry && entry.schema==1 && entry.key==key && type(entry.data)=="object" && type(entry.data.rules)=="array" && hash(path)==metadata.digest?{data:entry.data,bytes:info.size}:null;
 }
-function put(key,data){
+function put(key,data,workspace){
     if(!key || !ensure())return false;
     let text=sprintf("%J",{schema:1,key,data});if(length(text)>MAX_FILE)return false;
     let entries=[],total=0;
@@ -54,7 +55,7 @@ function put(key,data){
         total-=old.bytes;
     }
     if(total+length(text)+128>MAX_TOTAL)return false;
-    let now=clock(),temporary=ROOT+"/"+key+"."+sprintf("%x-%x",now[0],now[1])+".stage";
+    let temporary=workspace+"/cache.stage";
     let file=fs.open(temporary,"wex",384);if(!file)return false;
     let ok=file.write(text)==length(text);file.close();
     let digest=ok?hash(temporary):null,meta=temporary+".meta",output=digest?fs.open(meta,"wex",384):null;
@@ -63,18 +64,36 @@ function put(key,data){
     if(ok)ok=fs.rename(temporary,ROOT+"/"+key+".json") && fs.rename(meta,ROOT+"/"+key+".meta");
     fs.unlink(temporary);fs.unlink(meta);return !!ok;
 }
-function decode(path,format,milliseconds){
-    let pipe=fs.popen("umask 077; mktemp /tmp/trafira-route-decode.XXXXXX","re");
-    if(!pipe)return {error:"storage_unavailable"};
-    let temporary=trim(pipe.read(256)||"");
-    if(pipe.close()!=0 || !match(temporary,/^\/tmp\/trafira-route-decode[.][A-Za-z0-9]+$/))return {error:"storage_unavailable"};
-    // exec makes the native codec the timed child. No shell watchdog or RPC pipe remains.
-    let command="ulimit -f 32768; exec sing-box rule-set "+(format=="source"?"compile":"decompile")+" "+quote(path)+" -o "+quote(temporary)+" >/dev/null 2>&1";
-    let status=system(command,milliseconds),target=format=="source"?path:temporary,info=fs.stat(target);
-    let data=status==0?read(target,MAX_FILE,format=="source"):null;
-    fs.unlink(temporary);
-    if(status==-9)return {error:"decode_timeout"};
-    if(status==-25 || (info && info.size>MAX_FILE))return {error:"size_limit"};
+// Workspace is supplied by the private supervisor, never by an RPC request.
+function cleanup(workspace){
+    let marker=fs.lstat(workspace+"/codec.pid");
+    if(marker && marker.type=="file" && marker.size<128){
+        let fields=split(trim(fs.readfile(workspace+"/codec.pid")||""),/\s+/);
+        let alive=length(fields)==2?require("service.operation_lock").identity(fields[0]):null;
+        if(alive && alive.ticks==fields[1])system("kill -KILL "+alive.pid+" 2>/dev/null");
+    }
+    for(let name in ["codec.pid","decode-output","cache.stage","cache.stage.meta"]){
+        let path=workspace+"/"+name,info=fs.lstat(path);
+        if(info && info.type=="file")fs.unlink(path);
+    }
+}
+function decode(path,format,milliseconds,budget,workspace){
+    let limit=min(MAX_FILE,budget),temporary=workspace+"/decode-output";
+    if(limit<=0)return {error:"size_limit"};
+    let input=fs.stat(path);
+    if(format=="source" && input && input.size>limit)return {error:"size_limit"};
+    let file=fs.open(temporary,"wex",384);
+    if(!file)return {error:"storage_unavailable"};file.close();
+    // Record the timed native child identity so the supervisor can clean up after SIGKILL.
+    let marker=workspace+"/codec.pid";
+    let command="ulimit -Sv unlimited; umask 077; ticks=$(awk '{print $22}' /proc/$$/stat); printf '%s %s' $$ \"$ticks\" > "+quote(marker)+"; ulimit -f "+int((limit+511)/512)+"; exec sing-box rule-set "+(format=="source"?"compile":"decompile")+" "+quote(path)+" -o "+quote(temporary)+" >/dev/null 2>&1";
+    let started=clock(true),status=system(command,milliseconds),ended=clock(true);
+    let target=format=="source"?path:temporary,info=fs.stat(target);
+    let data=status==0 && info && info.size<=limit?read(target,limit,format=="source"):null;
+    fs.unlink(temporary);fs.unlink(marker);
+    let elapsed=(ended[0]-started[0])*1000+(ended[1]-started[1])/1000000;
+    if(status==-9 && elapsed>=milliseconds-100)return {error:"decode_timeout"};
+    if(status==-25 || (info && info.size>limit))return {error:"size_limit"};
     return type(data)=="object" && type(data.rules)=="array"?{data,bytes:info.size}:{error:"decode_failed"};
 }
-return {identity,cache_key,get,put,decode,MAX_FILE,MAX_TOTAL};
+return {identity,cache_key,get,put,decode,cleanup,MAX_FILE,MAX_TOTAL};

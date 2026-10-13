@@ -134,3 +134,9 @@ describe('background route transport', () => {
     ).toThrow(expect.objectContaining({ category: 'invalid_response' }));
   });
 });
+
+it('preserves validation errors from the background worker', () => {
+  expect(() =>
+    job({ success: false, running: false, error: 'invalid_request' }),
+  ).toThrow('invalid_request');
+});

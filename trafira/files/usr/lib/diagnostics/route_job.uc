@@ -20,6 +20,9 @@ function write(path,value){
     if(ok)ok=fs.rename(temporary,path);fs.unlink(temporary);return !!ok;
 }
 function ensure(){
+    let parent=getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira",directory=fs.lstat(parent);
+    if(directory && directory.type!="directory")return false;
+    if(!directory && !fs.mkdir(parent,493))return false;
     let info=fs.lstat(ROOT);if(info && info.type!="directory")return false;
     if(!info && !fs.mkdir(ROOT,448))return false;
     return fs.chmod(ROOT,448);
@@ -34,6 +37,7 @@ function lock(){
 }
 function cleanup(id){
     if(!valid(id))return;
+    require("diagnostics.route_decode_cache").cleanup(ROOT+"/"+id);
     for(let name in ["request.json","state.json","result.json","state.json.stage","result.json.stage"])fs.unlink(ROOT+"/"+id+"/"+name);
     fs.rmdir(ROOT+"/"+id);
 }
@@ -51,9 +55,11 @@ function status(id){
 }
 function start(raw){
     if(!analysis.validate(raw))return fail("invalid_request");
+    if(!ensure())return fail("storage_unavailable");
     let guard=lock();if(!guard)return fail("busy");
     let current=read(ROOT+"/active.json",1024);
     if(current && status(current.id).running){guard.close();return fail("busy");}
+    if(current && valid(current.id))require("diagnostics.route_decode_cache").cleanup(ROOT+"/"+current.id);
     let entries=[];
     for(let name in fs.lsdir(ROOT)||[])if(valid(name)) {
         let info=fs.lstat(ROOT+"/"+name);
@@ -76,7 +82,7 @@ function calculate(id){
     if(!valid(id))return false;
     let dir=ROOT+"/"+id,request=read(dir+"/request.json",16384),state=read(dir+"/state.json",4096);
     if(!request || !state || !state.running || state.job_id!=id || !analysis.validate(request.raw))return false;
-    let report=analysis.explain(request.raw,{background:true,progress:(progress)=>{
+    let report=analysis.explain(request.raw,{background:true,workspace:dir,progress:(progress)=>{
         state.progress=progress;write(dir+"/state.json",state);
     }});
     return write(dir+"/result.json",report);
@@ -89,9 +95,10 @@ function supervisor(id){
     let dir=ROOT+"/"+id,state=read(dir+"/state.json",4096);
     if(!state || !state.running || state.job_id!=id){guard.close();return fail("invalid_job");}
     state.worker=identity();write(dir+"/state.json",state);
-    let command="exec "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_job.uc","calculate",id],quote))+" >/dev/null 2>&1";
-    let code=system(command,125000),report=code==0?read(dir+"/result.json",1048576):null;
-    let result=report?{success:true,running:false,job_id:id,report}:{success:false,running:false,job_id:id,error:code==-9?"worker_timeout":"worker_interrupted"};
+    let command="ulimit -Sv 131072; exec "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_job.uc","calculate",id],quote))+" >/dev/null 2>&1";
+    let started=clock(true),code=system(command,125000),ended=clock(true),report=code==0?read(dir+"/result.json",1048576):null;
+    let result=report?{success:true,running:false,job_id:id,report}:{success:false,running:false,job_id:id,error:code==-9 && ended[0]-started[0]>=124?"worker_timeout":"worker_interrupted"};
+    require("diagnostics.route_decode_cache").cleanup(dir);
     write(dir+"/state.json",result);fs.unlink(dir+"/request.json");fs.unlink(dir+"/result.json");guard.close();return result;
 }
 let mode=ARGV[0];

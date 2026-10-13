@@ -83,4 +83,30 @@ test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 92
 run route_explain_status '../escape'  >"$WORK_DIR/invalid" || true
 node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success)throw Error("accepted path traversal");' "$WORK_DIR/invalid"
 test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/network-attempted"
-printf 'background route cold/warm/invalidation checks passed\n'
+# Refuse a verified cache entry before parsing when its budget is exhausted.
+ucode -L "$TRAFIRA_LIB" -e 'let c=require("diagnostics.route_decode_cache"),f=require("fs"),root=getenv("TRAFIRA_RUNTIME_STATE_DIR")+"/route-decode-cache";let name=filter(f.lsdir(root),(n)=>match(n,/^[a-f0-9]{64}[.]json$/))[0];assert(c.get(substr(name,0,64),1).error=="size_limit","budget before parse");'
+# Source data over the remaining budget never invokes the codec.
+before="$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")"
+ucode -L "$TRAFIRA_LIB" -e 'let c=require("diagnostics.route_decode_cache");assert(c.decode(ARGV[0],"source",1000,1,ARGV[1]).error=="size_limit","budget before codec");' "$WORK_DIR/set-0.json" "$WORK_DIR"
+test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = "$before"
+# A killed calculator must not leave its native child or private export behind.
+printf '\n# interrupted codec generation\n' >>"$WORK_DIR/bin/sing-box"
+id="$(start)"
+jobdir="$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id"
+for n in $(seq 1 200); do
+ [ ! -s "$jobdir/codec.pid" ] || break
+ sleep 0.01
+done
+read -r codec_pid codec_ticks <"$jobdir/codec.pid" || true
+calculator="$(awk '{print $4}' "/proc/$codec_pid/stat")"
+kill -KILL "$calculator"
+for n in $(seq 1 100); do
+ run route_explain_status "$id" >"$WORK_DIR/interrupted"
+ if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));process.exit(r.running?1:0)' "$WORK_DIR/interrupted"; then break; fi
+ sleep 0.05
+done
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success||r.error!=="worker_interrupted")throw Error(JSON.stringify(r));' "$WORK_DIR/interrupted"
+test ! -e "$jobdir/codec.pid"
+test ! -e "$jobdir/decode-output"
+test ! -e "$jobdir/cache.stage"
+printf 'background route cold/warm/invalidation/budget/interruption checks passed\n' 
