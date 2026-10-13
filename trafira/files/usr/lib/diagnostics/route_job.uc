@@ -44,6 +44,7 @@ function cleanup(id){
     if(!valid(id))return;
     stop_calculator(ROOT+"/"+id);
     require("diagnostics.route_decode_cache").cleanup(ROOT+"/"+id);
+    require("diagnostics.route_memory").cleanup(ROOT+"/"+id);
     for(let name in ["request.json","state.json","result.json","state.json.stage","result.json.stage","calculator.json.stage"])fs.unlink(ROOT+"/"+id+"/"+name);
     fs.rmdir(ROOT+"/"+id);
 }
@@ -105,11 +106,14 @@ function supervisor(id){
     let dir=ROOT+"/"+id,state=read(dir+"/state.json",4096);
     if(!state || !state.running || state.job_id!=id){guard.close();return fail("invalid_job");}
     state.worker=identity();write(dir+"/state.json",state);
+    let watcher="setsid "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_memory.uc","watch",dir,state.worker.pid,state.worker.ticks],quote))+" </dev/null >/dev/null 2>&1 &";
+    if(system(watcher)!=0){guard.close();return fail("worker_interrupted");}
     let command="ulimit -Sv 131072; exec "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_job.uc","calculate",id],quote))+" >/dev/null 2>&1";
     let started=clock(true),code=system(command,125000),ended=clock(true),report=code==0?read(dir+"/result.json",1048576):null;
-    let result=report?{success:true,running:false,job_id:id,report}:{success:false,running:false,job_id:id,error:code==-9 && ended[0]-started[0]>=124?"worker_timeout":"worker_interrupted"};
+    let result=report?{success:true,running:false,job_id:id,report}:{success:false,running:false,job_id:id,error:fs.readfile(dir+"/memory.error")=="resource_limit"?"resource_limit":code==-9 && ended[0]-started[0]>=124?"worker_timeout":"worker_interrupted"};
     stop_calculator(dir);
     require("diagnostics.route_decode_cache").cleanup(dir);
+    require("diagnostics.route_memory").cleanup(dir);
     write(dir+"/state.json",result);fs.unlink(dir+"/request.json");fs.unlink(dir+"/result.json");guard.close();return result;
 }
 let mode=ARGV[0];

@@ -3312,7 +3312,7 @@ msgid "When switching to another level, test every server and select the fastest
 msgstr "При переходе на другой уровень тестировать все сервера и выбирать самый быстрый, а не первый работающий."
 
 msgid "Where will the connection go?"
-msgstr "Куда пойдёт соединение?"
+msgstr "Проверка маршрутизации"
 
 msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in the form above."
 msgstr "Обход Trafira для Wi-Fi Calling зависит от реального IP назначения. Укажите его в форме выше."
@@ -3430,3 +3430,15 @@ msgstr "Отключить отдельные IPv6-проверки"
 
 msgid "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected."
 msgstr "Возвращать DNS-ответ «домен не найден» для отдельных IPv6-проверок Meta и Cloudflare до выдачи FakeIP. Действует только при «Только IPv4». Остальные домены CDN и устройства в обход Trafira не затрагиваются."
+
+msgid "Routing check"
+msgstr "Проверка маршрутизации"
+
+msgid "Checking saved rule sets"
+msgstr "Проверка сохранённых списков"
+
+msgid "Saved lists are checked one at a time without downloading them again. Only compact results for this request are cached."
+msgstr "Сохранённые списки проверяются по одному без повторного скачивания. В кэше остаются только компактные результаты этого запроса."
+
+msgid "The routing check stopped to preserve router memory. Trafira continues running; no route was confirmed. Try again when more memory is available."
+msgstr "Проверка маршрутизации остановлена для сохранения памяти роутера. Trafira продолжает работать; маршрут не подтверждён. Повторите проверку, когда будет больше свободной памяти."

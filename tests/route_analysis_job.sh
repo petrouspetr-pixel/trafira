@@ -75,6 +75,11 @@ test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 46
 printf '\n# replacement codec\n' >>"$WORK_DIR/bin/sing-box"
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 91
+# Compact result cache must never retain decoded list content.
+node - "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache" <<'JS'
+const fs=require('fs'),assert=require('assert/strict'),root=process.argv[2];
+for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.json'))){const raw=fs.readFileSync(root+'/'+name,'utf8');assert(raw.length<=4096);assert(!raw.includes('other-'));assert(JSON.parse(raw).data.match);}
+JS
 # Corrupt a cached export: it is rebuilt rather than used as a negative match.
 first_cache="$(ls -t "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache/"*.json | sed -n '1p')"
 printf '{"schema":1,"data":{"rules":[]}}' >"$first_cache"

@@ -126,14 +126,14 @@ export function renderRouteExplanationResult(
             progress?.phase === 'evaluating'
               ? _('Calculating route from prepared lists')
               : progress?.total
-                ? `${_('Preparing rule sets')}: ${progress.completed} / ${progress.total}`
+                ? `${_('Checking saved rule sets')}: ${progress.completed} / ${progress.total}`
                 : _('Starting route analysis'),
           ),
           E(
             'p',
             {},
             _(
-              'The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.',
+              'Saved lists are checked one at a time without downloading them again. Only compact results for this request are cached.',
             ),
           ),
         ]
@@ -389,7 +389,7 @@ export const routeExplanationPanel = {
       field(_('Incoming interface (optional)'), iface.node),
     ]);
     const form = E('form', { class: 'cbi-section' }, [
-      E('h3', {}, _('Where will the connection go?')),
+      E('h3', {}, _('Routing check')),
       E(
         'p',
         { class: 'cbi-section-descr' },
