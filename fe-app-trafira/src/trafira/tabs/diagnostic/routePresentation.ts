@@ -65,6 +65,15 @@ export function routeReason(reason: string): string {
       'sing-box could not export a saved list for this calculation. Some binary lists, including AdGuard lists, cannot be exported. Downloading the same copy again may not help.',
     ),
     ruleset_changed: _('A saved list changed during the check. Try again.'),
+    ruleset_decode_timeout: _(
+      'This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed.',
+    ),
+    ruleset_size_limit: _(
+      'This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed.',
+    ),
+    ruleset_job_timeout: _(
+      'Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists.',
+    ),
     ruleset_limit: _(
       'Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check.',
     ),
@@ -95,7 +104,14 @@ export function routeReasons(
           : undefined;
         return routeReason(
           detail &&
-            ['decode_failed', 'changed', 'limit'].includes(detail.reason)
+            [
+              'decode_failed',
+              'changed',
+              'limit',
+              'decode_timeout',
+              'size_limit',
+              'job_timeout',
+            ].includes(detail.reason)
             ? `ruleset_${detail.reason}`
             : reason,
         );
@@ -129,6 +145,21 @@ export function routeError(error: string): string {
     ),
     configuration_changed_retry: _(
       'The routing configuration changed during the check. Try again.',
+    ),
+    busy: _(
+      'Another route calculation is preparing lists. Wait for it to finish, then try again.',
+    ),
+    worker_timeout: _(
+      'The background route calculation reached its time limit. Already verified lists remain cached for another attempt.',
+    ),
+    worker_interrupted: _(
+      'The background route worker stopped unexpectedly. Try again.',
+    ),
+    storage_unavailable: _(
+      'There is not enough available RAM storage to prepare this route check.',
+    ),
+    resource_limit: _(
+      'The configuration has more rule sets than this diagnostic can process safely.',
     ),
     configuration_unavailable: _(
       'The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again.',

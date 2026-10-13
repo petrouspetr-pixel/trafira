@@ -25,7 +25,7 @@ function run(args) {
   return { calls, code };
 }
 for (const args of [
-  ['get_known_devices'], ['get_status'], ['route_explain', '{}'], ['show_version'], ['global_check', 'masked'],
+  ['get_known_devices'], ['get_status'], ['route_explain', '{}'], ['route_explain_start', '{}'], ['route_explain_status', 'r-one'], ['show_version'], ['global_check', 'masked'],
   ['clash_api', 'get_proxies'], ['clash_api', 'get_proxy_latencies', '["node"]', '5000'],
   ['profile_action', '{"action":"list"}'], ['profile_action', '{"action":"preview","id":"one"}'],
   ['core_action', '{"action":"catalog"}'], ['core_action', '{"action":"status"}'],
@@ -36,7 +36,7 @@ for (const args of [
   assert.strictEqual(result.calls.length, 1);
 }
 for (const args of [
-  ['get_known_devices', 'extra'], [], ['stop'], ['restart'], ['uninstall'], ['package_prerm', 'remove'], ['component_action', 'trafira', 'install'],
+  ['get_known_devices', 'extra'], ['route_explain_start', '{}', 'extra'], ['route_explain_status', 'r-one', 'extra'], ['route_explain_worker', 'r-one'], [], ['stop'], ['restart'], ['uninstall'], ['package_prerm', 'remove'], ['component_action', 'trafira', 'install'],
   ['component_action_async', 'sing_box', 'install'], ['get_status', 'stop'],
   ['clash_api', 'set_group_proxy', 'group', 'node'], ['clash_api', 'close_all_connections'],
   ['clash_api', 'get_proxy_latencies', '[]', '5000', '/etc/config/trafira'],

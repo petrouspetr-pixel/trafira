@@ -4815,3 +4815,48 @@ msgstr ""
 
 msgid "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure."
 msgstr ""
+
+msgid "Lists preventing a confirmed result"
+msgstr ""
+
+msgid "Calculating route from prepared lists"
+msgstr ""
+
+msgid "Preparing rule sets"
+msgstr ""
+
+msgid "Starting route analysis"
+msgstr ""
+
+msgid "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes."
+msgstr ""
+
+msgid "Lists available for calculation"
+msgstr ""
+
+msgid "Reused from RAM"
+msgstr ""
+
+msgid "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed."
+msgstr ""
+
+msgid "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed."
+msgstr ""
+
+msgid "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists."
+msgstr ""
+
+msgid "Another route calculation is preparing lists. Wait for it to finish, then try again."
+msgstr ""
+
+msgid "The background route calculation reached its time limit. Already verified lists remain cached for another attempt."
+msgstr ""
+
+msgid "The background route worker stopped unexpectedly. Try again."
+msgstr ""
+
+msgid "There is not enough available RAM storage to prepare this route check."
+msgstr ""
+
+msgid "The configuration has more rule sets than this diagnostic can process safely."
+msgstr ""

@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { RouteExplanationController, ExplainReport } from '../routeExplanation';
+import {
+  RouteExplanationController,
+  ExplainReport,
+  ExplainRequest,
+} from '../routeExplanation';
 
 const request = {
   domain: 'store.example',
@@ -43,7 +47,8 @@ describe('route explanation controller', () => {
     await controller.submit(request);
     finishOld(report('old'));
     await old;
-    expect(render.mock.lastCall?.[0]?.decision.outbound).toBe('new');
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(render.mock.lastCall?.[0]?.decision.outbound).toBe('old');
   });
   it('discards results after unmount and clears old state on mount', async () => {
     let finish!: (value: ExplainReport) => void;
@@ -95,4 +100,25 @@ describe('route explanation controller', () => {
     expect(render.mock.lastCall).toEqual([null, 'render_failed', false]);
     expect(JSON.stringify(render.mock.calls)).not.toContain('secret');
   });
+});
+
+it('renders preparation progress only while the current request is active', async () => {
+  const render = vi.fn();
+  const read = async (
+    _request: ExplainRequest,
+    progress?: (value: { completed: number; total: number }) => void,
+  ) => {
+    progress?.({ completed: 2, total: 41 });
+    return report('vpn-out');
+  };
+  const controller = new RouteExplanationController(read, render);
+  controller.mount();
+  await controller.submit(request);
+  expect(
+    render.mock.calls.some(
+      (call) =>
+        call[2] === true && call[3]?.completed === 2 && call[3]?.total === 41,
+    ),
+  ).toBe(true);
+  expect(render.mock.lastCall?.[0]?.decision.outbound).toBe('vpn-out');
 });
