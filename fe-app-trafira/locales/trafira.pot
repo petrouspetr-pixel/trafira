@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 12:18+0300\n"
-"PO-Revision-Date: 2026-10-10 12:18+0300\n"
+"POT-Creation-Date: 2026-10-13 09:52+0300\n"
+"PO-Revision-Date: 2026-10-13 09:52+0300\n"
 "Last-Translator: petrouspetr-pixel <280500603+petrouspetr-pixel@users.noreply.github.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -630,7 +630,7 @@ msgstr ""
 msgid "Check URL"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:273
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:331
 msgid "Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device."
 msgstr ""
 
@@ -805,7 +805,7 @@ msgstr ""
 msgid "Connection options"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:122
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:152
 msgid "Connection route"
 msgstr ""
 
@@ -886,6 +886,10 @@ msgstr ""
 msgid "Could not load available versions. Check the connection and refresh the list."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:464
+msgid "Could not load detected devices. Enter the address manually or refresh the list."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/renderSnapshots.ts:27
 msgid "Could not read saved-copy status. Refresh the status to try again."
 msgstr ""
@@ -922,7 +926,7 @@ msgstr ""
 msgid "Current section cannot download its own subscription"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:148
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:178
 msgid "Current selected node"
 msgstr ""
 
@@ -974,7 +978,7 @@ msgstr ""
 msgid "Delete the selected saved profile? Current settings will remain unchanged."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:281
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:340
 msgid "Destination port"
 msgstr ""
 
@@ -988,11 +992,15 @@ msgstr ""
 msgid "Detect server country"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:325
+msgid "Detected device"
+msgstr ""
+
 #: src/validators/validateOutboundJson.ts:115
 msgid "detour must be a non-empty string"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:174
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:204
 msgid "Device by IP address"
 msgstr ""
 
@@ -1000,8 +1008,8 @@ msgstr ""
 msgid "Device filter"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:179
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:267
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:224
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:324
 msgid "Device IP address"
 msgstr ""
 
@@ -1009,12 +1017,12 @@ msgstr ""
 msgid "Device IP addresses"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:184
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:293
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:229
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:356
 msgid "Device MAC (optional)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:291
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:354
 msgid "Device MAC and incoming interface (if needed)"
 msgstr ""
 
@@ -1105,8 +1113,8 @@ msgstr ""
 msgid "DNS over TLS (DoT)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:131
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:159
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:161
 msgid "DNS policy (A query)"
 msgstr ""
 
@@ -1224,7 +1232,7 @@ msgstr ""
 msgid "DoH client certificate authentication"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:278
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:336
 msgid "Domain"
 msgstr ""
 
@@ -1424,11 +1432,16 @@ msgstr ""
 msgid "Enter an absolute file path"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:208
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:419
+msgid "Enter an address manually"
+msgstr ""
+
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2406
 msgid "Enter HWID"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:255
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:293
 msgid "Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address."
 msgstr ""
 
@@ -1520,7 +1533,7 @@ msgstr ""
 msgid "Expires"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:301
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:364
 msgid "Explain route"
 msgstr ""
 
@@ -1586,7 +1599,7 @@ msgstr ""
 msgid "Failed to execute"
 msgstr ""
 
-#: src/trafira/tabs/updates/componentMessages.ts:71
+#: src/trafira/tabs/updates/componentMessages.ts:72
 msgid "Failed to execute component action"
 msgstr ""
 
@@ -1674,8 +1687,8 @@ msgstr ""
 msgid "Fix the highlighted fields and save again."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:199
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:251
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:246
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:289
 msgid "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below."
 msgstr ""
 
@@ -1901,8 +1914,8 @@ msgstr ""
 msgid "Included"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:188
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:294
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:234
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:357
 msgid "Incoming interface (optional)"
 msgstr ""
 
@@ -2368,6 +2381,11 @@ msgstr ""
 msgid "Loading connections"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:213
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:405
+msgid "Loading detected devices"
+msgstr ""
+
 #: src/trafira/tabs/updates/initController.ts:913
 #: src/trafira/tabs/updates/initController.ts:924
 #: src/trafira/tabs/updates/initController.ts:935
@@ -2578,11 +2596,15 @@ msgstr ""
 msgid "No conflict detected"
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:458
+msgid "No detected devices. Enter the address manually or refresh the list."
+msgstr ""
+
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:204
 msgid "No devices"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:138
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:168
 msgid "No DNS query was sent from the selected device."
 msgstr ""
 
@@ -3049,7 +3071,7 @@ msgstr ""
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:1957
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2482
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2516
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:282
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:341
 msgid "Protocol"
 msgstr ""
 
@@ -3074,13 +3096,13 @@ msgstr ""
 msgid "Read-only access. Configuration changes require write permission."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:193
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:195
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:245
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:240
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:242
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:283
 msgid "Real destination IP (optional)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:244
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:282
 msgid "Real destination IP (required for the router)"
 msgstr ""
 
@@ -3125,6 +3147,7 @@ msgid "Refresh available versions"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:431
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:220
 msgid "Refresh devices"
 msgstr ""
 
@@ -3425,6 +3448,10 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:9
 msgid "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:455
+msgid "Select a device to fill its IP, MAC and incoming interface. You can also enter them manually."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:342
@@ -3743,6 +3770,10 @@ msgstr ""
 msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
 msgstr ""
 
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:145
+msgid "Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation."
+msgstr ""
+
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:265
 msgid "Some routes could not be fully verified. Review existing rules and saved list copies."
 msgstr ""
@@ -3759,7 +3790,7 @@ msgstr ""
 msgid "Sorts servers in this section by lowest latency in the dashboard."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:279
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:337
 #: src/trafira/tabs/monitoring/initController.ts:831
 #: src/trafira/tabs/monitoring/initController.ts:881
 msgid "Source"
@@ -3920,7 +3951,7 @@ msgstr ""
 msgid "Tailscale hostname"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:221
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:268
 msgid "TCP, unknown protocol"
 msgstr ""
 
@@ -4012,6 +4043,10 @@ msgstr ""
 
 #: src/trafira/tabs/diagnostic/profilePanel.ts:87
 msgid "The profile operation failed."
+msgstr ""
+
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:126
+msgid "The request completed, but the route cannot be confirmed with the available data. This is not a website availability failure. See the reasons below."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:109
@@ -4137,7 +4172,7 @@ msgstr ""
 msgid "This profile matches the saved configuration."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:175
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:205
 msgid "This router"
 msgstr ""
 
@@ -4145,7 +4180,7 @@ msgstr ""
 msgid "This saved profile is invalid. Delete it or import a valid file."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:248
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:286
 msgid "This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings."
 msgstr ""
 
@@ -4335,7 +4370,7 @@ msgstr ""
 msgid "UDP (Unprotected DNS)"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:222
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:269
 msgid "UDP, unknown protocol"
 msgstr ""
 
@@ -4389,6 +4424,7 @@ msgstr ""
 msgid "unique UCI identifier"
 msgstr ""
 
+#: src/trafira/helpers/singBoxVariant.ts:28
 #: src/trafira/services/systemInfo.service.ts:10
 #: src/trafira/services/systemInfo.service.ts:11
 #: src/trafira/services/systemInfo.service.ts:12
@@ -4398,7 +4434,6 @@ msgstr ""
 #: src/trafira/services/systemInfo.service.ts:22
 #: src/trafira/services/systemInfo.service.ts:25
 #: src/trafira/services/systemInfo.service.ts:26
-#: src/trafira/helpers/singBoxVariant.ts:28
 #: src/trafira/tabs/updates/initController.ts:335
 #: src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25
 msgid "unknown"
@@ -4689,7 +4724,7 @@ msgstr ""
 msgid "When switching to another level, test every server and select the fastest instead of the first working one."
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:269
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:327
 msgid "Where will the connection go?"
 msgstr ""
 
@@ -4717,8 +4752,8 @@ msgstr ""
 msgid "You can select Output Network Interface, by default autodetect"
 msgstr ""
 
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:206
-#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:258
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:253
+#: src/trafira/tabs/diagnostic/renderRouteExplanation.ts:296
 msgid "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
 msgstr ""
 

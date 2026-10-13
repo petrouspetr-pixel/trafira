@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { executeShellCommand } from '../../../../helpers/executeShellCommand';
 import { routeExplanationPanel } from '../renderRouteExplanation';
 
 vi.mock('../../../../helpers/executeShellCommand', () => ({
@@ -16,7 +17,7 @@ class Element {
   hidden = false;
   textContent = '';
   children: Array<Element | string> = [];
-  listeners: Record<string, () => void> = {};
+  listeners: Record<string, (...args: unknown[]) => void> = {};
   constructor(
     public tag: string,
     public attributes: Record<string, unknown>,
@@ -37,6 +38,22 @@ class Element {
 }
 let nodes: Element[];
 beforeEach(() => {
+  vi.mocked(executeShellCommand).mockResolvedValue({
+    code: 0,
+    stderr: '',
+    stdout: JSON.stringify({
+      enabled: true,
+      source_interfaces: ['br-lan'],
+      devices: [
+        {
+          name: 'DESKTOP',
+          ips: ['192.168.10.234'],
+          mac: 'aa:bb:cc:dd:ee:ff',
+          interface: 'br-lan',
+        },
+      ],
+    }),
+  });
   nodes = [];
   vi.stubGlobal('_', (value: string) => value);
   vi.stubGlobal(
@@ -107,4 +124,76 @@ it('explains the configuration check before the first request', () => {
         ),
     ),
   ).toBe(true);
+});
+
+it('discovers devices independently of Alice Mode and fills all routing context', async () => {
+  await vi.waitFor(() =>
+    expect(
+      nodes.some(
+        (n) =>
+          n.tag === 'option' &&
+          n.children.some(
+            (c) => typeof c === 'string' && c.includes('DESKTOP'),
+          ),
+      ),
+    ).toBe(true),
+  );
+  expect(executeShellCommand).toHaveBeenCalledWith(
+    expect.objectContaining({ args: ['get_known_devices'] }),
+  );
+  const picker = nodes.find((n) => n.attributes.id === 'trafira-route-device')!;
+  picker.value = '0';
+  picker.listeners.change();
+  expect(
+    nodes.find((n) => n.attributes.placeholder === 'Device IP address')!.value,
+  ).toBe('192.168.10.234');
+  expect(
+    nodes.find((n) => n.attributes.placeholder === 'Device MAC (optional)')!
+      .value,
+  ).toBe('aa:bb:cc:dd:ee:ff');
+  expect(
+    nodes.find(
+      (n) => n.attributes.placeholder === 'Incoming interface (optional)',
+    )!.value,
+  ).toBe('br-lan');
+});
+
+it('includes detected MAC and interface when a known IP is entered manually', async () => {
+  await vi.waitFor(() =>
+    expect(
+      nodes.some(
+        (n) =>
+          n.tag === 'option' &&
+          n.children.some(
+            (c) => typeof c === 'string' && c.includes('DESKTOP'),
+          ),
+      ),
+    ).toBe(true),
+  );
+  nodes.find((n) => n.attributes.placeholder === 'Device IP address')!.value =
+    '192.168.10.234';
+  nodes.find((n) => n.attributes.placeholder === 'example.com')!.value =
+    'ya.ru';
+  nodes.find((n) => n.attributes.type === 'number')!.value = '443';
+  const protocol = nodes
+    .filter((n) => n.tag === 'select')
+    .find((n) =>
+      n.children.some(
+        (c) => c instanceof Element && c.attributes.value === 'tls',
+      ),
+    )!;
+  protocol.value = 'tls';
+  nodes
+    .find((n) => n.tag === 'form')!
+    .listeners.submit({ preventDefault() {} });
+  const call = vi
+    .mocked(executeShellCommand)
+    .mock.calls.filter(([request]) => request.args[0] === 'route_explain')
+    .pop()!;
+  expect(JSON.parse(call[0].args[1]).source).toEqual({
+    kind: 'device',
+    ip: '192.168.10.234',
+    mac: 'aa:bb:cc:dd:ee:ff',
+    interface: 'br-lan',
+  });
 });

@@ -9,7 +9,7 @@ const READ_COMMANDS = {
     check_logs: 0, check_sing_box_logs: 0, get_status: 0,
     get_outbound_metadata: 1, get_subscription_metadata: 1,
     get_sing_box_status: 0, get_zapret_status: 0, get_zapret2_status: 0,
-    get_byedpi_status: 0, get_system_info: 0, get_alice_devices: 0,
+    get_byedpi_status: 0, get_system_info: 0, get_alice_devices: 0, get_known_devices: 0,
     get_server_capabilities: 0, get_ui_capabilities: 0, get_ui_state: 0,
     service_action_status: 1, latency_test_status: 1, component_action_status: 1,
     subscription_update_status: 1, component_update_check_cache: 0,
