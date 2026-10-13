@@ -144,7 +144,7 @@ function load_sets(config,limitations) {
 }
 function load_background_sets(config,limitations,options) {
     let codec=require("diagnostics.route_decode_cache"),cache=require("singbox.ruleset_cache"),core=codec.identity();
-    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],seen={},memo={},deadline=clock()[0]+120;
+    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],seen={},memo={},pending={},deadline=clock()[0]+120;
     let report={basis:"local",live_verified:false,available:0,unavailable:0,cached:0,unavailable_reasons:[]};
     if(length(rules)>256)return {error:"too_many_rule_sets"};
     for(let rule in rules)if(type(rule.tag)=="string") {
@@ -182,7 +182,7 @@ function load_background_sets(config,limitations,options) {
                     // Refcounted data is released before the next list/codec.
                     decoded=null;
                     if(digest!=provenance.hash_file(path)){matched=null;reason="changed";}
-                    if(matched && key && core.digest==provenance.hash_file(core.path))codec.put(key,{rules:[],match:matched},options.workspace);
+                    if(matched && key)pending[key]={rules:[],match:matched};
                 }
             }
         }
@@ -195,7 +195,7 @@ function load_background_sets(config,limitations,options) {
         let answer=matched||{value:"unknown",missing:["rule_set:"+tag]};
         memo[memo_key]=answer;return answer;
     };
-    return {sets:resolve,checked,core,report};
+    return {sets:resolve,checked,core,report,publish:()=>{for(let key in pending)codec.put(key,pending[key],options.workspace);}};
 }
 function selected_node(config,tag) {
     let out=filter(arr(config.outbounds),(o)=>o.tag==tag)[0];
@@ -273,6 +273,8 @@ function explain(raw,options) {
         for(let item in loaded.checked)if(provenance.hash_file(item.path)!=item.digest)return error("configuration_changed_retry");
         if(loaded.core && provenance.hash_file(loaded.core.path)!=loaded.core.digest)return error("configuration_changed_retry");
     }
+    if(options.background && loaded.core && provenance.hash_file(loaded.core.path)!=loaded.core.digest)return error("configuration_changed_retry");
+    if(loaded.publish)loaded.publish();
     return {success:true,generated_at:time(),config_digest:digest,decision:route,dns_policy:dns,
         dns_query:{performed:false,origin:"none"},selector:selected,rule_sets:loaded.report,limitations};
 }

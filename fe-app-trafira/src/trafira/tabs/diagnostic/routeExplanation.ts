@@ -208,6 +208,7 @@ export function parseRouteJobCommandResult(result: {
       'busy',
       'worker_timeout',
       'worker_interrupted',
+      'resource_limit',
       'storage_unavailable',
     ];
     if (allowed.includes(String(value.error)))

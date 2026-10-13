@@ -1,25 +1,42 @@
 // Independent RSS monitor: virtual-address limits cannot bound Go's resident heap.
 let fs=require("fs"),identity=require("service.operation_lock").identity;
-const MAX_MEMORY=48*1024*1024,RESERVE=32*1024*1024;
-function over_budget(s){return s.unsupported===true || s.rss+s.temporary>MAX_MEMORY || (s.available!=null && s.available<RESERVE);}
+const MAX_MEMORY=48*1024*1024,RESERVE=64*1024*1024;
+function memory_budget(total){return total>0?min(128*1024*1024,int(total/4)):MAX_MEMORY;}
+function over_budget(s){return s.unsupported===true || (s.private_rss!=null?s.private_rss:s.rss)+s.temporary>(s.budget||MAX_MEMORY) || (s.available!=null && s.available<RESERVE);}
 function tree(owner,seen){
     let alive=owner?identity(owner.pid):null;
     if(!alive || alive.ticks!=owner.ticks || seen[alive.pid])return [];
     seen[alive.pid]=true;let list=[alive];
     let children=fs.readfile("/proc/"+alive.pid+"/task/"+alive.pid+"/children");
-    if(children==null){let again=identity(alive.pid);if(again && again.ticks==alive.ticks && again.state!="Z")seen.unavailable=true;return list;}
+    if(children==null){
+        // OpenWrt kernels often omit CONFIG_CHECKPOINT_RESTORE and its children
+        // file. Fall back to PPID from stat, retaining start-time verification.
+        let entries=fs.lsdir("/proc");
+        if(entries==null){let again=identity(alive.pid);if(again && again.ticks==alive.ticks && again.state!="Z")seen.unavailable=true;return list;}
+        let pids=[];
+        for(let name in entries)if(match(name,/^[1-9][0-9]*$/)) {
+            let child=identity(name);if(child && child.parent==alive.pid)push(pids,name);
+        }
+        children=join(" ",pids);
+    }
+    let parent_now=identity(alive.pid);
+    if(!parent_now || parent_now.ticks!=alive.ticks)return [];
     for(let pid in split(trim(children),/\s+/)) {
         let child=identity(pid);if(child && child.parent==alive.pid)for(let item in tree(child,seen))push(list,item);
     }
     return list;
 }
 function sample(owner,workspace,extra){
-    let seen={},processes=tree(owner,seen),rss=0,temporary=0;
+    let seen={},processes=tree(owner,seen),rss=0,private_rss=0,temporary=0;
     for(let additional in extra||[])for(let item in tree(additional,seen))push(processes,item);
-    for(let item in processes){let value=match(fs.readfile("/proc/"+item.pid+"/status")||"",/VmRSS:[ \t]+([0-9]+)/);if(value)rss+=int(value[1])*1024;}
+    for(let item in processes){
+        let status=fs.readfile("/proc/"+item.pid+"/status")||"",value=match(status,/VmRSS:[ \t]+([0-9]+)/),anonymous=match(status,/RssAnon:[ \t]+([0-9]+)/),shared=match(status,/RssShmem:[ \t]+([0-9]+)/);
+        if(value){rss+=int(value[1])*1024;private_rss+=(anonymous && shared?int(anonymous[1])+int(shared[1]):int(value[1]))*1024;}
+    }
     for(let name in ["decode-output","cache.stage","cache.stage.meta"]){let info=workspace?fs.lstat(workspace+"/"+name):null;if(info && info.type=="file")temporary+=info.size;}
-    let available=match(fs.readfile("/proc/meminfo")||"",/MemAvailable:[ \t]+([0-9]+)/);
-    return {rss,temporary,unsupported:seen.unavailable===true,available:available?int(available[1])*1024:null,processes};
+    let meminfo=fs.readfile("/proc/meminfo")||"",total=match(meminfo,/MemTotal:[ \t]+([0-9]+)/);
+    let available=match(meminfo,/MemAvailable:[ \t]+([0-9]+)/);
+    return {rss,private_rss,temporary,budget:memory_budget(total?int(total[1])*1024:0),unsupported:seen.unavailable===true,available:available?int(available[1])*1024:null,processes};
 }
 function stop(processes){
     // Descendants first, with start-time verification to avoid reused PIDs.
@@ -49,4 +66,4 @@ function watch(dir,pid,ticks){
     fs.unlink(dir+"/memory-monitor.json");
 }
 if(ARGV[0]=="watch" && match(ARGV[1]||"",/^.*\/r-[a-f0-9-]+$/)){watch(ARGV[1],ARGV[2],ARGV[3]);exit(0);}
-return {over_budget,sample,identity,cleanup,stop,tree};
+return {over_budget,sample,identity,cleanup,stop,tree,memory_budget};

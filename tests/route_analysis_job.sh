@@ -196,7 +196,7 @@ printf 'codec launch race cleanup passed\n'
 # Exercise the actual supervisor -> orphan launcher -> codec memory chain.
 cat >"$WORK_DIR/bin/sing-box" <<'SH'
 #!/bin/sh
-exec node -e 'const b=Buffer.alloc(60*1024*1024,1);setInterval(()=>console.log(b.length),1000)'
+exec node -e 'const b=Buffer.alloc(150*1024*1024,1);setInterval(()=>console.log(b.length),1000)'
 SH
 id="$(start)"
 for n in $(seq 1 100); do
