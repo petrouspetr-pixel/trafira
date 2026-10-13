@@ -85,8 +85,9 @@ function decode(path,format,milliseconds,budget,workspace){
     let file=fs.open(temporary,"wex",384);
     if(!file)return {error:"storage_unavailable"};file.close();
     // Record the timed native child identity so the supervisor can clean up after SIGKILL.
-    let marker=workspace+"/codec.pid";
-    let command="ulimit -Sv unlimited; umask 077; ticks=$(awk '{print $22}' /proc/$$/stat); printf '%s %s' $$ \"$ticks\" > "+quote(marker)+"; ulimit -f "+int((limit+511)/512)+"; exec sing-box rule-set "+(format=="source"?"compile":"decompile")+" "+quote(path)+" -o "+quote(temporary)+" >/dev/null 2>&1";
+    let marker=workspace+"/codec.pid",owner=require("service.operation_lock").identity();
+    let verify="if ! awk -v ticks="+quote(owner.ticks)+" '{exit($22 != ticks || $3 == \"Z\")}' /proc/"+owner.pid+"/stat 2>/dev/null; then rm -f "+quote(marker)+" "+quote(temporary)+"; exit 1; fi; ";
+    let command="ulimit -Sv unlimited; umask 077; ticks=$(awk '{print $22}' /proc/$$/stat); printf '%s %s' $$ \"$ticks\" > "+quote(marker)+"; "+verify+"ulimit -f "+int((limit+511)/512)+"; exec sing-box rule-set "+(format=="source"?"compile":"decompile")+" "+quote(path)+" -o "+quote(temporary)+" >/dev/null 2>&1";
     let started=clock(true),status=system(command,milliseconds),ended=clock(true);
     let target=format=="source"?path:temporary,info=fs.stat(target);
     let data=status==0 && info && info.size<=limit?read(target,limit,format=="source"):null;

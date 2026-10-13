@@ -160,3 +160,30 @@ test ! -e "$jobdir/calculator.json"
 test ! -e "$jobdir/codec.pid"
 test ! -e "$jobdir/decode-output"
 printf 'supervisor launch race cleanup passed\n'
+
+# Delay codec registration and kill its calculator before the PID marker appears.
+real_awk="$(command -v awk)"
+cat >"$WORK_DIR/bin/awk" <<SH
+#!/bin/sh
+if [ "\$1" = '{print \$22}' ]; then sleep 0.5; fi
+exec "$real_awk" "\$@"
+SH
+chmod +x "$WORK_DIR/bin/awk"
+printf '\n# codec registration window\n' >>"$WORK_DIR/bin/sing-box"
+before="$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")"
+id="$(start)"
+jobdir="$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id"
+for n in $(seq 1 200); do
+ [ ! -e "$jobdir/decode-output" ] || break
+ sleep 0.01
+done
+test ! -e "$jobdir/codec.pid"
+calculator="$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).pid)' "$jobdir/calculator.json")"
+kill -KILL "$calculator"
+sleep 1
+run route_explain_status "$id" >"$WORK_DIR/interrupted"
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success||r.error!=="worker_interrupted")throw Error(JSON.stringify(r));' "$WORK_DIR/interrupted"
+test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = "$before"
+test ! -e "$jobdir/codec.pid"
+test ! -e "$jobdir/decode-output"
+printf 'codec launch race cleanup passed\n'
