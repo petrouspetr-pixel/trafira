@@ -9,7 +9,7 @@ WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 mkdir "$WORK_DIR/r-dead"
 printf '{"running":true}' >"$WORK_DIR/r-dead/state.json"
-node -e 'const b=Buffer.alloc(60*1024*1024,1);setInterval(()=>console.log(b.length),1000)' >"$WORK_DIR/child.log" &
+node -e 'const b=Buffer.alloc(150*1024*1024,1);setInterval(()=>console.log(b.length),1000)' >"$WORK_DIR/child.log" &
 child=$!
 ucode -L "$TRAFIRA_LIB" -e 'let f=require("fs"),m=require("diagnostics.route_memory");f.writefile(ARGV[0],sprintf("%J",m.identity(ARGV[1])));' "$WORK_DIR/r-dead/calculator.json" "$child"
 ticks="$(awk '{print $22}' /proc/$$/stat)"
@@ -19,3 +19,7 @@ test "$(cat "$WORK_DIR/r-dead/memory.error")" = resource_limit
 printf 'resident memory monitor terminates oversized worker without network or service changes\n'
 
 ucode -L "$TRAFIRA_LIB" -e 'let m=require("diagnostics.route_match"),sets={sample:{rules:[{port:8443,source_ip_cidr:"192.0.2.0/24"},{ip_cidr:"192.0.2.0/24"}]}},request={domain:"target.example",source_ip:"192.0.2.5",destination_ip:"203.0.113.10",port:443,network:"tcp"};let config={route:{rules:[{action:"route-options",override_port:8443},{rule_set:"sample",rule_set_ip_cidr_match_source:true,outbound:"vpn-out"}],final:"direct-out"}};let calls=0;let callback=(tag,current,mode)=>{calls++;return m.match_rule({rule_set:tag,rule_set_ip_cidr_match_source:mode},current,sets);};let expected=m.explain(config,request,{},sets),actual=m.explain(config,request,{},callback);assert(sprintf("%J",expected)==sprintf("%J",actual) && actual.outbound=="vpn-out" && calls==1,"lazy source mode and route-options parity");'
+
+# Force the OpenWrt kernel fallback even on CI kernels with children support.
+sed 's@let children=fs.readfile(.*);@let children=null;@' "$TRAFIRA_LIB/diagnostics/route_memory.uc" >"$WORK_DIR/fallback.uc"
+ucode -L "$WORK_DIR" -L "$TRAFIRA_LIB" -e 'let fs=require("fs"),m=require("fallback");assert(m.memory_budget(512*1024*1024)==128*1024*1024,"large router budget capped");assert(m.memory_budget(128*1024*1024)==32*1024*1024,"small router limited to quarter RAM");let pipe=fs.popen("echo ready; sleep 20","r");pipe.read("line");let seen={},processes=m.tree(m.identity(),seen);assert(!seen.unavailable && length(processes)>=2,"PPID fallback finds live child");m.stop(slice(processes,1));pipe.close();'
