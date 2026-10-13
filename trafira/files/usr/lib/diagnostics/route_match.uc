@@ -42,7 +42,7 @@ function simple_field(key, expected, request, source_mode) {
         return result("unknown", "unsupported:" + key);
     let actual = request[field];
     if (actual == null || actual == "") return result("unknown", field);
-    let candidates = [];
+    let candidates = [], candidate_missing = {};
     for (let candidate in values(expected)) {
         let matches = false;
         if (key == "domain") matches = domain(actual) == domain(candidate);
@@ -52,7 +52,7 @@ function simple_field(key, expected, request, source_mode) {
             // Go RE2 and libc regex differ. Only the common basic subset is evaluated.
             if (type(candidate) != "string" || length(candidate) > 512 ||
                 index(candidate, "(?") >= 0 || index(candidate, "\\") >= 0 || index(candidate, "{") >= 0) {
-                push(candidates, result("unknown", "unsupported:domain_regex")); continue;
+                if (!candidate_missing["unsupported:domain_regex"]) { candidate_missing["unsupported:domain_regex"]=true; push(candidates, result("unknown", "unsupported:domain_regex")); } continue;
             }
             try { matches = match(domain(actual), regexp(candidate)) != null; }
             catch (e) { push(candidates, result("unknown", "invalid:domain_regex")); continue; }
@@ -68,7 +68,7 @@ function simple_field(key, expected, request, source_mode) {
                       int(actual) <= (bounds[2] == "" ? 65535 : int(bounds[2]));
         }
         else matches = candidate == actual;
-        push(candidates, result(matches ? "yes" : "no"));
+        if (matches) return result("yes");
     }
     return join_results(candidates, "or");
 }
@@ -94,6 +94,11 @@ function evaluate(rule, request, rulesets, budget, depth, source_mode) {
         if (key == "rule_set") {
             let matches = [];
             for (let tag in values(expected)) {
+                if (type(rulesets) == "function") {
+                    push(matches, rulesets(tag, request,
+                        rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true));
+                    continue;
+                }
                 let set = obj(rulesets)[tag];
                 if (type(set) != "object" || type(set.rules) != "array") {
                     push(matches, result("unknown", "rule_set:" + common.as_string(tag))); continue;

@@ -144,48 +144,58 @@ function load_sets(config,limitations) {
 }
 function load_background_sets(config,limitations,options) {
     let codec=require("diagnostics.route_decode_cache"),cache=require("singbox.ruleset_cache"),core=codec.identity();
-    let sets={},checked=[],used=0,available=0,unavailable=0,cached=0,saved=false,remote=false,reasons=[];
-    let rules=arr(obj(config.route).rule_set),total=length(rules),deadline=clock()[0]+120;
-    if(total>256)return {error:"resource_limit"};
-    for(let i=0;i<total;i++) {
-        let rule=rules[i],reason=null,data=null,bytes=0;
-        if(type(rule.tag)!="string")continue;
-        if(options.progress)options.progress({completed:i,total,phase:"preparing"});
-        if(rule.type=="inline"){bytes=length(sprintf("%J",rule.rules));if(used+bytes>codec.MAX_TOTAL)reason="size_limit";else {data=type(rule.rules)=="array"?{rules:rule.rules}:null;used+=bytes;}}
-        else {
+    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],seen={},memo={},deadline=clock()[0]+120;
+    let report={basis:"local",live_verified:false,available:0,unavailable:0,cached:0,unavailable_reasons:[]};
+    if(length(rules)>256)return {error:"too_many_rule_sets"};
+    for(let rule in rules)if(type(rule.tag)=="string") {
+        by_tag[rule.tag]=rule;
+        if(rule.type=="remote")report.basis="saved_snapshots";
+    }
+    if(report.basis=="saved_snapshots")push(limitations,"saved_rule_sets_may_differ_from_running_core");
+    // Resolve only the current scenario. No decoded list survives this call;
+    // route-options changes and source-mode queries have separate cache keys.
+    let resolve=function(tag,request,source_mode) {
+        let rule=by_tag[tag],reason=null,matched=null,hit=null;
+        if(!rule)return {value:"unknown",missing:["rule_set:"+tag]};
+        let scenario=sprintf("%J",{request,source_mode}),memo_key=tag+"\n"+scenario;
+        if(memo[memo_key])return memo[memo_key];
+        if(length(keys(memo))>=512)return {value:"unknown",missing:["evaluation_limit"]};
+        if(options.progress)options.progress({completed:length(keys(seen)),total:length(rules),phase:"evaluating"});
+        if(rule.type=="inline") {
+            matched=matcher.match_rule({rule_set:"current",rule_set_ip_cidr_match_source:source_mode},request,{current:{rules:rule.rules}});
+        } else {
             let path=rule.type=="remote"?cache.path(rule):rule.type=="local"?rule.path:null,format=rule.format||"binary";
-            if(rule.type=="remote")remote=true;
             let info=type(path)=="string" && path!=""?(rule.type=="local"?fs.stat(path):fs.lstat(path)):null;
             if(!info || info.type!="file" || info.size<=0)reason="missing";
-            else if(info.size>4194304 || i>=256)reason="size_limit";
+            else if(info.size>4194304)reason="size_limit";
             else {
-                let digest=provenance.hash_file(path),key=digest && core?codec.cache_key(digest,format,core.digest):null;
+                let digest=provenance.hash_file(path),key=digest && core?codec.cache_key(digest,format+"\n"+scenario,core.digest):null;
                 if(digest)push(checked,{path,digest});
-                let hit=key?codec.get(key,codec.MAX_TOTAL-used):null;
-                if(hit && hit.error)reason=hit.error;
-                else if(hit){data=hit.data;bytes=hit.bytes;cached++;}
-                else if(used>=codec.MAX_TOTAL)reason="size_limit";
+                hit=key?codec.get(key,4096):null;
+                if(hit && type(obj(hit.data).match)=="object")matched=hit.data.match;
                 else if(!digest)reason="decode_failed";
                 else if(clock()[0]>=deadline)reason="job_timeout";
                 else {
-                    let result=codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_TOTAL-used,options.workspace);
-                    data=result.data;bytes=result.bytes||0;reason=result.error;
-                    if(digest!=provenance.hash_file(path)){data=null;reason="changed";}
-                    if(data && key && core.digest==provenance.hash_file(core.path))codec.put(key,data,options.workspace);
+                    let decoded=codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
+                    if(decoded.data)matched=matcher.match_rule({rule_set:"current",rule_set_ip_cidr_match_source:source_mode},request,{current:decoded.data});
+                    else reason=decoded.error||"decode_failed";
+                    // Refcounted data is released before the next list/codec.
+                    decoded=null;
+                    if(digest!=provenance.hash_file(path)){matched=null;reason="changed";}
+                    if(matched && key && core.digest==provenance.hash_file(core.path))codec.put(key,{rules:[],match:matched},options.workspace);
                 }
-                if(used+bytes>codec.MAX_TOTAL){data=null;reason="size_limit";}
-                else used+=bytes;
             }
-            if(rule.type=="remote" && data)saved=true;
         }
-        sets[rule.tag]=data||null;
-        if(data)available++;
-        else {unavailable++;if(length(reasons)<200)push(reasons,{tag:rule.tag,reason:reason||"decode_failed"});}
-    }
-    if(options.progress)options.progress({completed:total,total,phase:"evaluating"});
-    if(saved)push(limitations,"saved_rule_sets_may_differ_from_running_core");
-    if(filter(reasons,(r)=>index(["size_limit","decode_timeout","job_timeout"],r.reason)>=0)[0])push(limitations,"rule_set_loading_limit");
-    return {sets,checked,core,report:{basis:remote?"saved_snapshots":"local",live_verified:false,available,unavailable,cached,unavailable_reasons:reasons}};
+        if(!seen[tag]) {
+            seen[tag]=true;
+            if(matched){report.available++;if(hit)report.cached++;}
+            else {report.unavailable++;push(report.unavailable_reasons,{tag,reason:reason||"decode_failed"});}
+        }
+        if(reason && index(["size_limit","decode_timeout","job_timeout"],reason)>=0 && index(limitations,"rule_set_loading_limit")<0)push(limitations,"rule_set_loading_limit");
+        let answer=matched||{value:"unknown",missing:["rule_set:"+tag]};
+        memo[memo_key]=answer;return answer;
+    };
+    return {sets:resolve,checked,core,report};
 }
 function selected_node(config,tag) {
     let out=filter(arr(config.outbounds),(o)=>o.tag==tag)[0];

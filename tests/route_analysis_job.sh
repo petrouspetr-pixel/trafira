@@ -75,6 +75,11 @@ test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 46
 printf '\n# replacement codec\n' >>"$WORK_DIR/bin/sing-box"
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 91
+# Compact result cache must never retain decoded list content.
+node - "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache" <<'JS'
+const fs=require('fs'),assert=require('assert/strict'),root=process.argv[2];
+for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.json'))){const raw=fs.readFileSync(root+'/'+name,'utf8');assert(raw.length<=4096);assert(!raw.includes('other-'));assert(JSON.parse(raw).data.match);}
+JS
 # Corrupt a cached export: it is rebuilt rather than used as a negative match.
 first_cache="$(ls -t "$TRAFIRA_RUNTIME_STATE_DIR/route-decode-cache/"*.json | sed -n '1p')"
 printf '{"schema":1,"data":{"rules":[]}}' >"$first_cache"
@@ -187,3 +192,35 @@ test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = "$before"
 test ! -e "$jobdir/codec.pid"
 test ! -e "$jobdir/decode-output"
 printf 'codec launch race cleanup passed\n'
+
+# Exercise the actual supervisor -> orphan launcher -> codec memory chain.
+cat >"$WORK_DIR/bin/sing-box" <<'SH'
+#!/bin/sh
+exec node -e 'const b=Buffer.alloc(60*1024*1024,1);setInterval(()=>console.log(b.length),1000)'
+SH
+id="$(start)"
+for n in $(seq 1 100); do
+ run route_explain_status "$id" >"$WORK_DIR/memory-stop"
+ if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));process.exit(r.running?1:0)' "$WORK_DIR/memory-stop"; then break; fi
+ sleep 0.1
+done
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success||r.running||r.error!=="resource_limit")throw Error(JSON.stringify(r));' "$WORK_DIR/memory-stop"
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id/codec.pid"
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id/decode-output"
+printf 'actual route supervisor limits decoder RSS\n'
+
+# Refuse to start a calculator when its mandatory RSS monitor cannot launch.
+cat >"$WORK_DIR/bin/ucode" <<'SH'
+#!/bin/sh
+case "$*" in *service/state.uc*sing-box-service-running*) exit 0;; *route_memory.uc*watch*) exit 1;; esac
+exec "$REAL_UCODE" "$@"
+SH
+id="$(start)"
+for n in $(seq 1 80); do
+ run route_explain_status "$id" >"$WORK_DIR/no-monitor"
+ if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));process.exit(r.running?1:0)' "$WORK_DIR/no-monitor"; then break; fi
+ sleep 0.1
+done
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success||r.running||r.error!=="worker_interrupted")throw Error(JSON.stringify(r));' "$WORK_DIR/no-monitor"
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id/calculator.json"
+printf 'missing memory monitor prevents calculator launch\n'

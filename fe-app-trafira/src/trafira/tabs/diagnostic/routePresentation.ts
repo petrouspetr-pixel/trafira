@@ -122,6 +122,9 @@ export function routeReasons(
 
 export function routeError(error: string): string {
   const messages: Record<string, string> = {
+    resource_limit: _(
+      'The routing check stopped to preserve router memory. Trafira continues running; no route was confirmed. Try again when more memory is available.',
+    ),
     timeout: _(
       'The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again.',
     ),
@@ -158,7 +161,7 @@ export function routeError(error: string): string {
     storage_unavailable: _(
       'There is not enough available RAM storage to prepare this route check.',
     ),
-    resource_limit: _(
+    too_many_rule_sets: _(
       'The configuration has more rule sets than this diagnostic can process safely.',
     ),
     configuration_unavailable: _(

@@ -44,7 +44,8 @@ function cleanup(id){
     if(!valid(id))return;
     stop_calculator(ROOT+"/"+id);
     require("diagnostics.route_decode_cache").cleanup(ROOT+"/"+id);
-    for(let name in ["request.json","state.json","result.json","state.json.stage","result.json.stage","calculator.json.stage"])fs.unlink(ROOT+"/"+id+"/"+name);
+    require("diagnostics.route_memory").cleanup(ROOT+"/"+id);
+    for(let name in ["request.json","state.json","result.json","state.json.stage","result.json.stage","calculator.json.stage","exit.status"])fs.unlink(ROOT+"/"+id+"/"+name);
     fs.rmdir(ROOT+"/"+id);
 }
 function status(id){
@@ -105,11 +106,38 @@ function supervisor(id){
     let dir=ROOT+"/"+id,state=read(dir+"/state.json",4096);
     if(!state || !state.running || state.job_id!=id){guard.close();return fail("invalid_job");}
     state.worker=identity();write(dir+"/state.json",state);
-    let command="ulimit -Sv 131072; exec "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_job.uc","calculate",id],quote))+" >/dev/null 2>&1";
-    let started=clock(true),code=system(command,125000),ended=clock(true),report=code==0?read(dir+"/result.json",1048576):null;
-    let result=report?{success:true,running:false,job_id:id,report}:{success:false,running:false,job_id:id,error:code==-9 && ended[0]-started[0]>=124?"worker_timeout":"worker_interrupted"};
+    let watcher="setsid "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_memory.uc","watch",dir,state.worker.pid,state.worker.ticks],quote))+" </dev/null >/dev/null 2>&1 &";
+    let memory=require("diagnostics.route_memory"),monitor=null;
+    if(system(watcher)==0)for(let n=0;n<40 && !monitor;n++) {
+        let saved=read(dir+"/memory-monitor.json",1024),alive=saved?identity(saved.pid):null;
+        if(alive && alive.ticks==saved.ticks && alive.state!="Z")monitor=alive;
+        else system("sleep 0.05");
+    }
+    if(!monitor){let failed={success:false,running:false,job_id:id,error:"worker_interrupted"};write(dir+"/state.json",failed);memory.cleanup(dir);guard.close();return failed;}
+    // The supervisor remains responsive while the calculator runs: loss of the
+    // mandatory monitor aborts the calculator and its descendants immediately.
+    let command="(ulimit -Sv 131072; "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_job.uc","calculate",id],quote))+" >/dev/null 2>&1; printf '%s' $? > "+quote(dir+"/exit.status")+") </dev/null >/dev/null 2>&1 & echo $!";
+    let pipe=fs.popen(command,"re"),pid=pipe?trim(pipe.read(64)||""):"",started=clock(true),launcher=match(pid,/^[1-9][0-9]*$/)?identity(pid):null;
+    if(pipe)pipe.close();
+    let code=-1;
+    for(let n=0;launcher && n<2500;n++) {
+        let alive=identity(monitor.pid);
+        if(!alive || alive.ticks!=monitor.ticks || alive.state=="Z") {
+            // A memory stop intentionally ends the monitor after writing error.
+            memory.stop(memory.tree(launcher,{}));
+            break;
+        }
+        let exited=fs.readfile(dir+"/exit.status");
+        if(exited!=null){code=int(exited);break;}
+        if(clock(true)[0]-started[0]>=125){code=-9;memory.stop(memory.tree(launcher,{}));break;}
+        system("sleep 0.05");
+    }
+    let ended=clock(true),report=code==0?read(dir+"/result.json",1048576):null;
+    fs.unlink(dir+"/exit.status");
+    let result=report?{success:true,running:false,job_id:id,report}:{success:false,running:false,job_id:id,error:fs.readfile(dir+"/memory.error")=="resource_limit"?"resource_limit":code==-9 && ended[0]-started[0]>=124?"worker_timeout":"worker_interrupted"};
     stop_calculator(dir);
     require("diagnostics.route_decode_cache").cleanup(dir);
+    require("diagnostics.route_memory").cleanup(dir);
     write(dir+"/state.json",result);fs.unlink(dir+"/request.json");fs.unlink(dir+"/result.json");guard.close();return result;
 }
 let mode=ARGV[0];

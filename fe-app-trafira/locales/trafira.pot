@@ -4866,3 +4866,15 @@ msgstr ""
 
 msgid "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected."
 msgstr ""
+
+msgid "Routing check"
+msgstr ""
+
+msgid "Checking saved rule sets"
+msgstr ""
+
+msgid "Saved lists are checked one at a time without downloading them again. Only compact results for this request are cached."
+msgstr ""
+
+msgid "The routing check stopped to preserve router memory. Trafira continues running; no route was confirmed. Try again when more memory is available."
+msgstr ""

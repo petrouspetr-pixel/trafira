@@ -1,7 +1,8 @@
-// RAM-only validated exports. Neither requests nor arbitrary caller paths are accepted.
+// RAM-only compact scenario results. Neither requests nor arbitrary caller paths are accepted.
 let fs=require("fs"),hash=require("singbox.provenance").hash_file;
 const ROOT=(getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/route-decode-cache";
-const MAX_FILE=16*1024*1024,MAX_TOTAL=32*1024*1024;
+const MAX_FILE=4*1024*1024,MAX_TOTAL=256*1024;
+const MAX_ENTRY=4096;
 function quote(v){return "'"+replace(""+v,/'/g,"'\\''")+"'";}
 function read(path,limit,follow){
     let info=follow?fs.stat(path):fs.lstat(path);if(!info || info.type!="file" || info.size>limit)return null;
@@ -13,6 +14,10 @@ function read(path,limit,follow){
 function ensure(){
     let info=fs.lstat(ROOT);if(info && info.type!="directory")return false;
     if(!info && !fs.mkdir(ROOT,448))return false;
+    for(let name in fs.lsdir(ROOT)||[])if(match(name,/^[a-f0-9]{64}[.]json$/)) {
+        let info=fs.lstat(ROOT+"/"+name);
+        if(info && info.type=="file" && info.size>MAX_ENTRY){fs.unlink(ROOT+"/"+name);fs.unlink(ROOT+"/"+substr(name,0,64)+".meta");}
+    }
     return fs.chmod(ROOT,448);
 }
 function identity(){
@@ -33,11 +38,11 @@ function get(key,budget){
     if(!info || info.type!="file" || !metadata || type(metadata.digest)!="string" || !match(metadata.digest,/^[a-f0-9]{64}$/) || hash(path)!=metadata.digest)return null;
     if(info.size>budget)return {error:"size_limit"};
     let entry=read(path,min(MAX_FILE+1024,budget));
-    return entry && entry.schema==1 && entry.key==key && type(entry.data)=="object" && type(entry.data.rules)=="array" && hash(path)==metadata.digest?{data:entry.data,bytes:info.size}:null;
+    return entry && entry.schema==1 && entry.key==key && type(entry.data)=="object" && type(entry.data.match)=="object" && index(["yes","no","unknown"],entry.data.match.value)>=0 && type(entry.data.match.missing)=="array" && hash(path)==metadata.digest?{data:entry.data,bytes:info.size}:null;
 }
 function put(key,data,workspace){
     if(!key || !ensure())return false;
-    let text=sprintf("%J",{schema:1,key,data});if(length(text)>MAX_FILE)return false;
+    let text=sprintf("%J",{schema:1,key,data});if(length(text)>MAX_ENTRY)return false;
     let entries=[],total=0;
     for(let name in fs.lsdir(ROOT)||[]) {
         if(!match(name,/^[a-f0-9]{64}[.]json$/))continue;
@@ -48,7 +53,7 @@ function put(key,data,workspace){
     }
     // One worker owns publication; evict only this component's regular entries.
     entries=sort(entries,(a,b)=>a.mtime-b.mtime);
-    while(length(entries) && (total+length(text)+128>MAX_TOTAL || length(entries)>=256)) {
+    while(length(entries) && (total+length(text)+128>MAX_TOTAL || length(entries)>=128)) {
         let old=shift(entries);
         if(!fs.unlink(ROOT+"/"+old.name))return false;
         fs.unlink(ROOT+"/"+substr(old.name,0,64)+".meta");
