@@ -161,7 +161,7 @@ export function routeError(error: string): string {
     storage_unavailable: _(
       'There is not enough available RAM storage to prepare this route check.',
     ),
-    resource_limit: _(
+    too_many_rule_sets: _(
       'The configuration has more rule sets than this diagnostic can process safely.',
     ),
     configuration_unavailable: _(

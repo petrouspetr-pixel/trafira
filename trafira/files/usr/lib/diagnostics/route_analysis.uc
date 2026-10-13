@@ -146,7 +146,7 @@ function load_background_sets(config,limitations,options) {
     let codec=require("diagnostics.route_decode_cache"),cache=require("singbox.ruleset_cache"),core=codec.identity();
     let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],seen={},memo={},deadline=clock()[0]+120;
     let report={basis:"local",live_verified:false,available:0,unavailable:0,cached:0,unavailable_reasons:[]};
-    if(length(rules)>256)return {error:"resource_limit"};
+    if(length(rules)>256)return {error:"too_many_rule_sets"};
     for(let rule in rules)if(type(rule.tag)=="string") {
         by_tag[rule.tag]=rule;
         if(rule.type=="remote")report.basis="saved_snapshots";
