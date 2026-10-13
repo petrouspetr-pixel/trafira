@@ -17,3 +17,5 @@ ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/diagnostics/route_memory.uc" watch "$WORK_
 if wait "$child"; then echo 'FAIL: memory-heavy worker survived' >&2; exit 1; fi
 test "$(cat "$WORK_DIR/r-dead/memory.error")" = resource_limit
 printf 'resident memory monitor terminates oversized worker without network or service changes\n'
+
+ucode -L "$TRAFIRA_LIB" -e 'let m=require("diagnostics.route_match"),sets={sample:{rules:[{port:8443,source_ip_cidr:"192.0.2.0/24"},{ip_cidr:"192.0.2.0/24"}]}},request={domain:"target.example",source_ip:"192.0.2.5",destination_ip:"203.0.113.10",port:443,network:"tcp"};let config={route:{rules:[{action:"route-options",override_port:8443},{rule_set:"sample",rule_set_ip_cidr_match_source:true,outbound:"vpn-out"}],final:"direct-out"}};let calls=0;let callback=(tag,current,mode)=>{calls++;return m.match_rule({rule_set:tag,rule_set_ip_cidr_match_source:mode},current,sets);};let expected=m.explain(config,request,{},sets),actual=m.explain(config,request,{},callback);assert(sprintf("%J",expected)==sprintf("%J",actual) && actual.outbound=="vpn-out" && calls==1,"lazy source mode and route-options parity");'

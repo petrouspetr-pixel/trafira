@@ -124,7 +124,7 @@ function supervisor(id){
         let alive=identity(monitor.pid);
         if(!alive || alive.ticks!=monitor.ticks || alive.state=="Z") {
             // A memory stop intentionally ends the monitor after writing error.
-            if(fs.readfile(dir+"/memory.error")!="resource_limit")memory.stop(memory.tree(launcher,{}));
+            memory.stop(memory.tree(launcher,{}));
             break;
         }
         let exited=fs.readfile(dir+"/exit.status");

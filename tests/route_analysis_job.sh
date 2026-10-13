@@ -192,3 +192,19 @@ test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = "$before"
 test ! -e "$jobdir/codec.pid"
 test ! -e "$jobdir/decode-output"
 printf 'codec launch race cleanup passed\n'
+
+# Refuse to start a calculator when its mandatory RSS monitor cannot launch.
+cat >"$WORK_DIR/bin/ucode" <<'SH'
+#!/bin/sh
+case "$*" in *service/state.uc*sing-box-service-running*) exit 0;; *route_memory.uc*watch*) exit 1;; esac
+exec "$REAL_UCODE" "$@"
+SH
+id="$(start)"
+for n in $(seq 1 80); do
+ run route_explain_status "$id" >"$WORK_DIR/no-monitor"
+ if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));process.exit(r.running?1:0)' "$WORK_DIR/no-monitor"; then break; fi
+ sleep 0.1
+done
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success||r.running||r.error!=="worker_interrupted")throw Error(JSON.stringify(r));' "$WORK_DIR/no-monitor"
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/route-analysis/$id/calculator.json"
+printf 'missing memory monitor prevents calculator launch\n'
