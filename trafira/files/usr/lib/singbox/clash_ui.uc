@@ -12,7 +12,7 @@ function config(settings,address) {
     if(enabled) {
         result.external_ui=UI_PATH;
         result.external_ui_download_url=UI_URL;
-        let section=common.bool_option(settings,"download_components_via_proxy",false)?common.option(settings,"download_components_via_proxy_section",""):"";
+        let section=common.bool_option(settings,"download_components_via_proxy",false)?common.option(settings,"download_components_via_proxy_section","") || common.option(settings,"download_lists_via_proxy_section",""):"";
         result.external_ui_download_detour=section!=""?constants.outbound_tag(section):constants.DIRECT_OUTBOUND_TAG;
         let secret=common.option(settings,"yacd_secret_key","");
         if(secret!="")result.secret=secret;
