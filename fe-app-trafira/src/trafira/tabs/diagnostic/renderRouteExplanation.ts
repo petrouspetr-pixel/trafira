@@ -109,6 +109,10 @@ export function renderRouteExplanationResult(
   busy: boolean,
   progress?: PreparationProgress,
 ) {
+  const submit = document.getElementById(
+    'trafira-route-submit',
+  ) as HTMLButtonElement | null;
+  if (submit) submit.disabled = busy;
   const result = document.getElementById('trafira-route-explanation-result');
   if (!result) return;
   result.replaceChildren(
@@ -418,7 +422,11 @@ export const routeExplanationPanel = {
       E('div', { class: 'fkp_diagnostic-actions' }, [
         E(
           'button',
-          { type: 'submit', class: 'cbi-button cbi-button-action' },
+          {
+            id: 'trafira-route-submit',
+            type: 'submit',
+            class: 'cbi-button cbi-button-action',
+          },
           _('Explain route'),
         ),
       ]),

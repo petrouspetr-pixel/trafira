@@ -54,7 +54,7 @@ function status(id){
     if(state.running) {
         let age=clock()[0]-state.started_at,alive=state.worker?identity(state.worker.pid):null;
         if(age>130)return fail("worker_timeout");
-        if(age>=10 && (!alive || alive.ticks!=state.worker.ticks || alive.state=="Z"))return fail("worker_interrupted");
+        if((state.worker || age>=10) && (!alive || alive.ticks!=state.worker.ticks || alive.state=="Z"))return fail("worker_interrupted");
     }
     // Never export request files, process identities, filesystem paths or codec stderr.
     return {success:state.success!==false,running:state.running===true,job_id:id,progress:state.progress,report:state.report,error:state.error};
