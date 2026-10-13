@@ -77,8 +77,6 @@ define Package/trafira/install
 
 	$(INSTALL_DIR) $(1)/usr/lib/trafira
 	$(CP) ./files/usr/lib/. $(1)/usr/lib/trafira/
-	# Historical source-test helper; not used by the runtime.
-	$(RM) $(1)/usr/lib/trafira/providers/rules.uc
 
 	sed -i -e 's/__COMPILED_VERSION_VARIABLE__/$(TRAFIRA_COMPILED_VERSION)/g' $(1)/usr/lib/trafira/core/constants.uc
 endef
