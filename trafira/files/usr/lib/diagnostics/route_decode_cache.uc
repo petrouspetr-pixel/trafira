@@ -29,7 +29,9 @@ function cache_key(digest,format,core){
 }
 function get(key){
     if(!key || !ensure())return null;
-    let entry=read(ROOT+"/"+key+".json",MAX_FILE+1024);
+    let path=ROOT+"/"+key+".json",info=fs.lstat(path),metadata=read(ROOT+"/"+key+".meta",256);
+    if(!info || info.type!="file" || !metadata || type(metadata.digest)!="string" || !match(metadata.digest,/^[a-f0-9]{64}$/) || hash(path)!=metadata.digest)return null;
+    let entry=read(path,MAX_FILE+1024);
     return entry && entry.schema==1 && entry.key==key && type(entry.data)=="object" && type(entry.data.rules)=="array"?entry.data:null;
 }
 function put(key,data){
@@ -40,21 +42,26 @@ function put(key,data){
         if(!match(name,/^[a-f0-9]{64}[.]json$/))continue;
         let info=fs.lstat(ROOT+"/"+name);
         if(!info || info.type!="file")continue;
-        total+=info.size;push(entries,{name,bytes:info.size,mtime:info.mtime});
+        let meta=fs.lstat(ROOT+"/"+substr(name,0,64)+".meta"),bytes=info.size+(meta && meta.type=="file"?meta.size:0);
+        total+=bytes;push(entries,{name,bytes,mtime:info.mtime});
     }
     // One worker owns publication; evict only this component's regular entries.
     entries=sort(entries,(a,b)=>a.mtime-b.mtime);
-    while(length(entries) && (total+length(text)>MAX_TOTAL || length(entries)>=256)) {
+    while(length(entries) && (total+length(text)+128>MAX_TOTAL || length(entries)>=256)) {
         let old=shift(entries);
         if(!fs.unlink(ROOT+"/"+old.name))return false;
+        fs.unlink(ROOT+"/"+substr(old.name,0,64)+".meta");
         total-=old.bytes;
     }
-    if(total+length(text)>MAX_TOTAL)return false;
+    if(total+length(text)+128>MAX_TOTAL)return false;
     let now=clock(),temporary=ROOT+"/"+key+"."+sprintf("%x-%x",now[0],now[1])+".stage";
     let file=fs.open(temporary,"wex",384);if(!file)return false;
     let ok=file.write(text)==length(text);file.close();
-    if(ok)ok=fs.rename(temporary,ROOT+"/"+key+".json");
-    fs.unlink(temporary);return !!ok;
+    let digest=ok?hash(temporary):null,meta=temporary+".meta",output=digest?fs.open(meta,"wex",384):null;
+    if(!output)ok=false;
+    else {let data=sprintf("%J",{digest});ok=output.write(data)==length(data);output.close();}
+    if(ok)ok=fs.rename(temporary,ROOT+"/"+key+".json") && fs.rename(meta,ROOT+"/"+key+".meta");
+    fs.unlink(temporary);fs.unlink(meta);return !!ok;
 }
 function decode(path,format,milliseconds){
     let pipe=fs.popen("umask 077; mktemp /tmp/trafira-route-decode.XXXXXX","re");

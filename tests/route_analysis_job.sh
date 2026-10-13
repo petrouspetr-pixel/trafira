@@ -48,7 +48,7 @@ start(){
  node - "$WORK_DIR/start" <<'JS'
 const fs=require('fs'),assert=require('assert/strict'),text=fs.readFileSync(process.argv[2],'utf8');
 assert(text.trim().startsWith('{'),'background route API must return JSON');
-const r=JSON.parse(text);assert(r.success&&r.running&&/^r-[a-f0-9-]+$/.test(r.job_id),'background route API must start a bounded job');
+const r=JSON.parse(text);assert(r.success&&r.running&&/^r-[a-f0-9-]+$/.test(r.job_id),'background route API must start a bounded job: '+JSON.stringify(r));
 console.log(r.job_id);
 JS
 }
