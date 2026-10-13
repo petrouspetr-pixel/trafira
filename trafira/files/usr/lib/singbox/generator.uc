@@ -482,7 +482,10 @@ function base_config(settings, service_address, runtime_context) {
                 "sonar6.frix7-1.fna.fbcdn.net",
                 "brunhild.challenges.cloudflare.com"
             ],
-            domain_regex: [ "^" + hex4 + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + hex4 + hex4 + "-netseer-ipaddr-assoc[.]xy[.]fbcdn[.]net$" ]
+            domain_regex: [
+                "^" + hex4 + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + hex4 + hex4 + "-netseer-ipaddr-assoc[.]xy[.]fbcdn[.]net$",
+                "^sonar6-[a-z][a-z][a-z][0-9]+-[0-9]+[.]xx[.]fbcdn[.]net$"
+            ]
         });
     }
     for (let rule in [
