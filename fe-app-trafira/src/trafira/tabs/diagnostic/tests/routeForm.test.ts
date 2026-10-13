@@ -1,32 +1,26 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { executeShellCommand } from '../../../../helpers/executeShellCommand';
 import { routeExplanationPanel } from '../renderRouteExplanation';
-
 vi.mock('../../../../helpers/executeShellCommand', () => ({
-  executeShellCommand: vi.fn(async () => ({
-    code: 0,
-    stdout: '{"devices":[]}',
-  })),
+  executeShellCommand: vi.fn(),
 }));
-
 class Element {
   value = '';
   required = false;
   disabled = false;
-  readOnly = false;
   hidden = false;
   textContent = '';
+  id = '';
   children: Array<Element | string> = [];
-  listeners: Record<string, (...args: unknown[]) => void> = {};
+  listeners: Record<string, (event?: unknown) => void> = {};
   constructor(
     public tag: string,
     public attributes: Record<string, unknown>,
   ) {
     Object.assign(this, attributes);
-    // LuCI E serializes boolean attributes; required="false" is still required.
     this.required = attributes.required != null;
   }
-  addEventListener(event: string, listener: () => void) {
+  addEventListener(event: string, listener: (event?: unknown) => void) {
     this.listeners[event] = listener;
   }
   replaceChildren(...children: Array<Element | string>) {
@@ -35,165 +29,200 @@ class Element {
   append(...children: Array<Element | string>) {
     this.children.push(...children);
   }
+  setAttribute(key: string, value: string) {
+    this.attributes[key] = value;
+  }
+  toggleAttribute(key: string, value: boolean) {
+    if (value) this.attributes[key] = '';
+    else delete this.attributes[key];
+  }
+  querySelectorAll() {
+    return [];
+  }
 }
-let nodes: Element[];
+let nodes: Element[], widgets: Record<string, Dropdown>;
+class Dropdown {
+  node!: Element;
+  constructor(
+    public value: string,
+    public choices: Record<string, string>,
+    public options: Record<string, unknown>,
+  ) {
+    widgets[options.id as string] = this;
+  }
+  render() {
+    return (this.node = E('div', {
+      id: this.options.id as string,
+    }) as unknown as Element);
+  }
+  getValue() {
+    return this.value;
+  }
+  setValue(value: string) {
+    this.value = value;
+    this.node.listeners['cbi-dropdown-change']?.();
+  }
+  clearChoices() {
+    this.choices = {};
+    this.value = '';
+  }
+  addChoices(values: string[], labels: Record<string, string>) {
+    for (const value of values) this.choices[value] = labels[value];
+  }
+}
+const widget = (id: string) => widgets['trafira-route-' + id];
+const node = (id: string) => nodes.find((n) => n.id === 'trafira-route-' + id)!;
 beforeEach(() => {
-  vi.mocked(executeShellCommand).mockResolvedValue({
+  nodes = [];
+  widgets = {};
+  vi.mocked(executeShellCommand).mockClear();
+  vi.mocked(executeShellCommand).mockImplementation(async (request) => ({
     code: 0,
     stderr: '',
-    stdout: JSON.stringify({
-      enabled: true,
-      source_interfaces: ['br-lan'],
-      devices: [
-        {
-          name: 'DESKTOP',
-          ips: ['192.168.10.234'],
-          mac: 'aa:bb:cc:dd:ee:ff',
-          interface: 'br-lan',
-        },
-      ],
-    }),
-  });
-  nodes = [];
-  vi.stubGlobal('_', (value: string) => value);
+    stdout: JSON.stringify(
+      request.args[0] === 'get_known_devices'
+        ? {
+            source_interfaces: ['br-lan'],
+            available_interfaces: ['br-lan', 'awg0'],
+            devices: [
+              {
+                name: 'DESKTOP',
+                ips: ['192.168.10.234', 'fd00::234'],
+                mac: 'aa:bb:cc:dd:ee:ff',
+                interface: 'br-lan',
+              },
+            ],
+          }
+        : {
+            success: true,
+            running: false,
+            job_id: 'r-a',
+            report: {
+              success: true,
+              decision: {
+                status: 'direct',
+                trace: [],
+                missing: [],
+                outbound: 'direct-out',
+              },
+              limitations: [],
+            },
+          },
+    ),
+  }));
+  vi.stubGlobal('_', (v: string) => v);
+  vi.stubGlobal('ui', { Dropdown });
   vi.stubGlobal(
     'E',
     (
       tag: string,
-      attributes: Record<string, unknown>,
+      attributes: Record<string, unknown> = {},
       children: Array<Element | string> | string = [],
     ) => {
-      const node = new Element(tag, attributes);
-      node.children = Array.isArray(children) ? children : [children];
-      nodes.push(node);
-      return node;
+      const n = new Element(tag, attributes);
+      n.children = Array.isArray(children) ? children : [children];
+      nodes.push(n);
+      return n;
     },
   );
-  vi.stubGlobal('document', { getElementById: () => new Element('div', {}) });
+  vi.stubGlobal('document', {
+    getElementById: (id: string) =>
+      nodes.find((n) => n.id === id) || new Element('div', {}),
+  });
   routeExplanationPanel.mount();
 });
 afterEach(() => {
   routeExplanationPanel.unmount();
   vi.unstubAllGlobals();
 });
-
-it('requires a visible destination address for the router and restores optional input for a device', () => {
-  const source = nodes.find((node) => node.tag === 'select')!;
-  const destination = nodes.find(
-    (node) => node.attributes.id === 'trafira-route-destination',
-  )!;
-  expect(destination).toBeDefined();
-  expect(destination.required).toBe(false);
-  source.value = 'router';
-  source.listeners.change();
-  expect(destination.required).toBe(true);
-  const contains = (node: Element, target: Element): boolean =>
-    node.children.some(
-      (child) =>
-        child === target ||
-        (child instanceof Element && contains(child, target)),
-    );
+it('uses native LuCI choices and no browser datalists', () => {
+  for (const name of ['device', 'mac', 'interface', 'source', 'protocol'])
+    expect(widget(name)).toBeDefined();
+  for (const name of ['device', 'mac', 'interface'])
+    expect(widget(name).options.create).toBe(true);
+  expect(nodes.some((n) => n.tag === 'datalist')).toBe(false);
   expect(
-    nodes.some((node) => node.tag === 'details' && contains(node, destination)),
-  ).toBe(false);
-  const deviceField = nodes.find(
-    (node) =>
-      node.tag === 'label' &&
-      node.children.some(
-        (child) =>
-          child instanceof Element &&
-          child.children.includes('Device IP address'),
-      ),
-  )!;
-  expect(deviceField.hidden).toBe(true);
-  source.value = 'device';
-  source.listeners.change();
-  expect(destination.required).toBe(false);
-  expect(deviceField.hidden).toBe(false);
-});
-
-it('explains the configuration check before the first request', () => {
-  expect(
-    nodes.some(
-      (node) =>
-        node.tag === 'p' &&
-        node.children.some(
-          (child) =>
-            typeof child === 'string' &&
-            child.includes('not test whether the website opens'),
-        ),
-    ),
+    nodes.some((n) => n.tag === 'div' && n.attributes.class === 'cbi-value'),
   ).toBe(true);
 });
-
-it('discovers devices independently of Alice Mode and fills all routing context', async () => {
-  await vi.waitFor(() =>
-    expect(
-      nodes.some(
-        (n) =>
-          n.tag === 'option' &&
-          n.children.some(
-            (c) => typeof c === 'string' && c.includes('DESKTOP'),
-          ),
-      ),
-    ).toBe(true),
-  );
-  expect(executeShellCommand).toHaveBeenCalledWith(
-    expect.objectContaining({ args: ['get_known_devices'] }),
-  );
-  const picker = nodes.find((n) => n.attributes.id === 'trafira-route-device')!;
-  picker.value = '0';
-  picker.listeners.change();
-  expect(
-    nodes.find((n) => n.attributes.placeholder === 'Device IP address')!.value,
-  ).toBe('192.168.10.234');
-  expect(
-    nodes.find((n) => n.attributes.placeholder === 'Device MAC (optional)')!
-      .value,
-  ).toBe('aa:bb:cc:dd:ee:ff');
-  expect(
-    nodes.find(
-      (n) => n.attributes.placeholder === 'Incoming interface (optional)',
-    )!.value,
-  ).toBe('br-lan');
+it('requires destination IP for the router and hides device fields', () => {
+  widget('source').setValue('router');
+  expect(node('destination').required).toBe(true);
+  expect(node('device-row').hidden).toBe(true);
+  expect(widget('device').node.attributes.disabled).toBeDefined();
+  widget('source').setValue('device');
+  expect(node('destination').required).toBe(false);
+  expect(node('device-row').hidden).toBe(false);
 });
-
-it('includes detected MAC and interface when a known IP is entered manually', async () => {
+it('loads named IPv4 and IPv6 choices and autofills device metadata', async () => {
   await vi.waitFor(() =>
-    expect(
-      nodes.some(
-        (n) =>
-          n.tag === 'option' &&
-          n.children.some(
-            (c) => typeof c === 'string' && c.includes('DESKTOP'),
-          ),
-      ),
-    ).toBe(true),
+    expect(widget('device').choices['192.168.10.234']).toContain('DESKTOP'),
   );
-  nodes.find((n) => n.attributes.placeholder === 'Device IP address')!.value =
-    '192.168.10.234';
+  expect(widget('device').choices['fd00::234']).toContain('DESKTOP');
+  widget('device').setValue('192.168.10.234');
+  expect(widget('mac').getValue()).toBe('aa:bb:cc:dd:ee:ff');
+  expect(widget('interface').getValue()).toBe('br-lan');
+  expect(widget('mac').choices['aa:bb:cc:dd:ee:ff']).toContain('DESKTOP');
+  expect(widget('interface').choices['br-lan']).toBeDefined();
+  expect(widget('interface').choices['awg0']).toBeDefined();
+});
+it('allows custom values and preserves explicit overrides in the request', async () => {
+  await vi.waitFor(() =>
+    expect(widget('device').choices['192.168.10.234']).toBeDefined(),
+  );
+  widget('device').setValue('192.168.10.234');
+  widget('mac').setValue('11:22:33:44:55:66');
+  widget('interface').setValue('br-guest');
   nodes.find((n) => n.attributes.placeholder === 'example.com')!.value =
     'ya.ru';
-  nodes.find((n) => n.attributes.type === 'number')!.value = '443';
-  const protocol = nodes
-    .filter((n) => n.tag === 'select')
-    .find((n) =>
-      n.children.some(
-        (c) => c instanceof Element && c.attributes.value === 'tls',
-      ),
-    )!;
-  protocol.value = 'tls';
   nodes
     .find((n) => n.tag === 'form')!
     .listeners.submit({ preventDefault() {} });
   const call = vi
     .mocked(executeShellCommand)
-    .mock.calls.filter(([request]) => request.args[0] === 'route_explain_start')
-    .pop()!;
+    .mock.calls.find(([r]) => r.args[0] === 'route_explain_start')!;
   expect(JSON.parse(call[0].args[1]).source).toEqual({
     kind: 'device',
     ip: '192.168.10.234',
-    mac: 'aa:bb:cc:dd:ee:ff',
-    interface: 'br-lan',
+    mac: '11:22:33:44:55:66',
+    interface: 'br-guest',
   });
+  widget('device').setValue('192.168.10.99');
+  expect(widget('mac').getValue()).toBe('');
+  expect(widget('interface').getValue()).toBe('');
+});
+
+it('refreshes labels without losing current custom choices', async () => {
+  await vi.waitFor(() =>
+    expect(widget('device').choices['192.168.10.234']).toBeDefined(),
+  );
+  widget('device').setValue('192.168.10.99');
+  widget('mac').setValue('11:22:33:44:55:66');
+  widget('interface').setValue('br-guest');
+  nodes.find((n) => n.children.includes('Refresh devices'))!.listeners.click();
+  await vi.waitFor(() =>
+    expect(
+      vi
+        .mocked(executeShellCommand)
+        .mock.calls.filter(([r]) => r.args[0] === 'get_known_devices'),
+    ).toHaveLength(2),
+  );
+  expect(widget('device').getValue()).toBe('192.168.10.99');
+  expect(widget('mac').getValue()).toBe('11:22:33:44:55:66');
+  expect(widget('interface').getValue()).toBe('br-guest');
+});
+it('keeps manual selection available if discovery fails', async () => {
+  await vi.waitFor(() =>
+    expect(widget('device').choices['192.168.10.234']).toBeDefined(),
+  );
+  vi.mocked(executeShellCommand).mockRejectedValueOnce(new Error('offline'));
+  nodes.find((n) => n.children.includes('Refresh devices'))!.listeners.click();
+  await vi.waitFor(() =>
+    expect(
+      nodes.some((n) =>
+        n.textContent.includes('Could not load detected devices'),
+      ),
+    ).toBe(true),
+  );
+  expect(widget('device').options.create).toBe(true);
 });

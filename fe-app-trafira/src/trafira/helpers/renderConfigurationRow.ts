@@ -1,8 +1,9 @@
 // Keep custom configuration tools aligned with LuCI's native form options.
 export function renderConfigurationRow(
-  label: string,
+  label: string | Node,
   id: string,
   children: Node[],
+  description?: Node,
 ) {
   const title = E('label', { class: 'cbi-value-title' }, label);
   if (id) (title as HTMLLabelElement).htmlFor = id;
@@ -10,6 +11,7 @@ export function renderConfigurationRow(
     title,
     E('div', { class: 'cbi-value-field' }, [
       E('div', { class: 'trafira-form-controls' }, children),
+      ...(description ? [description] : []),
     ]),
   ]);
 }

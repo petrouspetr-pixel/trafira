@@ -205,18 +205,6 @@ export const styles = `
     min-width: 0;
 }
 
-.fkp_diagnostic-panel {
-    border: 1px solid var(--background-color-low, lightgray);
-    border-radius: 4px;
-    padding: 16px;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.fkp_diagnostic-panel h3 {
-    margin-top: 0;
-}
-
 .trafira-feature-slot {
     width: 100%;
     min-width: 0;
@@ -242,32 +230,6 @@ export const styles = `
 
 .trafira-form-controls > button {
     margin: 0;
-}
-
-.fkp_diagnostic-fields {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px 16px;
-    margin: 12px 0;
-}
-
-.fkp_diagnostic-field[hidden] {
-    display: none;
-}
-
-.fkp_diagnostic-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-}
-
-.fkp_diagnostic-field > input,
-.fkp_diagnostic-field > select {
-    box-sizing: border-box;
-    width: auto;
-    min-width: 0;
-    max-width: 100%;
 }
 
 .fkp_diagnostic-actions {
@@ -310,10 +272,6 @@ export const styles = `
 }
 
 @media (max-width: 600px) {
-    .fkp_diagnostic-fields {
-        grid-template-columns: 1fr;
-    }
-
     .fkp_diagnostic-actions > button {
         white-space: normal;
     }

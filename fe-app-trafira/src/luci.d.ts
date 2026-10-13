@@ -49,14 +49,25 @@ declare global {
 
   const _ = (_key: string) => string;
 
-  const ui = {
-    showModal: (_title: string, _content: HTMLElement) => undefined,
-    hideModal: () => undefined,
+  const ui: {
+    Dropdown: new (
+      value: string,
+      choices: Record<string, string>,
+      options: Record<string, unknown>,
+    ) => {
+      render(): HTMLElement;
+      getValue(): string | null;
+      setValue(value: string): void;
+      clearChoices(reset?: boolean): void;
+      addChoices(values: string[], labels: Record<string, string>): void;
+    };
+    showModal: (_title: string, _content: HTMLElement) => undefined;
+    hideModal: () => undefined;
     addNotification: (
       _title: string,
       _children: HtmlElement | HtmlElement[],
       ..._classNames: string[]
-    ) => HTMLElement,
+    ) => HTMLElement;
   };
 }
 

@@ -363,8 +363,12 @@ let mode = ARGV[0] || "";
 
 if (mode == "get-alice-devices")
     common.write_json(build_report(runtime_data()));
-else if (mode == "get-known-devices")
-    common.write_json(build_report(runtime_data(true)));
+else if (mode == "get-known-devices") {
+    let report = build_report(runtime_data(true));
+    report.available_interfaces = sort(filter(fs.lsdir("/sys/class/net") || [],
+        (name) => match(name, /^[a-zA-Z0-9_.:@-]{1,15}$/)));
+    common.write_json(report);
+}
 else if (mode == "get-alice-devices-fixture")
     common.write_json(build_report(common.read_json_file(ARGV[1])));
 else {
