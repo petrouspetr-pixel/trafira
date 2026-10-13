@@ -1,3 +1,5 @@
+import { nativeChoice } from '../../helpers/nativeChoice';
+import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
 import {
   ExplainDecision,
@@ -262,40 +264,43 @@ export const routeExplanationPanel = {
       maxLength: 253,
       required: true,
     }) as HTMLInputElement;
-    const source = E('select', {}, [
-      E('option', { value: 'device' }, _('Device by IP address')),
-      E('option', { value: 'router' }, _('This router')),
-    ]) as HTMLSelectElement;
-    const devicePicker = E('select', { id: 'trafira-route-device' }, [
-      E('option', { value: '' }, _('Enter an address manually')),
-    ]);
+    const source = nativeChoice('trafira-route-source', _('Source'), 'device', {
+      device: _('Device by IP address'),
+      router: _('This router'),
+    });
+    const ip = nativeChoice(
+      'trafira-route-device',
+      _('Device IP address'),
+      '',
+      {},
+      true,
+      'ipaddr',
+    );
+    const mac = nativeChoice(
+      'trafira-route-mac',
+      _('Device MAC (optional)'),
+      '',
+      {},
+      true,
+      'macaddr',
+    );
+    const iface = nativeChoice(
+      'trafira-route-interface',
+      _('Incoming interface (optional)'),
+      '',
+      {},
+      true,
+    );
     const deviceStatus = E(
       'p',
-      { role: 'status' },
+      { role: 'status', class: 'cbi-value-description' },
       _('Loading detected devices'),
     );
-    const macOptions = E('datalist', { id: 'trafira-route-macs' });
-    const interfaceOptions = E('datalist', { id: 'trafira-route-interfaces' });
     const refreshDevices = E(
       'button',
       { type: 'button', class: 'cbi-button' },
       _('Refresh devices'),
     );
-    const ip = E('input', {
-      type: 'text',
-      placeholder: _('Device IP address'),
-      required: true,
-    }) as HTMLInputElement;
-    const mac = E('input', {
-      type: 'text',
-      placeholder: _('Device MAC (optional)'),
-      list: 'trafira-route-macs',
-    }) as HTMLInputElement;
-    const iface = E('input', {
-      type: 'text',
-      placeholder: _('Incoming interface (optional)'),
-      list: 'trafira-route-interfaces',
-    }) as HTMLInputElement;
     const destination = E('input', {
       id: 'trafira-route-destination',
       type: 'text',
@@ -304,14 +309,14 @@ export const routeExplanationPanel = {
     const destinationLabel = E('span', {}, _('Real destination IP (optional)'));
     const sourceHelp = E(
       'p',
-      { id: 'trafira-route-source-help' },
+      { id: 'trafira-route-source-help', class: 'cbi-value-description' },
       _(
         'For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.',
       ),
     );
     const destinationHelp = E(
       'p',
-      {},
+      { class: 'cbi-value-description' },
       _(
         'You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.',
       ),
@@ -323,22 +328,26 @@ export const routeExplanationPanel = {
       value: '443',
       required: true,
     }) as HTMLInputElement;
-    const protocol = E('select', {}, [
-      E('option', { value: 'tls' }, 'TLS / TCP'),
-      E('option', { value: 'http' }, 'HTTP / TCP'),
-      E('option', { value: 'quic' }, 'QUIC / UDP'),
-      E('option', { value: 'tcp' }, _('TCP, unknown protocol')),
-      E('option', { value: 'udp' }, _('UDP, unknown protocol')),
-    ]) as HTMLSelectElement;
+    const protocol = nativeChoice(
+      'trafira-route-protocol',
+      _('Protocol'),
+      'tls',
+      {
+        tls: 'TLS / TCP',
+        http: 'HTTP / TCP',
+        quic: 'QUIC / UDP',
+        tcp: _('TCP, unknown protocol'),
+        udp: _('UDP, unknown protocol'),
+      },
+    );
     let devices: Array<{ ip: string; mac?: string; interface?: string }> = [];
     const updateSource = () => {
       const router = source.value === 'router';
-      ip.disabled = router;
-      ip.required = !router;
-      mac.disabled = router;
-      iface.disabled = router;
+      ip.setDisabled(router);
+      mac.setDisabled(router);
+      iface.setDisabled(router);
       deviceField.hidden = router;
-      pickerField.hidden = router;
+      metadataFields.hidden = router;
       destination.required = router;
       destinationLabel.textContent = router
         ? _('Real destination IP (required for the router)')
@@ -359,66 +368,44 @@ export const routeExplanationPanel = {
             'You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.',
           );
     };
-    source.addEventListener('change', updateSource);
-    devicePicker.addEventListener('change', () => {
-      const device =
-        devicePicker.value === ''
-          ? undefined
-          : devices[Number(devicePicker.value)];
-      if (device) {
-        source.value = 'device';
-        updateSource();
-        ip.value = device.ip;
-        mac.value = device.mac || '';
-        iface.value = device.interface || '';
-      }
-    });
-    ip.addEventListener('input', () => {
-      devicePicker.value = '';
-      mac.value = '';
-      iface.value = '';
+    source.onChange(updateSource);
+    ip.onChange(() => {
+      const device = devices.find((device) => device.ip === ip.value);
+      mac.value = device?.mac || '';
+      iface.value = device?.interface || '';
     });
     const field = (label: string, control: HTMLElement) =>
-      E('label', { class: 'fkp_diagnostic-field' }, [
-        E('span', {}, label),
-        control,
-      ]);
-    const deviceField = field(_('Device IP address'), ip);
-    const pickerField = field(_('Detected device'), devicePicker);
-    const form = E('form', { class: 'fkp_diagnostic-panel' }, [
+      row(label, control.id, [control]);
+    const deviceField = row(
+      _('Device IP address'),
+      ip.node.id,
+      [ip.node, refreshDevices],
+      deviceStatus,
+    );
+    deviceField.id = 'trafira-route-device-row';
+    const metadataFields = E('details', { class: 'fkp_diagnostic-details' }, [
+      E('summary', {}, _('Device MAC and incoming interface (if needed)')),
+      field(_('Device MAC (optional)'), mac.node),
+      field(_('Incoming interface (optional)'), iface.node),
+    ]);
+    const form = E('form', { class: 'cbi-section' }, [
       E('h3', {}, _('Where will the connection go?')),
       E(
         'p',
-        {},
+        { class: 'cbi-section-descr' },
         _(
           'Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device.',
         ),
       ),
-      E('div', { class: 'fkp_diagnostic-fields' }, [
+      E('div', {}, [
         field(_('Domain'), domain),
-        field(_('Source'), source),
-        pickerField,
+        row(_('Source'), source.node.id, [source.node], sourceHelp),
         deviceField,
         field(_('Destination port'), port),
-        field(_('Protocol'), protocol),
-        E('label', { class: 'fkp_diagnostic-field' }, [
-          destinationLabel,
-          destination,
-        ]),
+        field(_('Protocol'), protocol.node),
+        row(destinationLabel, destination.id, [destination], destinationHelp),
       ]),
-      refreshDevices,
-      deviceStatus,
-      macOptions,
-      interfaceOptions,
-      sourceHelp,
-      destinationHelp,
-      E('details', { class: 'fkp_diagnostic-details' }, [
-        E('summary', {}, _('Device MAC and incoming interface (if needed)')),
-        E('div', { class: 'fkp_diagnostic-fields' }, [
-          field(_('Device MAC (optional)'), mac),
-          field(_('Incoming interface (optional)'), iface),
-        ]),
-      ]),
+      metadataFields,
       E('div', { class: 'fkp_diagnostic-actions' }, [
         E(
           'button',
@@ -471,6 +458,7 @@ export const routeExplanationPanel = {
       deviceStatus.textContent = _('Loading detected devices');
       return command<{
         source_interfaces?: string[];
+        available_interfaces?: string[];
         devices: Array<{
           name?: string;
           ips: string[];
@@ -481,42 +469,34 @@ export const routeExplanationPanel = {
         .then((report) => {
           if (generation !== mountId) return;
           devices = [];
-          devicePicker.replaceChildren(
-            E('option', { value: '' }, _('Enter an address manually')),
-          );
-          macOptions.replaceChildren(
-            ...[
-              ...new Set(
-                (report.devices || []).map((d) => d.mac).filter(Boolean),
-              ),
-            ].map((value) => E('option', { value })),
-          );
-          interfaceOptions.replaceChildren(
-            ...[
-              ...new Set([
-                ...(report.source_interfaces || []),
-                ...(report.devices || [])
-                  .map((d) => d.interface)
-                  .filter(Boolean),
-              ]),
-            ].map((value) => E('option', { value })),
-          );
-          for (const device of report.devices || [])
+          const ipChoices: Record<string, string> = {},
+            macChoices: Record<string, string> = {},
+            interfaceChoices: Record<string, string> = {};
+          for (const name of [
+            ...(report.available_interfaces || []),
+            ...(report.source_interfaces || []),
+          ])
+            interfaceChoices[name] = name;
+          for (const device of report.devices || []) {
+            const label = device.name || device.mac || '';
+            if (device.mac)
+              macChoices[device.mac] = label
+                ? `${label} — ${device.mac}`
+                : device.mac;
+            if (device.interface)
+              interfaceChoices[device.interface] = device.interface;
             for (const address of device.ips || []) {
-              const index =
-                devices.push({
-                  ip: address,
-                  mac: device.mac,
-                  interface: device.interface,
-                }) - 1;
-              devicePicker.append(
-                E(
-                  'option',
-                  { value: String(index) },
-                  `${device.name || address} — ${address}`,
-                ),
-              );
+              devices.push({
+                ip: address,
+                mac: device.mac,
+                interface: device.interface,
+              });
+              ipChoices[address] = label ? `${label} — ${address}` : address;
             }
+          }
+          ip.setChoices(ipChoices);
+          mac.setChoices(macChoices);
+          iface.setChoices(interfaceChoices);
           deviceStatus.textContent = devices.length
             ? _(
                 'Select a device to fill its IP, MAC and incoming interface. You can also enter them manually.',
