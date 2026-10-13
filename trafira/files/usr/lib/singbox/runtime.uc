@@ -831,21 +831,11 @@ function init_config(populate_nft, caches_prepared, no_refresh, prepared_deferre
     }
     log_file_lines(runtime_log, "warn", "sing-box config generator: ");
 
-    // Reconcile the saved UI flag at the publication boundary as well. A stale
-    // generator result must not silently keep the panel disabled after Apply.
-    let generated=common.read_json_file(temp_config);
-    if(type(generated)!="object") {
-        log_message("Generated sing-box configuration is unreadable", "fatal");
+    // Check the saved UI flag again at the publication boundary. Never keep
+    // stale panel settings merely because the generator reused an old API.
+    if(!require("singbox.clash_ui").reconcile(temp_config,settings,service_listen_address_value(settings))) {
+        log_message("Cannot reconcile YACD configuration and runtime metadata", "fatal");
         remove_files([temp_config,runtime_log]);exit(1);
-    }
-    let provenance=require("singbox.provenance"),origins=provenance.load(temp_config);
-    if(require("singbox.clash_ui").apply(generated,settings,service_listen_address_value(settings))) {
-        if(!common.write_json_file(temp_config,generated)) {
-            log_message("Cannot apply YACD settings to generated configuration", "fatal");
-            remove_files([temp_config,runtime_log]);exit(1);
-        }
-        // Normalization changes the digest bound to provenance/failure baselines.
-        if(origins)provenance.save(temp_config,origins);
     }
 
     let check_result = sing_box_check(temp_config, runtime_log);
