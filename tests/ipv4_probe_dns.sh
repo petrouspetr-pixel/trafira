@@ -15,9 +15,9 @@ for mode in ipv4_only prefer_ipv4 ipv6_only prefer_ipv6; do
   ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture "$WORK_DIR/input.json" "$WORK_DIR/$mode-$enabled.json" 127.0.0.1 0 1 '' 1.14.1
  done
 done
-printf '{"settings":{"dns_strategy":"ipv4_only"},"section":[]}' >"$WORK_DIR/input.json"
+printf '{"settings":{"dns_strategy":"ipv4_only"},"section":[{".name":"direct_section",".type":"section","enabled":"1","action":"bypass"}]}' >"$WORK_DIR/input.json"
 ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture "$WORK_DIR/input.json" "$WORK_DIR/default.json" 127.0.0.1 0 1 '' 1.13.18
-printf '{"settings":{"dns_strategy":"ipv4_only","disable_ipv6_probes":"1","alice_mode_enabled":"1","alice_ips":["192.0.2.1/32"]},"section":[]}' >"$WORK_DIR/input.json"
+printf '{"settings":{"dns_strategy":"ipv4_only","disable_ipv6_probes":"1","alice_mode_enabled":"1","alice_ips":["192.0.2.1/32"]},"section":[{".name":"direct_section",".type":"section","enabled":"1","action":"bypass"}]}' >"$WORK_DIR/input.json"
 ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture "$WORK_DIR/input.json" "$WORK_DIR/alice.json" 127.0.0.1 0 1 '' 1.14.1
 node - "$WORK_DIR" <<'JS'
 const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
