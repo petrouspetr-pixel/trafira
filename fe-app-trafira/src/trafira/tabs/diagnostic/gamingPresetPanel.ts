@@ -17,6 +17,7 @@ export interface GamingSelection {
 }
 export interface GamingState {
   busy: boolean;
+  phase?: 'idle' | 'checking' | 'applying';
   running: boolean;
   jobId: string;
   error: string;
@@ -94,6 +95,12 @@ export class GamingPresetController {
     this.state = {
       ...this.state,
       busy: true,
+      phase: ['preview', 'preview_remove'].includes(String(request.action))
+        ? 'checking'
+        : ['apply', 'remove'].includes(String(request.action)) ||
+            this.state.running
+          ? 'applying'
+          : 'idle',
       error: request.action === 'status' ? this.state.error : '',
       committed: request.action === 'status' ? this.state.committed : false,
     };

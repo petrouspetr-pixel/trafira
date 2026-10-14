@@ -3520,3 +3520,15 @@ msgstr "Правила продолжат работать. Пресет исч�
 
 msgid "Devices"
 msgstr "Устройства"
+
+msgid "Please wait while Trafira checks the proposed configuration. Your settings have not been changed."
+msgstr "Пожалуйста, подождите: Trafira проверяет предложенную конфигурацию. Ваши настройки ещё не изменены."
+
+msgid "Please wait while Trafira saves and applies the configuration. The service may restart briefly."
+msgstr "Пожалуйста, подождите: Trafira сохраняет и применяет конфигурацию. Возможен короткий перезапуск сервиса."
+
+msgid "Continue in background"
+msgstr "Продолжить в фоне"
+
+msgid "Applying configuration..."
+msgstr "Применение конфигурации…"

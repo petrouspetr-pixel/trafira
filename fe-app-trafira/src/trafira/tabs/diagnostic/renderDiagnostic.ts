@@ -6,7 +6,6 @@ export function render() {
         class: 'fkp_diagnostic-page__checks',
         id: 'fkp_diagnostic-page-checks',
       }),
-      E('div', { id: 'trafira-route-explanation' }),
     ]),
     E('div', { class: 'fkp_diagnostic-page__right-bar' }, [
       E('div', { id: 'fkp_diagnostic-page-wiki' }),

@@ -1,5 +1,4 @@
 import { onMount, preserveScrollForPage } from '../../../helpers';
-import { routeExplanationPanel } from './renderRouteExplanation';
 import { runDnsCheck } from './checks/runDnsCheck';
 import { runSingBoxCheck } from './checks/runSingBoxCheck';
 import { runInboundsCheck } from './checks/runInboundsCheck';
@@ -1165,7 +1164,6 @@ async function onPageMount() {
   });
 
   diagnosticMounted = true;
-  routeExplanationPanel.mount();
   diagnosticMountId += 1;
   const mountId = diagnosticMountId;
   const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
@@ -1230,7 +1228,6 @@ function onPageUnmount({
   preservePersistedRun?: boolean;
 } = {}) {
   diagnosticMounted = false;
-  routeExplanationPanel.unmount();
   diagnosticMountId += 1;
   stopServiceActionStateWatcher();
   servicesInfoRefreshPromise = null;

@@ -4956,3 +4956,15 @@ msgstr ""
 
 msgid "Devices"
 msgstr ""
+
+msgid "Please wait while Trafira checks the proposed configuration. Your settings have not been changed."
+msgstr ""
+
+msgid "Please wait while Trafira saves and applies the configuration. The service may restart briefly."
+msgstr ""
+
+msgid "Continue in background"
+msgstr ""
+
+msgid "Applying configuration..."
+msgstr ""
