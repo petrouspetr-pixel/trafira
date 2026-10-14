@@ -143,6 +143,7 @@ export const gamingPresetsPanel = {
       class: 'cbi-value-description',
       role: 'status',
     });
+    const content = E('div', { id: 'trafira-game-content' });
     const addresses = E('div', { class: 'trafira-form-controls' }),
       output = E('div', {}),
       status = E('p', {}),
@@ -170,6 +171,7 @@ export const gamingPresetsPanel = {
         b.disabled = !!busy;
       master.disabled = !canWrite || !catalog || !!busy;
       const disabled = catalog?.enabled === false;
+      content.hidden = disabled;
       master.checked = catalog?.enabled !== false;
       masterStatus.textContent = disabled
         ? _(
@@ -662,11 +664,7 @@ export const gamingPresetsPanel = {
       if (accepted && mine === generation)
         await controller.setEnabled(enabled, catalog.digest);
     });
-    host.replaceChildren(
-      row(_('Enable gaming presets'), 'trafira-game-enabled', [
-        master,
-        masterStatus,
-      ]),
+    content.replaceChildren(
       E(
         'p',
         { class: 'cbi-section-descr' },
@@ -776,6 +774,13 @@ export const gamingPresetsPanel = {
           if (accepted) void controller.apply();
         })),
       ]),
+    );
+    host.replaceChildren(
+      row(_('Enable gaming presets'), 'trafira-game-enabled', [
+        master,
+        masterStatus,
+      ]),
+      content,
       resultRow,
     );
     controller.mount();

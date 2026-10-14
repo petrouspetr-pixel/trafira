@@ -23,6 +23,7 @@ class Node {
   value = '';
   disabled = false;
   checked = false;
+  hidden = false;
   private ownText = '';
   get textContent() {
     return this.ownText;
@@ -79,6 +80,7 @@ function text(node: Node): string {
 let host: Node;
 let running: boolean;
 let empty: boolean;
+let presetsEnabled: boolean;
 const requests: string[] = [];
 const drain = async () => {
   for (let i = 0; i < 15; i++) await Promise.resolve();
@@ -108,6 +110,7 @@ beforeEach(() => {
   requests.length = 0;
   running = false;
   empty = false;
+  presetsEnabled = true;
   host = new Node('div');
   vi.stubGlobal('_', (s: string) => s);
   vi.stubGlobal('document', { getElementById: () => host });
@@ -137,6 +140,7 @@ beforeEach(() => {
         ? {
             success: true,
             digest: 'd',
+            enabled: presetsEnabled,
             presets: [{ id: 'steam', revision: 1, checked_at: '2026-10-09' }],
             devices: empty
               ? []
@@ -273,5 +277,25 @@ it.each([0, 1, 2, 3])(
     select.value = '';
     select.fire('change');
     expect(button('Preview gaming rules').disabled).toBe(true);
+  },
+);
+
+it.each([true, false])(
+  'shows gaming management only when presets are enabled (%s)',
+  async (enabled) => {
+    presetsEnabled = enabled;
+    gamingPresetsPanel.mount();
+    await drain();
+    const content = all(host).find(
+      (node) => node.attrs.id === 'trafira-game-content',
+    )!;
+    const master = all(host).find(
+      (node) => node.attrs.id === 'trafira-game-enabled',
+    )!;
+    expect(content.hidden).toBe(!enabled);
+    expect(master.checked).toBe(enabled);
+    expect(master.disabled).toBe(false);
+    expect(text(content)).toContain('Steam');
+    expect(requests).not.toContain('set_enabled');
   },
 );
