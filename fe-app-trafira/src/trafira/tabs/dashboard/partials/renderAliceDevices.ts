@@ -222,7 +222,7 @@ export function renderAliceDevices({
     return E(
       'div',
       { class: `${BLOCK} ${BLOCK}--failed` },
-      _('Alice Mode devices are currently unavailable'),
+      _('Device routing information is currently unavailable'),
     );
   }
 
@@ -235,7 +235,7 @@ export function renderAliceDevices({
 
   return E('div', { class: BLOCK }, [
     E('div', { class: `${BLOCK}__header` }, [
-      E('b', { class: `${BLOCK}__title` }, _('Alice Mode')),
+      E('b', { class: `${BLOCK}__title` }, _('Device routing')),
     ]),
     ...report.warnings.map(renderWarning),
     E(

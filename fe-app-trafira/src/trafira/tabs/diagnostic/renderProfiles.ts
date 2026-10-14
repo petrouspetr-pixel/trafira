@@ -471,7 +471,7 @@ export const profilesPanel = {
         disable_quic: _('Disable QUIC'),
         disable_ipv6_probes: _('Disable selected IPv6 probes'),
         enable_yacd: _('Enable YACD'),
-        alice_mode_enabled: _('Enable Alice Mode'),
+        alice_mode_enabled: _('Enable device routing'),
         alice_dashboard_enabled: _('Show on dashboard'),
         alice_list_mode: _('Devices in the list'),
         alice_interfaces: _('Interfaces'),

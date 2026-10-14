@@ -41,10 +41,10 @@ function message(code: string) {
   const messages: Record<string, string> = {
     conflict: _('Configuration changed. Review the differences again.'),
     alice_bypass: _(
-      'Alice Mode bypasses this device. Explicitly enable its selected addresses before applying.',
+      'Device routing bypasses this device. Explicitly enable its selected addresses before applying.',
     ),
     alice_broad_bypass: _(
-      'This Alice Mode exception also covers other devices. Edit it manually before applying this preset.',
+      'This device routing exception also covers other devices. Edit it manually before applying this preset.',
     ),
     preset_edited: _(
       'These rules were edited. Confirm replacement or keep them as ordinary rules.',
@@ -269,7 +269,7 @@ export const gamingPresetsPanel = {
               ' ' +
               conflict.slice('existing_device_routes:'.length)
             : conflict === 'alice_device_enabled'
-              ? _('The selected addresses will be enabled in Alice Mode.')
+              ? _('Device routing will be enabled for the selected addresses.')
               : message(conflict);
           output.append(
             E('p', { class: 'alert-message warning' }, description),
@@ -533,7 +533,6 @@ export const gamingPresetsPanel = {
       input.addEventListener('change', () => controller.invalidate());
     device.addEventListener('change', showAddresses);
     host.replaceChildren(
-      E('h3', {}, _('Gaming presets')),
       E(
         'p',
         { class: 'cbi-section-descr' },
@@ -575,7 +574,7 @@ export const gamingPresetsPanel = {
       row('', '', [
         E('label', { class: 'cbi-checkbox' }, [
           enable,
-          ' ' + _('Enable only these addresses in Alice Mode if required'),
+          ' ' + _('Enable device routing only for these addresses if required'),
         ]),
       ]),
       row('', '', [

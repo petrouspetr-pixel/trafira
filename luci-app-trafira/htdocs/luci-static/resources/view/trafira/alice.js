@@ -32,7 +32,7 @@ function createAliceContent(section) {
   let option = section.option(
     form.Flag,
     "alice_mode_enabled",
-    _("Enable Alice Mode"),
+    _("Enable device routing"),
     _(
       "Choose whether devices in the list use Trafira or bypass it. Bypassed devices connect directly and receive real IP addresses from DNS.",
     ),
@@ -143,15 +143,6 @@ function createAliceContent(section) {
       this,
       sectionId,
       cfgvalue,
-    );
-  };
-  option = section.option(form.DummyValue, "_gaming_presets");
-  option.render = function (sectionId) {
-    main.ConfigurationPanels.init("gaming", !this.map.readonly);
-    return E(
-      "div",
-      { id: this.cbid(sectionId), class: "trafira-feature-slot" },
-      [E("div", { id: "trafira-gaming-presets" })],
     );
   };
 }
