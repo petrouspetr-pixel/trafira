@@ -279,4 +279,3 @@ it.each([0, 1, 2, 3])(
     expect(button('Preview gaming rules').disabled).toBe(true);
   },
 );
-
