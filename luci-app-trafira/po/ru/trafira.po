@@ -3556,3 +3556,15 @@ msgstr "Игровые пресеты включены. Изменение пе�
 
 msgid "The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections."
 msgstr "Правила сохранят своё текущее состояние: включены или выключены. Пресет исчезнет из этого списка; включить, изменить или удалить его правила можно в разделе «Секции»."
+
+msgid "Disable gaming presets"
+msgstr "Отключить игровые пресеты"
+
+msgid "Restore the previous enabled state of each saved preset rule. Ordinary rules are not changed."
+msgstr "Восстановить прежнее состояние каждого правила сохранённых пресетов. Обычные правила не изменяются."
+
+msgid "Disable all saved preset rules without deleting the presets. Ordinary rules are not changed."
+msgstr "Отключить все правила сохранённых пресетов, сохранив сами пресеты. Обычные правила не изменяются."
+
+msgid "Disable"
+msgstr "Отключить"

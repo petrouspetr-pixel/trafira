@@ -633,7 +633,30 @@ export const gamingPresetsPanel = {
       master.checked = catalog.enabled !== false;
       confirming = true;
       update();
-      const accepted = await confirmConfigurationReplacement();
+      const accepted = await confirmAction(
+        enabled ? _('Enable gaming presets') : _('Disable gaming presets'),
+        E('div', {}, [
+          E(
+            'p',
+            {},
+            enabled
+              ? _(
+                  'Restore the previous enabled state of each saved preset rule. Ordinary rules are not changed.',
+                )
+              : _(
+                  'Disable all saved preset rules without deleting the presets. Ordinary rules are not changed.',
+                ),
+          ),
+          E(
+            'p',
+            {},
+            _(
+              'Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?',
+            ),
+          ),
+        ]),
+        enabled ? _('Enable') : _('Disable'),
+      );
       confirming = false;
       update();
       if (accepted && mine === generation)

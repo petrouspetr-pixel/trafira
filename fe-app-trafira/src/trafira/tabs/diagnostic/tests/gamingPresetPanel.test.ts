@@ -20,6 +20,36 @@ const selection = {
   placement: 'before-device-routes',
 };
 describe('gaming preset preview', () => {
+  it('tracks a global toggle after leaving the panel and reports its commit', async () => {
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        running: true,
+        job_id: 'global-toggle',
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        running: false,
+        job_id: 'global-toggle',
+      });
+    const render = vi.fn();
+    const controller = new GamingPresetController(call, render);
+    controller.mount();
+    await controller.setEnabled(false, 'current');
+    expect(call).toHaveBeenCalledWith({
+      action: 'set_enabled',
+      enabled: false,
+      expected_digest: 'current',
+    });
+    expect(
+      render.mock.calls.some(([state]) => state.phase === 'applying'),
+    ).toBe(true);
+    controller.unmount();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   it('shows an own background failure once on return and preserves the next reviewed preview', async () => {
     const failed = {
       success: false,

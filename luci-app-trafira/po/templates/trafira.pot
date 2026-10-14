@@ -4992,3 +4992,15 @@ msgstr ""
 
 msgid "The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections."
 msgstr ""
+
+msgid "Disable gaming presets"
+msgstr ""
+
+msgid "Restore the previous enabled state of each saved preset rule. Ordinary rules are not changed."
+msgstr ""
+
+msgid "Disable all saved preset rules without deleting the presets. Ordinary rules are not changed."
+msgstr ""
+
+msgid "Disable"
+msgstr ""
