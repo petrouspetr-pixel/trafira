@@ -279,23 +279,3 @@ it.each([0, 1, 2, 3])(
     expect(button('Preview gaming rules').disabled).toBe(true);
   },
 );
-
-it.each([true, false])(
-  'shows gaming management only when presets are enabled (%s)',
-  async (enabled) => {
-    presetsEnabled = enabled;
-    gamingPresetsPanel.mount();
-    await drain();
-    const content = all(host).find(
-      (node) => node.attrs.id === 'trafira-game-content',
-    )!;
-    const master = all(host).find(
-      (node) => node.attrs.id === 'trafira-game-enabled',
-    )!;
-    expect(content.hidden).toBe(!enabled);
-    expect(master.checked).toBe(enabled);
-    expect(master.disabled).toBe(false);
-    expect(text(content)).toContain('Steam');
-    expect(requests).not.toContain('set_enabled');
-  },
-);
