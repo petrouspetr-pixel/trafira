@@ -23,7 +23,14 @@ class Node {
   value = '';
   disabled = false;
   checked = false;
-  textContent = '';
+  private ownText = '';
+  get textContent() {
+    return this.ownText;
+  }
+  set textContent(value: string) {
+    this.ownText = value;
+    this.children = [];
+  }
   events: Record<string, () => void> = {};
   constructor(
     public tag: string,
