@@ -3568,3 +3568,9 @@ msgstr "Отключить все правила сохранённых прес
 
 msgid "Disable"
 msgstr "Отключить"
+
+msgid "Show gaming preset management. Changes to routing take effect after Apply. Saved presets are kept when disabled."
+msgstr "Показать управление игровыми пресетами. Изменения маршрутизации вступят в силу после нажатия «Применить». При выключении сохранённые пресеты остаются."
+
+msgid "Apply the gaming preset switch first, then create or update presets."
+msgstr "Сначала нажмите «Применить», чтобы включить игровые пресеты, затем создавайте или изменяйте их."

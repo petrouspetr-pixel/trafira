@@ -5004,3 +5004,9 @@ msgstr ""
 
 msgid "Disable"
 msgstr ""
+
+msgid "Show gaming preset management. Changes to routing take effect after Apply. Saved presets are kept when disabled."
+msgstr ""
+
+msgid "Apply the gaming preset switch first, then create or update presets."
+msgstr ""

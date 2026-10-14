@@ -1,3 +1,4 @@
+import { gamingSwitchChanges } from './gamingSwitch';
 import { watchPanel } from '../../helpers/panelLifecycle';
 import { snapshots } from '../diagnostic/renderSnapshots';
 import { profilesPanel } from '../diagnostic/renderProfiles';
@@ -16,6 +17,7 @@ const panels = {
 const watchers = new Map<keyof typeof panels, () => void>();
 
 export const ConfigurationPanels = {
+  gamingSwitchChanges,
   init(kind: keyof typeof panels, canWrite = true) {
     watchers.get(kind)?.();
     const panel = panels[kind];

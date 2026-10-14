@@ -448,7 +448,7 @@ const EntryPoint = {
     gamingSection.anonymous = true;
     gamingSection.addremove = false;
     gamingSection.cfgsections = function () {
-      return ["gaming"];
+      return ["settings"];
     };
     gaming.createGamingContent(gamingSection);
 
