@@ -44,13 +44,13 @@ function current_action(request,work){
             if(section.outbound_detour_section)item.connection=section.outbound_detour_section;
             item.edited=item.edited || g.fingerprint(section)!=section.preset_original_digest;owners[item.owner]=item;
         }
-        return {success:true,digest,presets:catalog.presets,devices:map(current.devices,(d)=>({name:d.name||"",interface:d.interface,mac:d.mac,ips:d.ips})),
+        return {success:true,digest,enabled:common.bool_option(filter(current.sections,(s)=>s[".type"]=="settings")[0]||{},"gaming_presets_enabled",true),presets:catalog.presets,devices:map(current.devices,(d)=>({name:d.name||"",interface:d.interface,mac:d.mac,ips:d.ips})),
             proxies:map(filter(current.sections,(s)=>s[".type"]=="section" && !s.preset_owner && common.bool_option(s,"enabled",true) && index(["connection","proxy","vpn","outbound"],s.action)>=0),(s)=>({id:s[".name"],label:s.label||s[".name"]})),owners:values(owners)};
     }
     if(request.expected_digest!=digest)return fail("conflict");
     let removal=index(["remove","preview_remove"],request.action)>=0;
     let preset=filter(catalog.presets,(p)=>p.id==request.preset)[0];
-    let result=removal?g.remove(request.owner,request.mode,request.confirm,current):g.build(preset,request,current);
+    let result=request.action=="set_enabled"?g.set_enabled(request.enabled,current):removal?g.remove(request.owner,request.mode,request.confirm,current):g.build(preset,request,current);
     if(!result.valid)return {...fail(result.errors[0]||"invalid_preset"),conflicts:result.conflicts};
     let document={schema:1,name:"Gaming",config:result.config};
     let prepared=runtime.prepare(document,work.directory);
@@ -67,9 +67,9 @@ function current_action(request,work){
 function action(text){
     let request;try{request=json(text);}catch(e){return fail("invalid_request");}
     if(type(text)!="string" || length(text)>65536 || type(request)!="object")return fail("invalid_request");
-    for(let key in request)if(index(["action","preset","device_ips","proxy_section","placement","expected_digest","enable_device","replace_edited","owner","mode","confirm"],key)<0)return fail("invalid_request");
+    for(let key in request)if(index(["action","preset","device_ips","proxy_section","placement","expected_digest","enable_device","replace_edited","owner","mode","confirm","enabled"],key)<0)return fail("invalid_request");
     if(request.action=="status")return jobs.status();
-    if(index(["catalog","preview","apply","preview_remove","remove"],request.action)<0)return fail("unsupported_action");
+    if(index(["catalog","preview","apply","preview_remove","remove","set_enabled"],request.action)<0)return fail("unsupported_action");
     let lock=locks.acquire("gaming-preset");if(!lock)return fail("busy");
     let work=jobs.new_directory(),result;
     try{result=work?current_action(request,work):fail("storage_unavailable");}catch(e){result=fail("gaming_operation_failed");}

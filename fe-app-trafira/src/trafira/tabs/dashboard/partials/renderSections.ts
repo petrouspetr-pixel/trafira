@@ -412,12 +412,21 @@ function renderDefaultState({
           E(
             'div',
             { class: 'fkp_dashboard-page__outbound-grid__item__type' },
-            [outbound.type].filter(Boolean),
+            [
+              outbound.interfaceName ? _('Network interface') : outbound.type,
+            ].filter(Boolean),
           ),
           E(
             'div',
-            { class: getLatencyClass() },
-            outbound.latency ? `${outbound.latency}ms` : 'N/A',
+            {
+              class: getLatencyClass(),
+              title: !outbound.latency
+                ? _(
+                    'No latency result is available. Use the latency test button to check this connection.',
+                  )
+                : undefined,
+            },
+            outbound.latency ? `${outbound.latency}ms` : _('No measurement'),
           ),
         ]),
       ],

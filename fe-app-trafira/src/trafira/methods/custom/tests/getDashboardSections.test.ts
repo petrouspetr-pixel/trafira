@@ -1008,6 +1008,7 @@ describe('getDashboardSections', () => {
     expect(section.outbounds[0]).toMatchObject({
       code: 'AWG-interface-1-out',
       displayName: 'awg1',
+      interfaceName: 'awg1',
       selected: true,
     });
   });
@@ -1054,6 +1055,7 @@ describe('getDashboardSections', () => {
     expect(section.outbounds[0]).toMatchObject({
       code: 'AWG-interface-1-out',
       displayName: 'awg1',
+      interfaceName: 'awg1',
       selected: true,
     });
   });

@@ -8,10 +8,13 @@
 
 function createDiagnosticContent(section) {
   const o = section.option(form.DummyValue, "_mount_node");
-  o.rawhtml = true;
-  o.cfgvalue = () => {
+  o.render = function (sectionId) {
     main.DiagnosticTab.initController();
-    return main.DiagnosticTab.render();
+    return E(
+      "div",
+      { id: this.cbid(sectionId), class: "trafira-feature-slot" },
+      [main.DiagnosticTab.render()],
+    );
   };
 }
 

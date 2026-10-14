@@ -3532,3 +3532,39 @@ msgstr "Продолжить в фоне"
 
 msgid "Applying configuration..."
 msgstr "Применение конфигурации…"
+
+msgid "Network interface"
+msgstr "Сетевой интерфейс"
+
+msgid "No measurement"
+msgstr "Нет замера"
+
+msgid "No latency result is available. Use the latency test button to check this connection."
+msgstr "Результат проверки задержки отсутствует. Нажмите кнопку проверки задержки для этого подключения."
+
+msgid "Enable gaming presets"
+msgstr "Включить игровые пресеты"
+
+msgid "Enable gaming presets before creating or updating their rules."
+msgstr "Включите игровые пресеты перед созданием или изменением их правил."
+
+msgid "Gaming presets are disabled. Saved presets are kept; their rules do not route traffic."
+msgstr "Игровые пресеты отключены. Сохранённые пресеты остаются, но их правила не участвуют в маршрутизации."
+
+msgid "Gaming presets are enabled. Changes to this switch are applied immediately and may briefly restart routing."
+msgstr "Игровые пресеты включены. Изменение переключателя применяется сразу и может ненадолго перезапустить маршрутизацию."
+
+msgid "The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections."
+msgstr "Правила сохранят своё текущее состояние: включены или выключены. Пресет исчезнет из этого списка; включить, изменить или удалить его правила можно в разделе «Секции»."
+
+msgid "Disable gaming presets"
+msgstr "Отключить игровые пресеты"
+
+msgid "Restore the previous enabled state of each saved preset rule. Ordinary rules are not changed."
+msgstr "Восстановить прежнее состояние каждого правила сохранённых пресетов. Обычные правила не изменяются."
+
+msgid "Disable all saved preset rules without deleting the presets. Ordinary rules are not changed."
+msgstr "Отключить все правила сохранённых пресетов, сохранив сами пресеты. Обычные правила не изменяются."
+
+msgid "Disable"
+msgstr "Отключить"

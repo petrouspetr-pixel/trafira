@@ -3,10 +3,6 @@ import { TRAFIRA_UCI_PACKAGE as TRAFIRA_CBI_PREFIX } from '../../../constants';
 
 export const styles = `
 
-#cbi-${TRAFIRA_CBI_PREFIX}-diagnostic-_mount_node > div {
-    width: 100%;
-}
-
 #cbi-${TRAFIRA_CBI_PREFIX}-diagnostic > h3 {
     display: none;
 }

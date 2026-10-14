@@ -15,6 +15,7 @@ interface Device {
 }
 interface Catalog {
   digest: string;
+  enabled?: boolean;
   devices: Device[];
   presets: Array<{ id: string; revision: number; checked_at: string }>;
   proxies: Array<{ id: string; label: string }>;
@@ -55,6 +56,9 @@ function message(code: string) {
     invalid_proxy: _('Select an enabled connection rule.'),
     candidate_check_failed: _(
       'The generated configuration did not pass validation.',
+    ),
+    gaming_disabled: _(
+      'Enable gaming presets before creating or updating their rules.',
     ),
     busy: _('Another configuration operation is already running.'),
     rollback_failed: _(
@@ -131,6 +135,14 @@ export const gamingPresetsPanel = {
         _('After existing device rules'),
       ),
     ]) as HTMLSelectElement;
+    const master = E('input', {
+      type: 'checkbox',
+      id: 'trafira-game-enabled',
+    }) as HTMLInputElement;
+    const masterStatus = E('p', {
+      class: 'cbi-value-description',
+      role: 'status',
+    });
     const addresses = E('div', { class: 'trafira-form-controls' }),
       output = E('div', {}),
       status = E('p', {}),
@@ -156,10 +168,20 @@ export const gamingPresetsPanel = {
       const busy = loading || confirming || state?.busy || state?.running;
       for (const b of Array.from(host!.querySelectorAll('button')))
         b.disabled = !!busy;
+      master.disabled = !canWrite || !catalog || !!busy;
+      const disabled = catalog?.enabled === false;
+      master.checked = catalog?.enabled !== false;
+      masterStatus.textContent = disabled
+        ? _(
+            'Gaming presets are disabled. Saved presets are kept; their rules do not route traffic.',
+          )
+        : _(
+            'Gaming presets are enabled. Changes to this switch are applied immediately and may briefly restart routing.',
+          );
       for (const input of [platform, device, proxy, placement, enable, replace])
-        input.disabled = !!busy;
+        input.disabled = !!busy || disabled;
       for (const input of Array.from(addresses.querySelectorAll('input')))
-        input.disabled = !!busy;
+        input.disabled = !!busy || disabled;
       const ready =
         !!catalog &&
         !!platform.value &&
@@ -167,7 +189,7 @@ export const gamingPresetsPanel = {
         !!proxy.value &&
         !!placement.value &&
         addresses.querySelectorAll('input:checked').length > 0;
-      if (preview) preview.disabled = !!busy || !ready;
+      if (preview) preview.disabled = !!busy || disabled || !ready;
       if (apply) {
         apply.textContent =
           state?.preview?.operation === 'preview_remove'
@@ -176,7 +198,10 @@ export const gamingPresetsPanel = {
               : _('Delete')
             : _('Apply reviewed changes');
         apply.disabled =
-          !canWrite || !!busy || state?.preview?.applicable !== true;
+          !canWrite ||
+          !!busy ||
+          state?.preview?.applicable !== true ||
+          (disabled && state?.preview?.operation !== 'preview_remove');
       }
       hint.textContent = !catalog
         ? ''
@@ -602,7 +627,46 @@ export const gamingPresetsPanel = {
     for (const input of [platform, proxy, placement, enable, replace])
       input.addEventListener('change', () => controller.invalidate());
     device.addEventListener('change', showAddresses);
+    master.addEventListener('change', async () => {
+      if (!canWrite || !catalog || master.disabled) return;
+      const enabled = master.checked;
+      master.checked = catalog.enabled !== false;
+      confirming = true;
+      update();
+      const accepted = await confirmAction(
+        enabled ? _('Enable gaming presets') : _('Disable gaming presets'),
+        E('div', {}, [
+          E(
+            'p',
+            {},
+            enabled
+              ? _(
+                  'Restore the previous enabled state of each saved preset rule. Ordinary rules are not changed.',
+                )
+              : _(
+                  'Disable all saved preset rules without deleting the presets. Ordinary rules are not changed.',
+                ),
+          ),
+          E(
+            'p',
+            {},
+            _(
+              'Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?',
+            ),
+          ),
+        ]),
+        enabled ? _('Enable') : _('Disable'),
+      );
+      confirming = false;
+      update();
+      if (accepted && mine === generation)
+        await controller.setEnabled(enabled, catalog.digest);
+    });
     host.replaceChildren(
+      row(_('Enable gaming presets'), 'trafira-game-enabled', [
+        master,
+        masterStatus,
+      ]),
       E(
         'p',
         { class: 'cbi-section-descr' },
@@ -693,7 +757,7 @@ export const gamingPresetsPanel = {
                         'p',
                         {},
                         _(
-                          'The rules will remain active. The preset will disappear from this list; edit or delete its rules in Sections.',
+                          'The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections.',
                         ),
                       ),
                       E(
