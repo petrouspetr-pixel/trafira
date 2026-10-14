@@ -30,7 +30,7 @@ function createGamingContent(section) {
   const option = section.option(form.DummyValue, "_gaming_presets");
   option.depends("gaming_presets_enabled", "1");
   option.retain = true;
-  option.render = function (sectionId, optionIndex) {
+  option.render = function (optionIndex, sectionId) {
     main.ConfigurationPanels.init("gaming", !this.map.readonly);
     return this.renderFrame(
       sectionId,
