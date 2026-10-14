@@ -4989,3 +4989,6 @@ msgstr ""
 
 msgid "Gaming presets are enabled. Changes to this switch are applied immediately and may briefly restart routing."
 msgstr ""
+
+msgid "The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections."
+msgstr ""

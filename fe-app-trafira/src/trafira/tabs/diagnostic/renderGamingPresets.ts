@@ -734,7 +734,7 @@ export const gamingPresetsPanel = {
                         'p',
                         {},
                         _(
-                          'The rules will remain active. The preset will disappear from this list; edit or delete its rules in Sections.',
+                          'The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections.',
                         ),
                       ),
                       E(

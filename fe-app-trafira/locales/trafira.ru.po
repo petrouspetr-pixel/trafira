@@ -3553,3 +3553,6 @@ msgstr "Игровые пресеты отключены. Сохранённые
 
 msgid "Gaming presets are enabled. Changes to this switch are applied immediately and may briefly restart routing."
 msgstr "Игровые пресеты включены. Изменение переключателя применяется сразу и может ненадолго перезапустить маршрутизацию."
+
+msgid "The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections."
+msgstr "Правила сохранят своё текущее состояние: включены или выключены. Пресет исчезнет из этого списка; включить, изменить или удалить его правила можно в разделе «Секции»."
