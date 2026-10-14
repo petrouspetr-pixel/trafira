@@ -231,11 +231,7 @@ export const gamingPresetsPanel = {
         'cbi-value' + (existing.children.length ? '' : ' hidden');
       resultRow.className =
         'cbi-value' +
-        (status.textContent ||
-        output.children.length ||
-        existing.children.length
-          ? ''
-          : ' hidden');
+        (status.textContent || output.children.length ? '' : ' hidden');
     }
     let progressNode: HTMLElement | null = null;
     let progressPhase = 'idle';
