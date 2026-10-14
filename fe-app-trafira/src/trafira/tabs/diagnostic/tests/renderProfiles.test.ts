@@ -124,6 +124,8 @@ beforeEach(async () => {
   vi.stubGlobal('document', {
     getElementById: () => host,
     createElement: (tag: string) => new Node(tag),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
   });
   vi.stubGlobal(
     'E',
@@ -139,6 +141,14 @@ beforeEach(async () => {
       return node;
     },
   );
+  vi.stubGlobal('ui', {
+    hideModal: vi.fn(),
+    showModal: (_title: string, content: Node) => {
+      const accepted = confirm();
+      const controls = all(content).filter((n) => n.tag === 'button');
+      controls[accepted ? 1 : 0].fire('click');
+    },
+  });
   vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
     blobs.push(blob as Blob);
     return 'blob:profile';

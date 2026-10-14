@@ -1,14 +1,50 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
-const confirm = vi.fn();
+type TestNode = {
+  tag: string;
+  attrs: Record<string, unknown>;
+  children: Array<TestNode | string>;
+};
+let modal: { title: string; content: TestNode };
+const hideModal = vi.fn();
+function controls(node: TestNode): TestNode[] {
+  return [
+    ...(node.tag === 'button' ? [node] : []),
+    ...node.children.flatMap((child) =>
+      typeof child === 'string' ? [] : controls(child),
+    ),
+  ];
+}
 const reload = vi.fn();
 beforeEach(() => {
   vi.resetModules();
   vi.useFakeTimers();
-  confirm.mockReset();
+  hideModal.mockReset();
+  vi.stubGlobal('document', {
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  });
+  vi.stubGlobal(
+    'E',
+    (
+      tag: string,
+      attrs: Record<string, unknown>,
+      children: Array<TestNode | string> | string = [],
+    ) => ({
+      tag,
+      attrs,
+      children: Array.isArray(children) ? children : [children],
+    }),
+  );
+  vi.stubGlobal('ui', {
+    hideModal,
+    showModal: (title: string, content: TestNode) => {
+      modal = { title, content };
+    },
+  });
   reload.mockReset();
   vi.stubGlobal('_', (value: string) => 'translated:' + value);
-  vi.stubGlobal('window', { confirm, location: { reload } });
+  vi.stubGlobal('window', { location: { reload } });
 });
 afterEach(() => {
   vi.clearAllTimers();
@@ -20,11 +56,15 @@ it('requires an explicit decision before discarding the native form changes', as
   const { confirmConfigurationReplacement } = await import(
     '../configurationSync'
   );
-  confirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
-  expect(confirmConfigurationReplacement()).toBe(false);
-  expect(confirmConfigurationReplacement()).toBe(true);
-  expect(confirm.mock.lastCall?.[0]).toContain('unsaved changes');
-  expect(confirm.mock.lastCall?.[0]).toMatch(/^translated:/);
+  const cancelled = confirmConfigurationReplacement();
+  expect(modal.title).toMatch(/^translated:/);
+  expect(JSON.stringify(modal.content)).toContain('unsaved changes');
+  (controls(modal.content)[0].attrs.click as () => void)();
+  await expect(cancelled).resolves.toBe(false);
+  const accepted = confirmConfigurationReplacement();
+  (controls(modal.content)[1].attrs.click as () => void)();
+  await expect(accepted).resolves.toBe(true);
+  expect(hideModal).toHaveBeenCalledTimes(2);
   expect(reload).not.toHaveBeenCalled();
 });
 

@@ -80,7 +80,11 @@ function evaluate(rule, request, rulesets, budget, depth, source_mode) {
         if (index(["and", "or"], rule.mode) < 0 || !length(arr(rule.rules)))
             return result("unknown", "invalid_logical_rule");
         let children = [];
-        for (let child in rule.rules) push(children, evaluate(child, request, rulesets, budget, depth+1, source_mode));
+        for (let child in rule.rules) {
+            let evaluated=evaluate(child, request, rulesets, budget, depth+1, source_mode);
+            push(children,evaluated);
+            if((rule.mode=="or" && evaluated.value=="yes") || (rule.mode=="and" && evaluated.value=="no"))break;
+        }
         push(clauses, join_results(children, rule.mode));
     }
     else if (rule.type != null && rule.type != "default")
@@ -95,8 +99,10 @@ function evaluate(rule, request, rulesets, budget, depth, source_mode) {
             let matches = [];
             for (let tag in values(expected)) {
                 if (type(rulesets) == "function") {
-                    push(matches, rulesets(tag, request,
-                        rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true));
+                    let evaluated=rulesets(tag, request,
+                        rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true);
+                    push(matches,evaluated);
+                    if(evaluated.value=="yes")break;
                     continue;
                 }
                 let set = obj(rulesets)[tag];
@@ -104,9 +110,15 @@ function evaluate(rule, request, rulesets, budget, depth, source_mode) {
                     push(matches, result("unknown", "rule_set:" + common.as_string(tag))); continue;
                 }
                 let children = [];
-                for (let child in set.rules) push(children, evaluate(child, request, rulesets, budget, depth+1,
-                    rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true));
-                push(matches, join_results(children, "or"));
+                for (let child in set.rules) {
+                    let evaluated=evaluate(child, request, rulesets, budget, depth+1,
+                        rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true);
+                    push(children,evaluated);
+                    if(evaluated.value=="yes")break;
+                }
+                let evaluated=join_results(children,"or");
+                push(matches,evaluated);
+                if(evaluated.value=="yes")break;
             }
             push(clauses, join_results(matches, "or")); continue;
         }
@@ -132,7 +144,9 @@ function explain(config, request, sources, rulesets) {
     let current = json(sprintf("%J", obj(request))), selected = null;
     for (let i=0; i<length(arr(route.rules)); i++) {
         let rule = route.rules[i], action = rule.action || (rule.outbound || rule.server ? "route" : "unknown");
-        let matched = evaluate(rule, current, rulesets, budget, 0, false);
+        // Later rules cannot change the first terminal decision. Keep their
+        // position in the trace without decoding lists for a shadowed rule.
+        let matched = selected != null ? result("unknown") : evaluate(rule, current, rulesets, budget, 0, false);
         let row = {index:i,match:matched.value,action,origin:arr(obj(sources).route)[i] || null,
                    shadowed:selected != null,missing:matched.missing};
         if (length(trace) < 200) push(trace,row);
@@ -152,7 +166,7 @@ function explain(config, request, sources, rulesets) {
             continue;
         }
         if (action == "reject" || (action == "predefined" && rule.rcode == "NXDOMAIN")) selected = {status:"blocked",rule_index:i};
-        else if (action == "route" && (rule.outbound || rule.server)) selected = {status:"matched",rule_index:i,outbound:rule.outbound || rule.server};
+        else if (action == "route" && (rule.outbound || rule.server)) selected = {status:rule.outbound && index(["direct-out","bypass-out"],rule.outbound)>=0?"direct":"matched",rule_index:i,outbound:rule.outbound || rule.server};
         else if (action == "hijack-dns") selected = {status:"matched",rule_index:i,outbound:"dns"};
         else return {status:"indeterminate",rule_index:i,trace,missing:["unsupported_action:" + action]};
     }

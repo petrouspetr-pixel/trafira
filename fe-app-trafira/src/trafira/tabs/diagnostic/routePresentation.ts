@@ -30,6 +30,18 @@ export function routeReason(reason: string): string {
     wifi_calling_bypass_depends_on_real_destination: _(
       'Wi-Fi Calling bypass depends on the real destination IP. Enter it in the form above.',
     ),
+    wifi_calling_bypass: _(
+      'This UDP connection is excluded from Trafira interception by Wi-Fi Calling bypass.',
+    ),
+    ntp_bypass: _(
+      'This UDP 123 connection is excluded from Trafira interception by NTP bypass.',
+    ),
+    ntp_bypass_depends_on_real_destination: _(
+      'Enter the real destination IP to check the NTP bypass for this packet.',
+    ),
+    packet_address_family_mismatch: _(
+      'For this UDP bypass check, select a device address in the same IP family as the destination: IPv4 with IPv4, or IPv6 with IPv6.',
+    ),
     fakeip_is_not_real_destination: _(
       'The entered address is a FakeIP. Enter the real destination IP instead.',
     ),

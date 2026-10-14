@@ -140,7 +140,12 @@ export class GamingPresetController {
         request.action === 'preview' ||
         request.action === 'preview_remove'
       ) {
-        this.state.preview = result;
+        this.state.preview = {
+          ...result,
+          operation: request.action,
+          mode: request.mode,
+          owner: request.owner,
+        };
         this.reviewed =
           result.applicable === true
             ? {

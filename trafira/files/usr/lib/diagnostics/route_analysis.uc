@@ -55,6 +55,25 @@ function gate(settings,r,config) {
             return decision("direct","router_vpn_transport");
         return null;
     }
+    let interfaces=common.list_option(settings,"source_network_interfaces");
+    if(r.network=="udp" && r.port==123 && settings.exclude_ntp==null)
+        return decision("indeterminate","applied_capture_state_unavailable");
+    let udp_bypass=r.network=="udp" && common.bool_option(settings,"exclude_wifi_calling",false) && (r.port==500 || r.port==4500)?"wifi_calling_bypass":
+        r.network=="udp" && ((type(settings.exclude_ntp)=="bool" && settings.exclude_ntp==true) || common.bool_option(settings,"exclude_ntp",false)) && r.port==123?"ntp_bypass":null;
+    if(udp_bypass) {
+        if(!r.destination_ip)return decision("indeterminate",udp_bypass+"_depends_on_real_destination");
+        for(let cidr in ["127.0.0.0/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16","::1/128","fc00::/7","fe80::/10"])
+            if(ip.ip_in_cidr(r.destination_ip,cidr))return decision("indeterminate","local_destination_check_nft_exclusions");
+        // These exclusions apply to the original packet, before DNS recovery.
+        // An IPv4 source and IPv6 destination cannot describe that packet.
+        if(ip.ip_family(r.source.ip)!=ip.ip_family(r.destination_ip))return decision("indeterminate","packet_address_family_mismatch");
+        // Wi-Fi Calling is scoped to captured ingress interfaces; NTP is not.
+        if(udp_bypass=="wifi_calling_bypass" && length(interfaces)) {
+            if(!r.source.interface)return decision("indeterminate","incoming_interface_missing");
+            if(!alice.interface_in_list(interfaces,r.source.interface))return decision("direct","interface_not_captured");
+        }
+        return decision("direct",udp_bypass);
+    }
     let a=alice.config(settings), device={ips:[r.source.ip],mac:r.source.mac,interface:r.source.interface};
     if (a.enabled) {
         let matched=alice.match_device(a,device);
@@ -62,7 +81,6 @@ function gate(settings,r,config) {
             return decision("indeterminate","alice_device_details_missing");
         if (!alice.routes_through_trafira(a,matched)) return decision("direct","alice_bypass");
     }
-    let interfaces=common.list_option(settings,"source_network_interfaces");
     if (length(interfaces)) {
         if (!r.source.interface) return decision("indeterminate","incoming_interface_missing");
         if (!alice.interface_in_list(interfaces,r.source.interface)) return decision("direct","interface_not_captured");
@@ -71,8 +89,6 @@ function gate(settings,r,config) {
         for (let cidr in ["127.0.0.0/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16","::1/128","fc00::/7","fe80::/10"])
             if (ip.ip_in_cidr(r.destination_ip,cidr)) return decision("indeterminate","local_destination_check_nft_exclusions");
     }
-    if (common.bool_option(settings,"exclude_wifi_calling",false) && r.network=="udp" && (r.port==500 || r.port==4500))
-        return decision("indeterminate","wifi_calling_bypass_depends_on_real_destination");
     return null;
 }
 function decode_set(path,format) {
@@ -176,8 +192,10 @@ function load_background_sets(config,limitations,options) {
                 else if(!digest)reason="decode_failed";
                 else if(clock()[0]>=deadline)reason="job_timeout";
                 else {
-                    let decoded=codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
-                    if(decoded.data)matched=matcher.match_rule({rule_set:"current",rule_set_ip_cidr_match_source:source_mode},request,{current:decoded.data});
+                    let native_domain=rule.type=="remote" && rule.url=="https://github.com/zxc-rv/ad-filter/releases/latest/download/adlist.srs" && format=="binary" && type(request.domain)=="string";
+                    let decoded=native_domain?codec.match_domain(path,request.domain,min(30000,max(1,(deadline-clock()[0])*1000)),options.workspace):codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
+                    if(decoded.match)matched=decoded.match;
+                    else if(decoded.data)matched=matcher.match_rule({rule_set:"current",rule_set_ip_cidr_match_source:source_mode},request,{current:decoded.data});
                     else reason=decoded.error||"decode_failed";
                     // Refcounted data is released before the next list/codec.
                     decoded=null;

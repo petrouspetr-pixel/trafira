@@ -90,7 +90,11 @@ export async function runFakeIPCheck() {
               ]
                 .filter(Boolean)
                 .join(' ')
-            : browserFakeIPCheckMessage,
+            : !checks.browserFakeIP && checks.singBoxFakeIP
+              ? _(
+                  'The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and Alice Mode bypass settings. This result alone does not identify which setting caused the bypass.',
+                )
+              : browserFakeIPCheckMessage,
       },
       ...insertIf<IDiagnosticsChecksItem>(checks.browserFakeIP, [
         {

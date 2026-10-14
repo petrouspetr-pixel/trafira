@@ -10,7 +10,9 @@ vi.mock('../../../../helpers/executeShellCommand', () => ({
   executeShellCommand: vi.fn(),
 }));
 vi.mock('../../../helpers/configurationSync', () => ({
-  confirmConfigurationReplacement: vi.fn(() => true),
+  confirmConfigurationReplacement: vi.fn(async () => true),
+  confirmAction: vi.fn(async () => true),
+  showConfigurationCommitNotice: vi.fn(),
   reloadAfterConfigurationCommit: vi.fn(),
   observeConfigurationCommit: vi.fn(() => false),
   trackConfigurationCommit: vi.fn(),
@@ -21,7 +23,14 @@ class Node {
   value = '';
   disabled = false;
   checked = false;
-  textContent = '';
+  private ownText = '';
+  get textContent() {
+    return this.ownText;
+  }
+  set textContent(value: string) {
+    this.ownText = value;
+    this.children = [];
+  }
   events: Record<string, () => void> = {};
   constructor(
     public tag: string,
@@ -198,7 +207,7 @@ it('does not poll idle jobs and synchronizes LuCI only after confirmed applicati
   completeSelection();
   button('Preview gaming rules').fire('click');
   await drain();
-  vi.mocked(confirmConfigurationReplacement).mockReturnValueOnce(false);
+  vi.mocked(confirmConfigurationReplacement).mockResolvedValueOnce(false);
   button('Apply reviewed changes').fire('click');
   await drain();
   expect(requests).not.toContain('apply');

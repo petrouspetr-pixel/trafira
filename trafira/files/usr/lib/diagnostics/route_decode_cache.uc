@@ -27,7 +27,7 @@ function identity(){
     return digest?{path,digest}:null;
 }
 function cache_key(digest,format,core){
-    let pipe=fs.popen("printf %s "+quote("route-v1\n"+digest+"\n"+format+"\n"+core)+" | sha256sum","re");
+    let pipe=fs.popen("printf %s "+quote("route-v2\n"+digest+"\n"+format+"\n"+core)+" | sha256sum","re");
     if(!pipe)return null;
     let output=pipe.read(128),status=pipe.close(),found=match(output||"",/^([a-f0-9]{64}) /);
     return status==0 && found?found[1]:null;
@@ -102,4 +102,20 @@ function decode(path,format,milliseconds,budget,workspace){
     if(status==-25 || (info && info.size>limit))return {error:"size_limit"};
     return type(data)=="object" && type(data.rules)=="array"?{data,bytes:info.size}:{error:"decode_failed"};
 }
-return {identity,cache_key,get,put,decode,cleanup,MAX_FILE,MAX_TOTAL};
+// Only callers with a verified domain-only provider may use this CLI: it does
+// not accept the full connection metadata needed by arbitrary rule sets.
+function match_domain(path,domain,milliseconds,workspace){
+    if(type(domain)!="string" || !match(domain,/^[A-Za-z0-9][A-Za-z0-9.-]*$/))return {error:"decode_failed"};
+    let temporary=workspace+"/decode-output",marker=workspace+"/codec.pid";
+    let file=fs.open(temporary,"wex",384);if(!file)return {error:"storage_unavailable"};file.close();
+    let owner=require("service.operation_lock").identity();
+    let verify="if ! awk -v ticks="+quote(owner.ticks)+" '{exit($22 != ticks || $3 == \"Z\")}' /proc/"+owner.pid+"/stat 2>/dev/null; then rm -f "+quote(marker)+" "+quote(temporary)+"; exit 1; fi; ";
+    let command="ulimit -Sv unlimited; umask 077; ticks=$(awk '{print $22}' /proc/$$/stat); printf '%s %s' $$ \"$ticks\" > "+quote(marker)+"; "+verify+"ulimit -f 128; exec sing-box rule-set match -f binary "+quote(path)+" "+quote(domain)+" >"+quote(temporary)+" 2>&1";
+    let status=system(command,milliseconds),info=fs.lstat(temporary),text=status==0 && info && info.type=="file" && info.size<=65536?fs.readfile(temporary):null;
+    fs.unlink(temporary);fs.unlink(marker);
+    if(text==null)return {error:"decode_failed"};
+    if(text=="")return {match:{value:"no",missing:[]}};
+    for(let line in split(text,"\n"))if(match(line,/^match rules[.]\[[0-9]+\]: /))return {match:{value:"yes",missing:[]}};
+    return {error:"decode_failed"};
+}
+return {identity,cache_key,get,put,decode,match_domain,cleanup,MAX_FILE,MAX_TOTAL};

@@ -7,8 +7,9 @@ import {
   profileErrorMessage,
 } from './profilePanel';
 import {
-  confirmConfigurationReplacement,
+  confirmAction,
   reloadAfterConfigurationCommit,
+  showConfigurationCommitNotice,
 } from '../../helpers/configurationSync';
 
 const MAX_FILE = 1048576;
@@ -40,6 +41,7 @@ export const profilesPanel = {
     this.unmount();
     const host = document.getElementById('trafira-profiles');
     if (!host) return;
+    showConfigurationCommitNotice();
     const generation = mountId;
     let last: ProfileState;
     let transferring = false;
@@ -171,32 +173,71 @@ export const profilesPanel = {
     });
     const apply = button(
       _('Apply profile'),
-      () => {
-        if (!confirmConfigurationReplacement()) return;
+      async () => {
+        const id = select.value;
+        const name = selectedEntry()?.name || '';
+        if (
+          !(await confirmAction(
+            _('Apply profile'),
+            E('div', {}, [
+              E('p', {}, name),
+              E(
+                'p',
+                {},
+                _(
+                  'Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?',
+                ),
+              ),
+            ]),
+            _('Apply profile'),
+          ))
+        )
+          return;
         notify('');
-        void controller.applyReviewed(select.value);
+        void controller.applyReviewed(id);
       },
       true,
     );
     const restore = button(
       _('Restore previous settings'),
-      () => {
-        if (!confirmConfigurationReplacement()) return;
-        void submit({ action: 'restore', digest: last.digest });
+      async () => {
+        const digest = last.digest;
+        if (
+          !(await confirmAction(
+            _('Restore previous settings'),
+            _(
+              'Replace the saved configuration with the settings backed up before the last profile or preset operation?',
+            ),
+            _('Restore previous settings'),
+          ))
+        )
+          return;
+        void submit({ action: 'restore', digest });
       },
       true,
     );
     const remove = button(
       _('Delete profile'),
-      () => {
+      async () => {
+        const id = select.value;
+        const name = selectedEntry()?.name || '';
         if (
-          window.confirm(
-            _(
-              'Delete the selected saved profile? Current settings will remain unchanged.',
-            ),
+          await confirmAction(
+            _('Delete profile'),
+            E('div', {}, [
+              E('p', {}, name),
+              E(
+                'p',
+                {},
+                _(
+                  'Delete the selected saved profile? Current settings will remain unchanged.',
+                ),
+              ),
+            ]),
+            _('Delete profile'),
           )
         )
-          void submit({ action: 'remove', id: select.value }, true);
+          void submit({ action: 'remove', id }, true);
       },
       true,
     );
@@ -423,8 +464,32 @@ export const profilesPanel = {
       }
       last = state;
       if (state.committed) reloadAfterConfigurationCommit();
+      const settingLabels: Record<string, string> = {
+        exclude_bittorrent: _('Bypass BitTorrent'),
+        exclude_wifi_calling: _('Bypass Wi-Fi Calling'),
+        exclude_ntp: _('Exclude NTP'),
+        disable_quic: _('Disable QUIC'),
+        disable_ipv6_probes: _('Disable selected IPv6 probes'),
+        enable_yacd: _('Enable YACD'),
+        alice_mode_enabled: _('Enable Alice Mode'),
+        alice_dashboard_enabled: _('Show on dashboard'),
+        alice_list_mode: _('Devices in the list'),
+        alice_interfaces: _('Interfaces'),
+        alice_ips: _('IP addresses and subnets'),
+        alice_macs: _('MAC addresses'),
+        router_origin_enabled: _('Route router applications'),
+      };
       const preview = state.preview;
       output.replaceChildren(
+        ...(state.busy && !state.running
+          ? [
+              E(
+                'p',
+                { class: 'spinning' },
+                _('Processing profile operation...'),
+              ),
+            ]
+          : []),
         ...(!state.entries.length && !state.busy && !state.error
           ? [
               E(
@@ -504,12 +569,18 @@ export const profilesPanel = {
                           E(
                             'td',
                             { class: 'td', 'data-title': _('Section') },
-                            change.section,
+                            change.section === 'settings'
+                              ? _('Settings')
+                              : change.section,
                           ),
                           E(
                             'td',
                             { class: 'td', 'data-title': _('Option') },
-                            change.option || '—',
+                            (change.section === 'settings'
+                              ? settingLabels[change.option]
+                              : '') ||
+                              change.option ||
+                              '—',
                           ),
                           E(
                             'td',

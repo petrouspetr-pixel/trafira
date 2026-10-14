@@ -6,11 +6,12 @@ export function nativeChoice(
   choices: Record<string, string> = {},
   custom = false,
   datatype?: string,
+  required = false,
 ) {
   const widget = new ui.Dropdown(initial, choices, {
     id,
     multiple: false,
-    optional: true,
+    optional: !required,
     sort: false,
     create: custom,
     select_placeholder: label,
@@ -20,6 +21,19 @@ export function nativeChoice(
   const node = widget.render();
   node.setAttribute('aria-label', label);
   let updating = false;
+  let disabled = false;
+  const preventDisabledInput = (event: Event) => {
+    if (
+      !disabled ||
+      (event instanceof KeyboardEvent && ['Tab', 'Escape'].includes(event.key))
+    )
+      return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+  node.addEventListener('click', preventDisabledInput, true);
+  node.addEventListener('mousedown', preventDisabledInput, true);
+  node.addEventListener('keydown', preventDisabledInput, true);
   const listeners: Array<() => void> = [];
   node.addEventListener('cbi-dropdown-change', () => {
     if (!updating) for (const listener of listeners) listener();
@@ -59,8 +73,10 @@ export function nativeChoice(
         updating = false;
       }
     },
-    setDisabled(disabled: boolean) {
+    setDisabled(value: boolean) {
+      disabled = value;
       node.toggleAttribute('disabled', disabled);
+      node.setAttribute('tabindex', disabled ? '-1' : '0');
       node.setAttribute('aria-disabled', String(disabled));
       for (const input of node.querySelectorAll<HTMLInputElement>('input'))
         input.disabled = disabled;

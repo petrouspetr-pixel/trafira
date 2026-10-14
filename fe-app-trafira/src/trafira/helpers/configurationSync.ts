@@ -1,15 +1,90 @@
-export function confirmConfigurationReplacement(): boolean {
-  return window.confirm(
+let confirmationOpen = false;
+export function confirmAction(
+  title: string,
+  text: string | HTMLElement,
+  action: string,
+): Promise<boolean> {
+  if (confirmationOpen) return Promise.resolve(false);
+  confirmationOpen = true;
+  return new Promise((resolve) => {
+    const finish = (accepted: boolean) => {
+      document.removeEventListener('keydown', escape);
+      confirmationOpen = false;
+      ui.hideModal();
+      resolve(accepted);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') finish(false);
+    };
+    document.addEventListener('keydown', escape);
+    ui.showModal(
+      title,
+      E('div', {}, [
+        typeof text === 'string' ? E('p', {}, text) : text,
+        E('div', { class: 'right' }, [
+          E(
+            'button',
+            {
+              type: 'button',
+              class: 'btn cbi-button',
+              click: () => finish(false),
+            },
+            _('Cancel'),
+          ),
+          ' ',
+          E(
+            'button',
+            {
+              type: 'button',
+              class: 'btn cbi-button cbi-button-action important',
+              click: () => finish(true),
+            },
+            action,
+          ),
+        ]),
+      ]),
+    );
+  });
+}
+export function confirmConfigurationReplacement(): Promise<boolean> {
+  return confirmAction(
+    _('Apply reviewed changes'),
     _(
       'Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?',
     ),
+    _('Apply reviewed changes'),
   );
 }
 
 let reloadRequested = false;
+export function showConfigurationCommitNotice(): void {
+  try {
+    const timestamp = Number(
+      sessionStorage.getItem('trafira:configuration-commit'),
+    );
+    sessionStorage.removeItem('trafira:configuration-commit');
+    if (
+      timestamp &&
+      Date.now() - timestamp >= 0 &&
+      Date.now() - timestamp < 120000
+    )
+      ui.addNotification(
+        'Trafira',
+        E('p', {}, _('Settings were applied successfully.')),
+        'info',
+      );
+  } catch {
+    /* Storage may be disabled by the browser. */
+  }
+}
 export function reloadAfterConfigurationCommit(): void {
   if (reloadRequested) return;
   reloadRequested = true;
+  try {
+    sessionStorage.setItem('trafira:configuration-commit', String(Date.now()));
+  } catch {
+    /* Optional notice only. */
+  }
   window.location.reload();
 }
 

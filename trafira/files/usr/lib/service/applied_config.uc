@@ -8,8 +8,9 @@ function normalized(value){return join("\n",filter(split(value||"","\n"),(line)=
 function capture(settings,sections){
     let source=text();if(source==null)return null;
     let selected={};
-    for(let key in ["config_path","router_origin_enabled","router_origin_section","alice_mode_enabled","alice_list_mode","alice_ips","alice_macs","alice_interfaces","source_network_interfaces","exclude_wifi_calling"])
+    for(let key in ["config_path","router_origin_enabled","router_origin_section","alice_mode_enabled","alice_list_mode","alice_ips","alice_macs","alice_interfaces","source_network_interfaces","exclude_wifi_calling","exclude_ntp"])
         if(settings[key]!=null)selected[key]=settings[key];
+    selected.exclude_ntp=common.bool_option(settings,"exclude_ntp",false)?"1":"0";
     selected.config_path=selected.config_path||"/etc/sing-box/config.json";
     let protected=false;
     for(let section in sections||[])if(common.bool_option(section,"enabled",true) && section.failure_policy && section.failure_policy!="legacy")protected=true;

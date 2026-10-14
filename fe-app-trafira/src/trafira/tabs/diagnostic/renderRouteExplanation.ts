@@ -31,7 +31,7 @@ function status(value: ExplainDecision['status']) {
     matched: _('Matched route'),
     direct: _('Direct connection'),
     blocked: _('Blocked'),
-    indeterminate: _('Insufficient information'),
+    indeterminate: _('Route not determined'),
   }[value];
 }
 function decisionView(
@@ -93,7 +93,7 @@ function decisionView(
                 E(
                   'p',
                   {},
-                  `#${row.index + 1}: ${matches[row.match] || _('Needs more information')} · ${actions[row.action] || _('Rule action')}${row.origin?.section ? ` · ${row.origin.section}` : ''}${row.shadowed ? ` (${_('Overridden by an earlier rule')})` : ''}`,
+                  `#${row.index + 1}: ${row.shadowed ? _('Not evaluated') : matches[row.match] || _('Needs more information')} · ${actions[row.action] || _('Rule action')}${row.origin?.section ? ` · ${row.origin.section}` : ''}${row.shadowed ? ` (${_('Overridden by an earlier rule')})` : ''}`,
                 ),
               ),
               ...(decision.trace_truncated
@@ -124,7 +124,7 @@ export function renderRouteExplanationResult(
             'p',
             { role: 'status' },
             progress?.phase === 'evaluating'
-              ? _('Calculating route from prepared lists')
+              ? `${_('Calculating route from prepared lists')}: ${progress.completed} / ${progress.total}`
               : progress?.total
                 ? `${_('Checking saved rule sets')}: ${progress.completed} / ${progress.total}`
                 : _('Starting route analysis'),
@@ -172,9 +172,9 @@ export function renderRouteExplanationResult(
                 ? [
                     E(
                       'p',
-                      { class: 'alert-message notice' },
+                      { class: 'alert-message warning' },
                       _(
-                        'The request completed, but the route cannot be confirmed with the available data. This is not a website availability failure. See the reasons below.',
+                        'The route has not been determined. Complete the request using the reasons below and run the check again.',
                       ),
                     ),
                   ]
@@ -195,6 +195,33 @@ export function renderRouteExplanationResult(
                       _(
                         'Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation.',
                       ),
+                    ),
+                  ]
+                : []),
+              ...(report.decision.status === 'indeterminate' &&
+              report.decision.missing.some(
+                (reason) =>
+                  reason === 'destination_ip' ||
+                  reason === 'router_destination_address_needed' ||
+                  reason ===
+                    'wifi_calling_bypass_depends_on_real_destination' ||
+                  reason === 'ntp_bypass_depends_on_real_destination',
+              )
+                ? [
+                    E(
+                      'button',
+                      {
+                        type: 'button',
+                        class: 'btn cbi-button',
+                        click: () => {
+                          const field = document.getElementById(
+                            'trafira-route-destination',
+                          ) as HTMLInputElement | null;
+                          field?.scrollIntoView({ block: 'center' });
+                          field?.focus();
+                        },
+                      },
+                      _('Enter the real destination IP'),
                     ),
                   ]
                 : []),
@@ -242,6 +269,7 @@ export function renderRouteExplanationResult(
           : []),
   );
 }
+let updateFormBusy: ((busy: boolean) => void) | null = null;
 const controller = new RouteExplanationController(
   (request, progress, active) =>
     runRoutePreparation(
@@ -250,7 +278,10 @@ const controller = new RouteExplanationController(
       progress || (() => {}),
       active || (() => true),
     ),
-  renderRouteExplanationResult,
+  (report, error, busy, progress) => {
+    updateFormBusy?.(busy);
+    renderRouteExplanationResult(report, error, busy, progress);
+  },
 );
 let mountId = 0;
 export const routeExplanationPanel = {
@@ -264,10 +295,18 @@ export const routeExplanationPanel = {
       maxLength: 253,
       required: true,
     }) as HTMLInputElement;
-    const source = nativeChoice('trafira-route-source', _('Source'), 'device', {
-      device: _('Device by IP address'),
-      router: _('This router'),
-    });
+    const source = nativeChoice(
+      'trafira-route-source',
+      _('Source'),
+      'device',
+      {
+        device: _('Device by IP address'),
+        router: _('This router'),
+      },
+      false,
+      undefined,
+      true,
+    );
     const ip = nativeChoice(
       'trafira-route-device',
       _('Device IP address'),
@@ -336,9 +375,13 @@ export const routeExplanationPanel = {
         tls: 'TLS / TCP',
         http: 'HTTP / TCP',
         quic: 'QUIC / UDP',
+        bittorrent: 'BitTorrent / TCP',
         tcp: _('TCP, unknown protocol'),
         udp: _('UDP, unknown protocol'),
       },
+      false,
+      undefined,
+      true,
     );
     let devices: Array<{ ip: string; mac?: string; interface?: string }> = [];
     const updateSource = () => {
@@ -440,7 +483,7 @@ export const routeExplanationPanel = {
       }
       if (destination.value.trim())
         request.destination_ip = destination.value.trim();
-      if (['tls', 'http', 'quic'].includes(protocol.value))
+      if (['tls', 'http', 'quic', 'bittorrent'].includes(protocol.value))
         request.protocol = protocol.value;
       void controller.submit(request);
     });
@@ -452,9 +495,24 @@ export const routeExplanationPanel = {
         'aria-live': 'polite',
       }),
     );
+    let routeBusy = false,
+      loadingDevices = false;
+    updateFormBusy = (busy) => {
+      routeBusy = busy;
+      const router = source.value === 'router';
+      domain.disabled = destination.disabled = port.disabled = busy;
+      source.setDisabled(busy);
+      protocol.setDisabled(busy);
+      ip.setDisabled(busy || router || loadingDevices);
+      mac.setDisabled(busy || router || loadingDevices);
+      iface.setDisabled(busy || router || loadingDevices);
+      refreshDevices.disabled = busy || loadingDevices;
+      form.setAttribute('aria-busy', String(busy));
+    };
     controller.mount();
     const loadDevices = () => {
-      refreshDevices.disabled = true;
+      loadingDevices = true;
+      updateFormBusy?.(routeBusy);
       deviceStatus.textContent = _('Loading detected devices');
       return command<{
         source_interfaces?: string[];
@@ -512,7 +570,10 @@ export const routeExplanationPanel = {
             );
         })
         .finally(() => {
-          if (generation === mountId) refreshDevices.disabled = false;
+          if (generation === mountId) {
+            loadingDevices = false;
+            updateFormBusy?.(routeBusy);
+          }
         });
     };
     refreshDevices.addEventListener('click', () => {
@@ -522,6 +583,7 @@ export const routeExplanationPanel = {
   },
   unmount() {
     mountId++;
+    updateFormBusy = null;
     controller.unmount();
   },
 };
