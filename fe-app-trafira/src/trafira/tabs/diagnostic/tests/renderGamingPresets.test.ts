@@ -10,7 +10,9 @@ vi.mock('../../../../helpers/executeShellCommand', () => ({
   executeShellCommand: vi.fn(),
 }));
 vi.mock('../../../helpers/configurationSync', () => ({
-  confirmConfigurationReplacement: vi.fn(() => true),
+  confirmConfigurationReplacement: vi.fn(async () => true),
+  confirmAction: vi.fn(async () => true),
+  showConfigurationCommitNotice: vi.fn(),
   reloadAfterConfigurationCommit: vi.fn(),
   observeConfigurationCommit: vi.fn(() => false),
   trackConfigurationCommit: vi.fn(),
