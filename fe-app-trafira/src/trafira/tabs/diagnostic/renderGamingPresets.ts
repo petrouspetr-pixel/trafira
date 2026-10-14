@@ -69,8 +69,11 @@ function message(code: string) {
       ')'
   );
 }
-let mounted: { controller: GamingPresetController; timer: number } | null =
-  null;
+let mounted: {
+  controller: GamingPresetController;
+  timer: number;
+  closeProgress: () => void;
+} | null = null;
 let generation = 0;
 function platformName(id: string) {
   return (
@@ -207,17 +210,84 @@ export const gamingPresetsPanel = {
           ? ''
           : ' hidden');
     }
+    let progressNode: HTMLElement | null = null;
+    let progressPhase = 'idle';
+    let dismissedPhase = '';
+    let notifiedError = '';
+    const closeProgress = () => {
+      if (progressNode?.isConnected) ui.hideModal();
+      progressNode = null;
+      progressPhase = 'idle';
+    };
+    const showProgress = (next: GamingState) => {
+      const phase = next.running
+        ? 'applying'
+        : next.busy
+          ? next.phase || 'idle'
+          : 'idle';
+      if (phase === 'idle') {
+        closeProgress();
+        dismissedPhase = '';
+        return;
+      }
+      if (dismissedPhase === phase || progressPhase === phase) return;
+      closeProgress();
+      progressPhase = phase;
+      progressNode = E('div', {}, [
+        E(
+          'p',
+          { class: 'spinning' },
+          phase === 'checking'
+            ? _(
+                'Please wait while Trafira checks the proposed configuration. Your settings have not been changed.',
+              )
+            : _(
+                'Please wait while Trafira saves and applies the configuration. The service may restart briefly.',
+              ),
+        ),
+        E('div', { class: 'right' }, [
+          E(
+            'button',
+            {
+              type: 'button',
+              class: 'btn cbi-button',
+              click: () => {
+                dismissedPhase = phase;
+                closeProgress();
+              },
+            },
+            _('Continue in background'),
+          ),
+        ]),
+      ]);
+      ui.showModal(
+        phase === 'checking'
+          ? _('Checking configuration...')
+          : _('Applying configuration...'),
+        progressNode,
+      );
+    };
     const controller = new GamingPresetController(command, (next) => {
       if (mine !== generation) return;
       const wasRunning = observedRunning;
       observedRunning = next.running;
       state = next;
+      showProgress(next);
+      if (next.error && next.error !== notifiedError)
+        ui.addNotification(
+          _('Gaming presets'),
+          E('p', {}, message(next.error)),
+          'danger',
+        );
+      notifiedError = next.error;
       status.textContent = state.error
         ? message(state.error)
         : state.running
           ? _('Applying configuration. You can reconnect to this page.')
-          : state.busy
-            ? _('Checking configuration...')
+          : state.busy && state.phase !== 'idle'
+            ? state.phase === 'applying'
+              ? _('Applying configuration...')
+              : _('Checking configuration...')
             : '';
       output.replaceChildren();
       if (state.preview) {
@@ -647,6 +717,7 @@ export const gamingPresetsPanel = {
     controller.mount();
     mounted = {
       controller,
+      closeProgress,
       timer: window.setInterval(() => {
         if (state?.running) void controller.poll();
       }, 2000),
@@ -656,6 +727,7 @@ export const gamingPresetsPanel = {
   unmount() {
     generation++;
     if (mounted) {
+      mounted.closeProgress();
       mounted.controller.unmount();
       window.clearInterval(mounted.timer);
     }

@@ -11,6 +11,7 @@
 "require view.trafira.alice as alice";
 "require view.trafira.profiles as profiles";
 "require view.trafira.gaming as gaming";
+"require view.trafira.routing as routing";
 
 // Sections
 "require view.trafira.section as section";
@@ -451,23 +452,17 @@ const EntryPoint = {
     };
     gaming.createGamingContent(gamingSection);
 
-    const serverSection = trafiraMap.section(
-      form.GridSection,
-      "server",
-      _("Servers"),
-      _("Accept external proxy connections and route them with sing-box."),
+    const routingSection = trafiraMap.section(
+      form.TypedSection,
+      "routing",
+      _("Routing check"),
     );
-    configureGridSection(
-      serverSection,
-      "server",
-      _("Server"),
-      _("Add a server inbound"),
-    );
-    serverSectionRef = serverSection;
-    server.configureServerSection(serverSection, {
-      loadCapabilities: loadUiCapabilities,
-    });
-    server.createServerContent(serverSection, uiCapabilities);
+    routingSection.anonymous = true;
+    routingSection.addremove = false;
+    routingSection.cfgsections = function () {
+      return ["routing"];
+    };
+    routing.createRoutingContent(routingSection);
 
     const settingsSection = trafiraMap.section(
       form.TypedSection,
@@ -492,6 +487,24 @@ const EntryPoint = {
       return ["updates"];
     };
     updates.createUpdatesContent(updatesSection);
+
+    const serverSection = trafiraMap.section(
+      form.GridSection,
+      "server",
+      _("Servers"),
+      _("Accept external proxy connections and route them with sing-box."),
+    );
+    configureGridSection(
+      serverSection,
+      "server",
+      _("Server"),
+      _("Add a server inbound"),
+    );
+    serverSectionRef = serverSection;
+    server.configureServerSection(serverSection, {
+      loadCapabilities: loadUiCapabilities,
+    });
+    server.createServerContent(serverSection, uiCapabilities);
 
     const diagnosticSection = trafiraMap.section(
       form.TypedSection,

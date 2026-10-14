@@ -112,6 +112,11 @@ beforeEach(() => {
   vi.stubGlobal('_', (s: string) => s);
   vi.stubGlobal('document', { getElementById: () => host });
   vi.stubGlobal('window', { setInterval, clearInterval, confirm: () => true });
+  vi.stubGlobal('ui', {
+    showModal: vi.fn(),
+    hideModal: vi.fn(),
+    addNotification: vi.fn(),
+  });
   vi.stubGlobal(
     'E',
     (

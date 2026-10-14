@@ -432,7 +432,6 @@ export const routeExplanationPanel = {
       field(_('Incoming interface (optional)'), iface.node),
     ]);
     const form = E('form', { class: 'cbi-section' }, [
-      E('h3', {}, _('Routing check')),
       E(
         'p',
         { class: 'cbi-section-descr' },
