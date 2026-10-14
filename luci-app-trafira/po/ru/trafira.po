@@ -3442,3 +3442,78 @@ msgstr "Сохранённые списки проверяются по одно
 
 msgid "The routing check stopped to preserve router memory. Trafira continues running; no route was confirmed. Try again when more memory is available."
 msgstr "Проверка маршрутизации остановлена для сохранения памяти роутера. Trafira продолжает работать; маршрут не подтверждён. Повторите проверку, когда будет больше свободной памяти."
+
+msgid "Delete gaming preset"
+msgstr "Удалить игровой пресет"
+
+msgid "The preset rules will be removed. Other settings will remain unchanged."
+msgstr "Правила этого пресета будут удалены. Остальные настройки сохранятся."
+
+msgid "Installed gaming presets"
+msgstr "Установленные игровые пресеты"
+
+msgid "Create or update a gaming preset"
+msgstr "Создать или изменить игровой пресет"
+
+msgid "Platform"
+msgstr "Платформа"
+
+msgid "Device"
+msgstr "Устройство"
+
+msgid "Connection"
+msgstr "Подключение"
+
+msgid "Actions"
+msgstr "Действия"
+
+msgid "Settings were applied successfully."
+msgstr "Настройки успешно применены."
+
+msgid "Checking configuration..."
+msgstr "Проверка конфигурации…"
+
+msgid "Processing profile operation..."
+msgstr "Выполняется операция с профилем…"
+
+msgid "Replace the saved configuration with the settings backed up before the last profile or preset operation?"
+msgstr "Заменить сохранённую конфигурацию настройками, которые были сохранены перед последней операцией с профилем или пресетом?"
+
+msgid "Route not determined"
+msgstr "Маршрут не определён"
+
+msgid "The route has not been determined. Complete the request using the reasons below and run the check again."
+msgstr "Маршрут не определён. Дополните запрос по подсказкам ниже и повторите проверку."
+
+msgid "Enter the real destination IP"
+msgstr "Указать реальный IP назначения"
+
+msgid "Proxy"
+msgstr "Прокси"
+
+msgid "If YACD asks for a backend, enter the router address shown in the link as Host and 9090 as Port. 127.0.0.1 refers to the computer running your browser."
+msgstr "Если YACD запрашивает подключение к серверу, укажите адрес роутера из ссылки в поле Host и 9090 в поле Port. Адрес 127.0.0.1 относится к компьютеру, на котором открыт браузер."
+
+msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and Alice Mode bypass settings. This result alone does not identify which setting caused the bypass."
+msgstr "Проверка FakeIP DNS роутера пройдена, но браузерный тест не подтвердил FakeIP. Проверьте защищённый DNS браузера, VPN или прокси на устройстве и исключения Alice Mode. Этот результат сам по себе не определяет, какая настройка вызвала обход."
+
+msgid "Not evaluated"
+msgstr "Не проверялось"
+
+msgid "This UDP connection is excluded from Trafira interception by Wi-Fi Calling bypass."
+msgstr "Это UDP-соединение исключено из перехвата Trafira настройкой «Wi-Fi Calling напрямую»."
+
+msgid "This UDP 123 connection is excluded from Trafira interception by NTP bypass."
+msgstr "Это UDP-соединение на порт 123 исключено из перехвата Trafira настройкой «Исключить NTP»."
+
+msgid "Enter the real destination IP to check the NTP bypass for this packet."
+msgstr "Укажите реальный IP назначения, чтобы проверить исключение NTP для этого пакета."
+
+msgid "For this UDP bypass check, select a device address in the same IP family as the destination: IPv4 with IPv4, or IPv6 with IPv6."
+msgstr "Для проверки этого UDP-исключения выберите адрес устройства того же семейства, что и IP назначения: IPv4 с IPv4 или IPv6 с IPv6."
+
+msgid "Delete removes this preset's rules. Keep as ordinary rules preserves routing and moves further management to Sections."
+msgstr "«Удалить» удаляет правила этого пресета. «Оставить как обычные правила» сохраняет маршрутизацию; дальнейшее управление будет в разделе «Секции»."
+
+msgid "The rules will remain active. The preset will disappear from this list; edit or delete its rules in Sections."
+msgstr "Правила продолжат работать. Пресет исчезнет из этого списка; изменить или удалить его правила можно будет в разделе «Секции»."

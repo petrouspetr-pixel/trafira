@@ -39,7 +39,9 @@ function current_action(request,work){
     if(request.action=="catalog") {
         let owners={};
         for(let section in current.sections)if(section.preset_owner) {
-            let item=owners[section.preset_owner]||{owner:section.preset_owner,platform:section.preset_platform||"",edited:false};
+            let item=owners[section.preset_owner]||{owner:section.preset_owner,platform:section.preset_platform||"",edited:false,addresses:[],connection:""};
+            for(let address in [...common.list_option(section,"source_ip_cidr"),...common.list_option(section,"fully_routed_ips")])if(index(item.addresses,address)<0)push(item.addresses,address);
+            if(section.outbound_detour_section)item.connection=section.outbound_detour_section;
             item.edited=item.edited || g.fingerprint(section)!=section.preset_original_digest;owners[item.owner]=item;
         }
         return {success:true,digest,presets:catalog.presets,devices:map(current.devices,(d)=>({name:d.name||"",interface:d.interface,mac:d.mac,ips:d.ips})),

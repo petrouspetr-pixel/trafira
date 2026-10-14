@@ -509,7 +509,10 @@ function createSettingsContent(section, capabilities) {
     form.Flag,
     "enable_yacd",
     _("Enable YACD"),
-    `<a href="${main.getClashUIUrl()}" target="_blank">${main.getClashUIUrl()}</a>`,
+    `<a href="${main.getClashUIUrl()}" target="_blank" rel="noopener noreferrer">${main.getClashUIUrl()}</a><br>` +
+      _(
+        "If YACD asks for a backend, enter the router address shown in the link as Host and 9090 as Port. 127.0.0.1 refers to the computer running your browser.",
+      ),
   );
   o.default = "0";
   o.rmempty = false;

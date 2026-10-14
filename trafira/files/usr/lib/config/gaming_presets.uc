@@ -90,6 +90,9 @@ function build(preset,request,current){
         if(!match(entry.value||"",/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/) || index(["exact","suffix"],entry.match)<0)return fail("invalid_catalog_domain");
         push(entry.match=="exact"?store.domain:store.domain_suffix,entry.value);
     }
+    // Empty UCI lists are not persisted; omit them to keep repeated previews stable.
+    if(!length(store.domain))delete store.domain;
+    if(!length(store.domain_suffix))delete store.domain_suffix;
     let direct={".name":owner+"_direct",".type":"section",enabled:"1",label:preset.id+" other traffic / "+join(", ",addresses),action:"bypass",fully_routed_ips:addresses};
     let additions=[store,direct];
     for(let section in additions) {

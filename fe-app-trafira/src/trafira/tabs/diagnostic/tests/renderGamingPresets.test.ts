@@ -198,7 +198,7 @@ it('does not poll idle jobs and synchronizes LuCI only after confirmed applicati
   completeSelection();
   button('Preview gaming rules').fire('click');
   await drain();
-  vi.mocked(confirmConfigurationReplacement).mockReturnValueOnce(false);
+  vi.mocked(confirmConfigurationReplacement).mockResolvedValueOnce(false);
   button('Apply reviewed changes').fire('click');
   await drain();
   expect(requests).not.toContain('apply');
