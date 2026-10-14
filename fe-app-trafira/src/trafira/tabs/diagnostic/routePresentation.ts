@@ -10,7 +10,7 @@ export function routeReason(reason: string): string {
       'Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface.',
     ),
     alice_device_details_missing: _(
-      'Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details.',
+      'Device routing needs this device MAC or incoming interface. Select a detected device, or enter the missing details.',
     ),
     applied_capture_state_unavailable: _(
       'The applied routing state is unavailable. Start Trafira and try again.',
@@ -46,7 +46,7 @@ export function routeReason(reason: string): string {
       'The entered address is a FakeIP. Enter the real destination IP instead.',
     ),
     alice_bypass: _(
-      'Alice Mode sends this device directly, bypassing Trafira.',
+      'Device routing sends this device directly, bypassing Trafira.',
     ),
     interface_not_captured: _(
       'Trafira does not intercept traffic from this incoming interface.',

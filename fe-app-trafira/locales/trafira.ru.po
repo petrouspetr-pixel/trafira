@@ -173,20 +173,20 @@ msgstr "После ошибки соединения повторять попы
 msgid "After existing device rules"
 msgstr "После существующих правил устройств"
 
-msgid "Alice Mode"
-msgstr "Alice Mode"
+msgid "Device routing"
+msgstr "Маршрутизация устройств"
 
-msgid "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
-msgstr "Alice Mode исключает это устройство. Перед применением явно включите обработку выбранных адресов."
+msgid "Device routing bypasses this device. Explicitly enable its selected addresses before applying."
+msgstr "Маршрутизация устройств исключает это устройство. Перед применением явно включите обработку выбранных адресов."
 
-msgid "Alice Mode devices are currently unavailable"
-msgstr "Данные об устройствах Alice Mode временно недоступны"
+msgid "Device routing information is currently unavailable"
+msgstr "Данные о маршрутизации устройств временно недоступны"
 
-msgid "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
-msgstr "Для Alice Mode нужны MAC-адрес или входящий интерфейс устройства. Выберите обнаруженное устройство или укажите недостающие сведения."
+msgid "Device routing needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
+msgstr "Для маршрутизации устройств нужны MAC-адрес или входящий интерфейс устройства. Выберите обнаруженное устройство или укажите недостающие сведения."
 
-msgid "Alice Mode sends this device directly, bypassing Trafira."
-msgstr "Alice Mode направляет это устройство напрямую, в обход Trafira."
+msgid "Device routing sends this device directly, bypassing Trafira."
+msgstr "Маршрутизация устройств направляет это устройство напрямую, в обход Trafira."
 
 msgid "All"
 msgstr "Все"
@@ -950,8 +950,8 @@ msgstr "Изменено вручную"
 msgid "Enable"
 msgstr "Включить"
 
-msgid "Enable Alice Mode"
-msgstr "Включить Alice Mode"
+msgid "Enable device routing"
+msgstr "Включить маршрутизацию устройств"
 
 msgid "Enable authentication"
 msgstr "Включить авторизацию"
@@ -974,8 +974,8 @@ msgstr "Включить смешанный прокси"
 msgid "Enable Mixed Proxy Authentication"
 msgstr "Включить авторизацию смешанного прокси"
 
-msgid "Enable only these addresses in Alice Mode if required"
-msgstr "При необходимости включить только эти адреса в Alice Mode"
+msgid "Enable device routing only for these addresses if required"
+msgstr "При необходимости включить маршрутизацию устройств только для этих адресов"
 
 msgid "Enable Output Network Interface"
 msgstr "Включить выходной сетевой интерфейс"
@@ -2885,8 +2885,8 @@ msgstr "Сохранённый профиль недоступен. Обнови
 msgid "The selected address is no longer known. Refresh the device list."
 msgstr "Выбранный адрес больше не найден. Обновите список устройств."
 
-msgid "The selected addresses will be enabled in Alice Mode."
-msgstr "Выбранные IP-адреса будут включены в Alice Mode."
+msgid "Device routing will be enabled for the selected addresses."
+msgstr "Маршрутизация устройств будет включена для выбранных IP-адресов."
 
 msgid "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again."
 msgstr "Конфигурация sing-box недоступна. Запустите Trafira или примените настройки и повторите проверку."
@@ -2906,8 +2906,8 @@ msgstr "Есть правила, использующие Zapret2"
 msgid "These rules were edited. Confirm replacement or keep them as ordinary rules."
 msgstr "Эти правила были изменены вручную. Подтвердите замену или сохраните их как обычные правила."
 
-msgid "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
-msgstr "Исключение Alice Mode затрагивает и другие устройства. Измените его вручную перед применением пресета."
+msgid "This device routing exception also covers other devices. Edit it manually before applying this preset."
+msgstr "Исключение маршрутизации устройств затрагивает и другие устройства. Измените его вручную перед применением пресета."
 
 msgid "This DNS connection is excluded from router application routing."
 msgstr "Это DNS-соединение исключено из маршрутизации приложений роутера."
@@ -3494,8 +3494,8 @@ msgstr "Прокси"
 msgid "If YACD asks for a backend, enter the router address shown in the link as Host and 9090 as Port. 127.0.0.1 refers to the computer running your browser."
 msgstr "Если YACD запрашивает подключение к серверу, укажите адрес роутера из ссылки в поле Host и 9090 в поле Port. Адрес 127.0.0.1 относится к компьютеру, на котором открыт браузер."
 
-msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and Alice Mode bypass settings. This result alone does not identify which setting caused the bypass."
-msgstr "Проверка FakeIP DNS роутера пройдена, но браузерный тест не подтвердил FakeIP. Проверьте защищённый DNS браузера, VPN или прокси на устройстве и исключения Alice Mode. Этот результат сам по себе не определяет, какая настройка вызвала обход."
+msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and device routing bypass settings. This result alone does not identify which setting caused the bypass."
+msgstr "Проверка FakeIP DNS роутера пройдена, но браузерный тест не подтвердил FakeIP. Проверьте защищённый DNS браузера, VPN или прокси на устройстве и исключения маршрутизации устройств. Этот результат сам по себе не определяет, какая настройка вызвала обход."
 
 msgid "Not evaluated"
 msgstr "Не проверялось"
@@ -3517,3 +3517,6 @@ msgstr "«Удалить» удаляет правила этого пресет
 
 msgid "The rules will remain active. The preset will disappear from this list; edit or delete its rules in Sections."
 msgstr "Правила продолжат работать. Пресет исчезнет из этого списка; изменить или удалить его правила можно будет в разделе «Секции»."
+
+msgid "Devices"
+msgstr "Устройства"

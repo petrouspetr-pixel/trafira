@@ -10,6 +10,7 @@
 "require view.trafira.settings as settings";
 "require view.trafira.alice as alice";
 "require view.trafira.profiles as profiles";
+"require view.trafira.gaming as gaming";
 
 // Sections
 "require view.trafira.section as section";
@@ -385,6 +386,30 @@ const EntryPoint = {
         });
     };
 
+    const dashboardSection = trafiraMap.section(
+      form.TypedSection,
+      "dashboard",
+      _("Dashboard"),
+    );
+    dashboardSection.anonymous = true;
+    dashboardSection.addremove = false;
+    dashboardSection.cfgsections = function () {
+      return ["dashboard"];
+    };
+    dashboard.createDashboardContent(dashboardSection);
+
+    const monitoringSection = trafiraMap.section(
+      form.TypedSection,
+      "monitoring",
+      _("Monitoring"),
+    );
+    monitoringSection.anonymous = true;
+    monitoringSection.addremove = false;
+    monitoringSection.cfgsections = function () {
+      return ["monitoring"];
+    };
+    monitoring.createMonitoringContent(monitoringSection);
+
     const rulesSection = trafiraMap.section(
       form.GridSection,
       "section",
@@ -401,6 +426,30 @@ const EntryPoint = {
       loadActionProvidersAvailability: loadUiCapabilities,
     });
     section.createSectionContent(rulesSection);
+
+    const aliceSection = trafiraMap.section(
+      form.TypedSection,
+      "alice",
+      _("Devices"),
+    );
+    aliceSection.anonymous = true;
+    aliceSection.addremove = false;
+    aliceSection.cfgsections = function () {
+      return ["settings"];
+    };
+    alice.createAliceContent(aliceSection);
+
+    const gamingSection = trafiraMap.section(
+      form.TypedSection,
+      "gaming",
+      _("Gaming presets"),
+    );
+    gamingSection.anonymous = true;
+    gamingSection.addremove = false;
+    gamingSection.cfgsections = function () {
+      return ["gaming"];
+    };
+    gaming.createGamingContent(gamingSection);
 
     const serverSection = trafiraMap.section(
       form.GridSection,
@@ -432,29 +481,17 @@ const EntryPoint = {
     };
     settings.createSettingsContent(settingsSection, uiCapabilities);
 
-    const profilesSection = trafiraMap.section(
+    const updatesSection = trafiraMap.section(
       form.TypedSection,
-      "profiles",
-      _("Profiles"),
+      "updates",
+      _("Components"),
     );
-    profilesSection.anonymous = true;
-    profilesSection.addremove = false;
-    profilesSection.cfgsections = function () {
-      return ["profiles"];
+    updatesSection.anonymous = true;
+    updatesSection.addremove = false;
+    updatesSection.cfgsections = function () {
+      return ["updates"];
     };
-    profiles.createProfilesContent(profilesSection);
-
-    const aliceSection = trafiraMap.section(
-      form.TypedSection,
-      "alice",
-      _("Alice Mode"),
-    );
-    aliceSection.anonymous = true;
-    aliceSection.addremove = false;
-    aliceSection.cfgsections = function () {
-      return ["settings"];
-    };
-    alice.createAliceContent(aliceSection);
+    updates.createUpdatesContent(updatesSection);
 
     const diagnosticSection = trafiraMap.section(
       form.TypedSection,
@@ -468,41 +505,17 @@ const EntryPoint = {
     };
     diagnostic.createDiagnosticContent(diagnosticSection);
 
-    const dashboardSection = trafiraMap.section(
+    const profilesSection = trafiraMap.section(
       form.TypedSection,
-      "dashboard",
-      _("Dashboard"),
+      "profiles",
+      _("Profiles"),
     );
-    dashboardSection.anonymous = true;
-    dashboardSection.addremove = false;
-    dashboardSection.cfgsections = function () {
-      return ["dashboard"];
+    profilesSection.anonymous = true;
+    profilesSection.addremove = false;
+    profilesSection.cfgsections = function () {
+      return ["profiles"];
     };
-    dashboard.createDashboardContent(dashboardSection);
-
-    const monitoringSection = trafiraMap.section(
-      form.TypedSection,
-      "monitoring",
-      _("Monitoring"),
-    );
-    monitoringSection.anonymous = true;
-    monitoringSection.addremove = false;
-    monitoringSection.cfgsections = function () {
-      return ["monitoring"];
-    };
-    monitoring.createMonitoringContent(monitoringSection);
-
-    const updatesSection = trafiraMap.section(
-      form.TypedSection,
-      "updates",
-      _("Components"),
-    );
-    updatesSection.anonymous = true;
-    updatesSection.addremove = false;
-    updatesSection.cfgsections = function () {
-      return ["updates"];
-    };
-    updates.createUpdatesContent(updatesSection);
+    profiles.createProfilesContent(profilesSection);
 
     await loadUiCapabilities().catch(() => null);
 

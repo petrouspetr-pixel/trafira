@@ -240,23 +240,23 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:450
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:238
-msgid "Alice Mode"
+msgid "Device routing"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:35
-msgid "Alice Mode bypasses this device. Explicitly enable its selected addresses before applying."
+msgid "Device routing bypasses this device. Explicitly enable its selected addresses before applying."
 msgstr ""
 
 #: src/trafira/tabs/dashboard/partials/renderAliceDevices.ts:225
-msgid "Alice Mode devices are currently unavailable"
+msgid "Device routing information is currently unavailable"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:12
-msgid "Alice Mode needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
+msgid "Device routing needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:36
-msgid "Alice Mode sends this device directly, bypassing Trafira."
+msgid "Device routing sends this device directly, bypassing Trafira."
 msgstr ""
 
 #: src/trafira/tabs/monitoring/initController.ts:626
@@ -1349,7 +1349,7 @@ msgid "Enable"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/alice.js:35
-msgid "Enable Alice Mode"
+msgid "Enable device routing"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2836
@@ -1381,7 +1381,7 @@ msgid "Enable Mixed Proxy Authentication"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:453
-msgid "Enable only these addresses in Alice Mode if required"
+msgid "Enable device routing only for these addresses if required"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:380
@@ -4086,7 +4086,7 @@ msgid "The selected address is no longer known. Refresh the device list."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:254
-msgid "The selected addresses will be enabled in Alice Mode."
+msgid "Device routing will be enabled for the selected addresses."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:133
@@ -4115,7 +4115,7 @@ msgid "These rules were edited. Confirm replacement or keep them as ordinary rul
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderGamingPresets.ts:38
-msgid "This Alice Mode exception also covers other devices. Edit it manually before applying this preset."
+msgid "This device routing exception also covers other devices. Edit it manually before applying this preset."
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/routePresentation.ts:42
@@ -4930,7 +4930,7 @@ msgstr ""
 msgid "If YACD asks for a backend, enter the router address shown in the link as Host and 9090 as Port. 127.0.0.1 refers to the computer running your browser."
 msgstr ""
 
-msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and Alice Mode bypass settings. This result alone does not identify which setting caused the bypass."
+msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and device routing bypass settings. This result alone does not identify which setting caused the bypass."
 msgstr ""
 
 msgid "Not evaluated"
@@ -4952,4 +4952,7 @@ msgid "Delete removes this preset's rules. Keep as ordinary rules preserves rout
 msgstr ""
 
 msgid "The rules will remain active. The preset will disappear from this list; edit or delete its rules in Sections."
+msgstr ""
+
+msgid "Devices"
 msgstr ""
