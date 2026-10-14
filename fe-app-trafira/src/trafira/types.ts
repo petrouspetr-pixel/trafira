@@ -113,6 +113,7 @@ export namespace Trafira {
     canCopyLink?: boolean;
     country?: string;
     runtimeAvailable?: boolean;
+    interfaceName?: string;
     urlTestInfo?: UrlTestInfo;
     priorityInfo?: PriorityInfo;
   }

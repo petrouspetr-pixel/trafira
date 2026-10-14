@@ -1158,6 +1158,9 @@ function buildProxyGroupOutbounds(
         displayName,
         latency: item?.value.history?.[0]?.delay || 0,
         type: priorityConfig ? 'Priority' : item?.value.type || 'URLTest',
+        interfaceName: getConnectionInterfaces(section).find(
+          (_, index) => code === `${sectionName}-interface-${index + 1}-out`,
+        ),
         selected: selector?.value?.now === code,
         link,
         canCopyLink,

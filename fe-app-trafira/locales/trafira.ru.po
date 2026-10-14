@@ -3532,3 +3532,24 @@ msgstr "Продолжить в фоне"
 
 msgid "Applying configuration..."
 msgstr "Применение конфигурации…"
+
+msgid "Network interface"
+msgstr "Сетевой интерфейс"
+
+msgid "No measurement"
+msgstr "Нет замера"
+
+msgid "No latency result is available. Use the latency test button to check this connection."
+msgstr "Результат проверки задержки отсутствует. Нажмите кнопку проверки задержки для этого подключения."
+
+msgid "Enable gaming presets"
+msgstr "Включить игровые пресеты"
+
+msgid "Enable gaming presets before creating or updating their rules."
+msgstr "Включите игровые пресеты перед созданием или изменением их правил."
+
+msgid "Gaming presets are disabled. Saved presets are kept; their rules do not route traffic."
+msgstr "Игровые пресеты отключены. Сохранённые пресеты остаются, но их правила не участвуют в маршрутизации."
+
+msgid "Gaming presets are enabled. Changes to this switch are applied immediately and may briefly restart routing."
+msgstr "Игровые пресеты включены. Изменение переключателя применяется сразу и может ненадолго перезапустить маршрутизацию."

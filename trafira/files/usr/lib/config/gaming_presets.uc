@@ -45,6 +45,27 @@ function remove(owner,mode,confirm,current){
     }
     return found?{valid:true,errors:[],conflicts:[],config,owner,patch:{sections:[]}}:fail("preset_not_found");
 }
+function set_enabled(enabled,current){
+    if(type(enabled)!="bool")return fail("invalid_request");
+    let config=clone(current.sections),settings=filter(config,(s)=>s[".type"]=="settings")[0];
+    if(!settings)return fail("invalid_request");
+    for(let section in config)if(section.preset_owner) {
+        let unchanged=fingerprint(section)==section.preset_original_digest;
+        if(!enabled) {
+            // Repeated disable must not overwrite the state to restore.
+            if(section.preset_resume_enabled==null)
+                section.preset_resume_enabled=common.bool_option(section,"enabled",true)?"1":"0";
+            section.enabled="0";
+        } else if(section.preset_resume_enabled!=null) {
+            section.enabled=section.preset_resume_enabled=="1"?"1":"0";
+            delete section.preset_resume_enabled;
+        }
+        // Preserve the edited warning; only maintenance changes to an untouched rule are rebased.
+        if(unchanged)section.preset_original_digest=fingerprint(section);
+    }
+    settings.gaming_presets_enabled=enabled?"1":"0";
+    return {valid:true,errors:[],conflicts:[],config,patch:{sections:[]}};
+}
 function build(preset,request,current){
     if(type(preset)!="object" || !match(preset.id||"",/^(steam|playstation|xbox|epic)$/) || !length(list(preset.domains)))return fail("invalid_preset");
     if(request.expected_digest!=current.digest || !current.digest)return fail("conflict");
@@ -64,6 +85,7 @@ function build(preset,request,current){
     }
     sort(addresses);
     let config=clone(current.sections),settings=filter(config,(s)=>s[".type"]=="settings")[0];
+    if(settings && !common.bool_option(settings,"gaming_presets_enabled",true))return fail("gaming_disabled");
     let proxy=filter(config,(s)=>s[".name"]==request.proxy_section && s[".type"]=="section")[0];
     if(!settings || !proxy || !common.bool_option(proxy,"enabled",true) || index(["connection","proxy","vpn","outbound"],proxy.action)<0 || proxy.preset_owner)return fail("invalid_proxy");
     let ac=alice.config(settings),conflicts=[];
@@ -109,4 +131,4 @@ function build(preset,request,current){
     if(!inserted)push(output,...additions);
     return {valid:true,errors:[],owner,config:output,patch:{sections:additions},conflicts,limitations:preset.limitations||[]};
 }
-return {build,remove,fingerprint,host};
+return {build,remove,set_enabled,fingerprint,host};

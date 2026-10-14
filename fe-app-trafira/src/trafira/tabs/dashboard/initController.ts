@@ -820,7 +820,7 @@ function getUrlTestLatencyClass(latency: number) {
 }
 
 function formatUrlTestLatency(latency: number) {
-  return latency ? `${latency}ms` : 'N/A';
+  return latency ? `${latency}ms` : _('No measurement');
 }
 
 function renderDetailsUrl(value: unknown) {

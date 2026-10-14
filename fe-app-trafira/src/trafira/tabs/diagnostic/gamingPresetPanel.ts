@@ -81,6 +81,14 @@ export class GamingPresetController {
       action: this.reviewed.owner ? 'remove' : 'apply',
     });
   }
+  async setEnabled(enabled: boolean, digest: string) {
+    if (!digest) return;
+    await this.submit({
+      action: 'set_enabled',
+      enabled,
+      expected_digest: digest,
+    });
+  }
   async poll() {
     await this.submit({ action: 'status' });
   }
@@ -97,7 +105,7 @@ export class GamingPresetController {
       busy: true,
       phase: ['preview', 'preview_remove'].includes(String(request.action))
         ? 'checking'
-        : ['apply', 'remove'].includes(String(request.action)) ||
+        : ['apply', 'remove', 'set_enabled'].includes(String(request.action)) ||
             this.state.running
           ? 'applying'
           : 'idle',
@@ -108,7 +116,7 @@ export class GamingPresetController {
     try {
       const result = await this.call(request);
       if (
-        ['apply', 'remove'].includes(String(request.action)) &&
+        ['apply', 'remove', 'set_enabled'].includes(String(request.action)) &&
         result.success === true &&
         result.running === true &&
         typeof result.job_id === 'string'

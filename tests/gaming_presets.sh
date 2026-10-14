@@ -40,5 +40,19 @@ let removed=g.remove(result.owner,"delete",false,{...current,sections:result.con
 assert(removed.valid && length(removed.config)==2 && removed.config[1][".name"]=="vpn","removal keeps unowned sections");
 let kept=g.remove(result.owner,"keep",false,{...current,sections:edited});
 assert(kept.valid && !filter(kept.config,(s)=>s.preset_owner)[0],"edited rules can become ordinary rules");
+let paused=g.set_enabled(false,{...current,sections:result.config});
+assert(paused.valid && paused.config[0].gaming_presets_enabled=="0","persist global switch");
+assert(!length(filter(paused.config,(s)=>s.preset_owner && s.enabled!="0")),"disable both preset routes");
+assert(paused.config[3][".name"]=="vpn" && paused.config[3].enabled=="1","ordinary connection remains active");
+assert(!g.build(preset,request,{...current,sections:paused.config}).valid,"cannot create active rules while globally paused");
+let resumed=g.set_enabled(true,{...current,sections:g.set_enabled(false,{...current,sections:paused.config}).config});
+assert(length(filter(resumed.config,(s)=>s.preset_owner && s.enabled=="1"))==2,"repeat disable preserves restoration");
+assert(g.remove(result.owner,"delete",false,{...current,sections:resumed.config}).valid,"toggle does not mark unedited rules edited");
+let manually_disabled=json(sprintf("%J",result.config));
+for(let section in manually_disabled)if(section.preset_owner) {section.enabled="0";section.label="User edit";break;}
+let restored=g.set_enabled(true,{...current,sections:g.set_enabled(false,{...current,sections:manually_disabled}).config});
+assert(length(filter(restored.config,(s)=>s.preset_owner && s.enabled=="0"))==1,"do not reactivate individually disabled rules");
+assert(!g.remove(result.owner,"delete",false,{...current,sections:restored.config}).valid,"edited warning survives toggle");
+assert(!g.set_enabled("0",current).valid,"reject non boolean enable request");
 print("gaming preset builder checks passed\n");
 '

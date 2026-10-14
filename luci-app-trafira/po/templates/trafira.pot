@@ -4968,3 +4968,24 @@ msgstr ""
 
 msgid "Applying configuration..."
 msgstr ""
+
+msgid "Network interface"
+msgstr ""
+
+msgid "No measurement"
+msgstr ""
+
+msgid "No latency result is available. Use the latency test button to check this connection."
+msgstr ""
+
+msgid "Enable gaming presets"
+msgstr ""
+
+msgid "Enable gaming presets before creating or updating their rules."
+msgstr ""
+
+msgid "Gaming presets are disabled. Saved presets are kept; their rules do not route traffic."
+msgstr ""
+
+msgid "Gaming presets are enabled. Changes to this switch are applied immediately and may briefly restart routing."
+msgstr ""
