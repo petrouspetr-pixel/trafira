@@ -19,7 +19,7 @@ printf '{"settings":{"dns_strategy":"ipv4_only"},"section":[{".name":"direct_sec
 ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture "$WORK_DIR/input.json" "$WORK_DIR/default.json" 127.0.0.1 0 1 '' 1.13.18
 printf '{"settings":{"dns_strategy":"ipv4_only","disable_ipv6_probes":"1","alice_mode_enabled":"1","alice_ips":["192.0.2.1/32"]},"section":[{".name":"direct_section",".type":"section","enabled":"1","action":"bypass"}]}' >"$WORK_DIR/input.json"
 ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture "$WORK_DIR/input.json" "$WORK_DIR/alice.json" 127.0.0.1 0 1 '' 1.14.1
-printf '{"settings":{"dns_strategy":"ipv4_only","disable_ipv6_probes":"1","router_origin_enabled":"1","router_origin_section":"meta"},"section":[{".name":"meta",".type":"section","enabled":"1","action":"connection","proxy_config_type":"interface","interface":"awg0","domain_suffix":["fbcdn.net"]}]}' >"$WORK_DIR/input.json"
+printf '{"settings":{"dns_strategy":"ipv4_only","disable_ipv6_probes":"1","router_origin_enabled":"1","router_origin_section":"meta"},"server":[{".name":"first",".type":"server","enabled":"1","protocol":"socks","socks_auth_enabled":"0","listen_port":"1080","routing_mode":"section","routing_section":"meta"},{".name":"second",".type":"server","enabled":"1","protocol":"socks","socks_auth_enabled":"0","listen_port":"1081","routing_mode":"section","routing_section":"meta"}],"section":[{".name":"meta",".type":"section","enabled":"1","action":"connection","proxy_config_type":"interface","interface":"awg0","domain_suffix":["fbcdn.net"]}]}' >"$WORK_DIR/input.json"
 ucode -L "$LIB" "$LIB/singbox/generator.uc" generate-config-fixture "$WORK_DIR/input.json" "$WORK_DIR/router.json" 127.0.0.1 0 1 '' 1.14.1
 node - "$WORK_DIR" "$ROOT_DIR" <<'JS'
 const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
@@ -29,7 +29,9 @@ const alice=JSON.parse(fs.readFileSync(dir+'/alice.json')).dns.rules;
 const bypass=alice.findIndex(r=>r.inbound==='alice-dns-in'),filterIndex=alice.findIndex(r=>r.action==='predefined');
 assert(bypass>=0&&filterIndex>=0&&bypass<filterIndex,'Alice bypass before probe filter');
 const router=JSON.parse(fs.readFileSync(dir+'/router.json'));
-assert.equal(router.route.rules[2].domain?.[0],'v6.xy.fbcdn.net','probe reject must precede router outbound too');
+assert.deepEqual(router.route.rules.slice(0,4).map(r=>r.action),['sniff','sniff','sniff','hijack-dns'],'all listeners must be sniffed and DNS hijacked before filtering');
+assert.equal(router.route.rules[4].domain?.[0],'v6.xy.fbcdn.net','probe reject must precede router outbound too');
+assert.equal(router.route.rules[5].outbound,'meta-out','router route follows probe rejection');
 const sonars=JSON.parse(fs.readFileSync(process.argv[3]+'/tests/fixtures/ipv6_sonar_probe_domains.json'));
 assert.equal(sonars.length,95);
 const yes=[...sonars,'v6.xy.fbcdn.net','fa4e35f8-5be3-4814-af28-573a3fe281ed-netseer-ipaddr-assoc.xy.fbcdn.net','sonar6.fhrk1-1.fna.fbcdn.net','sonar6.fppk1-1.fna.fbcdn.net','sonar6.frix7-1.fna.fbcdn.net','brunhild.challenges.cloudflare.com'];
