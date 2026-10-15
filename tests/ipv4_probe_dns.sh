@@ -68,6 +68,6 @@ ucode -L "$LIB" -e '
 let m=require("diagnostics.route_match"),f=require("fs"),c=json(f.readfile(ARGV[0]));
 for(let network in ["tcp","udp"])
  for(let name in ["v6.xy.fbcdn.net","sonar6-ams2-1.xx.fbcdn.net","brunhild.challenges.cloudflare.com"])
-  assert(m.explain(c,{domain:name,inbound:"tproxy-in",network},{},{}).status=="blocked","probe connection must be rejected: "+name);
+  assert(m.explain(c,{domain:name,inbound:"tproxy-in",network,protocol:network=="tcp"?"tls":"quic"},{},{}).status=="blocked","probe connection must be rejected: "+name);
 ' "$WORK_DIR/ipv4_only-1.json"
 printf 'IPv4 probe DNS and connection filtering checks passed\n'

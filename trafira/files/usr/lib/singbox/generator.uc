@@ -439,6 +439,26 @@ function source_dns_inbound_matcher() {
     return [ runtime_constants.SOURCE_DNS_INBOUND_TAG ];
 }
 
+function ipv6_probe_matcher(settings) {
+    if (option(settings, "dns_strategy", "prefer_ipv4") != "ipv4_only" ||
+        !bool_option(settings, "disable_ipv6_probes", false))
+        return null;
+    let hex4 = "[0-9a-f][0-9a-f][0-9a-f][0-9a-f]";
+    return {
+        domain: [
+            "v6.xy.fbcdn.net",
+            "sonar6.fhrk1-1.fna.fbcdn.net",
+            "sonar6.fppk1-1.fna.fbcdn.net",
+            "sonar6.frix7-1.fna.fbcdn.net",
+            "brunhild.challenges.cloudflare.com"
+        ],
+        domain_regex: [
+            "^" + hex4 + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + hex4 + hex4 + "-netseer-ipaddr-assoc[.]xy[.]fbcdn[.]net$",
+            "^sonar6-[a-z][a-z][a-z][0-9]+-[0-9]+[.]xx[.]fbcdn[.]net$"
+        ]
+    };
+}
+
 function base_config(settings, service_address, runtime_context) {
     let log_level = option(settings, "log_level", "warn");
     let rewrite_ttl = int_option(settings, "dns_rewrite_ttl", "60");
@@ -455,24 +475,9 @@ function base_config(settings, service_address, runtime_context) {
     if (runtime_context.alice_mode)
         push(dns_rules, { action: "route", inbound: runtime_constants.ALICE_DNS_INBOUND_TAG, server: runtime_constants.DNS_SERVER_TAG, rewrite_ttl });
     // Exact IPv6 probe endpoints only; bypassed Alice clients keep real DNS above.
-    if (option(settings, "dns_strategy", "prefer_ipv4") == "ipv4_only" &&
-        bool_option(settings, "disable_ipv6_probes", false)) {
-        let hex4 = "[0-9a-f][0-9a-f][0-9a-f][0-9a-f]";
-        push(dns_rules, {
-            action: "predefined", rcode: "NXDOMAIN",
-            domain: [
-                "v6.xy.fbcdn.net",
-                "sonar6.fhrk1-1.fna.fbcdn.net",
-                "sonar6.fppk1-1.fna.fbcdn.net",
-                "sonar6.frix7-1.fna.fbcdn.net",
-                "brunhild.challenges.cloudflare.com"
-            ],
-            domain_regex: [
-                "^" + hex4 + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + "-" + hex4 + hex4 + hex4 + "-netseer-ipaddr-assoc[.]xy[.]fbcdn[.]net$",
-                "^sonar6-[a-z][a-z][a-z][0-9]+-[0-9]+[.]xx[.]fbcdn[.]net$"
-            ]
-        });
-    }
+    let probe_matcher = ipv6_probe_matcher(settings);
+    if (probe_matcher != null)
+        push(dns_rules, { ...probe_matcher, action: "predefined", rcode: "NXDOMAIN" });
     for (let rule in [
         { action: "reject", query_type: "HTTPS" },
         { action: "reject", domain_suffix: "use-application-dns.net" },
@@ -3154,6 +3159,11 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
         add_mixed_proxy_for_section(config, section, service_address);
 
     require("config.router_origin").attach(config, settings, sections);
+    // Sniff and DNS hijacking stay first. Reject cached/externally resolved probe
+    // connections before any outbound selection, including router-origin routes.
+    let probe_matcher = ipv6_probe_matcher(settings);
+    if (probe_matcher != null)
+        splice(config.route.rules, 2, 0, { ...probe_matcher, action: "reject" });
     apply_ruleset_http_clients(config);
     // Candidate checks validate configuration, not startup snapshot contents.
     // Startup still validates each snapshot before attaching initial_path.
