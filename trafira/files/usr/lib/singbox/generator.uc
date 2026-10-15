@@ -3162,8 +3162,13 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
     // Sniff and DNS hijacking stay first. Reject cached/externally resolved probe
     // connections before any outbound selection, including router-origin routes.
     let probe_matcher = ipv6_probe_matcher(settings);
-    if (probe_matcher != null)
-        splice(config.route.rules, 2, 0, { ...probe_matcher, action: "reject" });
+    if (probe_matcher != null) {
+        let insert_at = 0;
+        while (insert_at < length(config.route.rules) &&
+            (config.route.rules[insert_at].action == "sniff" || config.route.rules[insert_at].action == "hijack-dns"))
+            insert_at++;
+        splice(config.route.rules, insert_at, 0, { ...probe_matcher, action: "reject" });
+    }
     apply_ruleset_http_clients(config);
     // Candidate checks validate configuration, not startup snapshot contents.
     // Startup still validates each snapshot before attaching initial_path.

@@ -37,7 +37,10 @@ function attach(value,settings,sections,context) {
         rule.inbound=[...inbounds,...INBOUNDS];break;
     }
     // System sniff/DNS hijack precede this rule; LAN rules never decide router traffic.
-    splice(value.route.rules,2,0,{action:"route",inbound:INBOUNDS,outbound:tags.outbound_tag(selected.section),__trafira_origin:origin});
+    let insert_at=0;
+    while(insert_at<length(value.route.rules) &&
+        (value.route.rules[insert_at].action=="sniff" || value.route.rules[insert_at].action=="hijack-dns"))insert_at++;
+    splice(value.route.rules,insert_at,0,{action:"route",inbound:INBOUNDS,outbound:tags.outbound_tag(selected.section),__trafira_origin:origin});
     unshift(value.dns.rules,{action:"route",inbound:INBOUNDS,server:tags.DNS_SERVER_TAG,__trafira_origin:origin});
     return value;
 }
