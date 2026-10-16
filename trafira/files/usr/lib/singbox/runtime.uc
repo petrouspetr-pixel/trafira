@@ -845,6 +845,12 @@ function init_config(populate_nft, caches_prepared, no_refresh, prepared_deferre
         exit(1);
     }
 
+    if (!require("singbox.ruleset_bootstrap").prepare_file(temp_config, sing_box_version())) {
+        log_message("Cannot prepare required rule sets; keeping the previous sing-box configuration", "fatal");
+        remove_files([temp_config, runtime_log]);
+        exit(1);
+    }
+
     if (populate_nft && !module_success([
         LIB_DIR + "/nft/apply.uc",
         "nft-populate-runtime-sets-from-uci",

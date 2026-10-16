@@ -137,4 +137,4 @@ function report(config, version) {
         entries, total_bytes: usage(), quota_bytes: MAX_TOTAL, max_file_bytes: MAX_FILE };
 }
 
-return { apply, save, refresh, path, report };
+return { apply, save, refresh, path, report, validate };
