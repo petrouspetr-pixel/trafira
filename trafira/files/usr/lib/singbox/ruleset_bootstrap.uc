@@ -24,7 +24,9 @@ function modern(version) {
 function index_outbounds(config) {
     let result = {};
     for (let outbound in common.array_or_empty(config.outbounds))
-        if (outbound.tag) result[outbound.tag] = outbound;
+        if (outbound.tag) result[outbound.tag] = {value:outbound, endpoint:false};
+    for (let endpoint in common.array_or_empty(config.endpoints))
+        if (endpoint.tag) result[endpoint.tag] = {value:endpoint, endpoint:true};
     return result;
 }
 function members(outbound) {
@@ -35,8 +37,10 @@ function members(outbound) {
 }
 function visit(tag, state, depth) {
     if (depth > 32 || state.visiting[tag]) { state.error = "invalid download graph"; return; }
-    let outbound = state.index[tag];
-    if (!outbound) { state.error = "missing download member or unsupported endpoint"; return; }
+    let entry = state.index[tag];
+    if (!entry) { state.error = "missing download member"; return; }
+    let outbound = entry.value;
+    if (entry.endpoint && outbound.type != "wireguard") { state.error = "unsupported native endpoint type"; return; }
     if (outbound.type != "selector" && outbound.type != "urltest") {
         if (index(state.candidates, tag) < 0 && length(state.candidates) < MAX_CANDIDATES)
             push(state.candidates, tag);
@@ -65,9 +69,9 @@ function plan(config, rule) {
 function dependency(tag, state, depth) {
     if (depth > 32 || state.visiting[tag]) { state.error = true; return; }
     if (state.added[tag]) return;
-    let original = state.index[tag];
-    if (!original) { state.error = true; return; }
-    let outbound = copy(original);
+    let entry = state.index[tag];
+    if (!entry) { state.error = true; return; }
+    let outbound = copy(entry.value);
     state.visiting[tag] = true;
     if (outbound.type == "urltest" || outbound.type == "selector") {
         let ordered = members(outbound);
@@ -77,11 +81,20 @@ function dependency(tag, state, depth) {
         for (let member in ordered) dependency(member, state, depth + 1);
     }
     if (outbound.detour) dependency(outbound.detour, state, depth + 1);
-    if (outbound.server || outbound.domain_resolver)
+    if (entry.endpoint) {
+        if (outbound.type != "wireguard") { state.error = true; return; }
+        // This private transport must not create the production TUN interface
+        // or bind its fixed UDP port. The main profile is never modified.
+        outbound.system = false;
+        delete outbound.name;
+        outbound.listen_port = 0;
+        for (let peer in common.array_or_empty(outbound.peers)) peer.persistent_keepalive_interval = 0;
+    }
+    if (entry.endpoint || outbound.server || outbound.domain_resolver)
         outbound.domain_resolver = "bootstrap-dns-server";
     delete state.visiting[tag];
     state.added[tag] = true;
-    push(state.outbounds, outbound);
+    push(entry.endpoint ? state.endpoints : state.outbounds, outbound);
 }
 function stage(config, candidate, port, credentials) {
     let bootstrap;
@@ -93,7 +106,7 @@ function stage(config, candidate, port, credentials) {
     // resolver's proxy detour or a listener that has not started yet.
     delete bootstrap.detour;
     delete bootstrap.domain_resolver;
-    let state = {index:index_outbounds(config), added:{}, visiting:{}, outbounds:[]};
+    let state = {index:index_outbounds(config), added:{}, visiting:{}, outbounds:[], endpoints:[]};
     dependency(candidate, state, 0);
     if (state.error) return {error:"unsupported outbound dependency"};
     let route = {rules:[], rule_set:[], final:candidate, default_domain_resolver:"bootstrap-dns-server"};
@@ -101,13 +114,32 @@ function stage(config, candidate, port, credentials) {
         if (config.route && config.route[key] != null) route[key] = config.route[key];
     let inbound = {type:"mixed", tag:"ruleset-bootstrap-in", listen:"127.0.0.1", listen_port:port};
     if (credentials) inbound.users = [credentials];
-    return {log:{disabled:true}, inbounds:[inbound], outbounds:state.outbounds,
+    let result = {log:{disabled:true}, inbounds:[inbound], outbounds:state.outbounds,
         dns:{servers:[bootstrap], final:"bootstrap-dns-server"}, route};
+    if (length(state.endpoints)) result.endpoints = state.endpoints;
+    return result;
 }
 function worker_script() { return "#!/bin/sh\nset -u\ndir=\"$1\"\nowner=\"$2\"\nticks=\"$3\"\nbudget=\"$4\"\nurl=\"$5\"\nauth=\"$6\"\nport=\"$7\"\ncore=\"\"\nfetch=\"\"\nwatch=\"\"\nworker=$$\nidentity() {\n    [ -r \"/proc/$owner/stat\" ] || return 1\n    raw=$(cat \"/proc/$owner/stat\") || return 1\n    rest=${raw##*) }\n    set -- $rest\n    [ \"$1\" != Z ] || return 1\n    shift 19\n    [ \"$1\" = \"$ticks\" ]\n}\ncleanup() {\n    trap - EXIT INT TERM\n    for child in \"$watch\" \"$fetch\" \"$core\"; do\n        [ -z \"$child\" ] || kill -TERM \"$child\" 2>/dev/null || :\n    done\n    sleep 0.1\n    for child in \"$watch\" \"$fetch\" \"$core\"; do\n        [ -z \"$child\" ] || kill -KILL \"$child\" 2>/dev/null || :\n    done\n    wait 2>/dev/null || :\n}\ntrap cleanup EXIT\ntrap 'exit 1' INT TERM\nstart=$(cut -d. -f1 /proc/uptime)\nif [ \"$port\" != \"-\" ]; then\n    sing-box run -c \"$dir/config.json\" </dev/null >/dev/null 2>&1 &\n    core=$!\nfi\n(\n    while :; do\n        now=$(cut -d. -f1 /proc/uptime)\n        if ! identity || [ \"$((now-start))\" -ge \"$budget\" ]; then\n            for child in \"$fetch\" \"$core\"; do\n                [ -z \"$child\" ] || kill -KILL \"$child\" 2>/dev/null || :\n            done\n            if [ -r \"$dir/curl.pid\" ]; then\n                child=$(cat \"$dir/curl.pid\")\n                case \"$child\" in *[!0-9]*|\"\") ;; *) kill -KILL \"$child\" 2>/dev/null || : ;; esac\n            fi\n            kill -TERM \"$worker\" 2>/dev/null || :\n            if ! identity; then\n                sleep 0.2\n                rm -rf \"$dir\"\n            fi\n            exit 0\n        fi\n        sleep 0.1\n    done\n) </dev/null >/dev/null 2>&1 &\nwatch=$!\nif [ \"$port\" != \"-\" ]; then\n    sleep 0.1\n    kill -0 \"$core\" 2>/dev/null || exit 1\n    set -- --proxy \"http://127.0.0.1:$port\" --proxy-user \"$auth\" --noproxy \"\"\nelse\n    set -- --noproxy \"*\"\nfi\ncurl --fail --location --silent --show-error --connect-timeout 3 --max-time \"$budget\" --max-filesize 4194304 --retry 2 --retry-connrefused --retry-delay 1 --retry-max-time 2 --output \"$dir/download\" \"$@\" \"$url\" </dev/null >/dev/null 2>&1 &\nfetch=$!\nprintf '%s' \"$fetch\" >\"$dir/curl.pid\"\nwait \"$fetch\"\nresult=$?\nfetch=\"\"\nexit \"$result\"\n"; }
 function cleanup(directory) {
     if (directory && match(directory, /^\/tmp\/trafira-ruleset-bootstrap[.][A-Za-z0-9]+(\/fetch)?$/))
         run(["rm", "-rf", directory]);
+}
+function active_core() {
+    let namespace = fs.readlink("/proc/self/ns/net");
+    if (!namespace) return true;
+    for (let pid in fs.lsdir("/proc") || []) {
+        if (!match(pid, /^[1-9][0-9]*$/) || fs.readlink("/proc/" + pid + "/ns/net") != namespace) continue;
+        let process = identity(pid);
+        if (!process || process.state == "Z") continue;
+        let file = fs.open("/proc/" + pid + "/cmdline", "re");
+        if (!file) continue;
+        let args = split(file.read(4096) || "", "\x00"); file.close();
+        // Also recognize a shell script used as the core binary, but never
+        // confuse compile/decompile validators or a core in another netns.
+        if (index(args, "run") >= 0 &&
+            (match(args[0] || "", /(^|\/)sing-box$/) || match(args[1] || "", /(^|\/)sing-box$/))) return true;
+    }
+    return false;
 }
 function fetch(config, rule, candidate, directory, seconds) {
     let owner = identity();
@@ -120,6 +152,10 @@ function fetch(config, rule, candidate, directory, seconds) {
     let staged = candidate == "" ? null : stage(config, candidate, port, {username:"bootstrap",password:auth});
     if (staged && staged.error) {
         warn("Rule-set startup bootstrap refused: ", staged.error, "\n");
+        return false;
+    }
+    if (staged && length(staged.endpoints || []) && active_core()) {
+        warn("Rule-set startup bootstrap refused: native WireGuard preparation would duplicate an active sing-box peer\n");
         return false;
     }
     fs.unlink(directory + "/download");

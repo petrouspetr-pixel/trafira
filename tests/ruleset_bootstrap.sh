@@ -31,7 +31,7 @@ c.outbounds[0].outbounds = ["explicit-direct"];
 assert(b.plan(c).candidates[0] == "explicit-direct", "explicit selected direct member remains supported");
 c.endpoints = [{type:"wireguard",tag:"endpoint"}];
 c.outbounds[0].outbounds = ["endpoint"];
-assert(b.plan(c).error != null, "interface-creating endpoints cannot be duplicated for bootstrap");
+assert(b.plan(c).candidates[0] == "endpoint", "native WireGuard endpoints are selected without creating their system interface");
 c.outbounds[0].outbounds = ["missing"];
 assert(b.plan(c).error != null, "missing selected member fails closed");
 print("rule-set bootstrap graph checks passed\n");
