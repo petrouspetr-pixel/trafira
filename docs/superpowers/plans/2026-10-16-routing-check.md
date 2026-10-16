@@ -21,22 +21,33 @@
 - instagram.com/facebook.com through AWG and youtube.com through Zapret2 preserve section order and IP rules.
 
 ### Task 1: Regression coverage
-- [ ] Add failing backend checks for repeated active starts, absent background DNS simulation, core hashing bounds, early device validation, and three requested domains.
-- [ ] Add failing frontend checks for restored pending forms, transient polling failures and DNS presentation.
-- [ ] Run focused frontend tests and backend CI to record expected failures.
+- [x] Add failing backend checks for repeated active starts, absent background DNS simulation, core hashing bounds, early device validation, and three requested domains.
+- [x] Add failing frontend checks for restored pending forms, transient polling failures and DNS presentation.
+- [x] Run focused frontend tests and backend CI to record expected failures.
 
 ### Task 2: Background calculation
-- [ ] Implement same-request job attachment without weakening lock ownership or cleanup.
-- [ ] Skip speculative DNS-policy calculation for background checks; keep actual DNS lookup and per-address routing.
-- [ ] Remove repeated per-scenario hashes and redundant executable reads, keeping final integrity checks.
-- [ ] Avoid repeated cache-directory scans on every hit; retain bounded validation and eviction.
+- [x] Implement same-request job attachment without weakening lock ownership or cleanup.
+- [x] Skip speculative DNS-policy calculation for background checks; keep actual DNS lookup and per-address routing.
+- [x] Remove repeated per-scenario hashes and redundant executable reads, keeping final integrity checks.
+- [x] Avoid repeated cache-directory scans on every hit; retain bounded validation and eviction.
 
 ### Task 3: Browser recovery and presentation
-- [ ] Persist pending request in sessionStorage with an expiry and restore form on mount.
-- [ ] Retry transient status failures against the same job within its original deadline.
-- [ ] Label rule actions descriptively; separate DNS lookup result from connection route; translate all added copy.
+- [x] Persist pending request in sessionStorage with an expiry and restore form on mount.
+- [x] Retry transient status failures against the same job within its original deadline.
+- [x] Label rule actions descriptively; separate DNS lookup result from connection route; translate all added copy.
 
 ### Task 4: Verification
-- [ ] Run frontend suite, lint, type checks, production bundle checks and translation checks.
-- [ ] Run backend runtime tests on readable and compacted source via CI.
-- [ ] Review branch, fix findings and report actual evidence; no release or router installation.
+- [x] Run frontend suite, lint, type checks, production bundle checks and translation checks.
+- [x] Run backend runtime tests on readable and compacted source via CI.
+- [x] Review branch, fix findings and report actual evidence; no release or router installation.
+
+## Verified result
+
+- Source/test commit: a0111b316d32a14464732c6a50398bc2c159dce5.
+- Frontend: 758 tests in 70 files; formatting, lint, TypeScript and production bundle contract pass.
+- Backend CI: all runtime scripts pass on readable and compacted installed sources.
+- Network CI: real sing-box 1.14.2 binary rule-set checks verify Meta via AWG, YouTube via Zapret2, direct fallback and cache invalidation.
+- Regression failures observed before implementation: identical active start returned busy; lost polling response aborted; refresh did not restore pending request; speculative DNS action evaluate caused an indeterminate policy.
+- Fresh review found a finished-job recovery race; fixed by persisting job_id and reading status before considering a new start.
+- Installed router version was only read/tested: instagram.com and facebook.com selected awg3_ru_eu-out; youtube.com selected zapret2-out. Earlier checks interrupted by unavailable/changing runtime state were retried; settings and packages were untouched.
+- No post-fix physical-router latency claim: new code was not deployed. No release was created.
