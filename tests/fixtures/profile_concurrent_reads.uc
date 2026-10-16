@@ -3,7 +3,8 @@ let document={schema:1,name:"Read test",config:[{".name":"settings",".type":"set
 let created=profiles.create(document);
 assert(created.success,"create fixture profile");
 let path=profiles.DIRECTORY+"/"+created.id+".json",original=fs.readfile(path);
-let lock_path=profiles.DIRECTORY+"/.lock",inode=fs.stat(lock_path).ino;
+let lock_path=profiles.DIRECTORY+"/.lock",inode=fs.stat(lock_path).inode;
+assert(inode!=null,"the registry lock has an inode");
 let other=fs.open(lock_path,"ae",384);
 assert(other && other.lock("sn"),"hold another reader on the registry inode");
 
@@ -28,6 +29,6 @@ for(let result in [profiles.create(document),profiles.rename(created.id,"Blocked
     assert(!result.success && result.error=="busy","writers remain exclusive");
 other.close();
 assert(profiles.list().entries[0].name=="After readers","list recovers after the writer finishes");
-assert(fs.stat(lock_path).ino==inode,"the shared registry lock inode remains stable");
+assert(fs.stat(lock_path).inode==inode,"the shared registry lock inode remains stable");
 assert(profiles.remove(created.id).success,"remove after locks are released");
 print("profile concurrent read and write exclusion checks passed\n");
