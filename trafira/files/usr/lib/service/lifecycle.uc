@@ -432,7 +432,7 @@ function restore_selector_state(snapshot) {
     let pairs = selector_restore_pairs(snapshot, clash_api_json("get_proxies"));
 
     for (let pair in pairs)
-        module_success(DIAGNOSTICS_UC, [ "clash-api", "set_group_proxy", pair.group, pair.proxy, "" ]);
+        module_success(DIAGNOSTICS_UC, [ "clash-api", "set_group_proxy", pair.group, pair.proxy, "transient" ]);
 }
 
 function module_background(module_path, args) {

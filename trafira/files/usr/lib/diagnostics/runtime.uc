@@ -1725,14 +1725,38 @@ function clash_api(action, arg1, arg2, arg3) {
         if (as_string(arg1) == "" || as_string(arg2) == "")
             return clash_json_error("group_tag and proxy_tag required");
         let payload = status_output([ "clash-set-group-proxy-payload", arg2 ], null);
-        let args = [ "curl", "-X", "PUT", "-s", "-w", "\n%{http_code}", base_url + "/proxies/" + clash_urlencode(arg1) ];
+        let args = [ "curl", "-X", "PUT", "-s", "--connect-timeout", "2", "--max-time", "5", "-w", "\n%{http_code}", base_url + "/proxies/" + clash_urlencode(arg1) ];
         for (let item in auth) push(args, item);
         push(args, "--data-raw");
         push(args, payload);
-        let result = status_capture([ "clash-set-group-proxy-result", arg1, arg2 ], command_output(command_from_args(args)));
-        if (result.output != "")
-            print(result.output);
-        return result.status;
+        let select = function() {
+            let response = command_capture(command_from_args(args));
+            if (response.status != 0)
+                return { success: false, error: "selector_api_failed" };
+            let parsed = status_capture([ "clash-set-group-proxy-result", arg1, arg2 ], response.output);
+            try {
+                let result = json(parsed.output);
+                if (parsed.status == 0 && result.success === true)
+                    return result;
+                if (type(result) == "object" && result.success === false)
+                    return result;
+            } catch (e) {}
+            return { success: false, error: "selector_api_failed" };
+        };
+        let result;
+        if (arg3 == "transient")
+            result = select();
+        else
+            result = require("singbox.selector_state").choose(arg1, arg2, function() {
+                let fetch = [ "curl", "-f", "-s", "--connect-timeout", "2", "--max-time", "5" ];
+                for (let item in auth) push(fetch, item);
+                push(fetch, base_url + "/proxies");
+                let response = command_capture(command_from_args(fetch));
+                if (response.status != 0) return null;
+                try { return json(response.output); } catch (e) { return null; }
+            }, select);
+        print(sprintf("%J\n", result));
+        return result.success === true ? 0 : 1;
     }
 
     if (action == "close_connection") {

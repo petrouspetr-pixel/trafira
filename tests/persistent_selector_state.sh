@@ -21,9 +21,10 @@ function choose(group, node, success) {
 }
 check(choose('main', 'two', true).success, 'explicit selection should persist');
 check((fs.stat(path).mode & 511) == 384, 'state must be private');
-let inode = fs.stat(path).ino;
+let inode = fs.stat(path).inode;
+check(inode != null, 'filesystem must expose inode for flash-write regression');
 check(choose('main', 'two', true).success, 'repeated selection should succeed');
-check(fs.stat(path).ino == inode, 'unchanged choice must not rewrite flash');
+check(fs.stat(path).inode == inode, 'unchanged choice must not rewrite flash');
 check(!choose('other', 'beta', false).success, 'failed API must fail');
 check(state.read().other == null, 'failed API must not persist');
 check(!choose('main', 'removed', true).success, 'missing node must fail');
@@ -36,6 +37,14 @@ state.apply(config);
 check(config.outbounds[0].default == 'one', 'deleted selection must retain generated fallback');
 check(choose('other', 'beta', true).success, 'second group should persist');
 check(state.read().main == 'two' && state.read().other == 'beta', 'writes must preserve other groups');
+let disabled = proxies.proxies.main;
+delete proxies.proxies.main;
+check(choose('other', 'alpha', true).success, 'other group should change while main is disabled');
+check(state.read().main == 'two', 'temporarily disabled group must keep its saved choice');
+proxies.proxies.main = disabled;
+config.outbounds[0].outbounds = [ 'one', 'two' ]; config.outbounds[0].default = 'one';
+state.apply(config);
+check(config.outbounds[0].default == 'two', 'reenabled group must recover its saved choice');
 fs.writefile(path, '{broken');
 check(length(keys(state.read())) == 0, 'malformed state should be ignored');
 check(choose('main', 'two', true).success, 'selection should recover malformed state');
@@ -77,4 +86,33 @@ second=$!
 wait "$first"; wait "$second"
 grep -q '"main":"two"' "$TRAFIRA_SELECTOR_STATE_FILE"
 grep -q '"other":"beta"' "$TRAFIRA_SELECTOR_STATE_FILE"
+cat >"$WORK_DIR/fixture.json" <<'JSON'
+{"settings":{"dns_server":"1.1.1.1"},"section":[{".name":"main",".type":"section","action":"connection","enabled":"1","selector_proxy_links":["socks5://127.0.0.1:1080#First","socks5://127.0.0.1:1081#Second"]}]}
+JSON
+mkdir -p "$WORK_DIR/config.json.section-cache"
+generate() {
+  ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/singbox/generator.uc" generate-config-fixture \
+    "$WORK_DIR/fixture.json" "$WORK_DIR/config.json" 127.0.0.1 0 1 '' 1.14.1
+}
+generate
+node - "$WORK_DIR/config.json" "$TRAFIRA_SELECTOR_STATE_FILE" <<'JS'
+const fs=require('fs'),assert=require('assert/strict');
+const group=JSON.parse(fs.readFileSync(process.argv[2])).outbounds.find(o=>o.type==='selector' && o.tag==='main-out');
+assert(group && group.outbounds.length>=2);
+fs.writeFileSync(process.argv[3],JSON.stringify({[group.tag]:group.outbounds[1]}));
+JS
+generate
+node - "$WORK_DIR/config.json" "$TRAFIRA_SELECTOR_STATE_FILE" "$WORK_DIR/fixture.json" <<'JS'
+const fs=require('fs'),assert=require('assert/strict');
+const group=JSON.parse(fs.readFileSync(process.argv[2])).outbounds.find(o=>o.tag==='main-out');
+assert.equal(group.default,JSON.parse(fs.readFileSync(process.argv[3]))['main-out'],'generator must restore explicit choice after reboot');
+const fixture=JSON.parse(fs.readFileSync(process.argv[4]));
+fixture.section[0].selector_proxy_links.pop();fs.writeFileSync(process.argv[4],JSON.stringify(fixture));
+JS
+generate
+node - "$WORK_DIR/config.json" <<'JS'
+const fs=require('fs'),assert=require('assert/strict');
+const group=JSON.parse(fs.readFileSync(process.argv[2])).outbounds.find(o=>o.tag==='main-out');
+assert.equal(group.default,group.outbounds[0],'removed choice must use generated fallback');
+JS
 printf 'persistent selector state checks passed\n'
