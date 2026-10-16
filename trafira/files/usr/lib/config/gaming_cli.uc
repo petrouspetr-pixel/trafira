@@ -64,9 +64,23 @@ function current_action(request,work){
     if(!applicable)return fail("candidate_check_failed");
     return jobs.start_document(document,digest);
 }
+// Separate ephemeral discovery from jobs/transactions: planning never opens saved UCI.
+function plan_action(request){
+    for(let key in request)if(index(["action","sections","operations"],key)<0)return fail("invalid_request");
+    if(!g.validate_plan(request))return fail("invalid_request");
+    let catalog=read(CATALOG,1048576);
+    if(!catalog || catalog.schema!=1 || type(catalog.presets)!="array")return fail("catalog_unavailable");
+    let stamp=clock(),directory=sprintf("/tmp/trafira-gaming-plan-%x-%x",stamp[0],stamp[1]);
+    if(!fs.mkdir(directory,448))return fail("storage_unavailable");
+    let result;
+    try{result=g.plan(request,catalog.presets,devices(directory));}catch(e){result=fail("gaming_operation_failed");}
+    fs.unlink(directory+"/devices.json");fs.rmdir(directory);
+    return result;
+}
 function action(text){
     let request;try{request=json(text);}catch(e){return fail("invalid_request");}
     if(type(text)!="string" || length(text)>65536 || type(request)!="object")return fail("invalid_request");
+    if(request.action=="plan")return plan_action(request);
     for(let key in request)if(index(["action","preset","device_ips","proxy_section","placement","expected_digest","enable_device","enable_gaming","replace_edited","owner","mode","confirm","enabled"],key)<0)return fail("invalid_request");
     if(request.action=="status")return jobs.status();
     if(index(["catalog","preview","apply","preview_remove","remove","set_enabled"],request.action)<0)return fail("unsupported_action");

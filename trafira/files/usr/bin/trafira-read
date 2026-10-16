@@ -27,7 +27,7 @@ const READ_CLASH = {
 const READ_CONFIG = {
     profile_action: [ "list", "status", "preview" ],
     core_action: [ "catalog", "status" ],
-    gaming_preset_action: [ "catalog", "status", "preview", "preview_remove" ]
+    gaming_preset_action: [ "catalog", "status", "preview", "preview_remove", "plan" ]
 };
 function allowed(args) {
     if (!length(args)) return false;

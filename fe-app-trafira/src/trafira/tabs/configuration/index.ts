@@ -1,8 +1,13 @@
 import { gamingSwitchChanges } from './gamingSwitch';
+import { gamingUciChanges, type GamingAdapter } from './gamingDraft';
+import { gamingDraft } from './gamingDraft.service';
 import { watchPanel } from '../../helpers/panelLifecycle';
 import { snapshots } from '../diagnostic/renderSnapshots';
 import { profilesPanel } from '../diagnostic/renderProfiles';
-import { gamingPresetsPanel } from '../diagnostic/renderGamingPresets';
+import {
+  gamingPresetsPanel,
+  gamingErrorMessage,
+} from '../diagnostic/renderGamingPresets';
 import { routeExplanationPanel } from '../diagnostic/renderRouteExplanation';
 
 const panels = {
@@ -18,6 +23,27 @@ const watchers = new Map<keyof typeof panels, () => void>();
 
 export const ConfigurationPanels = {
   gamingSwitchChanges,
+  gamingUciChanges,
+  bindGamingDraft(adapter: GamingAdapter) {
+    gamingDraft.bind(adapter);
+  },
+  async saveGamingDraft<T>(save: () => Promise<T>) {
+    try {
+      return await gamingDraft.save(save);
+    } catch (error) {
+      throw Error(
+        gamingErrorMessage(
+          error instanceof Error ? error.message : 'request_failed',
+        ),
+      );
+    }
+  },
+  flushGamingDraft() {
+    return gamingDraft.flush();
+  },
+  resetGamingDraft() {
+    gamingDraft.reset();
+  },
   init(kind: keyof typeof panels, canWrite = true) {
     watchers.get(kind)?.();
     const panel = panels[kind];

@@ -29,10 +29,66 @@ function owner_id(preset,device){
     for(let n=0;n<length(value);n++)encoded+=sprintf("%02x",ord(value,n));
     return "game_"+preset.id+"_"+encoded;
 }
+// Owner suffix encodes MAC@interface, independent of platform or selected IP family.
+function group(section){
+    let matched=match(section.preset_owner||"",/^game_(steam|playstation|xbox|epic)_([a-f0-9]+)$/);
+    return matched?matched[2]:null;
+}
+function ordered(sections){
+    return [...filter(sections,(s)=>s.action!="bypass"),...filter(sections,(s)=>s.action=="bypass")];
+}
+function normalize(sections){
+    let groups={},seen={},output=[];
+    for(let section in sections){let id=group(section);if(id){groups[id]=groups[id]||[];push(groups[id],section);}}
+    for(let section in sections){
+        let id=group(section);
+        if(!id)push(output,section);
+        else if(!seen[id]){push(output,...ordered(groups[id]));seen[id]=true;}
+    }
+    return output;
+}
+function place(sections,id,placement){
+    let additions=ordered(filter(sections,(s)=>group(s)==id)),output=[],inserted=false;
+    for(let section in sections){
+        if(group(section)==id)continue;
+        if(!inserted && placement=="before-device-routes" && section[".type"]=="section"){
+            push(output,...additions);inserted=true;
+        }
+        push(output,section);
+    }
+    if(!inserted)push(output,...additions);
+    return output;
+}
+function owners(sections){
+    let output={};
+    for(let section in sections)if(section.preset_owner){
+        let item=output[section.preset_owner]||{owner:section.preset_owner,platform:section.preset_platform||"",edited:false,addresses:[],connection:""};
+        for(let address in [...common.list_option(section,"source_ip_cidr"),...common.list_option(section,"fully_routed_ips")])if(index(item.addresses,address)<0)push(item.addresses,address);
+        if(section.outbound_detour_section)item.connection=section.outbound_detour_section;
+        item.edited=item.edited || fingerprint(section)!=section.preset_original_digest;
+        let first=filter(sections,(s)=>group(s)==group(section))[0];
+        let manual=filter(sections,(s)=>s[".type"]=="section" && !s.preset_owner)[0];
+        item.placement=!manual || index(sections,first)<index(sections,manual)?"before-device-routes":"after-device-routes";
+        output[item.owner]=item;
+    }
+    return values(output);
+}
+function validate_plan(request){
+    if(type(request)!="object" || type(request.operations)!="array" || length(request.operations)>128)return false;
+    if(!require("config.profile_format").validate({schema:1,name:"Gaming",config:request.sections}).valid)return false;
+    for(let operation in request.operations){
+        if(type(operation)!="object" || index(["upsert","remove"],operation.action)<0)return false;
+        let allowed=operation.action=="upsert"?["action","preset","device_ips","proxy_section","placement","enable_device","enable_gaming","replace_edited"]:["action","owner","mode","confirm"];
+        for(let key in operation)if(index(allowed,key)<0)return false;
+        for(let key in ["enable_device","enable_gaming","replace_edited","confirm"])if(operation[key]!=null && type(operation[key])!="bool")return false;
+        if(operation.action=="upsert" && (type(operation.preset)!="string" || type(operation.proxy_section)!="string" || type(operation.device_ips)!="array"))return false;
+    }
+    return true;
+}
 function remove(owner,mode,confirm,current){
     if(type(owner)!="string" || !match(owner,/^game_[a-z0-9_]{1,110}$/) || index(["delete","keep"],mode)<0)return fail("invalid_owner");
     let config=[],found=false;
-    for(let section in current.sections) {
+    for(let section in normalize(current.sections)) {
         if(section.preset_owner!=owner){push(config,clone(section));continue;}
         found=true;
         if(mode=="delete") {
@@ -123,17 +179,40 @@ function build(preset,request,current){
     let direct={".name":owner+"_direct",".type":"section",enabled:"1",label:preset.id+" other traffic / "+join(", ",addresses),action:"bypass",fully_routed_ips:addresses};
     let additions=[store,direct];
     for(let section in additions) {
+        let previous=filter(old,(s)=>s[".name"]==section[".name"])[0];
+        if(previous){
+            if(previous.enabled!=null)section.enabled=previous.enabled;
+            if(previous.preset_resume_enabled!=null)section.preset_resume_enabled=previous.preset_resume_enabled;
+        }
         if(length(filter(config,(s)=>s[".name"]==section[".name"])))return fail("section_name_collision");
         section.preset_owner=owner;section.preset_revision=""+preset.revision;section.preset_platform=preset.id;
         section.preset_original_digest=fingerprint(section);
     }
-    for(let section in config)if(section[".type"]=="section" && common.bool_option(section,"enabled",true) && (length(list(section.fully_routed_ips)) || length(list(section.source_ip_cidr))))push(conflicts,"existing_device_routes:"+section[".name"]);
-    let output=[],inserted=false;
-    for(let section in config) {
-        if(!inserted && request.placement=="before-device-routes" && section[".type"]=="section") {push(output,...additions);inserted=true;}
-        push(output,section);
-    }
-    if(!inserted)push(output,...additions);
+    for(let section in config)if(!section.preset_owner && section[".type"]=="section" && common.bool_option(section,"enabled",true) && (length(list(section.fully_routed_ips)) || length(list(section.source_ip_cidr))))push(conflicts,"existing_device_routes:"+section[".name"]);
+    let output=place(normalize([...config,...additions]),group(store),request.placement);
     return {valid:true,errors:[],owner,config:output,patch:{sections:additions},conflicts,limitations:preset.limitations||[]};
 }
-return {build,remove,set_enabled,fingerprint,host};
+// ucode closures bind existing declarations: keep the planner after its helpers.
+function plan(request,catalog,devices){
+    if(!validate_plan(request))return {success:false,error:"invalid_request"};
+    let config=clone(request.sections),conflicts=[],settings=filter(config,(s)=>s[".type"]=="settings")[0];
+    let enabled=common.bool_option(settings,"gaming_presets_enabled",true);
+    for(let operation in request.operations){
+        let current={sections:config,devices,digest:"native-draft"},result;
+        if(operation.action=="upsert"){
+            let preset=filter(catalog,(p)=>p.id==operation.preset)[0];
+            result=build(preset,{...operation,expected_digest:current.digest,enable_gaming:true},current);
+        }else{
+            result=remove(operation.owner,operation.mode,operation.confirm,current);
+            // A prior native Save attempt may already have staged this removal.
+            if(!result.valid && result.errors[0]=="preset_not_found")result={valid:true,config,conflicts:[]};
+        }
+        if(!result.valid)return {success:false,error:result.errors[0]||"invalid_request",conflicts:result.conflicts||[]};
+        config=result.config;push(conflicts,...(result.conflicts||[]));
+    }
+    // Native form settings at Save time own global enablement, including newly added rules.
+    config=set_enabled(enabled,{sections:config}).config;
+    if(!require("config.profile_format").validate({schema:1,name:"Gaming",config}).valid)return {success:false,error:"invalid_request"};
+    return {success:true,config,owners:owners(config),conflicts,changes:require("config.profile_format").diff(request.sections,config)};
+}
+return {build,remove,set_enabled,fingerprint,host,normalize,owners,validate_plan,plan};

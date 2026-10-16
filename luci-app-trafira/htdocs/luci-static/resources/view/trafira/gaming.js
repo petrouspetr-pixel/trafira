@@ -27,6 +27,73 @@ function createGamingContent(section) {
     }
     uci.set(packageName, sectionId, this.option, value);
   };
+  const map = section.map;
+  const packageName = main.TRAFIRA_UCI_PACKAGE;
+  main.ConfigurationPanels.bindGamingDraft({
+    read: function () {
+      const sections = uci
+        .sections(packageName)
+        .map((entry) => Object.assign({}, entry));
+      const settings = sections.find((entry) => entry[".type"] === "settings");
+      const value = enabled.formvalue("settings");
+      if (settings && value != null) settings.gaming_presets_enabled = value;
+      return sections;
+    },
+    checkpoint: function () {
+      // Capture the package cache after native parse. Recreating a deleted UCI
+      // section does not cancel its deletion marker, so inverse edits cannot
+      // faithfully roll back a failed save. Other packages remain untouched.
+      const keys = ["values", "creates", "changes", "deletes", "reorder"];
+      const snapshot = keys.map((key) => [
+        key,
+        uci.state[key][packageName] === undefined
+          ? undefined
+          : structuredClone(uci.state[key][packageName]),
+      ]);
+      return function () {
+        snapshot.forEach(([key, value]) => {
+          if (value === undefined) delete uci.state[key][packageName];
+          else uci.state[key][packageName] = structuredClone(value);
+        });
+      };
+    },
+    write: function (before, after) {
+      const changes = main.ConfigurationPanels.gamingUciChanges(before, after);
+      changes.removed.forEach((name) => uci.remove(packageName, name));
+      changes.added.forEach((entry) => {
+        const name = uci.add(packageName, entry[".type"], entry[".name"]);
+        Object.keys(entry)
+          .filter((key) => key.charAt(0) !== ".")
+          .forEach((key) => uci.set(packageName, name, key, entry[key]));
+      });
+      changes.edits.forEach((edit) => {
+        if (edit.value === undefined)
+          uci.unset(packageName, edit.section, edit.option);
+        else uci.set(packageName, edit.section, edit.option, edit.value);
+      });
+      const prior = uci.sections(packageName).map((entry) => entry[".name"]);
+      if (JSON.stringify(prior) !== JSON.stringify(changes.order))
+        changes.order.forEach((name) => uci.move(packageName, name, null));
+    },
+  });
+  const save = map.save;
+  map.save = function (callback, silent) {
+    return main.ConfigurationPanels.saveGamingDraft(() =>
+      save.call(
+        this,
+        async function () {
+          if (callback) await callback();
+          await main.ConfigurationPanels.flushGamingDraft();
+        },
+        silent,
+      ),
+    );
+  };
+  const reset = map.reset;
+  map.reset = function () {
+    main.ConfigurationPanels.resetGamingDraft();
+    return reset.apply(this, arguments);
+  };
   const option = section.option(form.DummyValue, "_gaming_presets");
   option.depends("gaming_presets_enabled", "1");
   option.retain = true;

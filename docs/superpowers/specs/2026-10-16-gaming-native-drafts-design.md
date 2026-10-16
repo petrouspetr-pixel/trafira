@@ -1,0 +1,11 @@
+# Gaming presets: native LuCI drafts
+
+User requirements: several platform presets for one device work together; creating/editing/deleting presets does not save configuration or restart service; native Save/Apply owns persistence and service effects; Reset discards unsaved preset changes; remove Preview/Apply-reviewed buttons; simplify Russian UX. No release or router deployment.
+
+Design: retain editable generated UCI sections and existing CLI compatibility. A read-only batch planner reuses the existing backend builder against a supplied native UCI draft. It returns a proposed config and owner metadata without invoking runtime prepare/validate, transactions or service activation. The frontend keeps operations only in memory until native map.save parses ordinary fields and applies the resulting UCI changes before the single native UCI save. Reset drops the operation queue. Tab changes/catalog refresh preserve it. Save failure keeps it available for retry.
+
+For one device identity (MAC + interface), platform-specific store rules form one group before that device's direct fallbacks. Selecting before/after manual rules sets the priority of the entire device group. Manual sections retain their relative order and content. Normalize existing preset groups during generation as well, so legacy saved presets do not retain the shadowing bug. Preserve IPv4/IPv6 selection, per-rule enabled state, edited-rule replacement guards, global enable/resume, removal and keep-as-ordinary behavior.
+
+UI: existing-preset table with clear platform, device and connection plus Edit/Delete; extra Keep-as-ordinary under details if retained. A simple platform/device/connection editor has Add/Update in draft and Cancel editing. Labels explain pending changes and system Save/Apply. No command mutation, commit polling, per-preset reload, preview buttons or cryptic conflict names.
+
+Implementation judgments: draft commands are read-only despite computing a candidate; inputs are bounded and validated; they never write real UCI config or invoke service hooks. Native LuCI credentials/ACL remain authoritative. Planner errors expose codes only. Existing manual preset edits require explicit confirmation before replacement/deletion. Scope is code and tests only.

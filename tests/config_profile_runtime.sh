@@ -87,6 +87,34 @@ for(let address in ["192.0.2.5","2001:db8::5"]) {
  let dns={...generated,route:{rules:generated.dns.rules,final:generated.dns.final}};
  assert(matcher.explain(dns,{...req,inbound:require("singbox.constants").SOURCE_DNS_INBOUND_TAG,query_type:"A"},{},{}).outbound=="fakeip-server","source-scoped store DNS receives FakeIP");
 }
+// Legacy interleaved presets are repaired by generation without modifying saved UCI.
+let epic=g.build({id:"epic",revision:1,domains:[{value:"epic.example",match:"suffix"}]},{device_ips:["192.0.2.5/32","2001:db8::5/128"],proxy_section:"vpn",placement:"before-device-routes",expected_digest:"test"},{digest:"test",devices:[{interface:"br-lan",mac:"02:00:00:00:00:01",ips:["192.0.2.5","2001:db8::5"]}],sections:built.config});
+assert(epic.valid,"second gaming platform");
+let manual={".name":"manual",".type":"section",action:"bypass",enabled:"1",fully_routed_ips:["192.0.2.5/32","2001:db8::5/128"]};
+let legacy={schema:1,name:"Legacy gaming",config:[gaming.config[0],...built.patch.sections,manual,...epic.patch.sections,filter(built.config,(s)=>s[".name"]=="vpn")[0]]};
+let saved=sprintf("%J",legacy);
+let generated_legacy=r.prepare(legacy,directory);
+assert(generated_legacy.success && r.hooks(legacy,directory).validate(generated_legacy.path),"legacy gaming generated");
+assert(sprintf("%J",legacy)==saved,"generator leaves source UCI unchanged");
+let combined=json(fs.readfile(directory+"/sing-box.json"));
+for(let address in ["192.0.2.5","2001:db8::5"]){
+ let req={source_ip:address,domain:"store.example",inbound:"tproxy-in",protocol:"tls",network:"tcp",port:443,destination_ip:"203.0.113.20"};
+ assert(matcher.explain(combined,req,{},{}).outbound==built.owner+"_store-out","Steam store still proxied");
+ assert(matcher.explain(combined,{...req,domain:"cdn.epic.example"},{},{}).outbound==epic.owner+"_store-out","Epic store precedes Steam direct and manual fallback for both families");
+ assert(matcher.explain(combined,{...req,domain:"unrelated.example"},{},{}).outbound=="bypass-out","other game traffic direct");
+}
+let disabled=json(saved);for(let section in disabled.config)if(section[".name"]==epic.owner+"_store")section.enabled="0";
+let disabled_stage=r.prepare(disabled,directory);
+assert(disabled_stage.success && r.hooks(disabled,directory).validate(disabled_stage.path),"disabled preset generation");
+assert(matcher.explain(json(fs.readfile(directory+"/sing-box.json")),{source_ip:"192.0.2.5",domain:"cdn.epic.example",inbound:"tproxy-in",protocol:"tls",network:"tcp",port:443,destination_ip:"203.0.113.20"},{},{}).outbound=="bypass-out","disabled store is never reenabled by normalization");
+let remaining=g.remove(built.owner,"delete",false,{sections:legacy.config});
+let remaining_doc={schema:1,name:"Remaining gaming",config:remaining.config},remaining_stage=r.prepare(remaining_doc,directory);
+assert(remaining.valid && remaining_stage.success && r.hooks(remaining_doc,directory).validate(remaining_stage.path),"remaining preset generated");
+// Manual priority intentionally remains where the user placed it when Steam is removed.
+let independent=g.build({id:"epic",revision:1,domains:[{value:"epic.example",match:"suffix"}]},{device_ips:["192.0.2.5/32","2001:db8::5/128"],proxy_section:"vpn",placement:"before-device-routes",expected_digest:"test"},{digest:"test",devices:[{interface:"br-lan",mac:"02:00:00:00:00:01",ips:["192.0.2.5","2001:db8::5"]}],sections:remaining.config});
+let independent_doc={schema:1,name:"Independent gaming",config:independent.config},independent_stage=r.prepare(independent_doc,directory);
+assert(independent_stage.success && r.hooks(independent_doc,directory).validate(independent_stage.path),"remaining preset moved before manual");
+assert(matcher.explain(json(fs.readfile(directory+"/sing-box.json")),{source_ip:"2001:db8::5",domain:"cdn.epic.example",inbound:"tproxy-in",protocol:"tls",network:"tcp",port:443,destination_ip:"203.0.113.20"},{},{}).outbound==epic.owner+"_store-out","removing Steam preserves Epic routing");
 fs.writefile(prepared.path,"changed");
 assert(!hooks.validate(prepared.path),"tampered candidate rejected");
 '

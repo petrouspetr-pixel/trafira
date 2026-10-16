@@ -5220,3 +5220,72 @@ msgstr ""
 
 msgid "IP addresses in section “%s”"
 msgstr ""
+
+msgid "Add a gaming preset"
+msgstr ""
+
+msgid "Add platforms to the list, then use Save & Apply below."
+msgstr ""
+
+msgid "Add to list"
+msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
+msgid "Cancel editing"
+msgstr ""
+
+msgid "Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes."
+msgstr ""
+
+msgid "Choose a platform, device addresses and connection, or cancel editing before saving."
+msgstr ""
+
+msgid "Device gaming rule priority"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Edit gaming preset"
+msgstr ""
+
+msgid "Editing was cancelled. Your changes have not been saved."
+msgstr ""
+
+msgid "Enable these addresses in device routing if needed"
+msgstr ""
+
+msgid "No gaming presets in the list yet."
+msgstr ""
+
+msgid "Reload the page before editing gaming presets."
+msgstr ""
+
+msgid "Replace"
+msgstr ""
+
+msgid "Replace edited preset"
+msgstr ""
+
+msgid "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together."
+msgstr ""
+
+msgid "The gaming draft could not be processed. Reduce the number of pending changes and try again."
+msgstr ""
+
+msgid "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first."
+msgstr ""
+
+msgid "Update in list"
+msgstr ""
+
+msgid "You do not have permission to change these settings."
+msgstr ""
+
+msgid "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply."
+msgstr ""
+
+msgid "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices."
+msgstr ""

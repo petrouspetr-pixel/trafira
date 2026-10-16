@@ -71,7 +71,13 @@ const readClash: Record<string, number> = {
 const readConfig: Record<string, string[]> = {
   profile_action: ['list', 'status', 'preview'],
   core_action: ['catalog', 'status'],
-  gaming_preset_action: ['catalog', 'status', 'preview', 'preview_remove'],
+  gaming_preset_action: [
+    'catalog',
+    'status',
+    'preview',
+    'preview_remove',
+    'plan',
+  ],
 };
 function readCommand(command: string, args: string[]) {
   if (command === '/usr/bin/trafira') {

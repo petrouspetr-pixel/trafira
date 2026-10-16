@@ -3784,3 +3784,72 @@ msgstr "Домены секции «%s»"
 
 msgid "IP addresses in section “%s”"
 msgstr "IP-адреса секции «%s»"
+
+msgid "Add a gaming preset"
+msgstr "Добавить игровой пресет"
+
+msgid "Add platforms to the list, then use Save & Apply below."
+msgstr "Добавьте нужные платформы в список, затем нажмите «Сохранить и применить» внизу страницы."
+
+msgid "Add to list"
+msgstr "Добавить в список"
+
+msgid "Advanced"
+msgstr "Дополнительно"
+
+msgid "Cancel editing"
+msgstr "Отменить редактирование"
+
+msgid "Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes."
+msgstr "Изменения ещё не применены. Нажмите «Сохранить и применить» внизу страницы, чтобы применить их вместе. «Сброс» отменяет несохранённые изменения."
+
+msgid "Choose a platform, device addresses and connection, or cancel editing before saving."
+msgstr "Перед сохранением выберите платформу, адреса устройства и подключение либо отмените редактирование."
+
+msgid "Device gaming rule priority"
+msgstr "Приоритет игровых правил устройства"
+
+msgid "Edit"
+msgstr "Изменить"
+
+msgid "Edit gaming preset"
+msgstr "Изменить игровой пресет"
+
+msgid "Editing was cancelled. Your changes have not been saved."
+msgstr "Редактирование отменено. Изменения не сохранены."
+
+msgid "Enable these addresses in device routing if needed"
+msgstr "При необходимости включить маршрутизацию устройств для этих адресов"
+
+msgid "No gaming presets in the list yet."
+msgstr "В списке пока нет игровых пресетов."
+
+msgid "Reload the page before editing gaming presets."
+msgstr "Обновите страницу перед редактированием игровых пресетов."
+
+msgid "Replace"
+msgstr "Заменить"
+
+msgid "Replace edited preset"
+msgstr "Заменить изменённый пресет"
+
+msgid "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together."
+msgstr "Магазины и сервисы учётных записей используют выбранное подключение. Остальной трафик идёт напрямую. Для одного устройства можно добавить несколько платформ — их правила работают вместе."
+
+msgid "The gaming draft could not be processed. Reduce the number of pending changes and try again."
+msgstr "Не удалось обработать черновик игровых пресетов. Сохраните меньше изменений за один раз и повторите попытку."
+
+msgid "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first."
+msgstr "Приоритет действует на все игровые пресеты этого устройства. Если обычные правила устройства стоят раньше, они могут выбрать маршрут первыми."
+
+msgid "Update in list"
+msgstr "Обновить в списке"
+
+msgid "You do not have permission to change these settings."
+msgstr "У вас нет прав на изменение этих настроек."
+
+msgid "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply."
+msgstr "Этот пресет был изменён вручную в «Секциях». При замене его правила будут созданы заново по выбранным настройкам, а ваши ручные правки этих правил — удалены. Другие пресеты и обычные секции сохранятся. Замена вступит в силу только после нажатия «Сохранить и применить»."
+
+msgid "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices."
+msgstr "Включите, если выбранные IP-адреса исключены из маршрутизации во вкладке «Устройства» — иначе игровые пресеты для них не сработают. После «Сохранить и применить» Trafira разрешит обработку только этих адресов, не затрагивая другие устройства. Исключение для целой подсети, MAC-адреса или интерфейса нужно изменить вручную во вкладке «Устройства»."
