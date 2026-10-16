@@ -441,7 +441,7 @@ function source_dns_inbound_matcher() {
 
 function ipv6_probe_matcher(settings) {
     if (option(settings, "dns_strategy", "prefer_ipv4") != "ipv4_only" ||
-        !bool_option(settings, "disable_ipv6_probes", false))
+        !bool_option(settings, "disable_ipv6_probes", true))
         return null;
     let hex4 = "[0-9a-f][0-9a-f][0-9a-f][0-9a-f]";
     return {
