@@ -18,6 +18,9 @@ let lock=require("service.operation_lock");
 let held=lock.acquire("child");
 assert(held,"nested child may borrow the owner's lock");
 lock.release(held);
+let read=lock.acquire_read();
+assert(read && read.borrowed,"nested catalog may borrow the owner's write lock");
+lock.release(read);
 UC
 cat >"$WORK_DIR/owner.uc" <<'UC'
 let fs=require("fs"),lock=require("service.operation_lock");

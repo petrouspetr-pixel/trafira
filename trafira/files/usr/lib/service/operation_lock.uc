@@ -34,8 +34,7 @@ function owned_by_ancestor() {
     return is_live_ancestor(owner);
 }
 
-function acquire(operation,allow_borrow,failure) {
-    if(type(failure)=="object") failure.busy=false;
+function open_lock() {
     let directory=fs.lstat(DIRECTORY);
     if(directory && directory.type!="directory") return null;
     // Providers run without root and must retain access to their own subfolders.
@@ -44,6 +43,21 @@ function acquire(operation,allow_borrow,failure) {
     let info=fs.lstat(LOCK);
     if(info && info.type!="file") return null;
     let file=fs.open(LOCK,"ae",384);
+    return file;
+}
+
+function acquire_read() {
+    let file=open_lock();
+    if(!file) return null;
+    // Readers share the same inode with writers and never change owner metadata.
+    if(file.lock("sn")) return {file,shared:true};
+    file.close();
+    return owned_by_ancestor()?{borrowed:true}:null;
+}
+
+function acquire(operation,allow_borrow,failure) {
+    if(type(failure)=="object") failure.busy=false;
+    let file=open_lock();
     if(!file) return null;
     if(!file.lock("xn")) {
         let error=fs.error();
@@ -71,8 +85,8 @@ function acquire(operation,allow_borrow,failure) {
 function release(handle) {
     if(!handle || handle.borrowed || !handle.file) return;
     // Delete metadata before unlocking; never unlink the stable lock inode.
-    fs.unlink(OWNER);
+    if(!handle.shared) fs.unlink(OWNER);
     handle.file.close();
     handle.file=null;
 }
-return {acquire,release,identity,is_live_ancestor};
+return {acquire,acquire_read,release,identity,is_live_ancestor};

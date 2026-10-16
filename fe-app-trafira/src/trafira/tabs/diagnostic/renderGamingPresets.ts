@@ -496,6 +496,8 @@ export const gamingPresetsPanel = {
           : connections.length === 1
             ? String(connections[0]['.name'])
             : '';
+        error.textContent = '';
+        error.className = 'hidden';
       } catch (cause) {
         if (!disposed) showError(cause);
       } finally {
