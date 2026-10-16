@@ -153,8 +153,8 @@ export const coreVersionsPanel = {
     );
     select.addEventListener('change', () => picker.select(select.value));
     host.replaceChildren(
-      E('section', { class: 'fkp_updates-page__core-versions' }, [
-        E('h3', {}, _('Sing-box versions')),
+      E('details', { class: 'fkp_updates-page__core-versions' }, [
+        E('summary', {}, _('Sing-box versions')),
         E(
           'p',
           { class: 'fkp_updates-page__core-versions-help' },
