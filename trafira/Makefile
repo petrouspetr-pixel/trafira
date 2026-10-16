@@ -1,6 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=trafira
+PKG_BUILD_DEPENDS:=ucode/host
 
 TRAFIRA_SOURCE_VERSION:=$(or $(TRAFIRA_PACKAGE_VERSION),$(TRAFIRA_VERSION))
 TRAFIRA_HAS_RELEASE_VERSION:=$(if $(filter dev,$(TRAFIRA_SOURCE_VERSION)),,$(TRAFIRA_SOURCE_VERSION))
@@ -77,6 +78,7 @@ define Package/trafira/install
 
 	$(INSTALL_DIR) $(1)/usr/lib/trafira
 	$(CP) ./files/usr/lib/. $(1)/usr/lib/trafira/
+	python3 ./compact-sources.py $(1) --ucode $(STAGING_DIR_HOSTPKG)/bin/ucode
 
 	sed -i -e 's/__COMPILED_VERSION_VARIABLE__/$(TRAFIRA_COMPILED_VERSION)/g' $(1)/usr/lib/trafira/core/constants.uc
 endef
