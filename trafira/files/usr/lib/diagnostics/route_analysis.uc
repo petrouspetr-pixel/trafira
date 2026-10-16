@@ -160,7 +160,7 @@ function load_sets(config,limitations) {
 }
 function load_background_sets(config,limitations,options) {
     let codec=require("diagnostics.route_decode_cache"),cache=require("singbox.ruleset_cache"),core=codec.identity();
-    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],seen={},memo={},pending={},deadline=clock()[0]+120;
+    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],seen={},memo={},pending={},deadline=min(clock()[0]+120,options.deadline||clock()[0]+120);
     let report={basis:"local",live_verified:false,available:0,unavailable:0,cached:0,unavailable_reasons:[]};
     if(length(rules)>256)return {error:"too_many_rule_sets"};
     for(let rule in rules)if(type(rule.tag)=="string") {
@@ -280,14 +280,17 @@ function explain(raw,options) {
     // Do not block runtime reloads during a potentially long background calculation.
     let captured=sprintf("%J",applied);
     if(options.background && read_guard){read_guard.close();read_guard=null;}
+    // Leave time inside the supervisor's 125s budget for DNS, selector lookup
+    // and the final snapshot verification; address count cannot multiply it.
+    let analysis_deadline=clock()[0]+110;
     let dns_query=active?require("diagnostics.route_dns").resolve(config,r,settings,options.workspace):{performed:false,origin:"none",addresses:[]};
     let requests=[];
     for(let address in length(dns_query.addresses||[])?dns_query.addresses:[null])
         push(requests,{domain:lc(r.domain),source_ip:r.source.ip,destination_ip:address,port:r.port,network:r.network,
             protocol:r.protocol,source_mac_address:r.source.mac,inbound:r.source.kind=="router"?(ip.ip_family(address)==6?"router-tproxy6-in":"router-tproxy-in"):(ip.ip_family(r.source.ip)==6?"tproxy6-in":"tproxy-in")});
-    let loaded=options.background?load_background_sets(config,limitations,{...options,scenarios:requests}):load_sets(config,limitations),sets=loaded.sets;
+    let loaded=options.background?load_background_sets(config,limitations,{...options,scenarios:requests,deadline:analysis_deadline}):load_sets(config,limitations),sets=loaded.sets;
     if(loaded.error)return error(loaded.error);
-    let request=requests[0],destinations=[],route=null,selected=null;
+    let request=requests[0],destinations=[],route=null,selected=null,nodes={};
     for(let scenario in requests) {
         let input={...r,destination_ip:scenario.destination_ip};
         let answer=!active?decision("indeterminate","applied_capture_state_unavailable"):fake_destination(config,scenario.destination_ip)?decision("indeterminate","fakeip_is_not_real_destination"):gate(settings,input,config) || matcher.explain(config,scenario,origins || {},sets);
@@ -298,7 +301,8 @@ function explain(raw,options) {
             }
             else if(dns_query.performed)answer=decision("indeterminate","dns_"+dns_query.status);
         }
-        let node=answer.outbound?selected_node(config,answer.outbound):null;
+        if(answer.outbound && !nodes[answer.outbound])nodes[answer.outbound]={node:selected_node(config,answer.outbound)};
+        let node=answer.outbound?nodes[answer.outbound].node:null;
         if(!route){route=answer;selected=node;}
         if(scenario.destination_ip)push(destinations,{ip:scenario.destination_ip,decision:{...answer,trace:slice(answer.trace,0,40),trace_truncated:answer.trace_truncated || length(answer.trace)>40},connection:connection_info(config,answer,node)});
     }
