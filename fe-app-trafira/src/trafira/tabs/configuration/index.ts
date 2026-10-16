@@ -1,4 +1,6 @@
 import { gamingSwitchChanges } from './gamingSwitch';
+import { gamingUciChanges, type GamingAdapter } from './gamingDraft';
+import { gamingDraft } from './gamingDraft.service';
 import { watchPanel } from '../../helpers/panelLifecycle';
 import { snapshots } from '../diagnostic/renderSnapshots';
 import { profilesPanel } from '../diagnostic/renderProfiles';
@@ -18,6 +20,19 @@ const watchers = new Map<keyof typeof panels, () => void>();
 
 export const ConfigurationPanels = {
   gamingSwitchChanges,
+  gamingUciChanges,
+  bindGamingDraft(adapter: GamingAdapter) {
+    gamingDraft.bind(adapter);
+  },
+  saveGamingDraft<T>(save: () => Promise<T>) {
+    return gamingDraft.save(save);
+  },
+  flushGamingDraft() {
+    return gamingDraft.flush();
+  },
+  resetGamingDraft() {
+    gamingDraft.reset();
+  },
   init(kind: keyof typeof panels, canWrite = true) {
     watchers.get(kind)?.();
     const panel = panels[kind];

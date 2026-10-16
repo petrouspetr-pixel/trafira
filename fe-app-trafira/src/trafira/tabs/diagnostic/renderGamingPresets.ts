@@ -1,12 +1,14 @@
-import { executeShellCommand } from '../../../helpers/executeShellCommand';
 import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
+import { confirmAction } from '../../helpers/configurationSync';
 import {
-  confirmAction,
-  confirmConfigurationReplacement,
-  reloadAfterConfigurationCommit,
-  showConfigurationCommitNotice,
-} from '../../helpers/configurationSync';
-import { GamingPresetController, GamingState } from './gamingPresetPanel';
+  gamingCommand,
+  gamingDraft,
+} from '../configuration/gamingDraft.service';
+import type {
+  GamingOperation,
+  GamingSection,
+} from '../configuration/gamingDraft';
+
 interface Device {
   name: string;
   interface: string;
@@ -14,33 +16,93 @@ interface Device {
   ips: string[];
 }
 interface Catalog {
-  digest: string;
-  enabled?: boolean;
   devices: Device[];
-  presets: Array<{ id: string; revision: number; checked_at: string }>;
-  proxies: Array<{ id: string; label: string }>;
-  owners: Array<{
-    owner: string;
-    platform: string;
-    edited: boolean;
-    addresses?: string[];
-    connection?: string;
-  }>;
+  presets: Array<{ id: string }>;
 }
-async function command(
-  request: Record<string, unknown>,
-): Promise<Record<string, unknown>> {
-  const response = await executeShellCommand({
-    command: '/usr/bin/trafira-config',
-    args: ['gaming_preset_action', JSON.stringify(request)],
-    timeout: 30000,
-  });
-  if (response.code) throw new Error('Gaming preset request failed');
-  return JSON.parse(response.stdout) as Record<string, unknown>;
+interface Owner {
+  owner: string;
+  platform: string;
+  addresses: string[];
+  connection: string;
+  placement: string;
+  edited: boolean;
+}
+const platformName = (id: string) =>
+  (
+    ({
+      steam: 'Steam',
+      playstation: 'PlayStation',
+      xbox: 'Xbox',
+      epic: 'Epic Games',
+    }) as Record<string, string>
+  )[id] || id;
+const strings = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === 'string')
+    : [];
+function owners(sections: GamingSection[]) {
+  const result = new Map<string, Owner>();
+  for (const section of sections) {
+    const key = String(section.preset_owner || '');
+    if (!key) continue;
+    const owner = result.get(key) || {
+      owner: key,
+      platform: String(section.preset_platform || ''),
+      addresses: [],
+      connection: '',
+      placement: String(section.preset_placement || 'after-device-routes'),
+      edited: false,
+    };
+    owner.addresses = [
+      ...new Set([
+        ...owner.addresses,
+        ...strings(section.source_ip_cidr),
+        ...strings(section.fully_routed_ips),
+      ]),
+    ];
+    if (section.outbound_detour_section)
+      owner.connection = String(section.outbound_detour_section);
+    const clean: GamingSection = {};
+    for (const field of Object.keys(section).sort()) {
+      if (field.startsWith('.') || field.startsWith('preset_')) continue;
+      const value = section[field];
+      if (Array.isArray(value) && !value.length) continue;
+      const scalar = (v: unknown) =>
+        v === true ? '1' : v === false ? '0' : String(v);
+      clean[field] = Array.isArray(value) ? value.map(scalar) : scalar(value);
+    }
+    try {
+      owner.edited ||=
+        JSON.stringify(JSON.parse(String(section.preset_original_digest))) !==
+        JSON.stringify(clean);
+    } catch {
+      owner.edited = true;
+    }
+    result.set(key, owner);
+  }
+  const manual = sections.findIndex(
+    (s) => s['.type'] === 'section' && !s.preset_owner,
+  );
+  for (const item of result.values()) {
+    const identity = item.owner.replace(
+      /^game_(steam|playstation|xbox|epic)_/,
+      '',
+    );
+    const first = sections.findIndex(
+      (s) =>
+        typeof s.preset_owner === 'string' &&
+        s.preset_owner.replace(/^game_(steam|playstation|xbox|epic)_/, '') ===
+          identity,
+    );
+    item.placement =
+      manual < 0 || first < manual
+        ? 'before-device-routes'
+        : 'after-device-routes';
+  }
+  return [...result.values()];
 }
 function message(code: string) {
   const messages: Record<string, string> = {
-    conflict: _('Configuration changed. Review the differences again.'),
     alice_bypass: _(
       'Device routing bypasses this device. Explicitly enable its selected addresses before applying.',
     ),
@@ -54,432 +116,341 @@ function message(code: string) {
       'The selected address is no longer known. Refresh the device list.',
     ),
     invalid_proxy: _('Select an enabled connection rule.'),
-    candidate_check_failed: _(
-      'The generated configuration did not pass validation.',
-    ),
-    gaming_disabled: _(
-      'Apply the gaming preset switch first, then create or update presets.',
-    ),
     busy: _('Another configuration operation is already running.'),
-    rollback_failed: _(
-      'Restoration failed. Check the service before continuing.',
+    draft_unavailable: _('Reload the page before editing gaming presets.'),
+    incomplete_editor: _(
+      'Choose a platform, device addresses and connection, or cancel editing before saving.',
+    ),
+    editor_cancelled: _(
+      'Editing was cancelled. Your changes have not been saved.',
+    ),
+    permission_denied: _(
+      'You do not have permission to change these settings.',
+    ),
+    invalid_request: _(
+      'The gaming draft could not be processed. Reduce the number of pending changes and try again.',
     ),
   };
   return (
     messages[code] ||
-    _('The operation failed. Refresh the page and review the settings.') +
-      ' (' +
-      code +
-      ')'
+    _('The operation failed. Refresh the page and review the settings.')
   );
 }
 let mounted: {
-  controller: GamingPresetController;
-  timer: number;
-  closeProgress: () => void;
+  host: HTMLElement;
+  activate: (canWrite: boolean) => void;
+  dispose: () => void;
 } | null = null;
-let generation = 0;
-function platformName(id: string) {
-  return (
-    (
-      {
-        steam: 'Steam',
-        playstation: 'PlayStation',
-        xbox: 'Xbox',
-        epic: 'Epic Games',
-      } as Record<string, string>
-    )[id] || id
-  );
-}
-function rows(value: unknown): Record<string, unknown>[] {
-  return Array.isArray(value)
-    ? value.filter(
-        (row): row is Record<string, unknown> =>
-          !!row && typeof row === 'object',
-      )
-    : [];
-}
-function strings(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : [];
-}
 export const gamingPresetsPanel = {
   mount(canWrite = true) {
-    this.unmount();
     const host = document.getElementById('trafira-gaming-presets');
     if (!host) return;
-    showConfigurationCommitNotice();
-    const mine = generation;
-    let catalog: Catalog | null = null;
-    let state: GamingState;
-    let observedRunning = false;
-    let loading = false;
-    let confirming = false;
-    let shownRemoval: Record<string, unknown> | null = null;
+    if (mounted?.host === host) {
+      mounted.activate(canWrite);
+      return;
+    }
+    mounted?.dispose();
+    let disposed = false,
+      loading = false,
+      dirty = false,
+      editing: Owner | null = null;
+    let catalog: Catalog | null = null,
+      epoch = gamingDraft.epoch;
     const platform = E('select', {
-        id: 'trafira-game-platform',
-      }) as HTMLSelectElement,
-      device = E('select', { id: 'trafira-game-device' }) as HTMLSelectElement,
-      proxy = E('select', { id: 'trafira-game-proxy' }) as HTMLSelectElement;
-    const placement = E('select', { id: 'trafira-game-priority' }, [
-      E('option', { value: '' }, _('Choose rule priority')),
-      E(
-        'option',
-        { value: 'before-device-routes' },
-        _('Before existing device rules'),
-      ),
-      E(
-        'option',
-        { value: 'after-device-routes' },
-        _('After existing device rules'),
-      ),
-    ]) as HTMLSelectElement;
-    const content = E('div', { id: 'trafira-game-content' });
-    const addresses = E('div', { class: 'trafira-form-controls' }),
-      output = E('div', {}),
-      status = E('p', {}),
-      existing = E('div', {});
-    const hint = E('p', { role: 'status' });
-    const addressRow = row(_('Device IP addresses'), '', [addresses]);
-    const hintRow = row('', '', [hint]);
-    const resultRow = row('', '', [E('div', {}, [status, output])]);
-    const existingRow = row(_('Installed gaming presets'), '', [existing]);
-    const enable = E('input', { type: 'checkbox' }) as HTMLInputElement,
-      replace = E('input', { type: 'checkbox' }) as HTMLInputElement;
-    let apply: HTMLButtonElement;
-    let preview: HTMLButtonElement;
-    function button(label: string, click: () => void) {
-      const b = E(
+      id: 'trafira-game-platform',
+      class: 'cbi-input-select',
+    }) as HTMLSelectElement;
+    const device = E('select', {
+      id: 'trafira-game-device',
+      class: 'cbi-input-select',
+    }) as HTMLSelectElement;
+    const proxy = E('select', {
+      id: 'trafira-game-proxy',
+      class: 'cbi-input-select',
+    }) as HTMLSelectElement;
+    const placement = E(
+      'select',
+      { id: 'trafira-game-priority', class: 'cbi-input-select' },
+      [
+        E(
+          'option',
+          { value: 'after-device-routes' },
+          _('After existing device rules'),
+        ),
+        E(
+          'option',
+          { value: 'before-device-routes' },
+          _('Before existing device rules'),
+        ),
+      ],
+    ) as HTMLSelectElement;
+    const addresses = E('div', { class: 'trafira-form-controls' });
+    const enable = E('input', { type: 'checkbox' }) as HTMLInputElement;
+    const status = E('p', { role: 'status', 'aria-live': 'polite' });
+    const error = E('p', {
+      role: 'alert',
+      class: 'alert-message error hidden',
+    });
+    const existing = E('div', {}),
+      heading = E('h4', {}, _('Add a gaming preset'));
+    function button(label: string, click: () => void, danger = false) {
+      return E(
         'button',
-        { type: 'button', class: 'cbi-button cbi-button-action', click },
+        {
+          type: 'button',
+          class: danger
+            ? 'cbi-button cbi-button-remove'
+            : 'cbi-button cbi-button-action',
+          click,
+        },
         label,
       ) as HTMLButtonElement;
-      return b;
+    }
+    const cancel = button(_('Cancel editing'), () => resetEditor());
+    const add = button(_('Add to list'), () => {
+      void submit().catch(showError);
+    });
+    function showError(cause: unknown) {
+      error.textContent = message(
+        cause instanceof Error ? cause.message : 'request_failed',
+      );
+      error.className = 'alert-message error';
+    }
+    function selectedAddresses() {
+      return Array.from(
+        addresses.querySelectorAll<HTMLInputElement>('input:checked'),
+      ).map((input) => input.value);
+    }
+    function ready() {
+      return Boolean(
+        platform.value &&
+          device.value !== '' &&
+          proxy.value &&
+          selectedAddresses().length,
+      );
+    }
+    function resetEditor() {
+      dirty = false;
+      editing = null;
+      platform.value = '';
+      device.value = '';
+      addresses.replaceChildren();
+      enable.checked = false;
+      error.className = 'hidden';
+      update();
+    }
+    function showAddresses(selected?: string[]) {
+      addresses.replaceChildren();
+      const entry =
+        device.value === '' ? null : catalog?.devices[Number(device.value)];
+      if (entry && catalog) {
+        const values = [
+          ...new Set(
+            catalog.devices
+              .filter(
+                (d) => d.mac === entry.mac && d.interface === entry.interface,
+              )
+              .flatMap((d) => d.ips),
+          ),
+        ];
+        for (const address of values) {
+          const input = E('input', {
+            type: 'checkbox',
+            value: address,
+          }) as HTMLInputElement;
+          input.checked = selected
+            ? selected.some((s) => s.split('/')[0] === address)
+            : entry.ips.includes(address);
+          input.addEventListener('change', () => {
+            dirty = true;
+            update();
+          });
+          addresses.append(E('label', {}, [input, ' ' + address]));
+        }
+      }
+      update();
+    }
+    async function submit() {
+      if (!dirty) return;
+      if (!canWrite) throw Error('permission_denied');
+      if (!ready()) throw Error('incomplete_editor');
+      if (
+        editing?.edited &&
+        !(await confirmAction(
+          _('Replace edited preset'),
+          _(
+            'These rules were edited. Confirm replacement or keep them as ordinary rules.',
+          ),
+          _('Replace'),
+        ))
+      )
+        throw Error('editor_cancelled');
+      await gamingDraft.stage({
+        action: 'upsert',
+        preset: platform.value,
+        device_ips: selectedAddresses(),
+        proxy_section: proxy.value,
+        placement: placement.value,
+        enable_device: enable.checked,
+        replace_edited: Boolean(editing?.edited),
+      });
+      resetEditor();
+    }
+    async function remove(owner: Owner, keep = false) {
+      if (!canWrite || gamingDraft.busy) return;
+      if (
+        owner.edited &&
+        !(await confirmAction(
+          keep ? _('Keep as ordinary rules') : _('Delete gaming preset'),
+          _(
+            'These rules were edited. Confirm replacement or keep them as ordinary rules.',
+          ),
+          keep ? _('Keep as ordinary rules') : _('Delete'),
+        ))
+      )
+        return;
+      const operation: GamingOperation = {
+        action: 'remove',
+        owner: owner.owner,
+        mode: keep ? 'keep' : 'delete',
+        confirm: owner.edited,
+      };
+      try {
+        await gamingDraft.stage(operation);
+        if (editing?.owner === owner.owner) resetEditor();
+      } catch (cause) {
+        showError(cause);
+      }
+    }
+    function edit(owner: Owner) {
+      editing = owner;
+      dirty = false;
+      platform.value = owner.platform;
+      proxy.value = owner.connection;
+      placement.value = owner.placement;
+      const index =
+        catalog?.devices.findIndex((d) =>
+          d.ips.some((ip) =>
+            owner.addresses.some((s) => s.split('/')[0] === ip),
+          ),
+        ) ?? -1;
+      device.value = index >= 0 ? String(index) : '';
+      showAddresses(owner.addresses);
+      update();
     }
     function update() {
-      const busy = loading || confirming || state?.busy || state?.running;
-      for (const b of Array.from(host!.querySelectorAll('button')))
-        b.disabled = !!busy;
-      // Native LuCI depends() mounts this panel only while the current form flag is on.
-      // The saved catalog flag may still be off until the user explicitly applies changes.
-      for (const input of [platform, device, proxy, placement, enable, replace])
-        input.disabled = !!busy;
-      for (const input of Array.from(addresses.querySelectorAll('input')))
-        input.disabled = !!busy;
-      const ready =
-        !!catalog &&
-        !!platform.value &&
-        device.value !== '' &&
-        !!proxy.value &&
-        !!placement.value &&
-        addresses.querySelectorAll('input:checked').length > 0;
-      if (preview) preview.disabled = !!busy || !ready;
-      if (apply) {
-        apply.textContent =
-          state?.preview?.operation === 'preview_remove'
-            ? state.preview.mode === 'keep'
-              ? _('Keep as ordinary rules')
-              : _('Delete')
-            : _('Apply reviewed changes');
-        apply.disabled =
-          !canWrite || !!busy || state?.preview?.applicable !== true;
+      if (disposed) return;
+      if (epoch !== gamingDraft.epoch) {
+        epoch = gamingDraft.epoch;
+        dirty = false;
+        editing = null;
+        platform.value = '';
+        device.value = '';
+        addresses.replaceChildren();
       }
-      hint.textContent = !catalog
-        ? ''
-        : !catalog.devices.length
-          ? _(
-              'No known devices. Connect the device to the router and refresh the list.',
-            ) +
-            (!catalog.proxies.length
-              ? ' ' + _('No enabled connection rules. Add a connection first.')
-              : '')
-          : !catalog.proxies.length
-            ? _('No enabled connection rules. Add a connection first.')
-            : !catalog.presets.length
-              ? _('No gaming presets are available.')
-              : ready
-                ? ''
-                : _(
-                    'Choose a platform, device addresses, connection and rule priority before previewing.',
-                  );
-      addressRow.className =
-        'cbi-value' +
-        (addresses.querySelectorAll('input').length ? '' : ' hidden');
-      hintRow.className = 'cbi-value' + (hint.textContent ? '' : ' hidden');
-      existingRow.className =
-        'cbi-value' + (existing.children.length ? '' : ' hidden');
-      resultRow.className =
-        'cbi-value' +
-        (status.textContent || output.children.length ? '' : ' hidden');
-    }
-    let progressNode: HTMLElement | null = null;
-    let progressPhase = 'idle';
-    let dismissedPhase = '';
-    let notifiedError = '';
-    const closeProgress = () => {
-      if (progressNode?.isConnected) ui.hideModal();
-      progressNode = null;
-      progressPhase = 'idle';
-    };
-    const showProgress = (next: GamingState) => {
-      const phase = next.running
-        ? 'applying'
-        : next.busy
-          ? next.phase || 'idle'
-          : 'idle';
-      if (phase === 'idle') {
-        closeProgress();
-        dismissedPhase = '';
-        return;
+      const busy = loading || gamingDraft.busy;
+      for (const input of [platform, device, proxy, placement, enable])
+        input.disabled = !canWrite || busy;
+      platform.disabled ||= Boolean(editing);
+      device.disabled ||= Boolean(editing);
+      for (const input of addresses.querySelectorAll<HTMLInputElement>('input'))
+        input.disabled = !canWrite || busy;
+      add.disabled = !canWrite || busy || !ready() || !dirty;
+      add.textContent = editing ? _('Update in list') : _('Add to list');
+      cancel.hidden = !editing && !dirty;
+      cancel.disabled = busy;
+      heading.textContent = editing
+        ? _('Edit gaming preset')
+        : _('Add a gaming preset');
+      status.textContent = gamingDraft.pending
+        ? _(
+            'Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.',
+          )
+        : _('Add platforms to the list, then use Save & Apply below.');
+      existing.replaceChildren();
+      let sections: GamingSection[];
+      try {
+        sections = gamingDraft.sections();
+      } catch {
+        sections = [];
       }
-      if (dismissedPhase === phase || progressPhase === phase) return;
-      closeProgress();
-      progressPhase = phase;
-      progressNode = E('div', {}, [
-        E(
-          'p',
-          { class: 'spinning' },
-          phase === 'checking'
-            ? _(
-                'Please wait while Trafira checks the proposed configuration. Your settings have not been changed.',
-              )
-            : _(
-                'Please wait while Trafira saves and applies the configuration. The service may restart briefly.',
-              ),
-        ),
-        E('div', { class: 'right' }, [
+      const list = owners(sections);
+      if (list.length) {
+        const table = E('table', { class: 'table cbi-section-table' }, [
           E(
-            'button',
-            {
-              type: 'button',
-              class: 'btn cbi-button',
-              click: () => {
-                dismissedPhase = phase;
-                closeProgress();
-              },
+            'tr',
+            { class: 'tr table-titles' },
+            [_('Platform'), _('Device'), _('Connection'), _('Actions')].map(
+              (s) => E('th', { class: 'th' }, s),
+            ),
+          ),
+        ]);
+        for (const owner of list) {
+          const editButton = button(_('Edit'), () => edit(owner));
+          const deleteButton = button(
+            _('Delete'),
+            () => {
+              void remove(owner);
             },
-            _('Continue in background'),
-          ),
-        ]),
-      ]);
-      ui.showModal(
-        phase === 'checking'
-          ? _('Checking configuration...')
-          : _('Applying configuration...'),
-        progressNode,
-      );
-    };
-    const controller = new GamingPresetController(command, (next) => {
-      if (mine !== generation) return;
-      const wasRunning = observedRunning;
-      observedRunning = next.running;
-      state = next;
-      showProgress(next);
-      if (next.error && next.error !== notifiedError)
-        ui.addNotification(
-          _('Gaming presets'),
-          E('p', {}, message(next.error)),
-          'danger',
-        );
-      notifiedError = next.error;
-      status.textContent = state.error
-        ? message(state.error)
-        : state.running
-          ? _('Applying configuration. You can reconnect to this page.')
-          : state.busy && state.phase !== 'idle'
-            ? state.phase === 'applying'
-              ? _('Applying configuration...')
-              : _('Checking configuration...')
-            : '';
-      output.replaceChildren();
-      if (state.preview) {
-        const p = state.preview;
-        output.append(
-          E(
-            'p',
-            {},
-            p.applicable
-              ? _('Configuration validation passed. Review the changes below.')
-              : _('The generated configuration did not pass validation.'),
-          ),
-        );
-        for (const route of rows(p.routes)) {
-          const domains = [
-            ...strings(route.domain),
-            ...strings(route.domain_suffix).map((name) => '*.' + name),
-          ];
-          const target = String(route.target || '');
-          const label =
-            target === 'direct'
-              ? _('Direct connection')
-              : catalog?.proxies.find((item) => item.id === target)?.label ||
-                target;
-          output.append(
-            E(
-              'p',
-              {},
-              `${strings(route.source).join(', ')}: ${domains.length ? domains.join(', ') : _('Other traffic')} → ${label}`,
-            ),
+            true,
+          );
+          editButton.disabled = deleteButton.disabled = !canWrite || busy;
+          const keep = button(_('Keep as ordinary rules'), () => {
+            void remove(owner, true);
+          });
+          keep.disabled =
+            !canWrite || busy || !gamingDraft.savedOwner(owner.owner);
+          table.append(
+            E('tr', { class: 'tr' }, [
+              E(
+                'td',
+                { class: 'td' },
+                platformName(owner.platform) +
+                  (owner.edited ? ' / ' + _('Edited') : ''),
+              ),
+              E('td', { class: 'td' }, owner.addresses.join(', ')),
+              E(
+                'td',
+                { class: 'td' },
+                String(
+                  sections.find((s) => s['.name'] === owner.connection)
+                    ?.label || owner.connection,
+                ),
+              ),
+              E('td', { class: 'td' }, [
+                E('div', { class: 'trafira-form-controls' }, [
+                  editButton,
+                  deleteButton,
+                ]),
+                E('details', {}, [E('summary', {}, _('Advanced')), keep]),
+              ]),
+            ]),
           );
         }
-        const changes = rows(p.changes);
-        output.append(
-          E(
-            'p',
-            {},
-            _('Changed rules') +
-              ': ' +
-              new Set(changes.map((change) => String(change.section || '')))
-                .size,
-          ),
-        );
-        for (const conflict of strings(p.conflicts)) {
-          const description = conflict.startsWith('existing_device_routes:')
-            ? _(
-                'An existing device rule may overlap. The selected priority determines which rule takes effect.',
-              ) +
-              ' ' +
-              conflict.slice('existing_device_routes:'.length)
-            : conflict === 'alice_device_enabled'
-              ? _('Device routing will be enabled for the selected addresses.')
-              : message(conflict);
-          output.append(
-            E('p', { class: 'alert-message warning' }, description),
-          );
-        }
-        if (rows(p.checks).some((check) => check.status === 'indeterminate'))
-          output.append(
-            E(
-              'p',
-              {},
-              _(
-                'Some routes could not be fully verified. Review existing rules and saved list copies.',
-              ),
-            ),
-          );
-        // Details remain optional; all backend text goes through text nodes.
-        output.append(
-          E('details', {}, [
-            E('summary', {}, _('Technical details')),
-            E(
-              'pre',
-              {
-                style:
-                  'white-space:pre-wrap;overflow-wrap:anywhere;max-height:24em;overflow:auto',
-              },
-              JSON.stringify(
-                {
-                  routes: p.routes,
-                  changes: p.changes,
-                  conflicts: p.conflicts,
-                  checks: p.checks,
-                },
-                null,
-                2,
-              ),
-            ),
-          ]),
-        );
-      }
-      update();
-      if (
-        canWrite &&
-        state.preview?.operation === 'preview_remove' &&
-        state.preview.mode === 'delete' &&
-        state.preview.applicable &&
-        shownRemoval !== state.preview
-      ) {
-        const removal = state.preview;
-        shownRemoval = removal;
-        const owner = catalog?.owners.find(
-          (item) => item.owner === removal.owner,
-        );
-        confirming = true;
-        update();
-        void confirmAction(
-          _('Delete gaming preset'),
-          E('div', {}, [
-            E(
-              'p',
-              {},
-              owner
-                ? `${platformName(owner.platform)} · ${owner.addresses?.join(', ') || owner.owner}`
-                : '',
-            ),
-            E(
-              'p',
-              {},
-              _(
-                'The preset rules will be removed. Other settings will remain unchanged.',
-              ),
-            ),
-            ...(owner?.edited
-              ? [E('p', { class: 'alert-message warning' }, _('Edited'))]
-              : []),
-            output.cloneNode(true),
-          ]),
-          _('Delete'),
-        ).then((accepted) => {
-          if (mine !== generation) return;
-          confirming = false;
-          if (accepted && canWrite && state.preview === removal)
-            void controller.apply();
-          else controller.invalidate();
-          update();
-        });
-      }
-      if (state.committed) reloadAfterConfigurationCommit();
-      else if (wasRunning && !state.running && !state.error) void refresh();
-    });
-    function showAddresses() {
-      controller.invalidate();
-      addresses.replaceChildren();
-      const selected = catalog?.devices[Number(device.value)];
-      if (device.value === '' || !selected) {
-        update();
-        return;
-      }
-      // Never silently group every address with a shared MAC (proxy ARP is possible).
-      const candidates = catalog!.devices.filter(
-        (d) => d.mac === selected.mac && d.interface === selected.interface,
-      );
-      const values = [...new Set(candidates.flatMap((d) => d.ips))];
-      for (const address of values) {
-        const input = E('input', {
-          type: 'checkbox',
-          value: address,
-        }) as HTMLInputElement;
-        input.checked = values.length === 1;
-        input.addEventListener('change', () => controller.invalidate());
-        addresses.append(
-          E('label', { class: 'cbi-checkbox' }, [input, ' ' + address]),
-        );
-      }
-      update();
+        existing.append(table);
+      } else
+        existing.append(E('p', {}, _('No gaming presets in the list yet.')));
     }
     async function refresh() {
-      if (mine !== generation || loading || state?.busy || state?.running)
-        return;
-      const previousPlatform = platform.value;
-      const previousProxy = proxy.value;
-      const previousPlacement = placement.value;
-      const previousDevice =
-        device.value === '' ? null : catalog?.devices[Number(device.value)];
-      const selectedAddresses = new Set(
-        Array.from(
-          addresses.querySelectorAll<HTMLInputElement>('input:checked'),
-        ).map((input) => input.value),
-      );
+      if (loading || gamingDraft.busy) return;
       loading = true;
-      controller.invalidate();
       update();
       try {
-        const result = await command({ action: 'catalog' });
-        if (mine !== generation) return;
-        if (result.success !== true)
-          throw new Error(String(result.error || 'catalog_unavailable'));
+        const priorDevice =
+          device.value === '' ? null : catalog?.devices[Number(device.value)];
+        const priorAddresses = selectedAddresses();
+        const result = await gamingCommand({ action: 'catalog' });
+        if (disposed) return;
         catalog = result as unknown as Catalog;
+        const previousPlatform = platform.value;
+        const nextDevice = priorDevice
+          ? catalog.devices.findIndex(
+              (d) =>
+                d.mac === priorDevice.mac &&
+                d.interface === priorDevice.interface &&
+                d.ips.some((ip) => priorDevice.ips.includes(ip)),
+            )
+          : -1;
         platform.replaceChildren(
           E('option', { value: '' }, _('Choose a platform')),
           ...catalog.presets.map((p) =>
@@ -492,249 +463,114 @@ export const gamingPresetsPanel = {
             E(
               'option',
               { value: String(i) },
-              `${d.name || d.mac} · ${d.interface} · ${d.ips.join(', ')}`,
+              `${d.name || d.mac} / ${d.interface} / ${d.ips.join(', ')}`,
             ),
           ),
         );
+        platform.value = previousPlatform;
+        device.value = nextDevice >= 0 ? String(nextDevice) : '';
+        showAddresses(priorAddresses);
+        const sections = gamingDraft.sections();
+        const connections = sections.filter(
+          (s) =>
+            s['.type'] === 'section' &&
+            !s.preset_owner &&
+            s.enabled !== '0' &&
+            ['connection', 'proxy', 'vpn', 'outbound'].includes(
+              String(s.action),
+            ),
+        );
+        const priorProxy = proxy.value;
         proxy.replaceChildren(
           E('option', { value: '' }, _('Select a connection')),
-          ...catalog.proxies.map((p) =>
-            E('option', { value: p.id }, p.label || p.id),
+          ...connections.map((s) =>
+            E(
+              'option',
+              { value: String(s['.name']) },
+              String(s.label || s['.name']),
+            ),
           ),
         );
-        if (catalog.presets.some((p) => p.id === previousPlatform))
-          platform.value = previousPlatform;
-        if (catalog.proxies.some((p) => p.id === previousProxy))
-          proxy.value = previousProxy;
-        else if (catalog.proxies.length === 1)
-          proxy.value = catalog.proxies[0].id;
-        placement.value = previousPlacement || 'after-device-routes';
-        const retainedDevice = previousDevice
-          ? catalog.devices.findIndex(
-              (d) =>
-                d.mac === previousDevice.mac &&
-                d.interface === previousDevice.interface &&
-                d.ips.length === previousDevice.ips.length &&
-                d.ips.every((address) => previousDevice.ips.includes(address)),
-            )
-          : -1;
-        device.value = retainedDevice >= 0 ? String(retainedDevice) : '';
-        showAddresses();
-        if (retainedDevice >= 0)
-          for (const input of addresses.querySelectorAll<HTMLInputElement>(
-            'input',
-          ))
-            input.checked = selectedAddresses.has(input.value);
-        existing.replaceChildren();
-        if (catalog.owners.length) {
-          const table = E('table', { class: 'table cbi-section-table' }, [
-            E(
-              'tr',
-              { class: 'tr table-titles' },
-              [_('Platform'), _('Device'), _('Connection'), _('Actions')].map(
-                (label) => E('th', { class: 'th' }, label),
-              ),
-            ),
-          ]);
-          for (const owner of catalog.owners) {
-            const keep = button(_('Keep as ordinary rules'), () => {
-              void controller.preview(
-                { owner: owner.owner, mode: 'keep' },
-                catalog!.digest,
-              );
-            });
-            const remove = button(_('Delete'), async () => {
-              void controller.preview(
-                { owner: owner.owner, mode: 'delete', confirm: owner.edited },
-                catalog!.digest,
-              );
-            });
-            table.append(
-              E('tr', { class: 'tr' }, [
-                E(
-                  'td',
-                  { class: 'td' },
-                  platformName(owner.platform) +
-                    (owner.edited ? ' · ' + _('Edited') : ''),
-                ),
-                E(
-                  'td',
-                  { class: 'td' },
-                  owner.addresses?.join(', ') || owner.owner,
-                ),
-                E(
-                  'td',
-                  { class: 'td' },
-                  catalog!.proxies.find((p) => p.id === owner.connection)
-                    ?.label ||
-                    owner.connection ||
-                    '—',
-                ),
-                E(
-                  'td',
-                  { class: 'td' },
-                  E('div', { class: 'trafira-form-controls' }, [keep, remove]),
-                ),
-              ]),
-            );
-          }
-          existing.append(
-            table,
-            E(
-              'p',
-              { class: 'cbi-value-description' },
-              _(
-                "Delete removes this preset's rules. Keep as ordinary rules preserves routing and moves further management to Sections.",
-              ),
-            ),
-          );
-        }
-        status.textContent = '';
-      } catch (error) {
-        if (mine === generation)
-          status.textContent = message(
-            error instanceof Error ? error.message : 'catalog_unavailable',
-          );
+        proxy.value = connections.some((s) => s['.name'] === priorProxy)
+          ? priorProxy
+          : connections.length === 1
+            ? String(connections[0]['.name'])
+            : '';
+      } catch (cause) {
+        if (!disposed) showError(cause);
       } finally {
-        if (mine === generation) {
-          loading = false;
-          update();
-        }
+        loading = false;
+        update();
       }
     }
-    for (const input of [platform, proxy, placement, enable, replace])
-      input.addEventListener('change', () => controller.invalidate());
-    device.addEventListener('change', showAddresses);
-    content.replaceChildren(
+    for (const input of [platform, proxy, placement, enable])
+      input.addEventListener('change', () => {
+        dirty = true;
+        update();
+      });
+    device.addEventListener('change', () => {
+      dirty = true;
+      showAddresses();
+    });
+    const refreshButton = button(_('Refresh devices'), () => {
+      void refresh();
+    });
+    host.replaceChildren(
       E(
         'p',
         { class: 'cbi-section-descr' },
         _(
-          'Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic.',
+          'Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together.',
         ),
       ),
-      E(
-        'p',
-        { class: 'cbi-section-descr' },
-        _(
-          'Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened.',
+      status,
+      error,
+      existing,
+      heading,
+      row(_('Platform'), '', [platform]),
+      row(_('Select a known device'), '', [device, refreshButton]),
+      row(_('Device IP addresses'), '', [addresses]),
+      row(_('Connection'), '', [proxy]),
+      row(
+        _('Device gaming rule priority'),
+        '',
+        [placement],
+        E(
+          'div',
+          { class: 'cbi-value-description' },
+          _(
+            'This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first.',
+          ),
         ),
       ),
-      existingRow,
-      E('h4', {}, _('Create or update a gaming preset')),
-      row(_('Gaming presets'), 'trafira-game-platform', [platform]),
-      row(_('Select a known device'), 'trafira-game-device', [
-        device,
-        button(_('Refresh devices'), () => {
-          void refresh();
-        }),
-      ]),
-      addressRow,
-      row(_('Select a connection'), 'trafira-game-proxy', [proxy]),
-      row(_('Choose rule priority'), 'trafira-game-priority', [placement]),
-      hintRow,
-      ...(!canWrite
-        ? [
-            E(
-              'p',
-              {},
-              _(
-                'Read-only access: you can preview rules but cannot apply changes.',
-              ),
-            ),
-          ]
-        : []),
       row('', '', [
-        E('label', { class: 'cbi-checkbox' }, [
+        E('label', {}, [
           enable,
-          ' ' + _('Enable device routing only for these addresses if required'),
+          ' ' + _('Enable these addresses in device routing if needed'),
         ]),
       ]),
       row('', '', [
-        E('label', { class: 'cbi-checkbox' }, [
-          replace,
-          ' ' + _('Replace my edits to this preset after preview'),
-        ]),
-      ]),
-      row('', '', [
-        (preview = button(_('Preview gaming rules'), () => {
-          if (!catalog || preview.disabled) return;
-          void controller.preview(
-            {
-              preset: platform.value,
-              enable_gaming: catalog.enabled === false ? true : undefined,
-              device_ips: Array.from(
-                addresses.querySelectorAll<HTMLInputElement>('input:checked'),
-              ).map((i) => i.value),
-              proxy_section: proxy.value,
-              placement: placement.value,
-              enable_device: enable.checked,
-              replace_edited: replace.checked,
-            },
-            catalog.digest,
-          );
-        })),
-        (apply = button(_('Apply reviewed changes'), async () => {
-          if (!canWrite || apply.disabled || confirming) return;
-          confirming = true;
-          update();
-          const accepted =
-            state?.preview?.operation === 'preview_remove' &&
-            state.preview.mode === 'delete'
-              ? await confirmAction(
-                  _('Delete gaming preset'),
-                  _(
-                    'The preset rules will be removed. Other settings will remain unchanged.',
-                  ),
-                  _('Delete'),
-                )
-              : state.preview?.operation === 'preview_remove' &&
-                  state.preview.mode === 'keep'
-                ? await confirmAction(
-                    _('Keep as ordinary rules'),
-                    E('div', {}, [
-                      E(
-                        'p',
-                        {},
-                        _(
-                          'The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections.',
-                        ),
-                      ),
-                      E(
-                        'p',
-                        {},
-                        _(
-                          'Applying these settings replaces the saved configuration. Any unsaved changes in this LuCI page will be lost. Continue?',
-                        ),
-                      ),
-                    ]),
-                    _('Keep as ordinary rules'),
-                  )
-                : await confirmConfigurationReplacement();
-          confirming = false;
-          update();
-          if (accepted) void controller.apply();
-        })),
+        E('div', { class: 'trafira-form-controls' }, [add, cancel]),
       ]),
     );
-    host.replaceChildren(content, resultRow);
-    controller.mount();
+    const unsubscribe = gamingDraft.subscribe(update);
+    const unprepare = gamingDraft.setPrepare(submit);
     mounted = {
-      controller,
-      closeProgress,
-      timer: window.setInterval(() => {
-        if (state?.running) void controller.poll();
-      }, 2000),
+      host,
+      activate: (value) => {
+        canWrite = value;
+        update();
+      },
+      dispose: () => {
+        disposed = true;
+        unsubscribe();
+        unprepare();
+      },
     };
-    void controller.poll().then(() => refresh());
+    update();
+    void refresh();
   },
-  unmount() {
-    generation++;
-    if (mounted) {
-      mounted.closeProgress();
-      mounted.controller.unmount();
-      window.clearInterval(mounted.timer);
-    }
-    mounted = null;
-  },
+  // Retain the editor and operation queue while switching tabs. A replaced form
+  // gets a new host and disposes the old listeners on the next mount.
+  unmount() {},
 };
