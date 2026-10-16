@@ -242,6 +242,53 @@ it('allows immediate draft editing while the saved switch is off', async () => {
   expect(write).not.toHaveBeenCalled();
 });
 
+it('clears a catalog error after a successful refresh without discarding the draft', async () => {
+  gamingPresetsPanel.mount();
+  await drain();
+  fill();
+  button('Add to list').fire('click');
+  await drain();
+  fill('epic');
+  vi.mocked(executeShellCommand).mockResolvedValueOnce({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  button('Refresh devices').fire('click');
+  await drain();
+  expect(text(host)).toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(gamingDraft.pending).toBe(1);
+  button('Refresh devices').fire('click');
+  await drain();
+  expect(text(host)).not.toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(gamingDraft.pending).toBe(1);
+  expect(
+    all(host).find((n) => n.attrs.id === 'trafira-game-platform')!.value,
+  ).toBe('epic');
+  expect(button('Add to list').disabled).toBe(false);
+  expect(write).not.toHaveBeenCalled();
+});
+
+it('keeps the error visible when refreshing the catalog fails again', async () => {
+  vi.mocked(executeShellCommand).mockResolvedValue({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  gamingPresetsPanel.mount();
+  await drain();
+  button('Refresh devices').fire('click');
+  await drain();
+  expect(text(host)).toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(write).not.toHaveBeenCalled();
+});
+
 it('editing an existing preset preserves its before-device priority and sends replacement once', async () => {
   const owner = 'game_steam_30323a30303a30303a30303a30303a30314062722d6c616e';
   saved.splice(1, 0, {
