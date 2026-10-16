@@ -5169,3 +5169,18 @@ msgstr ""
 
 msgid "The server IP could not be determined automatically. Try again, or enter a known real destination IP in Additional settings."
 msgstr ""
+
+msgid "Applied configuration migrations"
+msgstr ""
+
+msgid "Configuration version"
+msgstr ""
+
+msgid "Clean shutdown state"
+msgstr ""
+
+msgid "Section type"
+msgstr ""
+
+msgid "Name"
+msgstr ""

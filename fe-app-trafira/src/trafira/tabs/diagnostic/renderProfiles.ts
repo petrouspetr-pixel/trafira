@@ -1,3 +1,4 @@
+import { profileOptionLabels } from './profileOptionLabels';
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
 import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
 import {
@@ -440,6 +441,7 @@ export const profilesPanel = {
       row('', '', [restore]),
       restoreHintRow,
     );
+    const labels = profileOptionLabels();
     const controller = new ProfilePanelController(command, (state) => {
       if (generation !== mountId) return;
       if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
@@ -464,21 +466,6 @@ export const profilesPanel = {
       }
       last = state;
       if (state.committed) reloadAfterConfigurationCommit();
-      const settingLabels: Record<string, string> = {
-        exclude_bittorrent: _('Bypass BitTorrent'),
-        exclude_wifi_calling: _('Bypass Wi-Fi Calling'),
-        exclude_ntp: _('Exclude NTP'),
-        disable_quic: _('Disable QUIC'),
-        disable_ipv6_probes: _('Disable selected IPv6 probes'),
-        enable_yacd: _('Enable YACD'),
-        alice_mode_enabled: _('Enable device routing'),
-        alice_dashboard_enabled: _('Show on dashboard'),
-        alice_list_mode: _('Devices in the list'),
-        alice_interfaces: _('Interfaces'),
-        alice_ips: _('IP addresses and subnets'),
-        alice_macs: _('MAC addresses'),
-        router_origin_enabled: _('Route router applications'),
-      };
       const preview = state.preview;
       output.replaceChildren(
         ...(state.busy && !state.running
@@ -577,8 +564,8 @@ export const profilesPanel = {
                             'td',
                             { class: 'td', 'data-title': _('Option') },
                             (change.section === 'settings'
-                              ? settingLabels[change.option]
-                              : '') ||
+                              ? labels.settings[change.option]
+                              : labels.options[change.option]) ||
                               change.option ||
                               '—',
                           ),
