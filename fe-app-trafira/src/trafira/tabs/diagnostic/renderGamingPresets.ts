@@ -101,7 +101,7 @@ function owners(sections: GamingSection[]) {
   }
   return [...result.values()];
 }
-function message(code: string) {
+export function gamingErrorMessage(code: string) {
   const messages: Record<string, string> = {
     alice_bypass: _(
       'Device routing bypasses this device. Explicitly enable its selected addresses before applying.',
@@ -211,7 +211,7 @@ export const gamingPresetsPanel = {
       void submit().catch(showError);
     });
     function showError(cause: unknown) {
-      error.textContent = message(
+      error.textContent = gamingErrorMessage(
         cause instanceof Error ? cause.message : 'request_failed',
       );
       error.className = 'alert-message error';

@@ -39,6 +39,24 @@ function createGamingContent(section) {
       if (settings && value != null) settings.gaming_presets_enabled = value;
       return sections;
     },
+    checkpoint: function () {
+      // Capture the package cache after native parse. Recreating a deleted UCI
+      // section does not cancel its deletion marker, so inverse edits cannot
+      // faithfully roll back a failed save. Other packages remain untouched.
+      const keys = ["values", "creates", "changes", "deletes", "reorder"];
+      const snapshot = keys.map((key) => [
+        key,
+        uci.state[key][packageName] === undefined
+          ? undefined
+          : structuredClone(uci.state[key][packageName]),
+      ]);
+      return function () {
+        snapshot.forEach(([key, value]) => {
+          if (value === undefined) delete uci.state[key][packageName];
+          else uci.state[key][packageName] = structuredClone(value);
+        });
+      };
+    },
     write: function (before, after) {
       const changes = main.ConfigurationPanels.gamingUciChanges(before, after);
       changes.removed.forEach((name) => uci.remove(packageName, name));

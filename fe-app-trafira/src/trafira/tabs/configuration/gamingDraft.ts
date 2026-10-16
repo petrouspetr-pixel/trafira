@@ -13,6 +13,7 @@ export interface GamingOperation {
 }
 export interface GamingAdapter {
   read(): GamingSection[];
+  checkpoint?(): () => void;
   write(before: GamingSection[], after: GamingSection[]): void;
 }
 export interface GamingPlan {
@@ -88,6 +89,7 @@ export class GamingDraft {
   private work: Promise<void> | null = null;
   private saving = false;
   private saveRequested = false;
+  private rollback: (() => void) | null = null;
   private flushed: { before: GamingSection[]; after: GamingSection[] } | null =
     null;
   private prepare: (() => Promise<void>) | null = null;
@@ -191,6 +193,7 @@ export class GamingDraft {
     if (!this.saving) throw Error('invalid_save');
     if (!this.pending) return;
     const { before, result } = await this.calculate(this.operations);
+    this.rollback = this.adapter!.checkpoint?.() || null;
     this.flushed = { before, after: result.config! };
     this.adapter!.write(before, result.config!);
   }
@@ -204,13 +207,16 @@ export class GamingDraft {
       this.emit();
       const result = await persist();
       this.flushed = null;
+      this.rollback = null;
       this.reset();
       return result;
     } catch (error) {
       if (this.flushed) {
         const { before, after } = this.flushed;
         this.flushed = null;
-        this.adapter!.write(after, before);
+        if (this.rollback) this.rollback();
+        else this.adapter!.write(after, before);
+        this.rollback = null;
       }
       throw error;
     } finally {

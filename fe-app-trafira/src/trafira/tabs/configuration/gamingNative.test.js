@@ -7,7 +7,7 @@ const source = readFileSync(
   'utf8',
 );
 function setup() {
-  let sections = [
+  const initial = [
     { '.name': 'settings', '.type': 'settings', gaming_presets_enabled: '1' },
     {
       '.name': 'vpn',
@@ -19,33 +19,78 @@ function setup() {
   ];
   const events = [];
   let failSave = false;
+  // Model LuCI's distinct caches: deletion markers survive add(same name).
+  const state = {
+    values: {
+      trafira: Object.fromEntries(
+        initial.map((s, i) => [s['.name'], { ...s, '.index': i }]),
+      ),
+    },
+    creates: {},
+    changes: {},
+    deletes: {},
+    reorder: {},
+  };
+  const sections = () =>
+    [
+      ...Object.values(state.values.trafira)
+        .filter((s) => state.deletes.trafira?.[s['.name']] !== true)
+        .map((s) => ({ ...s, ...state.changes.trafira?.[s['.name']] })),
+      ...Object.values(state.creates.trafira || {}),
+    ].sort((a, b) => a['.index'] - b['.index']);
   const uci = {
-    sections: () => sections,
-    get: (_p, n, k) => sections.find((s) => s['.name'] === n)?.[k],
+    state,
+    sections,
     set: (_p, n, k, v) => {
       events.push('set');
-      sections.find((s) => s['.name'] === n)[k] = v;
+      if (state.creates.trafira?.[n]) state.creates.trafira[n][k] = v;
+      else {
+        state.changes.trafira ||= {};
+        state.changes.trafira[n] ||= {};
+        state.changes.trafira[n][k] = v;
+      }
     },
     unset: (_p, n, k) => {
       events.push('unset');
-      delete sections.find((s) => s['.name'] === n)[k];
+      if (state.creates.trafira?.[n]) delete state.creates.trafira[n][k];
+      else {
+        state.changes.trafira ||= {};
+        state.changes.trafira[n] ||= {};
+        state.changes.trafira[n][k] = undefined;
+      }
     },
-    add: (_p, t, n) => {
+    add: (_p, type, name) => {
       events.push('add');
-      sections.push({ '.name': n, '.type': t });
-      return n;
+      state.creates.trafira ||= {};
+      state.creates.trafira[name] = {
+        '.name': name,
+        '.create': name,
+        '.type': type,
+        '.index': 1000 + Object.keys(state.creates.trafira).length,
+      };
+      return name;
     },
     remove: (_p, n) => {
       events.push('remove');
-      sections = sections.filter((s) => s['.name'] !== n);
+      if (state.creates.trafira?.[n]) delete state.creates.trafira[n];
+      else {
+        if (state.changes.trafira) delete state.changes.trafira[n];
+        state.deletes.trafira ||= {};
+        state.deletes.trafira[n] = true;
+      }
     },
     move: (_p, n) => {
-      if (!sections.find((s) => s && s['.name'] === n))
-        throw Error('MOVE ' + n + ' ' + JSON.stringify(sections));
       events.push('move');
-      const s = sections.find((s) => s['.name'] === n);
-      sections = sections.filter((entry) => entry !== s);
-      sections.push(s);
+      const ordered = sections();
+      const target = ordered.find((s) => s['.name'] === n);
+      if (!target) throw Error('missing section');
+      for (const [i, s] of [
+        ...ordered.filter((s) => s !== target),
+        target,
+      ].entries())
+        (state.creates.trafira?.[s['.name']] ||
+          state.values.trafira[s['.name']])['.index'] = i;
+      state.reorder.trafira = true;
     },
   };
   const draft = new GamingDraft(async (input, ops) => {
@@ -76,6 +121,15 @@ function setup() {
       if (callback) await callback();
       events.push('save');
       if (failSave) throw Error('offline');
+      state.values.trafira = Object.fromEntries(
+        sections().map((s) => {
+          const v = { ...s };
+          delete v['.create'];
+          return [s['.name'], v];
+        }),
+      );
+      for (const key of ['creates', 'changes', 'deletes', 'reorder'])
+        delete state[key].trafira;
     },
     reset: () => events.push('reset'),
   };
@@ -103,7 +157,8 @@ function setup() {
     draft,
     map,
     events,
-    sections: () => sections,
+    sections,
+    state,
     fail: (value) => {
       failSave = value;
     },
@@ -169,6 +224,8 @@ it('failed Save rolls local gaming edits back; Reset and the next Save cannot re
   t.fail(true);
   await expect(t.map.save()).rejects.toThrow('offline');
   expect(t.sections().some((s) => s.preset_owner === 'game_steam')).toBe(true);
+  expect(t.state.deletes.trafira?.game_steam).toBeUndefined();
+  expect(t.state.creates.trafira?.game_steam).toBeUndefined();
   t.fail(false);
   await t.map.save();
   expect(t.sections().some((s) => s.preset_owner)).toBe(false);
