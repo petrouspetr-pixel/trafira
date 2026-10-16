@@ -8281,5 +8281,61 @@
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js"
     ]
+  },
+  {
+    "call": "DNS lookup: website addresses found",
+    "key": "DNS lookup: website addresses found",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:226"
+    ]
+  },
+  {
+    "call": "Finishing the check and verifying that the configuration has not changed.",
+    "key": "Finishing the check and verifying that the configuration has not changed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:94"
+    ]
+  },
+  {
+    "call": "Request a DNS answer for later rules",
+    "key": "Request a DNS answer for later rules",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:21"
+    ]
+  },
+  {
+    "call": "Return a predefined DNS answer",
+    "key": "Return a predefined DNS answer",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:23"
+    ]
+  },
+  {
+    "call": "Return the received DNS answer",
+    "key": "Return the received DNS answer",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:22"
+    ]
+  },
+  {
+    "call": "Route the connection",
+    "key": "Route the connection",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:15"
+    ]
+  },
+  {
+    "call": "The check runs on the router. It does not send a request from the selected device or open the website.",
+    "key": "The check runs on the router. It does not send a request from the selected device or open the website.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:159"
+    ]
+  },
+  {
+    "call": "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure.",
+    "key": "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:164"
+    ]
   }
 ]

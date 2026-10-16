@@ -63,6 +63,13 @@ function status(id){
 function start(raw){
     if(!analysis.validate(raw))return fail("invalid_request");
     if(!ensure())return fail("storage_unavailable");
+    // A lost browser response or page refresh must attach, not launch a rival
+    // calculator. Only return the job when the supplied scenario is identical.
+    let active=read(ROOT+"/active.json",1024);
+    if(active && valid(active.id)) {
+        let state=status(active.id),request=read(ROOT+"/"+active.id+"/request.json",16384);
+        if(state.running && request && request.raw==raw)return state;
+    }
     let guard=lock();if(!guard)return fail("busy");
     let current=read(ROOT+"/active.json",1024);
     if(current && status(current.id).running){guard.close();return fail("busy");}

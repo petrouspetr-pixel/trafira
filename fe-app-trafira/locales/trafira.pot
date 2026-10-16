@@ -5184,3 +5184,27 @@ msgstr ""
 
 msgid "Name"
 msgstr ""
+
+msgid "DNS lookup: website addresses found"
+msgstr ""
+
+msgid "Finishing the check and verifying that the configuration has not changed."
+msgstr ""
+
+msgid "Request a DNS answer for later rules"
+msgstr ""
+
+msgid "Return a predefined DNS answer"
+msgstr ""
+
+msgid "Return the received DNS answer"
+msgstr ""
+
+msgid "Route the connection"
+msgstr ""
+
+msgid "The check runs on the router. It does not send a request from the selected device or open the website."
+msgstr ""
+
+msgid "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure."
+msgstr ""

@@ -12,12 +12,15 @@ function ruleDetails(decision: ExplainDecision) {
     unknown: _('Could not check this condition'),
   };
   const actions: Record<string, string> = {
-    route: _('Select a connection'),
+    route: _('Route the connection'),
     reject: _('Block the connection'),
     sniff: _('Read the application protocol'),
     resolve: _('Look up the website address'),
     'route-options': _('Set connection parameters'),
     'hijack-dns': _('Send the DNS request to Trafira'),
+    evaluate: _('Request a DNS answer for later rules'),
+    respond: _('Return the received DNS answer'),
+    predefined: _('Return a predefined DNS answer'),
   };
   return E('div', {}, [
     ...(decision.trace.length
@@ -87,11 +90,15 @@ export function renderRouteExplanationResult(
         E(
           'p',
           {},
-          progress?.total
-            ? _('Checking saved lists: %s of %s')
-                .replace('%s', String(progress.completed))
-                .replace('%s', String(progress.total))
-            : _('Finding the website addresses and checking your settings.'),
+          progress?.phase === 'finishing'
+            ? _(
+                'Finishing the check and verifying that the configuration has not changed.',
+              )
+            : progress?.total
+              ? _('Checking saved lists: %s of %s')
+                  .replace('%s', String(progress.completed))
+                  .replace('%s', String(progress.total))
+              : _('Finding the website addresses and checking your settings.'),
         ),
         E(
           'p',
@@ -146,7 +153,13 @@ export function renderRouteExplanationResult(
             ruleDetails(report.dns_policy),
           ]
         : []),
-      E('p', {}, _('No DNS query was sent from the selected device.')),
+      E(
+        'p',
+        {},
+        _(
+          'The check runs on the router. It does not send a request from the selected device or open the website.',
+        ),
+      ),
       ...(report.selector
         ? [
             E(
@@ -209,6 +222,9 @@ export function renderRouteExplanationResult(
     E('div', { class: 'cbi-section' }, [
       E('h3', {}, outcome.title),
       E('p', {}, outcome.reason),
+      ...(dns?.status === 'resolved'
+        ? [E('p', {}, _('DNS lookup: website addresses found'))]
+        : []),
       ...(reasons.length
         ? [
             E(

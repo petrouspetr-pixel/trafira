@@ -3748,3 +3748,27 @@ msgstr "Тип секции"
 
 msgid "Name"
 msgstr "Название"
+
+msgid "DNS lookup: website addresses found"
+msgstr "DNS: адреса сайта найдены"
+
+msgid "Finishing the check and verifying that the configuration has not changed."
+msgstr "Завершаем проверку и убеждаемся, что настройки не изменились."
+
+msgid "Request a DNS answer for later rules"
+msgstr "Получить DNS-ответ для следующих правил"
+
+msgid "Return a predefined DNS answer"
+msgstr "Вернуть заранее заданный DNS-ответ"
+
+msgid "Return the received DNS answer"
+msgstr "Вернуть полученный DNS-ответ"
+
+msgid "Route the connection"
+msgstr "Направить соединение"
+
+msgid "The check runs on the router. It does not send a request from the selected device or open the website."
+msgstr "Проверка выполняется на роутере. Она не отправляет запрос с выбранного устройства и не открывает сайт."
+
+msgid "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure."
+msgstr "Эта часть диагностики не умеет рассчитывать указанное действие. Это ограничение проверки, а не ошибка соединения."

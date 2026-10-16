@@ -160,6 +160,10 @@ export function routeReason(reason: string): string {
     ),
   };
   if (messages[reason]) return messages[reason];
+  if (reason.startsWith('unsupported_action:'))
+    return _(
+      'This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure.',
+    );
   if (reason.startsWith('rule_set:'))
     return _(
       'A required saved list is missing or unreadable. Download or update copies in Saved rule sets, then try again.',

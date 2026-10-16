@@ -71,6 +71,7 @@ type RouteFailure =
   | 'invalid_response'
   | 'render_failed'
   | 'invalid_request'
+  | 'invalid_job'
   | 'busy'
   | 'worker_timeout'
   | 'worker_interrupted'
@@ -230,7 +231,7 @@ function connection(value: unknown): boolean {
 export interface PreparationProgress {
   completed: number;
   total: number;
-  phase?: 'preparing' | 'evaluating';
+  phase?: 'preparing' | 'evaluating' | 'finishing';
 }
 export interface RouteJobStatus {
   success: boolean;
@@ -268,6 +269,7 @@ export function parseRouteJobCommandResult(result: {
   if (!value.success) {
     const allowed = [
       'invalid_request',
+      'invalid_job',
       'busy',
       'worker_timeout',
       'worker_interrupted',
@@ -293,7 +295,9 @@ export function parseRouteJobCommandResult(result: {
       Number(progress.completed) < 0 ||
       Number(progress.total) < Number(progress.completed) ||
       Number(progress.total) > 256 ||
-      !['preparing', 'evaluating'].includes(String(progress.phase)))
+      !['preparing', 'evaluating', 'finishing'].includes(
+        String(progress.phase),
+      ))
   )
     throw new RouteExplanationError('invalid_response');
   return value as unknown as RouteJobStatus;
@@ -305,8 +309,23 @@ export async function runRoutePreparation(
   active: () => boolean,
   wait: () => Promise<void> = () =>
     new Promise((resolve) => setTimeout(resolve, 500)),
+  resumeId?: string,
 ): Promise<ExplainReport> {
-  let state = await invoke('route_explain_start', [JSON.stringify(request)]);
+  let state: RouteJobStatus;
+  if (resumeId && /^r-[a-f0-9-]{1,60}$/.test(resumeId)) {
+    try {
+      state = await invoke('route_explain_status', [resumeId]);
+      if (state.job_id !== resumeId)
+        throw new RouteExplanationError('invalid_response');
+    } catch (error) {
+      if (
+        !(error instanceof RouteExplanationError) ||
+        error.category !== 'invalid_job'
+      )
+        throw error;
+      state = await invoke('route_explain_start', [JSON.stringify(request)]);
+    }
+  } else state = await invoke('route_explain_start', [JSON.stringify(request)]);
   const id = state.job_id,
     deadline = Date.now() + 150000;
   for (let polls = 0; polls < 300; polls++) {
@@ -322,7 +341,17 @@ export async function runRoutePreparation(
     if (Date.now() >= deadline) break;
     await wait();
     if (!active()) throw new Error('Route view no longer active');
-    state = await invoke('route_explain_status', [id!]);
+    try {
+      state = await invoke('route_explain_status', [id!]);
+    } catch (error) {
+      // A lost status response does not stop the server job. Keep polling the
+      // same ID within the original bounded deadline instead of starting again.
+      if (
+        !(error instanceof RouteExplanationError) ||
+        !['timeout', 'rpc_failed'].includes(error.category)
+      )
+        throw error;
+    }
   }
   throw new RouteExplanationError('worker_timeout');
 }

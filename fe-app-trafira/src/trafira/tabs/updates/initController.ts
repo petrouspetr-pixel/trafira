@@ -79,6 +79,7 @@ let updatesMountId = 0;
 let pageUnloading = false;
 let preserveCheckResultsOnNextMount = false;
 let componentUpdateCheckCacheResolved = false;
+let checkResultRevision = 0;
 let componentUpdateCheckCacheSnapshot: Trafira.ComponentUpdateCheckCache | null =
   null;
 let componentUpdateCheckCachePromise: Promise<Trafira.ComponentUpdateCheckCache> | null =
@@ -197,6 +198,7 @@ function setCheckResult(
   latestVersion: string,
   releaseUrl: string = '',
 ) {
+  checkResultRevision += 1;
   const updatesChecks = store.get().updatesChecks;
 
   store.set({
@@ -449,6 +451,8 @@ async function applyCompletedComponentAction({
     const status = result.status || null;
 
     if (status === 'latest' || status === 'outdated' || status === 'dev') {
+      // A fresh answer is usable even while the initial cache read is pending.
+      componentUpdateCheckCacheResolved = true;
       setCheckResult(
         result.component,
         status,
@@ -1293,6 +1297,9 @@ async function onPageMount() {
     applyComponentUpdateCheckCache(prefetchedComponentUpdateCheckCache);
   }
 
+  const revisionBeforeCacheRead = checkResultRevision;
+  // Checks can finish before the initial cache/runtime requests. Keep cards live.
+  store.subscribe(onStoreUpdate);
   renderUpdatesComponents();
   coreVersionsPanel.mount(updatesCanWrite);
 
@@ -1304,7 +1311,12 @@ async function onPageMount() {
     return;
   }
 
-  applyComponentUpdateCheckCache(componentUpdateCheckCache);
+  if (checkResultRevision === revisionBeforeCacheRead) {
+    applyComponentUpdateCheckCache(componentUpdateCheckCache);
+  } else {
+    // Do not replace a new check result with an older mount-time snapshot.
+    componentUpdateCheckCacheResolved = true;
+  }
   preserveCheckResultsOnNextMount = false;
   renderUpdatesComponents();
 
@@ -1316,7 +1328,6 @@ async function onPageMount() {
     }
   }
 
-  store.subscribe(onStoreUpdate);
   startComponentActionStateWatcher();
   renderUpdatesComponents();
   void ensureSystemInfo();

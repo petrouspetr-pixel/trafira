@@ -60,3 +60,4 @@ jobs:
           sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_bootstrap_network.sh
           sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/native_wireguard_bootstrap_network.sh
           sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/route_dns_network.sh
+          sudo env TRAFIRA_REAL_CODEC=1 bash tests/route_social_domains.sh
