@@ -8337,5 +8337,33 @@
     "places": [
       "src/trafira/tabs/diagnostic/routePresentation.ts:164"
     ]
+  },
+  {
+    "call": "Conditions in section “%s”",
+    "key": "Conditions in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:18"
+    ]
+  },
+  {
+    "call": "Lists in section “%s”",
+    "key": "Lists in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:20"
+    ]
+  },
+  {
+    "call": "Domains in section “%s”",
+    "key": "Domains in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:22"
+    ]
+  },
+  {
+    "call": "IP addresses in section “%s”",
+    "key": "IP addresses in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:23"
+    ]
   }
 ]
