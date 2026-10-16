@@ -45,6 +45,12 @@ assert(paused.valid && paused.config[0].gaming_presets_enabled=="0","persist glo
 assert(!length(filter(paused.config,(s)=>s.preset_owner && s.enabled!="0")),"disable both preset routes");
 assert(paused.config[3][".name"]=="vpn" && paused.config[3].enabled=="1","ordinary connection remains active");
 assert(!g.build(preset,request,{...current,sections:paused.config}).valid,"cannot create active rules while globally paused");
+let staged=g.build(preset,{...request,enable_gaming:true},{...current,sections:paused.config});
+assert(staged.valid && staged.config[0].gaming_presets_enabled=="1","pending switch enables candidate and preset in one transaction");
+assert(length(filter(staged.config,(s)=>s.preset_owner && s.enabled=="1"))==2,"candidate routes are active");
+assert(paused.config[0].gaming_presets_enabled=="0" && !length(filter(paused.config,(s)=>s.preset_owner && s.enabled!="0")),"preview never mutates saved switch or routes");
+assert(!g.build(preset,{...request,enable_gaming:"1"},{...current,sections:paused.config}).valid,"explicit enable must be boolean");
+assert(!g.build(preset,{...request,enable_gaming:true,expected_digest:"old"},{...current,sections:paused.config}).valid,"pending enable preserves digest conflict check");
 let resumed=g.set_enabled(true,{...current,sections:g.set_enabled(false,{...current,sections:paused.config}).config});
 assert(length(filter(resumed.config,(s)=>s.preset_owner && s.enabled=="1"))==2,"repeat disable preserves restoration");
 assert(g.remove(result.owner,"delete",false,{...current,sections:resumed.config}).valid,"toggle does not mark unedited rules edited");

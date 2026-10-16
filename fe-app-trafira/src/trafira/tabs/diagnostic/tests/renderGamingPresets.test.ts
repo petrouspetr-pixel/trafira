@@ -279,3 +279,56 @@ it.each([0, 1, 2, 3])(
     expect(button('Preview gaming rules').disabled).toBe(true);
   },
 );
+
+it('uses the unsaved enabled flag to edit and preview without saving the switch first', async () => {
+  presetsEnabled = false;
+  gamingPresetsPanel.mount();
+  await drain();
+  expect(
+    all(host)
+      .filter((n) => n.tag === 'select')
+      .every((n) => !n.disabled),
+  ).toBe(true);
+  expect(requests).not.toContain('set_enabled');
+  expect(requests).not.toContain('apply');
+  completeSelection();
+  expect(button('Preview gaming rules').disabled).toBe(false);
+  button('Preview gaming rules').fire('click');
+  await drain();
+  const requestBodies = () =>
+    vi
+      .mocked(executeShellCommand)
+      .mock.calls.map(([r]) => JSON.parse(r.args[1]));
+  expect(requestBodies().find((r) => r.action === 'preview')).toMatchObject({
+    enable_gaming: true,
+  });
+  expect(requests).not.toContain('apply');
+  button('Apply reviewed changes').fire('click');
+  await drain();
+  expect(requestBodies().find((r) => r.action === 'apply')).toMatchObject({
+    enable_gaming: true,
+  });
+});
+it('discards the pending editor preview when native LuCI hides or resets the panel', async () => {
+  presetsEnabled = false;
+  gamingPresetsPanel.mount();
+  await drain();
+  completeSelection();
+  const detachedPreview = button('Preview gaming rules');
+  gamingPresetsPanel.unmount();
+  detachedPreview.fire('click');
+  await drain();
+  expect(requests).not.toContain('preview');
+  expect(requests).not.toContain('apply');
+  expect(requests).not.toContain('set_enabled');
+});
+it('keeps read-only access when the unsaved flag enables the editor', async () => {
+  presetsEnabled = false;
+  gamingPresetsPanel.mount(false);
+  await drain();
+  completeSelection();
+  expect(button('Preview gaming rules').disabled).toBe(false);
+  button('Preview gaming rules').fire('click');
+  await drain();
+  expect(button('Apply reviewed changes').disabled).toBe(true);
+});

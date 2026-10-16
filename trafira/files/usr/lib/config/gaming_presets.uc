@@ -84,7 +84,12 @@ function build(preset,request,current){
         device=first;push(addresses,address.cidr);
     }
     sort(addresses);
-    let config=clone(current.sections),settings=filter(config,(s)=>s[".type"]=="settings")[0];
+    if(request.enable_gaming!=null && type(request.enable_gaming)!="bool")return fail("invalid_request");
+    // Preview the unsaved LuCI switch together with the preset. Only the explicit
+    // apply action commits this candidate; the source document remains untouched.
+    let toggled=request.enable_gaming===true?set_enabled(true,current):null;
+    if(toggled && !toggled.valid)return toggled;
+    let config=toggled?toggled.config:clone(current.sections),settings=filter(config,(s)=>s[".type"]=="settings")[0];
     if(settings && !common.bool_option(settings,"gaming_presets_enabled",true))return fail("gaming_disabled");
     let proxy=filter(config,(s)=>s[".name"]==request.proxy_section && s[".type"]=="section")[0];
     if(!settings || !proxy || !common.bool_option(proxy,"enabled",true) || index(["connection","proxy","vpn","outbound"],proxy.action)<0 || proxy.preset_owner)return fail("invalid_proxy");
