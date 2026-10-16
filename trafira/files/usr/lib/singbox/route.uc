@@ -42,6 +42,11 @@ function config(settings, runtime) {
         default_mark: runtime_constants.OUTBOUND_MARK
     };
 
+    if (type(runtime) == "object" && bool_value(runtime.source_aware_dns))
+        // Only DNS may leave this redirect listener via hijack-dns above.
+        // Other payloads must not route back to its own listening port.
+        push(result.rules, { action: "reject", inbound: [ runtime_constants.SOURCE_DNS_INBOUND_TAG ] });
+
     if (type(runtime) == "object" && bool_value(runtime.alice_mode))
         // The Alice listener accepts DNS redirects only. Reject other payloads
         // instead of sending them through final=direct back to port 1604.

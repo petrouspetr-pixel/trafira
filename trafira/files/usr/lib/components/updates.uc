@@ -14,7 +14,7 @@ const LIST_UPDATE_STATE_FILE = getenv("TRAFIRA_LIST_UPDATE_STATE_FILE") || RUNTI
 const LIST_UPDATE_PID_FILE = getenv("TRAFIRA_LIST_UPDATE_PID_FILE") || "/var/run/trafira_list_update.pid";
 const LIST_UPDATE_LOCK_FILE = getenv("TRAFIRA_LIST_UPDATE_LOCK_FILE") || LIST_UPDATE_PID_FILE + ".lock";
 const SNAPSHOT_JOB_FILE = getenv("TRAFIRA_SNAPSHOT_JOB_FILE") || RUNTIME_STATE_DIR + "/snapshot-job.json";
-let list_update_lock = null;
+let list_update_queue = null;
 const SUBSCRIPTION_UPDATE_STATE_DIR = getenv("TRAFIRA_SUBSCRIPTION_UPDATE_STATE_DIR") || RUNTIME_STATE_DIR + "/subscription-update";
 const SUBSCRIPTION_JOB_DIR = getenv("TRAFIRA_SUBSCRIPTION_UPDATE_JOB_DIR") || "/var/run/trafira/subscription-update-jobs";
 const SUBSCRIPTION_UPDATE_LOCK_DIR = getenv("TRAFIRA_SUBSCRIPTION_UPDATE_LOCK_DIR") || RUNTIME_STATE_DIR + "/subscription-update.lock";
@@ -2598,15 +2598,20 @@ function snapshot_unlock(file) {
     if (file) { file.lock("u"); file.close(); }
 }
 
+function schedule_queued_list_update() {
+    let command = command_from_args([ "ucode", "-L", LIB_DIR, LIB_DIR + "/components/updates.uc", "list-update" ]);
+    return command_status("sh -c " + shell_quote(command + " </dev/null >/dev/null 2>&1 &")) == 0;
+}
+
 function list_update_pid_begin() {
-    list_update_lock = snapshot_file_lock(LIST_UPDATE_LOCK_FILE);
-    if (!list_update_lock) return false;
+    ensure_parent_dir(LIST_UPDATE_LOCK_FILE);
+    list_update_queue = require("service.list_queue").create(LIST_UPDATE_LOCK_FILE, LIST_UPDATE_PID_FILE + ".pending");
+    if (!list_update_queue.begin(false)) return false;
     let existing_pid = trim(as_string(fs.readfile(LIST_UPDATE_PID_FILE) || ""));
     let current_pid = owner_pid();
     if (existing_pid != "" && existing_pid != current_pid && runtime_pid_running(existing_pid)) {
         log_message("Another lists update is already running, skipping", "info");
-        snapshot_unlock(list_update_lock);
-        list_update_lock = null;
+        list_update_queue.end(() => true);
         return false;
     }
 
@@ -2617,8 +2622,9 @@ function list_update_pid_begin() {
 
 function list_update_pid_end() {
     remove_file(LIST_UPDATE_PID_FILE);
-    snapshot_unlock(list_update_lock);
-    list_update_lock = null;
+    if (list_update_queue && !list_update_queue.end(schedule_queued_list_update))
+        log_message("Could not start the queued lists update; request retained for retry", "error");
+    list_update_queue = null;
 }
 
 function snapshot_job(locked) {
@@ -2776,16 +2782,11 @@ function write_list_update_timestamp(timestamp) {
     write_file(LIST_UPDATE_STATE_FILE, as_string(timestamp) + "\n");
 }
 
-function list_update() {
-    log_message("Starting lists update", "info");
-    if (!list_update_pid_begin())
-        exit(0);
-
+function list_update_pass() {
     let settings = uci_settings();
     let proxy_address = service_proxy_address(settings, "lists");
     if (!dns_probe_passed(proxy_address)) {
-        list_update_pid_end();
-        exit(1);
+        return false;
     }
     github_probe(proxy_address);
 
@@ -2822,6 +2823,29 @@ function list_update() {
         log_message("Lists update failed", "info");
     }
 
+    return ok;
+}
+
+function list_update() {
+    log_message("Starting lists update", "info");
+    ensure_parent_dir(LIST_UPDATE_LOCK_FILE);
+    list_update_queue = require("service.list_queue").create(LIST_UPDATE_LOCK_FILE, LIST_UPDATE_PID_FILE + ".pending");
+    if (!list_update_queue.begin(true)) {
+        if (list_update_queue.error() != "") {
+            log_message("Could not record the lists update request", "error");
+            exit(1);
+        }
+        log_message("Lists update queued behind the active worker", "info");
+        exit(0);
+    }
+    write_file(LIST_UPDATE_PID_FILE, owner_pid() + "\n");
+    let ok = false;
+    try {
+        ok = list_update_pass();
+    }
+    catch (e) { ok = false; log_message("Lists update interrupted; queued requests retained", "error"); }
+    // A fresh process also gets a fresh UCI cursor. Repeating here would reuse
+    // the package loaded before a concurrent LuCI Save/Apply.
     list_update_pid_end();
     exit(ok ? 0 : 1);
 }

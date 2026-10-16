@@ -5,6 +5,7 @@ on:
       - 'trafira/files/**'
       - 'tests/failure_policy*'
       - 'tests/router_origin*'
+      - 'tests/ruleset_bootstrap*'
       - 'tests/helpers/failure_policy_servers.py'
       - '.github/workflows/failure-policy-network.yml'
   push:
@@ -13,6 +14,7 @@ on:
       - 'trafira/files/**'
       - 'tests/failure_policy*'
       - 'tests/router_origin*'
+      - 'tests/ruleset_bootstrap*'
       - 'tests/helpers/failure_policy_servers.py'
       - '.github/workflows/failure-policy-network.yml'
 jobs:
@@ -40,3 +42,15 @@ jobs:
 
       - name: Verify router-origin packet paths
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/router_origin_network.sh
+
+      - name: Verify isolated rule-set bootstrap transport
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_bootstrap_network.sh
+
+      - name: Verify real sing-box 1.14 startup snapshots
+        shell: bash
+        run: |
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 90 https://github.com/SagerNet/sing-box/releases/download/v1.14.2/sing-box-1.14.2-linux-amd64.tar.gz -o /tmp/sing-box-1.14.tar.gz
+          echo 'a684484d7477d1437282ee411f4d131d0340aaad60a7868841ebd5d87dd8a0c6  /tmp/sing-box-1.14.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/sing-box-1.14.tar.gz -C /tmp
+          sudo install -m 0755 /tmp/sing-box-1.14.2-linux-amd64/sing-box /usr/local/bin/sing-box
+          sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_bootstrap_network.sh

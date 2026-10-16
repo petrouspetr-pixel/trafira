@@ -3173,9 +3173,10 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
     // Candidate checks validate configuration, not startup snapshot contents.
     // Startup still validates each snapshot before attaching initial_path.
     if (!validation_only)
-        require("singbox.ruleset_cache").apply(config, runtime_sing_box_version);
+        require("singbox.ruleset_cache").apply(config, runtime_sing_box_version, true);
     assert_unique_outbound_tags(config);
     let removed = runtime_prune.prune_config(config, runtime_subscription_tags);
+    require("singbox.selector_state").apply(config);
     for (let section_name, state in runtime_section_states) {
         runtime_prune.prune_state(state, removed);
         if (!atomic_write_json_file(runtime_subscription.section_cache_path(section_name), state))
