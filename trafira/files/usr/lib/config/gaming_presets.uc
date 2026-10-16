@@ -85,28 +85,6 @@ function validate_plan(request){
     }
     return true;
 }
-function plan(request,catalog,devices){
-    if(!validate_plan(request))return {success:false,error:"invalid_request"};
-    let config=clone(request.sections),conflicts=[],settings=filter(config,(s)=>s[".type"]=="settings")[0];
-    let enabled=common.bool_option(settings,"gaming_presets_enabled",true);
-    for(let operation in request.operations){
-        let current={sections:config,devices,digest:"native-draft"},result;
-        if(operation.action=="upsert"){
-            let preset=filter(catalog,(p)=>p.id==operation.preset)[0];
-            result=build(preset,{...operation,expected_digest:current.digest,enable_gaming:true},current);
-        }else{
-            result=remove(operation.owner,operation.mode,operation.confirm,current);
-            // A prior native Save attempt may already have staged this removal.
-            if(!result.valid && result.errors[0]=="preset_not_found")result={valid:true,config,conflicts:[]};
-        }
-        if(!result.valid)return {success:false,error:result.errors[0]||"invalid_request",conflicts:result.conflicts||[]};
-        config=result.config;push(conflicts,...(result.conflicts||[]));
-    }
-    // Native form settings at Save time own global enablement, including newly added rules.
-    config=set_enabled(enabled,{sections:config}).config;
-    if(!require("config.profile_format").validate({schema:1,name:"Gaming",config}).valid)return {success:false,error:"invalid_request"};
-    return {success:true,config,owners:owners(config),conflicts,changes:require("config.profile_format").diff(request.sections,config)};
-}
 function remove(owner,mode,confirm,current){
     if(type(owner)!="string" || !match(owner,/^game_[a-z0-9_]{1,110}$/) || index(["delete","keep"],mode)<0)return fail("invalid_owner");
     let config=[],found=false;
@@ -213,5 +191,28 @@ function build(preset,request,current){
     for(let section in config)if(!section.preset_owner && section[".type"]=="section" && common.bool_option(section,"enabled",true) && (length(list(section.fully_routed_ips)) || length(list(section.source_ip_cidr))))push(conflicts,"existing_device_routes:"+section[".name"]);
     let output=place(normalize([...config,...additions]),group(store),request.placement);
     return {valid:true,errors:[],owner,config:output,patch:{sections:additions},conflicts,limitations:preset.limitations||[]};
+}
+// ucode closures bind existing declarations: keep the planner after its helpers.
+function plan(request,catalog,devices){
+    if(!validate_plan(request))return {success:false,error:"invalid_request"};
+    let config=clone(request.sections),conflicts=[],settings=filter(config,(s)=>s[".type"]=="settings")[0];
+    let enabled=common.bool_option(settings,"gaming_presets_enabled",true);
+    for(let operation in request.operations){
+        let current={sections:config,devices,digest:"native-draft"},result;
+        if(operation.action=="upsert"){
+            let preset=filter(catalog,(p)=>p.id==operation.preset)[0];
+            result=build(preset,{...operation,expected_digest:current.digest,enable_gaming:true},current);
+        }else{
+            result=remove(operation.owner,operation.mode,operation.confirm,current);
+            // A prior native Save attempt may already have staged this removal.
+            if(!result.valid && result.errors[0]=="preset_not_found")result={valid:true,config,conflicts:[]};
+        }
+        if(!result.valid)return {success:false,error:result.errors[0]||"invalid_request",conflicts:result.conflicts||[]};
+        config=result.config;push(conflicts,...(result.conflicts||[]));
+    }
+    // Native form settings at Save time own global enablement, including newly added rules.
+    config=set_enabled(enabled,{sections:config}).config;
+    if(!require("config.profile_format").validate({schema:1,name:"Gaming",config}).valid)return {success:false,error:"invalid_request"};
+    return {success:true,config,owners:owners(config),conflicts,changes:require("config.profile_format").diff(request.sections,config)};
 }
 return {build,remove,set_enabled,fingerprint,host,normalize,owners,validate_plan,plan};

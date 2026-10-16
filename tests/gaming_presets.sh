@@ -91,9 +91,9 @@ let unchanged_steam=filter(updated.config,(s)=>s.preset_owner==first.owner && s.
 assert(updated.valid && unchanged_steam.enabled=="0" && unchanged_steam.preset_original_digest==first.patch.sections[0].preset_original_digest,"group move preserves disabled state and edited fingerprint");
 assert(length(unchanged_steam.source_ip_cidr)==2,"group move preserves IPv6 selection");
 let plan=g.plan({sections:[settings,vpn],operations:[{action:"upsert",preset:"steam",...draft_request},{action:"upsert",preset:"epic",...draft_request}]},[preset,epic],[device]);
-assert(plan.success && length(plan.owners)==2,"batch adds both platforms");
+assert(plan.success && length(plan.owners)==2,sprintf("batch adds both platforms: %J",plan));
 let retry=g.plan({sections:plan.config,operations:[{action:"remove",owner:first.owner,mode:"delete"},{action:"remove",owner:first.owner,mode:"delete"}]},[preset,epic],[device]);
-assert(retry.success && length(retry.owners)==1,"Save retry removal is idempotent");
+assert(retry.success && length(retry.owners)==1,sprintf("Save retry removal is idempotent: %J",retry));
 let original=sprintf("%J",plan.config);
 assert(!g.plan({sections:plan.config,operations:[{action:"remove",owner:first.owner,mode:"delete"},{action:"upsert",preset:"missing",...draft_request}]},[preset,epic],[device]).success,"batch fails atomically");
 assert(sprintf("%J",plan.config)==original,"failed batch never mutates supplied draft");

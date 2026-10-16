@@ -31,9 +31,9 @@ for name in ok bad empty bounds; do
 done
 node - "$WORK_DIR" <<'JS'
 const assert=require('assert'),fs=require('fs'),root=process.argv[2],read=n=>JSON.parse(fs.readFileSync(`${root}/${n}.json`));
-const result=read('ok');assert(result.success);assert.equal(result.owners.length,2);assert.equal(result.config.filter(s=>s.preset_owner).length,4);
+const result=read('ok');assert(result.success,`read-only plan failed: ${JSON.stringify(result)}`);assert.equal(result.owners.length,2);assert.equal(result.config.filter(s=>s.preset_owner).length,4);
 assert.equal(result.config.find(s=>s['.name']==='vpn').password,'private-password','ordinary values preserved');
-assert(read('empty').success);assert.equal(read('empty').config.length,2);
+assert(read('empty').success,`empty plan failed: ${JSON.stringify(read('empty'))}`);assert.equal(read('empty').config.length,2);
 for(const name of ['bad','bounds']){const r=read(name);assert.equal(r.success,false);assert(!r.config,'no partially applied config');assert(!JSON.stringify(r).includes('private-password'));assert(!JSON.stringify(r).includes('secret-value'));}
 JS
 test "$(cat "$TRAFIRA_CONFIG_FILE")" = original
