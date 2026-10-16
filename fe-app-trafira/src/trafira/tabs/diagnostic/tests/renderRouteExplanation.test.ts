@@ -38,6 +38,50 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('route diagnostic output', () => {
+  it('distinguishes manual domains and lists belonging to the same section', () => {
+    const report = {
+      success: true,
+      decision: {
+        status: 'matched',
+        outbound: 'awg-out',
+        missing: [],
+        trace: [
+          {
+            index: 7,
+            action: 'route',
+            match: 'no',
+            shadowed: false,
+            missing: [],
+            origin: { kind: 'section', section: 'awg3_ru_eu', list_tag: '' },
+            match_fields: ['domain_suffix'],
+          },
+          {
+            index: 8,
+            action: 'route',
+            match: 'yes',
+            shadowed: false,
+            missing: [],
+            origin: {
+              kind: 'section',
+              section: 'awg3_ru_eu',
+              list_tag: 'meta',
+            },
+            match_fields: ['rule_set'],
+          },
+        ],
+      },
+      limitations: [],
+    };
+    renderRouteExplanationResult(
+      parseRouteExplanationResult({ code: 0, stdout: JSON.stringify(report) }),
+      '',
+      false,
+    );
+    expect(text(output)).toContain('Domains in section “awg3_ru_eu”');
+    expect(text(output)).toContain('Lists in section “awg3_ru_eu”');
+    expect(text(output)).toContain('Does not apply');
+    expect(text(output)).toContain('Applies to this connection');
+  });
   it('describes rule actions and successful IPv4 lookup without a second DNS rule table', () => {
     renderRouteExplanationResult(
       {
@@ -73,6 +117,47 @@ describe('route diagnostic output', () => {
     expect(text(output)).not.toContain('DNS policy (A query)');
     expect(text(output)).not.toContain('Select a connection');
   });
+  it.each([
+    { match_fields: ['ip_cidr'], label: 'IP addresses in section “vpn”' },
+    {
+      match_fields: ['domain_suffix', 'ip_cidr'],
+      label: 'Conditions in section “vpn”',
+    },
+    { match_fields: undefined, label: 'Conditions in section “vpn”' },
+    {
+      match_fields: undefined,
+      list_tag: 'meta',
+      label: 'Lists in section “vpn”',
+    },
+  ])(
+    'labels section rules accurately: $label',
+    ({ match_fields, list_tag, label }) => {
+      renderRouteExplanationResult(
+        {
+          success: true,
+          decision: {
+            status: 'direct',
+            missing: [],
+            trace: [
+              {
+                index: 0,
+                action: 'route',
+                match: 'no',
+                shadowed: false,
+                missing: [],
+                origin: { kind: 'section', section: 'vpn', list_tag },
+                match_fields,
+              },
+            ],
+          },
+          limitations: [],
+        },
+        '',
+        false,
+      );
+      expect(text(output)).toContain(label);
+    },
+  );
   it('renders the full router CLI response with partially available saved lists', () => {
     const report = parseRouteExplanationResult({
       code: 0,

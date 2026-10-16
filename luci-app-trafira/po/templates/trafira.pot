@@ -5208,3 +5208,15 @@ msgstr ""
 
 msgid "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure."
 msgstr ""
+
+msgid "Conditions in section “%s”"
+msgstr ""
+
+msgid "Lists in section “%s”"
+msgstr ""
+
+msgid "Domains in section “%s”"
+msgstr ""
+
+msgid "IP addresses in section “%s”"
+msgstr ""

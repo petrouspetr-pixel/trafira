@@ -5,6 +5,25 @@ import type {
 } from './routeExplanation';
 import { routeError, routeOutcome, routeReasons } from './routePresentation';
 
+function sectionRulePurpose(item: ExplainDecision['trace'][number]) {
+  const section = item.origin?.section;
+  if (item.action !== 'route' || !section) return null;
+  const fields = item.match_fields || [];
+  const domains = fields.some((field) => field.startsWith('domain'));
+  const addresses = fields.includes('ip_cidr');
+  const lists = fields.includes('rule_set') || Boolean(item.origin?.list_tag);
+  const categories = Number(domains) + Number(addresses) + Number(lists);
+  const caption =
+    categories !== 1
+      ? _('Conditions in section “%s”')
+      : lists
+        ? _('Lists in section “%s”')
+        : domains
+          ? _('Domains in section “%s”')
+          : _('IP addresses in section “%s”');
+  return caption.replace('%s', section);
+}
+
 function ruleDetails(decision: ExplainDecision) {
   const matches: Record<string, string> = {
     yes: _('Applies to this connection'),
@@ -50,7 +69,9 @@ function ruleDetails(decision: ExplainDecision) {
                   E(
                     'td',
                     {},
-                    actions[item.action] || _('Other routing action'),
+                    sectionRulePurpose(item) ||
+                      actions[item.action] ||
+                      _('Other routing action'),
                   ),
                   E(
                     'td',

@@ -148,6 +148,7 @@ function explain(config, request, sources, rulesets) {
         // position in the trace without decoding lists for a shadowed rule.
         let matched = selected != null ? result("unknown") : evaluate(rule, current, rulesets, budget, 0, false);
         let row = {index:i,match:matched.value,action,origin:arr(obj(sources).route)[i] || null,
+                   match_fields:filter(["domain","domain_suffix","domain_keyword","domain_regex","ip_cidr","rule_set"],field=>rule[field]!=null),
                    shadowed:selected != null,missing:matched.missing};
         if (length(trace) < 200) push(trace,row);
         if (selected != null || matched.value == "no") continue;

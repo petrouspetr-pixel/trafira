@@ -31,6 +31,15 @@ check(m.explain(config,req,{},sets).status == "indeterminate", "unknown early te
 config.route.rules[0] = {port:80,action:"route",outbound:"bypass-out"};
 let answer = m.explain(config,req,{},sets);
 check(answer.status == "matched" && answer.rule_index == 1 && answer.outbound == "vpn-out", "first matching rule");
+let labels = m.explain({route:{rules:[
+    {domain_suffix:"other.example",action:"route",outbound:"vpn-out"},
+    {rule_set:"cached",action:"route",outbound:"vpn-out"},
+    {ip_cidr:"203.0.113.0/24",action:"route",outbound:"vpn-out"}
+]}},req,{},sets);
+check(length(labels.trace[0].match_fields)==1 && labels.trace[0].match_fields[0]=="domain_suffix", "manual domain matcher label");
+check(length(labels.trace[1].match_fields)==1 && labels.trace[1].match_fields[0]=="rule_set", "list matcher label");
+check(length(labels.trace[2].match_fields)==1 && labels.trace[2].match_fields[0]=="ip_cidr", "shadowed IP matcher label");
+check(index(sprintf("%J",labels.trace[0]),"other.example")<0,"trace labels do not expose rule values");
 let dns_answer=m.explain({route:{rules:[{domain_suffix:"example",server:"fakeip-server"}],final:"dns-server"}},req,{},sets);
 check(dns_answer.status=="matched" && dns_answer.outbound=="fakeip-server", "DNS server implies route action in the legacy format");
 config.route.rules[0] = {action:"sniff"};
