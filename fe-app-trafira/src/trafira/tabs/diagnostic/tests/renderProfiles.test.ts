@@ -400,6 +400,37 @@ it('uses the same option captions as LuCI for settings and routing sections', as
     expect(text(host)).not.toContain(key);
   expect(text(host)).toContain('awg3_ru_eu'); // User-defined section names are preserved.
 });
+it('keeps unknown option names as text without reading inherited object properties', async () => {
+  previewResult = {
+    success: true,
+    applicable: true,
+    digest,
+    changes: [
+      {
+        section: 'custom_section',
+        option: 'constructor',
+        change: 'changed',
+        before: 'private-old',
+        after: 'private-new',
+      },
+      {
+        section: 'settings',
+        option: 'unknown_custom_option',
+        change: 'changed',
+      },
+      { section: 'new_section', change: 'added' },
+    ],
+  };
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  await click('Show differences');
+  expect(text(host)).toContain('constructor');
+  expect(text(host)).toContain('unknown_custom_option');
+  expect(text(host)).not.toContain('private-old');
+  expect(text(host)).not.toContain('private-new');
+  expect(text(host)).not.toContain('function Object');
+});
 
 it.each([
   { success: true, digest, changes: [] },

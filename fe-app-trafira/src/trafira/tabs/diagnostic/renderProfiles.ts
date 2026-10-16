@@ -442,6 +442,12 @@ export const profilesPanel = {
       restoreHintRow,
     );
     const labels = profileOptionLabels();
+    const optionCaption = (section: string, option?: string) => {
+      const group = section === 'settings' ? labels.settings : labels.options;
+      return option && Object.prototype.hasOwnProperty.call(group, option)
+        ? group[option]
+        : option || '—';
+    };
     const controller = new ProfilePanelController(command, (state) => {
       if (generation !== mountId) return;
       if (JSON.stringify(last?.entries) !== JSON.stringify(state.entries)) {
@@ -563,11 +569,7 @@ export const profilesPanel = {
                           E(
                             'td',
                             { class: 'td', 'data-title': _('Option') },
-                            (change.section === 'settings'
-                              ? labels.settings[change.option]
-                              : labels.options[change.option]) ||
-                              change.option ||
-                              '—',
+                            optionCaption(change.section, change.option),
                           ),
                           E(
                             'td',
