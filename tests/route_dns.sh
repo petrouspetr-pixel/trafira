@@ -31,6 +31,9 @@ let before=fs.readfile(getenv("DNS_CALLS"));
 r=dns.resolve(c,{domain:"example.com",destination_ip:"203.0.113.8",source:{kind:"router"}},{});
 assert(!r.performed && r.origin=="manual" && r.addresses[0]=="203.0.113.8","manual override skips DNS");
 assert(fs.readfile(getenv("DNS_CALLS"))==before,"no DNS on override");
+fs.writefile(getenv("DNS_FIXTURE"),"2001:db8::1\n203.0.113.1\n");
+r=dns.resolve(c,{domain:"example.com",source:{kind:"device",ip:"2001:db8::2"}},{dns_strategy:"ipv4_only"});
+assert(length(r.addresses)==1 && r.addresses[0]=="2001:db8::1" && r.family=="ipv6","selected source family is never mixed with an incompatible destination");
 assert(dns.resolve({}, {domain:"example.com",source:{kind:"router"}},{}).status=="unavailable","no external resolver fallback");
 print("route DNS checks passed\n");
 '

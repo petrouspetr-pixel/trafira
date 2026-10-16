@@ -3657,7 +3657,7 @@ msgid "Server IP"
 msgstr "IP-адрес сервера"
 
 msgid "Addresses were requested through the main DNS configured in Trafira. A device using its own DNS may receive different addresses."
-msgstr "Адреса получены через основной DNS, настроенный в Trafira. Если устройство использует собственный DNS, адреса могут отличаться."
+msgstr "DNS-запрос выполнен через основной DNS, настроенный в Trafira. Если устройство использует собственный DNS, адреса могут отличаться."
 
 msgid "The check uses the server IP you entered. No DNS lookup was needed."
 msgstr "Проверен указанный вами IP сервера. DNS-запрос не выполнялся."

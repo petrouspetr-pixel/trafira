@@ -16,7 +16,7 @@ function resolve(config,request,settings,workspace){
     let inbound=filter(common.array_or_empty(config.inbounds),(item)=>item.tag=="dns-health-active-main-in" && item.listen=="127.0.0.42" && item.listen_port==12053)[0];
     if(!inbound)return result;
     let strategy=(config.dns||{}).strategy||settings.dns_strategy||"prefer_ipv4",family=request.source.kind=="device"?ip.ip_family(request.source.ip):0;
-    let types=family==4 || strategy=="ipv4_only"?["A"]:family==6 || strategy=="ipv6_only"?["AAAA"]:strategy=="prefer_ipv6"?["AAAA","A"]:["A","AAAA"];
+    let types=family==4?["A"]:family==6?["AAAA"]:strategy=="ipv4_only"?["A"]:strategy=="ipv6_only"?["AAAA"]:strategy=="prefer_ipv6"?["AAAA","A"]:["A","AAAA"];
     result.family=length(types)==2?"both":types[0]=="A"?"ipv4":"ipv6";
     let temporary=workspace?workspace+"/dns-answer":null;
     if(!temporary){
