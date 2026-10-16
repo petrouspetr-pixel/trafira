@@ -3718,3 +3718,15 @@ msgstr "В работающей конфигурации недоступно а
 
 msgid "The configured DNS server could not resolve this website. Try again, or enter a known real IP in Additional settings."
 msgstr "Настроенный DNS-сервер не смог определить адрес сайта. Повторите проверку или укажите известный IP сервера в дополнительных настройках."
+
+msgid "Phone or computer"
+msgstr "Телефон или компьютер"
+
+msgid "Choose the device that will open the website."
+msgstr "Выберите устройство, с которого будете открывать сайт."
+
+msgid "This checks apps running on the router itself. Device traffic is checked separately."
+msgstr "Этот вариант проверяет приложения самого роутера. Для телефона или компьютера выберите устройство."
+
+msgid "Select a device from the list, or enter its local IP address."
+msgstr "Выберите устройство из списка или введите его IP-адрес в локальной сети."

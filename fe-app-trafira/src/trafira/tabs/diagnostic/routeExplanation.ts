@@ -39,6 +39,7 @@ export interface ExplainReport {
     status?: string;
     addresses?: string[];
     truncated?: boolean;
+    partial?: boolean;
     family?: string;
   };
   connection?: RouteConnection | null;
@@ -165,9 +166,26 @@ export function parseRouteExplanationResult(result: {
       (!record(report.dns_query) ||
         typeof report.dns_query.performed !== 'boolean' ||
         typeof report.dns_query.origin !== 'string' ||
+        (report.dns_query.status != null &&
+          ![
+            'resolved',
+            'provided',
+            'unavailable',
+            'no_address',
+            'fakeip',
+            'failed',
+            'timeout',
+          ].includes(String(report.dns_query.status))) ||
+        (report.dns_query.truncated != null &&
+          typeof report.dns_query.truncated !== 'boolean') ||
+        (report.dns_query.partial != null &&
+          typeof report.dns_query.partial !== 'boolean') ||
         (report.dns_query.addresses != null &&
           (!strings(report.dns_query.addresses) ||
-            report.dns_query.addresses.length > 4)))) ||
+            report.dns_query.addresses.length > 4 ||
+            report.dns_query.addresses.some(
+              (address) => address.length > 45,
+            ))))) ||
     (report.destinations != null &&
       (!Array.isArray(report.destinations) ||
         report.destinations.length > 4 ||

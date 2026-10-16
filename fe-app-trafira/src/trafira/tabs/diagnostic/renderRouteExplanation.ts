@@ -45,6 +45,7 @@ export const routeExplanationPanel = {
     const container = document.getElementById('trafira-route-explanation');
     if (!container) return;
     const domain = E('input', {
+      id: 'trafira-route-domain',
       type: 'text',
       placeholder: 'example.com',
       maxLength: 253,
@@ -55,7 +56,7 @@ export const routeExplanationPanel = {
       _('Source'),
       'device',
       {
-        device: _('Device by IP address'),
+        device: _('Phone or computer'),
         router: _('This router'),
       },
       false,
@@ -104,9 +105,7 @@ export const routeExplanationPanel = {
     const sourceHelp = E(
       'p',
       { id: 'trafira-route-source-help', class: 'cbi-value-description' },
-      _(
-        'For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.',
-      ),
+      _('Choose the device that will open the website.'),
     );
     const destinationHelp = E(
       'p',
@@ -116,6 +115,7 @@ export const routeExplanationPanel = {
       ),
     );
     const port = E('input', {
+      id: 'trafira-route-port',
       type: 'number',
       min: '1',
       max: '65535',
@@ -151,11 +151,9 @@ export const routeExplanationPanel = {
       destination.placeholder = _('Determined automatically');
       sourceHelp.textContent = router
         ? _(
-            'This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings.',
+            'This checks apps running on the router itself. Device traffic is checked separately.',
           )
-        : _(
-            'For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.',
-          );
+        : _('Choose the device that will open the website.');
       destinationHelp.textContent = _(
         'Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server.',
       );
@@ -313,9 +311,7 @@ export const routeExplanationPanel = {
           mac.setChoices(macChoices);
           iface.setChoices(interfaceChoices);
           deviceStatus.textContent = devices.length
-            ? _(
-                'Select a device to fill its IP, MAC and incoming interface. You can also enter them manually.',
-              )
+            ? _('Select a device from the list, or enter its local IP address.')
             : _(
                 'No detected devices. Enter the address manually or refresh the list.',
               );

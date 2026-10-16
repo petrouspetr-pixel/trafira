@@ -5154,3 +5154,15 @@ msgstr ""
 
 msgid "The configured DNS server could not resolve this website. Try again, or enter a known real IP in Additional settings."
 msgstr ""
+
+msgid "Phone or computer"
+msgstr ""
+
+msgid "Choose the device that will open the website."
+msgstr ""
+
+msgid "This checks apps running on the router itself. Device traffic is checked separately."
+msgstr ""
+
+msgid "Select a device from the list, or enter its local IP address."
+msgstr ""
