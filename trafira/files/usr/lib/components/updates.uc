@@ -2617,7 +2617,8 @@ function list_update_pid_begin() {
 
 function list_update_pid_end() {
     remove_file(LIST_UPDATE_PID_FILE);
-    if (list_update_queue) list_update_queue.end(schedule_queued_list_update);
+    if (list_update_queue && !list_update_queue.end(schedule_queued_list_update))
+        log_message("Could not start the queued lists update; request retained for retry", "error");
     list_update_queue = null;
 }
 
@@ -2830,6 +2831,10 @@ function list_update() {
     ensure_parent_dir(LIST_UPDATE_LOCK_FILE);
     list_update_queue = require("service.list_queue").create(LIST_UPDATE_LOCK_FILE, LIST_UPDATE_PID_FILE + ".pending");
     if (!list_update_queue.begin(true)) {
+        if (list_update_queue.error() != "") {
+            log_message("Could not record the lists update request", "error");
+            exit(1);
+        }
         log_message("Lists update queued behind the active worker", "info");
         exit(0);
     }
@@ -2837,11 +2842,10 @@ function list_update() {
     let ok = false;
     try {
         ok = list_update_pass();
-        // Coalesce changes made during this pass; a later request remains queued
-        // and is handed to another worker instead of keeping this call forever.
-        if (list_update_queue.next()) ok = list_update_pass();
     }
-    catch (e) { log_message("Lists update interrupted; queued requests retained", "error"); }
+    catch (e) { ok = false; log_message("Lists update interrupted; queued requests retained", "error"); }
+    // A fresh process also gets a fresh UCI cursor. Repeating here would reuse
+    // the package loaded before a concurrent LuCI Save/Apply.
     list_update_pid_end();
     exit(ok ? 0 : 1);
 }
