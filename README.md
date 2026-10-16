@@ -4,7 +4,7 @@
 
 Выбирайте, какие сайты и устройства подключаются напрямую, через прокси, VPN или средства обхода DPI. Сервер, подписку либо VPN-интерфейс нужно настроить самостоятельно.
 
-[Скачать](https://github.com/petrouspetr-pixel/trafira/releases/latest) · [Что нового](https://github.com/petrouspetr-pixel/trafira/releases) · [Сообщить об ошибке](https://github.com/petrouspetr-pixel/trafira/issues)
+[Скачать](https://github.com/petrouspetr-pixel/trafira/releases/latest) · [Что нового](https://github.com/petrouspetr-pixel/trafira/releases)
 
 ## Возможности
 
@@ -87,7 +87,7 @@ apk update && apk add --allow-untrusted /tmp/trafira-update/*.apk
 
 Запустите проверки в **Диагностике** и посмотрите журнал. При ошибке установки проверьте свободное место во flash. После обновления интерфейса обновите страницу с очисткой кэша браузера.
 
-В [сообщении об ошибке](https://github.com/petrouspetr-pixel/trafira/issues) укажите версии Trafira и OpenWrt, модель роутера, шаги воспроизведения и фрагмент журнала. Удалите из него пароли, ключи и закрытые ссылки подписок.
+Для разбора проблемы подготовьте версии Trafira и OpenWrt, модель роутера, шаги воспроизведения и фрагмент журнала. Перед передачей журнала удалите из него пароли, ключи и закрытые ссылки подписок.
 
 ---
 
