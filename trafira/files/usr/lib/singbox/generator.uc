@@ -3047,7 +3047,7 @@ function enabled_sections(deferred_sections) {
         if (section_enabled(section) && !deferred[as_string(section[".name"])])
             push(result, section);
     });
-    return result;
+    return require("config.gaming_presets").normalize(result);
 }
 
 function enabled_servers() {

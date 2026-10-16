@@ -29,7 +29,7 @@ for (const args of [
   ['clash_api', 'get_proxies'], ['clash_api', 'get_proxy_latencies', '["node"]', '5000'],
   ['profile_action', '{"action":"list"}'], ['profile_action', '{"action":"preview","id":"one"}'],
   ['core_action', '{"action":"catalog"}'], ['core_action', '{"action":"status"}'],
-  ['gaming_preset_action', '{"action":"preview_remove"}']
+  ['gaming_preset_action', '{"action":"preview_remove"}'], ['gaming_preset_action', '{"action":"plan","sections":[],"operations":[]}']
 ]) {
   const result = run(args);
   assert.strictEqual(result.code, 0, `allowed ${args}`);
