@@ -282,7 +282,7 @@ it.each([0, 1, 2, 3])(
 
 it('uses the unsaved enabled flag to edit and preview without saving the switch first', async () => {
   presetsEnabled = false;
-  gamingPresetsPanel.mount(true, () => true);
+  gamingPresetsPanel.mount();
   await drain();
   expect(
     all(host)
@@ -309,24 +309,22 @@ it('uses the unsaved enabled flag to edit and preview without saving the switch 
     enable_gaming: true,
   });
 });
-it('restores the saved disabled state after resetting the pending toggle', async () => {
+it('discards the pending editor preview when native LuCI hides or resets the panel', async () => {
   presetsEnabled = false;
-  gamingPresetsPanel.mount(true, () => true);
+  gamingPresetsPanel.mount();
   await drain();
+  completeSelection();
+  const detachedPreview = button('Preview gaming rules');
   gamingPresetsPanel.unmount();
-  gamingPresetsPanel.mount(true, () => false);
+  detachedPreview.fire('click');
   await drain();
-  expect(
-    all(host)
-      .filter((n) => n.tag === 'select')
-      .every((n) => n.disabled),
-  ).toBe(true);
+  expect(requests).not.toContain('preview');
   expect(requests).not.toContain('apply');
   expect(requests).not.toContain('set_enabled');
 });
 it('keeps read-only access when the unsaved flag enables the editor', async () => {
   presetsEnabled = false;
-  gamingPresetsPanel.mount(false, () => true);
+  gamingPresetsPanel.mount(false);
   await drain();
   completeSelection();
   expect(button('Preview gaming rules').disabled).toBe(false);

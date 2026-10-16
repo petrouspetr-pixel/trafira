@@ -11,7 +11,7 @@ printf original >"$TRAFIRA_CONFIG_FILE"
 cat >"$TRAFIRA_LIB/config/profile_runtime.uc" <<'UC'
 let fs=require("fs"),format=require("config.profile_format");
 return {
- read_document:()=>({success:true,document:{schema:1,name:"Current",config:[{".name":"settings",".type":"settings"},{".name":"vpn",".type":"section",action:"connection",enabled:"1"}]}}),
+ read_document:()=>({success:true,document:{schema:1,name:"Current",config:[{".name":"settings",".type":"settings",gaming_presets_enabled:"0"},{".name":"vpn",".type":"section",action:"connection",enabled:"1"}]}}),
  prepare:(document,directory)=>{fs.writefile(directory+"/trafira",format.to_uci(document.config));return {success:true,path:directory+"/trafira"};},
  hooks:()=>({validate:()=>true,capture:()=>({running:true,enabled:false}),activate:()=>true,restore:()=>true})
 };
@@ -22,7 +22,7 @@ UC
 call(){ ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/config/gaming_cli.uc" action "$1"; }
 call '{"action":"catalog"}' >"$WORK_DIR/catalog.json"
 digest=$(sha256sum "$TRAFIRA_CONFIG_FILE" | cut -d' ' -f1)
-request="\"preset\":\"steam\",\"device_ips\":[\"192.0.2.5/32\"],\"proxy_section\":\"vpn\",\"placement\":\"before-device-routes\",\"expected_digest\":\"$digest\""
+request="\"enable_gaming\":true,\"preset\":\"steam\",\"device_ips\":[\"192.0.2.5/32\"],\"proxy_section\":\"vpn\",\"placement\":\"before-device-routes\",\"expected_digest\":\"$digest\""
 call "{\"action\":\"preview\",$request}" >"$WORK_DIR/preview.json"
 test "$(cat "$TRAFIRA_CONFIG_FILE")" = original
 call "{\"action\":\"apply\",$request}" >"$WORK_DIR/start.json"
@@ -38,6 +38,7 @@ if(!read('preview').applicable || read('preview').patch.sections.length!==2)thro
 if(!read('start').running || !read('status').success || read('status').running)throw Error('durable apply');
 JS
 grep -q preset_owner "$TRAFIRA_CONFIG_FILE"
+grep -q "option gaming_presets_enabled '1'" "$TRAFIRA_CONFIG_FILE"
 test "$(cat "$TRAFIRA_TRANSACTION_DIR/previous.uci")" = original
 call "{\"action\":\"apply\",$request}" >"$WORK_DIR/stale.json"
 node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.success||r.error!=="conflict")throw Error("stale preview");' "$WORK_DIR/stale.json"

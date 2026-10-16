@@ -10,6 +10,7 @@ export interface GamingSelection {
   proxy_section?: string;
   placement?: string;
   enable_device?: boolean;
+  enable_gaming?: boolean;
   replace_edited?: boolean;
   owner?: string;
   mode?: string;

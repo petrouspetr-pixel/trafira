@@ -67,7 +67,7 @@ function current_action(request,work){
 function action(text){
     let request;try{request=json(text);}catch(e){return fail("invalid_request");}
     if(type(text)!="string" || length(text)>65536 || type(request)!="object")return fail("invalid_request");
-    for(let key in request)if(index(["action","preset","device_ips","proxy_section","placement","expected_digest","enable_device","replace_edited","owner","mode","confirm","enabled"],key)<0)return fail("invalid_request");
+    for(let key in request)if(index(["action","preset","device_ips","proxy_section","placement","expected_digest","enable_device","enable_gaming","replace_edited","owner","mode","confirm","enabled"],key)<0)return fail("invalid_request");
     if(request.action=="status")return jobs.status();
     if(index(["catalog","preview","apply","preview_remove","remove","set_enabled"],request.action)<0)return fail("unsupported_action");
     let lock=locks.acquire("gaming-preset");if(!lock)return fail("busy");

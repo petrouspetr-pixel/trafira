@@ -161,11 +161,12 @@ export const gamingPresetsPanel = {
       const busy = loading || confirming || state?.busy || state?.running;
       for (const b of Array.from(host!.querySelectorAll('button')))
         b.disabled = !!busy;
-      const disabled = catalog?.enabled === false;
+      // Native LuCI depends() mounts this panel only while the current form flag is on.
+      // The saved catalog flag may still be off until the user explicitly applies changes.
       for (const input of [platform, device, proxy, placement, enable, replace])
-        input.disabled = !!busy || disabled;
+        input.disabled = !!busy;
       for (const input of Array.from(addresses.querySelectorAll('input')))
-        input.disabled = !!busy || disabled;
+        input.disabled = !!busy;
       const ready =
         !!catalog &&
         !!platform.value &&
@@ -173,7 +174,7 @@ export const gamingPresetsPanel = {
         !!proxy.value &&
         !!placement.value &&
         addresses.querySelectorAll('input:checked').length > 0;
-      if (preview) preview.disabled = !!busy || disabled || !ready;
+      if (preview) preview.disabled = !!busy || !ready;
       if (apply) {
         apply.textContent =
           state?.preview?.operation === 'preview_remove'
@@ -182,34 +183,26 @@ export const gamingPresetsPanel = {
               : _('Delete')
             : _('Apply reviewed changes');
         apply.disabled =
-          !canWrite ||
-          !!busy ||
-          state?.preview?.applicable !== true ||
-          (disabled && state?.preview?.operation !== 'preview_remove');
+          !canWrite || !!busy || state?.preview?.applicable !== true;
       }
-      hint.textContent = disabled
-        ? _(
-            'Apply the gaming preset switch first, then create or update presets.',
-          )
-        : !catalog
-          ? ''
-          : !catalog.devices.length
-            ? _(
-                'No known devices. Connect the device to the router and refresh the list.',
-              ) +
-              (!catalog.proxies.length
-                ? ' ' +
-                  _('No enabled connection rules. Add a connection first.')
-                : '')
-            : !catalog.proxies.length
-              ? _('No enabled connection rules. Add a connection first.')
-              : !catalog.presets.length
-                ? _('No gaming presets are available.')
-                : ready
-                  ? ''
-                  : _(
-                      'Choose a platform, device addresses, connection and rule priority before previewing.',
-                    );
+      hint.textContent = !catalog
+        ? ''
+        : !catalog.devices.length
+          ? _(
+              'No known devices. Connect the device to the router and refresh the list.',
+            ) +
+            (!catalog.proxies.length
+              ? ' ' + _('No enabled connection rules. Add a connection first.')
+              : '')
+          : !catalog.proxies.length
+            ? _('No enabled connection rules. Add a connection first.')
+            : !catalog.presets.length
+              ? _('No gaming presets are available.')
+              : ready
+                ? ''
+                : _(
+                    'Choose a platform, device addresses, connection and rule priority before previewing.',
+                  );
       addressRow.className =
         'cbi-value' +
         (addresses.querySelectorAll('input').length ? '' : ' hidden');
@@ -669,6 +662,7 @@ export const gamingPresetsPanel = {
           void controller.preview(
             {
               preset: platform.value,
+              enable_gaming: catalog.enabled === false ? true : undefined,
               device_ips: Array.from(
                 addresses.querySelectorAll<HTMLInputElement>('input:checked'),
               ).map((i) => i.value),
