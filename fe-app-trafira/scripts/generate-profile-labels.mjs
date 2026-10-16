@@ -16,7 +16,19 @@ for (const file of fs.readdirSync(source).sort()) {
   const ast = parse(fs.readFileSync(path.join(source, file), 'utf8'), {
     sourceType: 'script', allowReturnOutsideFunction: true,
   });
-  traverse(ast, { CallExpression(call) {
+  traverse(ast, { ForOfStatement(loop) {
+    if (loop.node.right.type !== 'ArrayExpression') return;
+    let definesOptions = false;
+    loop.get('body').traverse({ CallExpression(inner) {
+      if (['option', 'taboption'].includes(inner.node.callee.property?.name)) definesOptions = true;
+    } });
+    if (!definesOptions) return;
+    for (const pair of loop.node.right.elements) {
+      const [key, title] = pair?.type === 'ArrayExpression' ? pair.elements : [];
+      if (key?.type === 'StringLiteral' && /^[a-z][a-z0-9_]*$/.test(key.value) && title?.callee?.name === '_' && title.arguments[0]?.type === 'StringLiteral')
+        captions[settingsFiles.has(file) ? 'settings' : 'options'][key.value] = title.arguments[0].value;
+    }
+  }, CallExpression(call) {
     const { node } = call;
     const method = node.callee.property?.name;
     if (method === 'forEach' && node.callee.object?.type === 'ArrayExpression' && node.arguments[0]) {

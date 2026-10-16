@@ -57,6 +57,12 @@ it('has a Russian translation for every known profile option caption', () => {
   );
   expect(labels.options.failure_policy).toBe('Поведение при отказе VPN');
   expect(labels.options.community_lists).toBe('Встроенные наборы правил');
+  for (const key of [
+    'failure_threshold',
+    'recovery_threshold',
+    'failure_hold_seconds',
+  ])
+    expect(labels.options[key], `Missing caption: ${key}`).toBeTruthy();
   for (const label of used)
     expect(ru[label], `Missing Russian caption: ${label}`).toBeTruthy();
 });
