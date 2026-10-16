@@ -88,6 +88,10 @@ start_main
 kill "$main_pid"
 wait "$main_pid" 2>/dev/null || true
 rm -rf "$TRAFIRA_RULESET_CACHE_DIR"
+# Main's system endpoint legitimately routes plaintext into its kernel device.
+# Count only the isolated bootstrap attempt below, not that main-core traffic.
+ip netns exec "$router" nft flush chain inet wg_bootstrap_test output
+ip netns exec "$router" nft add rule inet wg_bootstrap_test output ip daddr 10.200.0.1 tcp dport 18080 counter reject
 sha256sum "$WORK_DIR/candidate.json" >"$WORK_DIR/before.sha"
 if run_prepare; then echo 'offline cold native bootstrap succeeded without lists' >&2; exit 1; fi
 sha256sum -c "$WORK_DIR/before.sha"
