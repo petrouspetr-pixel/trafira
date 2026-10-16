@@ -195,7 +195,19 @@ function load_background_sets(config,limitations,options) {
                     let native_domain=rule.type=="remote" && rule.url=="https://github.com/zxc-rv/ad-filter/releases/latest/download/adlist.srs" && format=="binary" && type(request.domain)=="string";
                     let decoded=native_domain?codec.match_domain(path,request.domain,min(30000,max(1,(deadline-clock()[0])*1000)),options.workspace):codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
                     if(decoded.match)matched=decoded.match;
-                    else if(decoded.data)matched=matcher.match_rule({rule_set:"current",rule_set_ip_cidr_match_source:source_mode},request,{current:decoded.data});
+                    else if(decoded.data) {
+                        let wrapper={rule_set:"current",rule_set_ip_cidr_match_source:source_mode},data={current:decoded.data};
+                        matched=matcher.match_rule(wrapper,request,data);
+                        // Evaluate the other DNS addresses while this single decoded
+                        // list is in memory; never retain decoded lists between calls.
+                        for(let other in options.scenarios||[]) {
+                            let other_scenario=sprintf("%J",{request:other,source_mode}),other_memo=tag+"\n"+other_scenario;
+                            if(memo[other_memo] || length(keys(memo))>=512)continue;
+                            let value=matcher.match_rule(wrapper,other,data);
+                            memo[other_memo]=value;
+                            if(digest && core)pending[codec.cache_key(digest,format+"\n"+other_scenario,core.digest)]={rules:[],match:value};
+                        }
+                    }
                     else reason=decoded.error||"decode_failed";
                     // Refcounted data is released before the next list/codec.
                     decoded=null;
@@ -242,6 +254,13 @@ function fake_destination(config,address) {
     if(legacy.enabled)push(ranges,legacy.inet4_range||"198.18.0.0/15",legacy.inet6_range||"fc00::/18");
     return length(filter(ranges,(range)=>ip.ip_in_cidr(address,range)))>0;
 }
+function connection_info(config,route,selected) {
+    if(!route.outbound)return null;
+    let tag=selected?selected.current:route.outbound,entry=null;
+    for(let candidate in [...arr(config.outbounds),...arr(config.endpoints)])if(candidate.tag==tag)entry=candidate;
+    let label=entry && entry.bind_interface?entry.bind_interface:tag;
+    return {label:substr(common.as_string(label),0,256),type:entry?entry.type||"unknown":"unknown"};
+}
 function explain(raw,options) {
     options=options||{};
     let r=validate(raw); if (!r) return error("invalid_request");
@@ -261,11 +280,27 @@ function explain(raw,options) {
     // Do not block runtime reloads during a potentially long background calculation.
     let captured=sprintf("%J",applied);
     if(options.background && read_guard){read_guard.close();read_guard=null;}
-    let loaded=options.background?load_background_sets(config,limitations,options):load_sets(config,limitations),sets=loaded.sets;
+    let dns_query=active?require("diagnostics.route_dns").resolve(config,r,settings,options.workspace):{performed:false,origin:"none",addresses:[]};
+    let requests=[];
+    for(let address in length(dns_query.addresses||[])?dns_query.addresses:[null])
+        push(requests,{domain:lc(r.domain),source_ip:r.source.ip,destination_ip:address,port:r.port,network:r.network,
+            protocol:r.protocol,source_mac_address:r.source.mac,inbound:r.source.kind=="router"?(ip.ip_family(address)==6?"router-tproxy6-in":"router-tproxy-in"):(ip.ip_family(r.source.ip)==6?"tproxy6-in":"tproxy-in")});
+    let loaded=options.background?load_background_sets(config,limitations,{...options,scenarios:requests}):load_sets(config,limitations),sets=loaded.sets;
     if(loaded.error)return error(loaded.error);
-    let request={domain:lc(r.domain),source_ip:r.source.ip,destination_ip:r.destination_ip,port:r.port,network:r.network,
-        protocol:r.protocol,source_mac_address:r.source.mac,inbound:r.source.kind=="router"?(ip.ip_family(r.destination_ip)==6?"router-tproxy6-in":"router-tproxy-in"):(ip.ip_family(r.source.ip)==6?"tproxy6-in":"tproxy-in")};
-    let route=!active?decision("indeterminate","applied_capture_state_unavailable"):fake_destination(config,r.destination_ip)?decision("indeterminate","fakeip_is_not_real_destination"):gate(settings,r,config) || matcher.explain(config,request,origins || {},sets);
+    let request=requests[0],destinations=[],route=null,selected=null;
+    for(let scenario in requests) {
+        let input={...r,destination_ip:scenario.destination_ip};
+        let answer=!active?decision("indeterminate","applied_capture_state_unavailable"):fake_destination(config,scenario.destination_ip)?decision("indeterminate","fakeip_is_not_real_destination"):gate(settings,input,config) || matcher.explain(config,scenario,origins || {},sets);
+        if(answer.status=="indeterminate" && !scenario.destination_ip && dns_query.status && dns_query.status!="resolved")
+            push(answer.missing,"dns_"+dns_query.status);
+        let node=answer.outbound?selected_node(config,answer.outbound):null;
+        if(!route){route=answer;selected=node;}
+        if(scenario.destination_ip)push(destinations,{ip:scenario.destination_ip,decision:{...answer,trace:slice(answer.trace,0,40),trace_truncated:answer.trace_truncated || length(answer.trace)>40},connection:connection_info(config,answer,node)});
+    }
+    let different=false;
+    for(let entry in destinations)if(entry.decision.status!=route.status || entry.decision.outbound!=route.outbound || sprintf("%J",entry.decision.missing)!=sprintf("%J",route.missing))different=true;
+    if(different){route=decision("indeterminate","multiple_destination_routes");selected=null;}
+    if(dns_query.truncated || dns_query.partial){route=decision("indeterminate",dns_query.truncated?"dns_answer_limit":"dns_partial_answer");selected=null;}
     let dns_request={domain:request.domain,source_ip:request.source_ip,query_type:"A"};
     if(r.source.kind=="device")dns_request.inbound=require("singbox.constants").SOURCE_DNS_INBOUND_TAG;
     if(r.source.kind=="router") {
@@ -281,7 +316,6 @@ function explain(raw,options) {
         }
     }
     let dns=active?matcher.explain({route:obj(config.dns)},dns_request,{route:obj(origins).dns},sets):decision("indeterminate","applied_capture_state_unavailable");
-    let selected=route.outbound ? selected_node(config,route.outbound) : null;
     if (digest!=provenance.hash_file(path)) return error("configuration_changed_retry");
     if(options.background && locked) {
         read_guard=fs.open(root+"/operation.lock","re");
@@ -294,6 +328,6 @@ function explain(raw,options) {
     if(options.background && loaded.core && provenance.hash_file(loaded.core.path)!=loaded.core.digest)return error("configuration_changed_retry");
     if(loaded.publish)loaded.publish();
     return {success:true,generated_at:time(),config_digest:digest,decision:route,dns_policy:dns,
-        dns_query:{performed:false,origin:"none"},selector:selected,rule_sets:loaded.report,limitations};
+        dns_query,destinations,connection:connection_info(config,route,selected),selector:selected,rule_sets:loaded.report,limitations};
 }
 return {explain,validate};

@@ -101,7 +101,7 @@ function count_prefix(values, prefix) { let count = 0; for (let value in values 
 
 let single = cfg(ARGV[0]);
 assert(length(single.dns.servers) == 3, "singleton keeps the legacy three-server shape");
-assert(length(single.inbounds) == 3, "singleton adds no health inbounds");
+assert(length(single.inbounds) == 4, "singleton exposes loopback real DNS for routing diagnostics");
 assert(count_prefix(single.dns.servers, "dns-health-") == 0, "singleton adds no health servers");
 assert(find_tag(single.dns.servers, "dns-server").server == "77.88.8.8", "singleton main DNS preserved");
 assert(single.route.default_domain_resolver == "dns-server", "singleton keeps main default resolver");

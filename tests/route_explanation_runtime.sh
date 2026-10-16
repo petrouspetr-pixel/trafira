@@ -85,3 +85,29 @@ node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.de
 printf 'trafira.settings.alice_mode_enabled=1\ntrafira.settings.alice_list_mode=allow\ntrafira.settings.alice_ips=198.51.100.5\n' >>"$TRAFIRA_UCI_STATE_FILE"
 run '{"domain":"store.example","source":{"kind":"device","ip":"192.0.2.5"},"port":443,"network":"tcp"}' >"$WORK_DIR/unapplied.json"
 node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.decision.status==="direct")throw Error("Unapplied Alice settings masquerade as active capture");' "$WORK_DIR/unapplied.json"
+
+# Automatic real-DNS addresses must not pick an arbitrary route.
+cat >"$WORK_DIR/bin/dig" <<'SH'
+#!/bin/sh
+printf '203.0.113.5\n203.0.113.6\n'
+SH
+chmod +x "$WORK_DIR/bin/dig"
+printf 'trafira.settings=settings\ntrafira.settings.config_path=%s/config.json\n' "$WORK_DIR" >"$TRAFIRA_UCI_STATE_FILE"
+cat >"$WORK_DIR/config.json" <<'JSON'
+{"inbounds":[{"tag":"dns-health-active-main-in","listen":"127.0.0.42","listen_port":12053}],"route":{"rules":[{"ip_cidr":"203.0.113.5/32","action":"route","outbound":"vpn-out"}],"final":"direct-out"},"dns":{"rules":[],"final":"dns-server","strategy":"ipv4_only"},"outbounds":[{"tag":"vpn-out","type":"direct","bind_interface":"awg0"}]}
+JSON
+stamp
+run '{"domain":"store.example","source":{"kind":"device","ip":"192.0.2.5"},"port":443,"network":"tcp","protocol":"tls"}' >"$WORK_DIR/resolved.json"
+run '{"domain":"store.example","destination_ip":"203.0.113.5","source":{"kind":"device","ip":"192.0.2.5"},"port":443,"network":"tcp","protocol":"tls"}' >"$WORK_DIR/manual.json"
+node - "$WORK_DIR" <<'JS'
+const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
+const auto=JSON.parse(fs.readFileSync(dir+'/resolved.json')),manual=JSON.parse(fs.readFileSync(dir+'/manual.json'));
+assert.equal(auto.decision.status,'indeterminate');
+assert.ok(auto.decision.missing.includes('multiple_destination_routes'));
+assert.deepEqual(auto.destinations.map(x=>x.decision.status),['matched','direct']);
+assert.equal(auto.destinations[0].connection.label,'awg0');
+assert.equal(auto.dns_query.performed,true);
+assert.equal(manual.dns_query.performed,false);
+assert.equal(manual.decision.outbound,'vpn-out');
+JS
+printf 'automatic DNS multi-address route checks passed\n'

@@ -45,7 +45,7 @@ function cleanup(id){
     stop_calculator(ROOT+"/"+id);
     require("diagnostics.route_decode_cache").cleanup(ROOT+"/"+id);
     require("diagnostics.route_memory").cleanup(ROOT+"/"+id);
-    for(let name in ["request.json","state.json","result.json","state.json.stage","result.json.stage","calculator.json.stage","exit.status"])fs.unlink(ROOT+"/"+id+"/"+name);
+    for(let name in ["request.json","state.json","result.json","state.json.stage","result.json.stage","calculator.json.stage","exit.status","dns-answer"])fs.unlink(ROOT+"/"+id+"/"+name);
     fs.rmdir(ROOT+"/"+id);
 }
 function status(id){
