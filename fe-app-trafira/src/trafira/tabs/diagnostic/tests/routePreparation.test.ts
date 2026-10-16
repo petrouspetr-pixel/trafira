@@ -18,6 +18,23 @@ const report = {
 const job = (value: unknown) =>
   parseRouteJobCommandResult({ stdout: JSON.stringify(value), code: 0 });
 describe('background route transport', () => {
+  it('restores a finished job by ID without calculating the same scenario again', async () => {
+    const calls: string[] = [];
+    const result = await runRoutePreparation(
+      async (name, args) => {
+        calls.push(name);
+        expect(args).toEqual(['r-abcd']);
+        return job({ success: true, running: false, job_id: 'r-abcd', report });
+      },
+      request,
+      () => {},
+      () => true,
+      async () => {},
+      'r-abcd',
+    );
+    expect(result.decision.outbound).toBe('vpn-out');
+    expect(calls).toEqual(['route_explain_status']);
+  });
   it('polls its own job, reports progress and validates the final route report', async () => {
     const calls: string[] = [],
       progress: number[] = [];
@@ -82,12 +99,22 @@ describe('background route transport', () => {
         if (name === 'route_explain_start')
           return job({ success: true, running: true, job_id: 'r-a' });
         if (!polls++)
-          return parseRouteJobCommandResult({stdout: '', code: 1, failure: 'timeout'});
+          return parseRouteJobCommandResult({
+            stdout: '',
+            code: 1,
+            failure: 'timeout',
+          });
         return job({ success: true, running: false, job_id: 'r-a', report });
-      }, request, () => {}, () => true, async () => {},
+      },
+      request,
+      () => {},
+      () => true,
+      async () => {},
     );
     expect(result.decision.outbound).toBe('vpn-out');
-    expect(calls.filter((name) => name === 'route_explain_start')).toHaveLength(1);
+    expect(calls.filter((name) => name === 'route_explain_start')).toHaveLength(
+      1,
+    );
   });
   it('stops polling after the view has changed', async () => {
     let active = true,

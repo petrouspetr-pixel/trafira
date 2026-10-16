@@ -32,6 +32,7 @@ chmod +x "$WORK_DIR/bin/"*
 
 cat >"$WORK_DIR/bin/dig" <<'SH'
 #!/bin/sh
+printf 'dns\n' >>"$TRAFIRA_RUNTIME_STATE_DIR/dns-calls"
 printf '203.0.113.1\n203.0.113.2\n203.0.113.3\n203.0.113.4\n'
 SH
 chmod +x "$WORK_DIR/bin/dig"
@@ -58,3 +59,16 @@ done
 test "$(grep -c "$WORK_DIR/bin/sing-box$" "$TRAFIRA_RUNTIME_STATE_DIR/hash-calls")" = 2
 test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/network-attempted"
 printf 'four DNS addresses share each decoded list once, warm result cache reused\n'
+
+# Missing ingress information cannot be repaired by decoding lists or simulating DNS.
+printf 'trafira.settings.source_network_interfaces=br-lan\n' >>"$WORK_DIR/uci"
+ucode -L "$TRAFIRA_LIB" -e 'let a=require("service.applied_config"),u=require("core.uci");assert(a.save(a.capture(u.get_all("trafira","settings"),[])));'
+before_dns=$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/dns-calls")
+before_codec=$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")
+ucode -L "$TRAFIRA_LIB" -e '
+ let r=require("diagnostics.route_analysis").explain("{\"domain\":\"target.example\",\"source\":{\"kind\":\"device\",\"ip\":\"192.0.2.5\"},\"port\":443,\"network\":\"tcp\"}",{background:true,workspace:ARGV[0]});
+ assert(r.success && index(r.decision.missing,"incoming_interface_missing")>=0,"clear missing interface result");
+ assert(!r.dns_query.performed,"no DNS for an incomplete device selection");
+' "$WORK_DIR"
+test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/dns-calls")" = "$before_dns"
+test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = "$before_codec"

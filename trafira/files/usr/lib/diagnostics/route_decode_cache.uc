@@ -14,18 +14,19 @@ function read(path,limit,follow){
 function ensure(){
     let info=fs.lstat(ROOT);if(info && info.type!="directory")return false;
     if(!info && !fs.mkdir(ROOT,448))return false;
-    for(let name in fs.lsdir(ROOT)||[])if(match(name,/^[a-f0-9]{64}[.]json$/)) {
-        let info=fs.lstat(ROOT+"/"+name);
-        if(info && info.type=="file" && info.size>MAX_ENTRY){fs.unlink(ROOT+"/"+name);fs.unlink(ROOT+"/"+substr(name,0,64)+".meta");}
-    }
     return fs.chmod(ROOT,448);
+}
+function signature(path){
+    let s=fs.stat(path);
+    return s && s.type=="file"?join(":",[s.inode,s.size,s.mtime,s.ctime,s.mode]):null;
 }
 function identity(){
     let pipe=fs.popen("command -v sing-box","re");if(!pipe)return null;
     let path=trim(pipe.read(1024)||""),status=pipe.close();
-    let digest=status==0 && path!=""?hash(path):null;
-    return digest?{path,digest}:null;
+    let before=status==0 && path!=""?signature(path):null,digest=before?hash(path):null;
+    return digest && before==signature(path)?{path,digest,signature:before}:null;
 }
+function unchanged(core){return core && core.signature==signature(core.path);}
 function cache_key(digest,format,core){
     let pipe=fs.popen("printf %s "+quote("route-v2\n"+digest+"\n"+format+"\n"+core)+" | sha256sum","re");
     if(!pipe)return null;
@@ -35,6 +36,7 @@ function cache_key(digest,format,core){
 function get(key,budget){
     if(!key || !ensure())return null;
     let path=ROOT+"/"+key+".json",info=fs.lstat(path),metadata=read(ROOT+"/"+key+".meta",256);
+    if(info && info.size>min(budget,MAX_ENTRY))return {error:"size_limit"};
     if(!info || info.type!="file" || !metadata || type(metadata.digest)!="string" || !match(metadata.digest,/^[a-f0-9]{64}$/) || hash(path)!=metadata.digest)return null;
     if(info.size>budget)return {error:"size_limit"};
     let entry=read(path,min(MAX_FILE+1024,budget));
@@ -118,4 +120,4 @@ function match_domain(path,domain,milliseconds,workspace){
     for(let line in split(text,"\n"))if(match(line,/^match rules[.]\[[0-9]+\]: /))return {match:{value:"yes",missing:[]}};
     return {error:"decode_failed"};
 }
-return {identity,cache_key,get,put,decode,match_domain,cleanup,MAX_FILE,MAX_TOTAL};
+return {identity,unchanged,cache_key,get,put,decode,match_domain,cleanup,MAX_FILE,MAX_TOTAL};

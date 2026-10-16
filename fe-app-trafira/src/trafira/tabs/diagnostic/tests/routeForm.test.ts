@@ -149,7 +149,13 @@ it('restores a pending request after refresh and resumes the same scenario', asy
   routeExplanationPanel.unmount();
   const pending = {
     started: Date.now(),
-    request: {domain: 'facebook.com', source: {kind: 'device', ip: '192.168.10.234', interface: 'br-lan'}, port: 443, network: 'tcp', protocol: 'tls'},
+    request: {
+      domain: 'facebook.com',
+      source: { kind: 'device', ip: '192.168.10.234', interface: 'br-lan' },
+      port: 443,
+      network: 'tcp',
+      protocol: 'tls',
+    },
   };
   const storage = new Map([['trafira-route-pending', JSON.stringify(pending)]]);
   vi.stubGlobal('sessionStorage', {
@@ -159,10 +165,18 @@ it('restores a pending request after refresh and resumes the same scenario', asy
   });
   nodes = [];
   routeExplanationPanel.mount();
-  await vi.waitFor(() => expect(vi.mocked(executeShellCommand).mock.calls.some(([r]) => r.args[0] === 'route_explain_start')).toBe(true));
+  await vi.waitFor(() =>
+    expect(
+      vi
+        .mocked(executeShellCommand)
+        .mock.calls.some(([r]) => r.args[0] === 'route_explain_start'),
+    ).toBe(true),
+  );
   expect(node('domain').value).toBe('facebook.com');
   expect(widget('device').getValue()).toBe('192.168.10.234');
-  const call = vi.mocked(executeShellCommand).mock.calls.find(([r]) => r.args[0] === 'route_explain_start')!;
+  const call = vi
+    .mocked(executeShellCommand)
+    .mock.calls.find(([r]) => r.args[0] === 'route_explain_start')!;
   expect(JSON.parse(call[0].args[1])).toEqual(pending.request);
   await vi.waitFor(() => expect(storage.size).toBe(0));
 });

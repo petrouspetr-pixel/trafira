@@ -2,6 +2,13 @@ import { nativeChoice } from '../../helpers/nativeChoice';
 import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
 import {
+  pendingRoute,
+  savePendingRoute,
+  clearPendingRoute,
+  pendingRouteId,
+  savePendingRouteId,
+} from './routePending';
+import {
   ExplainRequest,
   parseRouteExplanationResult,
   RouteExplanationController,
@@ -26,13 +33,36 @@ import { renderRouteExplanationResult } from './renderRouteResult';
 export { renderRouteExplanationResult } from './renderRouteResult';
 let updateFormBusy: ((busy: boolean) => void) | null = null;
 const controller = new RouteExplanationController(
-  (request, progress, active) =>
-    runRoutePreparation(
-      (name, args) => command<RouteJobStatus>(name, args),
-      request,
-      progress || (() => {}),
-      active || (() => true),
-    ),
+  async (request, progress, active) => {
+    savePendingRoute(request);
+    try {
+      const report = await runRoutePreparation(
+        async (name, args) => {
+          const state = await command<RouteJobStatus>(name, args);
+          savePendingRouteId(request, state.job_id);
+          return state;
+        },
+        request,
+        progress || (() => {}),
+        active || (() => true),
+        undefined,
+        pendingRouteId(request),
+      );
+      clearPendingRoute(request);
+      return report;
+    } catch (error) {
+      // Preserve transport failures for refresh/retry; final server failures
+      // must not silently auto-run again when the page next opens.
+      if (
+        error instanceof Error &&
+        !['timeout', 'rpc_failed', 'Route view no longer active'].includes(
+          error.message,
+        )
+      )
+        clearPendingRoute(request);
+      throw error;
+    }
+  },
   (report, error, busy, progress) => {
     updateFormBusy?.(busy);
     renderRouteExplanationResult(report, error, busy, progress);
@@ -340,7 +370,21 @@ export const routeExplanationPanel = {
     refreshDevices.addEventListener('click', () => {
       void loadDevices();
     });
-    void loadDevices();
+    const pending = pendingRoute();
+    if (pending) updateFormBusy(true);
+    void loadDevices().then(() => {
+      if (!pending || generation !== mountId) return;
+      source.value = pending.source.kind;
+      ip.value = pending.source.ip || '';
+      mac.value = pending.source.mac || '';
+      iface.value = pending.source.interface || '';
+      domain.value = pending.domain;
+      destination.value = pending.destination_ip || '';
+      port.value = String(pending.port);
+      protocol.value = pending.protocol || pending.network;
+      updateSource();
+      void controller.submit(pending);
+    });
   },
   unmount() {
     mountId++;

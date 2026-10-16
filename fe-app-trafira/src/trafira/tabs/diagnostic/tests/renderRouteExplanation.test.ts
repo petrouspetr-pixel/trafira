@@ -38,6 +38,41 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('route diagnostic output', () => {
+  it('describes rule actions and successful IPv4 lookup without a second DNS rule table', () => {
+    renderRouteExplanationResult(
+      {
+        success: true,
+        decision: {
+          status: 'matched',
+          outbound: 'awg-out',
+          missing: [],
+          trace: [
+            {
+              index: 0,
+              action: 'route',
+              match: 'yes',
+              shadowed: false,
+              missing: [],
+            },
+          ],
+        },
+        dns_query: {
+          performed: true,
+          origin: 'trafira_main_dns',
+          status: 'resolved',
+          family: 'ipv4',
+          addresses: ['203.0.113.5'],
+        },
+        limitations: [],
+      },
+      '',
+      false,
+    );
+    expect(text(output)).toContain('Route the connection');
+    expect(text(output)).toContain('DNS lookup: website addresses found');
+    expect(text(output)).not.toContain('DNS policy (A query)');
+    expect(text(output)).not.toContain('Select a connection');
+  });
   it('renders the full router CLI response with partially available saved lists', () => {
     const report = parseRouteExplanationResult({
       code: 0,

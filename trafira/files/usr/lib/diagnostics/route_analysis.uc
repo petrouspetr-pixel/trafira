@@ -159,8 +159,8 @@ function load_sets(config,limitations) {
     return {sets,report:{basis:remote?"saved_snapshots":"local",live_verified:false,available,unavailable,unavailable_reasons}};
 }
 function load_background_sets(config,limitations,options) {
-    let codec=require("diagnostics.route_decode_cache"),cache=require("singbox.ruleset_cache"),core=codec.identity();
-    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],seen={},memo={},pending={},deadline=min(clock()[0]+120,options.deadline||clock()[0]+120);
+    let codec=require("diagnostics.route_decode_cache"),cache=require("singbox.ruleset_cache"),core=null,core_checked=false,output=null;
+    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],hashes={},seen={},memo={},pending={},deadline=min(clock()[0]+120,options.deadline||clock()[0]+120);
     let report={basis:"local",live_verified:false,available:0,unavailable:0,cached:0,unavailable_reasons:[]};
     if(length(rules)>256)return {error:"too_many_rule_sets"};
     for(let rule in rules)if(type(rule.tag)=="string") {
@@ -185,8 +185,12 @@ function load_background_sets(config,limitations,options) {
             if(!info || info.type!="file" || info.size<=0)reason="missing";
             else if(info.size>4194304)reason="size_limit";
             else {
-                let digest=provenance.hash_file(path),key=digest && core?codec.cache_key(digest,format+"\n"+scenario,core.digest):null;
-                if(digest)push(checked,{path,digest});
+                if(hashes[path]==null) {
+                    hashes[path]=provenance.hash_file(path)||false;
+                    if(hashes[path])push(checked,{path,digest:hashes[path]});
+                }
+                if(!core_checked){core=codec.identity();core_checked=true;output.core=core;}
+                let digest=hashes[path],key=digest && core?codec.cache_key(digest,format+"\n"+scenario,core.digest):null;
                 hit=key?codec.get(key,4096):null;
                 if(hit && type(obj(hit.data).match)=="object")matched=hit.data.match;
                 else if(!digest)reason="decode_failed";
@@ -225,7 +229,8 @@ function load_background_sets(config,limitations,options) {
         let answer=matched||{value:"unknown",missing:["rule_set:"+tag]};
         memo[memo_key]=answer;return answer;
     };
-    return {sets:resolve,checked,core,report,publish:()=>{for(let key in pending)codec.put(key,pending[key],options.workspace);}};
+    output={sets:resolve,checked,core,report,publish:()=>{for(let key in pending)codec.put(key,pending[key],options.workspace);}};
+    return output;
 }
 function selected_node(config,tag) {
     let out=filter(arr(config.outbounds),(o)=>o.tag==tag)[0];
@@ -280,6 +285,12 @@ function explain(raw,options) {
     // Do not block runtime reloads during a potentially long background calculation.
     let captured=sprintf("%J",applied);
     if(options.background && read_guard){read_guard.close();read_guard=null;}
+    // Missing device metadata is an input problem: no DNS or list work can fix
+    // it. In particular, do not calculate a second DNS policy before reporting it.
+    let preflight=active && r.source.kind=="device"?gate(settings,r,config):null;
+    if(options.background && preflight && preflight.status=="indeterminate" &&
+        length(filter(preflight.missing,(reason)=>index(["incoming_interface_missing","alice_device_details_missing"],reason)>=0)))
+        return {success:true,generated_at:time(),config_digest:digest,decision:preflight,dns_query:{performed:false,origin:"none"},limitations};
     // Leave time inside the supervisor's 125s budget for DNS, selector lookup
     // and the final snapshot verification; address count cannot multiply it.
     let analysis_deadline=clock()[0]+110;
@@ -310,6 +321,8 @@ function explain(raw,options) {
     for(let entry in destinations)if(entry.decision.status!=route.status || entry.decision.outbound!=route.outbound || sprintf("%J",entry.decision.missing)!=sprintf("%J",route.missing))different=true;
     if(different){route=decision("indeterminate","multiple_destination_routes");selected=null;}
     if(dns_query.truncated || dns_query.partial){route=decision("indeterminate",dns_query.truncated?"dns_answer_limit":"dns_partial_answer");selected=null;}
+    let dns=null;
+    if(!options.background) {
     let dns_request={domain:request.domain,source_ip:request.source_ip,query_type:"A"};
     if(r.source.kind=="device")dns_request.inbound=require("singbox.constants").SOURCE_DNS_INBOUND_TAG;
     if(r.source.kind=="router") {
@@ -324,7 +337,12 @@ function explain(raw,options) {
             push(limitations,"router_dns_assumes_local_forwarder");
         }
     }
-    let dns=active?matcher.explain({route:obj(config.dns)},dns_request,{route:obj(origins).dns},sets):decision("indeterminate","applied_capture_state_unavailable");
+    // The actual main-DNS lookup is already reported above. Simulating a device
+    // DNS query with different inbound/response context is neither that lookup
+    // nor proof of its DNS policy, and needlessly evaluates lists a second time.
+    dns=active?matcher.explain({route:obj(config.dns)},dns_request,{route:obj(origins).dns},sets):decision("indeterminate","applied_capture_state_unavailable");
+    }
+    if(options.progress)options.progress({completed:loaded.report.available+loaded.report.unavailable,total:length(arr(obj(config.route).rule_set)),phase:"finishing"});
     if (digest!=provenance.hash_file(path)) return error("configuration_changed_retry");
     if(options.background && locked) {
         read_guard=fs.open(root+"/operation.lock","re");
@@ -332,9 +350,10 @@ function explain(raw,options) {
         if(active && (system("exec ucode -L "+quote(lib)+" "+quote(lib+"/service/state.uc")+" sing-box-service-running >/dev/null 2>&1",3000)!=0 || system("nft list table inet "+quote(require("core.constants").NFT_TABLE_NAME)+" >/dev/null 2>&1",2000)!=0))return error("configuration_changed_retry");
         if(captured!=sprintf("%J",require("service.applied_config").active()))return error("configuration_changed_retry");
         for(let item in loaded.checked)if(provenance.hash_file(item.path)!=item.digest)return error("configuration_changed_retry");
-        if(loaded.core && provenance.hash_file(loaded.core.path)!=loaded.core.digest)return error("configuration_changed_retry");
     }
-    if(options.background && loaded.core && provenance.hash_file(loaded.core.path)!=loaded.core.digest)return error("configuration_changed_retry");
+    // identity() hashed the executable once. Package replacement changes its
+    // inode/size/timestamps; do not reread a 95 MB binary twice per result.
+    if(options.background && loaded.core && !require("diagnostics.route_decode_cache").unchanged(loaded.core))return error("configuration_changed_retry");
     if(loaded.publish)loaded.publish();
     return {success:true,generated_at:time(),config_digest:digest,decision:route,dns_policy:dns,
         dns_query,destinations,connection:connection_info(config,route,selected),selector:selected,rule_sets:loaded.report,limitations};
