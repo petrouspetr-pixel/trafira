@@ -195,7 +195,7 @@ it('lets a reader inspect versions but never install or unpin them', async () =>
   expect(executeShellCommand).toHaveBeenCalledTimes(count);
 });
 
-it('shows versions without disclosure and pins the installed core without an install request', async () => {
+it('keeps versions in a closed native disclosure and pins the installed core without an install request', async () => {
   vi.mocked(executeShellCommand).mockImplementation(async ({ args }) => {
     const request = JSON.parse(args[1]);
     return {
@@ -221,9 +221,14 @@ it('shows versions without disclosure and pins the installed core without an ins
   });
   coreVersionsPanel.mount();
   await vi.waitFor(() => expect(executeShellCommand).toHaveBeenCalledTimes(2));
-  expect(find(host, (n) => n.tag === 'details')).toBeUndefined();
+  const disclosure = find(host, (n) => n.tag === 'details')!;
+  expect(disclosure).toBeDefined();
+  expect(disclosure.attributes).not.toHaveProperty('open');
   expect(
-    find(host, (n) => n.tag === 'h3' && n.children[0] === 'Sing-box versions'),
+    find(
+      disclosure,
+      (n) => n.tag === 'summary' && n.children[0] === 'Sing-box versions',
+    ),
   ).toBeDefined();
   const button = find(
     host,

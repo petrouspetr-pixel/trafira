@@ -165,12 +165,6 @@ export const styles = `
     font-size: 13px;
 }
 
-.fkp_updates-page__core-versions > h3 {
-    margin: 0 0 8px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
 .fkp_updates-page__core-versions-help,
 .fkp_updates-page__core-versions-info {
     color: var(--text-color-medium, #666);
