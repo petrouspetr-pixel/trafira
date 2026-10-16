@@ -708,6 +708,26 @@ function reload_release() {
     return 0;
 }
 
+function retry_busy_config_reload(mode, reason) {
+    if (mode != "reload-service" || (reason != CONFIG_CHANGE_REASON && reason != "pending"))
+        return false;
+
+    // Do not wait here: rc.common owns procd's lock, which the current
+    // configuration transaction may need for its own nested service action.
+    // Re-enter through procd so repeated events retain its normal coalescing.
+    let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
+    if (inherited_lock)
+        inherited_lock.close();
+    let event = sprintf("%J", { type: "config.change", data: { package: CONFIG_NAME } });
+    let worker = "sleep 2; exec " + command_from_args([ "ubus", "call", "service", "event", event ]);
+    if (command_status(command_from_args([ "sh", "-c", worker ]) +
+        " </dev/null >/dev/null 2>&1 &") != 0)
+        return false;
+    command_success_from_args([ "logger", "-t", SERVICE_NAME,
+        "[info] Configuration apply deferred until the active operation completes" ]);
+    return true;
+}
+
 function trigger_plan(settings) {
     settings = object_or_empty(settings);
     let badwan_enabled = option(settings, "enable_badwan_interface_monitoring", "") == "1";
@@ -737,6 +757,8 @@ let operation_lock=null;
 if(index(["start-service","stop-service","reload-service","retry-start-on-wan-up","handle-wan-up"],mode)>=0) {
     operation_lock=require("service.operation_lock").acquire("initd");
     if(!operation_lock) {
+        if (retry_busy_config_reload(mode, ARGV[1]))
+            exit(0);
         warn("Another configuration operation is already running\n");
         exit(1);
     }
