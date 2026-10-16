@@ -64,7 +64,14 @@ const assert=require('assert/strict'),r=JSON.parse(require('fs').readFileSync(pr
 assert(r.success&&!r.running,JSON.stringify(r));assert.equal(r.report.decision.outbound,'vpn-out');assert.equal(r.report.rule_sets.available,45);assert.equal(r.report.rule_sets.unavailable,0);
 JS
 }
-id="$(start)"; finish "$id"
+id="$(start)"
+# A refresh with the identical scenario attaches to its existing worker.
+same_id="$(start)"
+test "$same_id" = "$id"
+# A different scenario must neither receive the first request nor take its lock.
+run route_explain_start "${request/target.example/different.example}" >"$WORK_DIR/busy"
+node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1]));if(r.error!=="busy"||r.job_id||r.report)throw Error(JSON.stringify(r));' "$WORK_DIR/busy"
+finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 45
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 45

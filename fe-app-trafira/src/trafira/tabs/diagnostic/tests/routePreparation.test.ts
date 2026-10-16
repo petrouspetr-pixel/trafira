@@ -73,6 +73,22 @@ describe('background route transport', () => {
       ),
     ).rejects.toMatchObject({ category: 'invalid_response' });
   });
+  it('retries a transient polling timeout without starting a second worker', async () => {
+    const calls: string[] = [];
+    let polls = 0;
+    const result = await runRoutePreparation(
+      async (name) => {
+        calls.push(name);
+        if (name === 'route_explain_start')
+          return job({ success: true, running: true, job_id: 'r-a' });
+        if (!polls++)
+          return parseRouteJobCommandResult({stdout: '', code: 1, failure: 'timeout'});
+        return job({ success: true, running: false, job_id: 'r-a', report });
+      }, request, () => {}, () => true, async () => {},
+    );
+    expect(result.decision.outbound).toBe('vpn-out');
+    expect(calls.filter((name) => name === 'route_explain_start')).toHaveLength(1);
+  });
   it('stops polling after the view has changed', async () => {
     let active = true,
       calls = 0;
