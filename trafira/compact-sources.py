@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build-only indentation removal, certified by both ucode compilation modes.
+"""Build-only indentation compaction, certified by both ucode compilation modes.
 
 Only text is installed. Bytecode is temporary proof, never a package payload.
 """
@@ -11,8 +11,8 @@ import subprocess
 import tempfile
 
 
-def strip_indentation(source):
-    return re.sub(rb'(?m)^[ \t]+', b'', source)
+def compact_indentation(source):
+    return re.sub(rb'(?m)^[ \t]+', lambda match: match[0].replace(b'    ', b'\t'), source)
 
 
 def normalize_proof(code):
@@ -76,7 +76,7 @@ def compile_source(source, strict, compiler, workspace):
 
 
 def verified_source(source, compiler):
-    candidate = strip_indentation(source)
+    candidate = compact_indentation(source)
     if candidate == source:
         return source
     with tempfile.TemporaryDirectory(prefix='trafira-ucode-proof-') as directory:
@@ -111,7 +111,7 @@ def compact_tree(root, compiler):
         if compact != original:
             changes.append((file, compact))
             stats['changed'] += 1
-        elif strip_indentation(original) != original:
+        elif compact_indentation(original) != original:
             stats['retained'] += 1
     # Finish all proofs before changing the staging tree. File modes stay intact.
     for file, content in changes:
