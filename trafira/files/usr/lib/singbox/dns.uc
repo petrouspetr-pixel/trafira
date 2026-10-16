@@ -286,8 +286,9 @@ function config(settings, override_state) {
         sniff_inbounds: []
     };
 
-    if (length(state.main_servers) > 1 || length(state.bootstrap_servers) > 1)
-        add_active_health_inbound(result);
+    // Also used by routing diagnostics to obtain real addresses without FakeIP.
+    // Keep this loopback-only listener available for a single configured DNS too.
+    add_active_health_inbound(result);
 
     if (length(state.main_servers) > 1)
         for (let i = 0; i < length(state.main_servers); i++)

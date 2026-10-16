@@ -1,10 +1,79 @@
+import type { ExplainDecision, RouteConnection } from './routeExplanation';
+
+export function routeOutcome(
+  decision: ExplainDecision,
+  connection?: RouteConnection | null,
+) {
+  if (decision.status === 'indeterminate')
+    return {
+      title: decision.missing.includes('multiple_destination_routes')
+        ? _('The route depends on the server address')
+        : _('Cannot determine the route yet'),
+      reason: decision.missing.includes('multiple_destination_routes')
+        ? routeReason('multiple_destination_routes')
+        : _(
+            'See what prevented the check below. An incomplete answer does not mean that the website is unavailable.',
+          ),
+    };
+  if (decision.status === 'blocked')
+    return {
+      title: _('Connection blocked'),
+      reason: _('A Trafira rule blocks this connection.'),
+    };
+  if (decision.status === 'direct')
+    return {
+      title: _('Direct connection'),
+      reason: _(
+        'Trafira does not send this connection through a proxy or VPN. Other system VPN and firewall rules may still apply.',
+      ),
+    };
+  const name =
+    connection?.label || decision.outbound || _('Selected connection');
+  const matched = decision.trace.find(
+    (row) => row.index === decision.rule_index,
+  );
+  return {
+    title: _('Via %s').replace('%s', name),
+    reason: matched?.origin?.section
+      ? _('A rule in section "%s" selected this connection.').replace(
+          '%s',
+          matched.origin.section,
+        )
+      : _('This connection is selected by the Trafira routing settings.'),
+  };
+}
+
 export function routeReason(reason: string): string {
   const messages: Record<string, string> = {
+    dns_partial_answer: _(
+      'One DNS query did not finish. Results below apply only to the addresses that were returned. Try again to check all addresses.',
+    ),
+    multiple_destination_routes: _(
+      'This website has several server addresses with different routing results. See the result for each address below.',
+    ),
+    dns_answer_limit: _(
+      'This website returned more addresses than can be checked at once. Results below apply only to the displayed addresses. Enter one address in Additional settings to check it separately.',
+    ),
+    dns_timeout: _(
+      'The configured DNS server did not respond in time. Try again, or enter a known real server IP in Additional settings.',
+    ),
+    dns_no_address: _(
+      'The configured DNS server returned no usable address for this website and selected IP family. Check the website name or enter a known real IP in Additional settings.',
+    ),
+    dns_fakeip: _(
+      'DNS returned a virtual FakeIP instead of a real server address. The address cannot be used to check IP rules. Restart Trafira after updating, or enter a known real IP in Additional settings.',
+    ),
+    dns_unavailable: _(
+      'Automatic address lookup is unavailable in the running configuration. Restart Trafira after updating, or enter a known real IP in Additional settings.',
+    ),
+    dns_failed: _(
+      'The configured DNS server could not resolve this website. Try again, or enter a known real IP in Additional settings.',
+    ),
     legacy_router_output_rules: _(
       'Router application routing is disabled. Select a LAN device to check its route. To analyze router applications, Router application routing must be enabled and applied in Settings. Other firewall and system VPN routes are not calculated here.',
     ),
     router_destination_address_needed: _(
-      'Enter the real destination IP in the form above. A domain alone cannot determine the router firewall route.',
+      'The server IP could not be determined automatically. Try again, or enter a known real destination IP in Additional settings.',
     ),
     incoming_interface_missing: _(
       'Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface.',

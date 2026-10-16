@@ -145,14 +145,24 @@ it('uses native LuCI choices and no browser datalists', () => {
     nodes.some((n) => n.tag === 'div' && n.attributes.class === 'cbi-value'),
   ).toBe(true);
 });
-it('requires destination IP for the router and hides device fields', () => {
+it('resolves a domain for the router without requiring a manual destination', () => {
   widget('source').setValue('router');
-  expect(node('destination').required).toBe(true);
+  expect(node('destination').required).toBe(false);
   expect(node('device-row').hidden).toBe(true);
   expect(widget('device').node.attributes.disabled).toBeDefined();
   widget('source').setValue('device');
   expect(node('destination').required).toBe(false);
   expect(node('device-row').hidden).toBe(false);
+});
+it('keeps port, protocol and destination override under additional settings', () => {
+  const advanced = nodes.find((n) => n.id === 'trafira-route-advanced');
+  expect(advanced?.tag).toBe('details');
+  expect(advanced?.attributes.open).toBeUndefined();
+});
+it('clears the old result when the user edits the request', () => {
+  node('explanation-result').children = ['Old website route'];
+  nodes.find((n) => n.tag === 'form')!.listeners.input();
+  expect(node('explanation-result').children).toEqual([]);
 });
 it('loads named IPv4 and IPv6 choices and autofills device metadata', async () => {
   await vi.waitFor(() =>

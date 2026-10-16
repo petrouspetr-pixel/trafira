@@ -71,6 +71,27 @@ describe('route response boundary', () => {
       ...valid,
       dns_policy: { status: 'direct', trace: 'wrong', missing: [] },
     }),
+    JSON.stringify({
+      ...valid,
+      dns_query: {
+        performed: true,
+        origin: 'trafira_main_dns',
+        addresses: ['1', '2', '3', '4', '5'],
+      },
+    }),
+    JSON.stringify({
+      ...valid,
+      dns_query: {
+        performed: true,
+        origin: 'trafira_main_dns',
+        status: 'resolved',
+        truncated: 'yes',
+      },
+    }),
+    JSON.stringify({
+      ...valid,
+      destinations: [{ ip: '203.0.113.1', decision: { status: 'direct' } }],
+    }),
     'x'.repeat(262145),
   ])('rejects malformed or oversized output before rendering', (stdout) => {
     expect(category({ code: 0, stdout })).toBe('invalid_response');
