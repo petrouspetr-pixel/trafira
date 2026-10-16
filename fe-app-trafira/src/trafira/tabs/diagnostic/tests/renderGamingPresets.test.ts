@@ -242,6 +242,53 @@ it('allows immediate draft editing while the saved switch is off', async () => {
   expect(write).not.toHaveBeenCalled();
 });
 
+it('clears a catalog error after a successful refresh without discarding the draft', async () => {
+  gamingPresetsPanel.mount();
+  await drain();
+  fill();
+  button('Add to list').fire('click');
+  await drain();
+  fill('epic');
+  vi.mocked(executeShellCommand).mockResolvedValueOnce({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  button('Refresh devices').fire('click');
+  await drain();
+  expect(text(host)).toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(gamingDraft.pending).toBe(1);
+  button('Refresh devices').fire('click');
+  await drain();
+  expect(text(host)).not.toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(gamingDraft.pending).toBe(1);
+  expect(
+    all(host).find((n) => n.attrs.id === 'trafira-game-platform')!.value,
+  ).toBe('epic');
+  expect(button('Add to list').disabled).toBe(false);
+  expect(write).not.toHaveBeenCalled();
+});
+
+it('keeps the error visible when refreshing the catalog fails again', async () => {
+  vi.mocked(executeShellCommand).mockResolvedValue({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  gamingPresetsPanel.mount();
+  await drain();
+  button('Refresh devices').fire('click');
+  await drain();
+  expect(text(host)).toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(write).not.toHaveBeenCalled();
+});
+
 it('editing an existing preset preserves its before-device priority and sends replacement once', async () => {
   const owner = 'game_steam_30323a30303a30303a30303a30303a30314062722d6c616e';
   saved.splice(1, 0, {
@@ -270,4 +317,83 @@ it('editing an existing preset preserves its before-device priority and sends re
     }),
   ]);
   expect(write).not.toHaveBeenCalled();
+});
+
+it.each(['success', 'failure'])(
+  'loads choices after native Save rerenders the form while still busy (%s)',
+  async (outcome) => {
+    gamingPresetsPanel.mount();
+    await drain();
+    expect(requests.filter((r) => r.action === 'catalog')).toHaveLength(1);
+    const save = gamingDraft.save(async () => {
+      // form.Map.save() renders the replacement host before its promise resolves.
+      gamingPresetsPanel.unmount();
+      host = new Node('div');
+      gamingPresetsPanel.mount();
+      expect(requests.filter((r) => r.action === 'catalog')).toHaveLength(1);
+      expect(
+        all(host).find((n) => n.attrs.id === 'trafira-game-platform')!.disabled,
+      ).toBe(true);
+      if (outcome === 'failure') throw Error('offline');
+    });
+    if (outcome === 'failure') await expect(save).rejects.toThrow('offline');
+    else await save;
+    await drain();
+    expect(requests.filter((r) => r.action === 'catalog')).toHaveLength(2);
+    for (const [id, label] of [
+      ['platform', 'Steam'],
+      ['device', 'PC'],
+      ['proxy', 'My VPN'],
+    ]) {
+      const input = all(host).find((n) => n.attrs.id === 'trafira-game-' + id)!;
+      expect(input.disabled).toBe(false);
+      expect(text(input)).toContain(label);
+    }
+    gamingPresetsPanel.mount();
+    await drain();
+    expect(requests.filter((r) => r.action === 'catalog')).toHaveLength(2);
+    fill();
+    expect(button('Add to list').disabled).toBe(false);
+  },
+);
+
+it('does not load a disposed replacement host or repeat catalog loads on idle updates', async () => {
+  gamingPresetsPanel.mount();
+  await drain();
+  let obsolete!: Node;
+  await gamingDraft.save(async () => {
+    host = new Node('div');
+    gamingPresetsPanel.mount();
+    obsolete = host;
+    host = new Node('div');
+    gamingPresetsPanel.mount();
+  });
+  await drain();
+  expect(requests.filter((r) => r.action === 'catalog')).toHaveLength(2);
+  expect(
+    all(obsolete).find((n) => n.attrs.id === 'trafira-game-platform')!.children,
+  ).toHaveLength(0);
+  expect(
+    text(all(host).find((n) => n.attrs.id === 'trafira-game-platform')!),
+  ).toContain('Steam');
+  gamingDraft.reset();
+  gamingPresetsPanel.mount();
+  await drain();
+  expect(requests.filter((r) => r.action === 'catalog')).toHaveLength(2);
+});
+it('allows one explicit retry after catalog failure without an automatic retry loop', async () => {
+  vi.mocked(executeShellCommand).mockRejectedValueOnce(Error('offline'));
+  gamingPresetsPanel.mount();
+  await drain();
+  expect(vi.mocked(executeShellCommand)).toHaveBeenCalledTimes(1);
+  expect(text(host)).toContain('The operation failed.');
+  expect(button('Refresh devices').disabled).toBe(false);
+  gamingPresetsPanel.mount();
+  await drain();
+  expect(vi.mocked(executeShellCommand)).toHaveBeenCalledTimes(1);
+  button('Refresh devices').fire('click');
+  await drain();
+  expect(vi.mocked(executeShellCommand)).toHaveBeenCalledTimes(2);
+  fill();
+  expect(button('Add to list').disabled).toBe(false);
 });

@@ -13,11 +13,12 @@ function ensure() {
     if(!info && !fs.mkdir(DIRECTORY,448)) return false;
     return fs.chmod(DIRECTORY,448);
 }
-function locked(callback) {
+function locked(callback,read_only) {
     if(!ensure()) return failure("storage_unavailable");
     let lock=fs.open(DIRECTORY+"/.lock","ae",384);
     if(!lock) return failure("storage_unavailable");
-    if(!lock.lock("xn")) {lock.close();return failure("busy");}
+    // Catalog, export and diff readers may coexist; all writes stay exclusive.
+    if(!lock.lock(read_only?"sn":"xn")) {lock.close();return failure("busy");}
     let result;
     try { result=callback(); } catch(e) { result=failure("storage_error"); }
     lock.close();return result;
@@ -84,10 +85,10 @@ function list() {
             else push(entries,{id,name:id,invalid:true,bytes:info?info.size:0});
         }
         return {success:true,entries,total_bytes:total,max_count:MAX_COUNT,max_file_bytes:MAX_FILE,quota_bytes:MAX_TOTAL};
-    });
+    },true);
 }
 function export_profile(id) {
-    return locked(function() {let doc=read(id);return doc?{success:true,document:doc}:failure("profile_unavailable");});
+    return locked(function() {let doc=read(id);return doc?{success:true,document:doc}:failure("profile_unavailable");},true);
 }
 function rename(id,name) {
     return locked(function() {
@@ -108,6 +109,6 @@ function preview(id,current) {
     return locked(function() {
         let doc=read(id);if(!doc) return failure("profile_unavailable");
         return {success:true,name:doc.name,changes:format.diff(current,doc.config)};
-    });
+    },true);
 }
 return {DIRECTORY,MAX_FILE,valid_id,create,list,export_profile,rename,remove,preview};
