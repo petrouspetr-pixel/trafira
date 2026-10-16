@@ -159,6 +159,11 @@ it('keeps port, protocol and destination override under additional settings', ()
   expect(advanced?.tag).toBe('details');
   expect(advanced?.attributes.open).toBeUndefined();
 });
+it('clears the old result when the user edits the request', () => {
+  node('explanation-result').children = ['Old website route'];
+  nodes.find((n) => n.tag === 'form')!.listeners.input();
+  expect(node('explanation-result').children).toEqual([]);
+});
 it('loads named IPv4 and IPv6 choices and autofills device metadata', async () => {
   await vi.waitFor(() =>
     expect(widget('device').choices['192.168.10.234']).toContain('DESKTOP'),

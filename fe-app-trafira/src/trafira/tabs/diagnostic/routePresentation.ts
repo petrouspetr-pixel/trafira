@@ -9,9 +9,11 @@ export function routeOutcome(
       title: decision.missing.includes('multiple_destination_routes')
         ? _('The route depends on the server address')
         : _('Cannot determine the route yet'),
-      reason: _(
-        'See what prevented the check below. An incomplete answer does not mean that the website is unavailable.',
-      ),
+      reason: decision.missing.includes('multiple_destination_routes')
+        ? routeReason('multiple_destination_routes')
+        : _(
+            'See what prevented the check below. An incomplete answer does not mean that the website is unavailable.',
+          ),
     };
   if (decision.status === 'blocked')
     return {

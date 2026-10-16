@@ -154,6 +154,7 @@ export const routeExplanationPanel = {
             'This checks apps running on the router itself. Device traffic is checked separately.',
           )
         : _('Choose the device that will open the website.');
+      sourceHelp.hidden = !router;
       destinationHelp.textContent = _(
         'Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server.',
       );
@@ -241,6 +242,13 @@ export const routeExplanationPanel = {
         request.protocol = protocol.value;
       void controller.submit(request);
     });
+    // Do not leave a previous website's answer under an edited request.
+    for (const event of ['input', 'change', 'cbi-dropdown-change'])
+      form.addEventListener(event, () => {
+        document
+          .getElementById('trafira-route-explanation-result')
+          ?.replaceChildren();
+      });
     container.replaceChildren(
       form,
       E('div', {

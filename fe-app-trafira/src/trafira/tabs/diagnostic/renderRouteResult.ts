@@ -116,7 +116,9 @@ export function renderRouteExplanationResult(
   }
   const outcome = routeOutcome(report.decision, report.connection);
   const unavailable = report.rule_sets?.unavailable_reasons || [];
-  const reasons = routeReasons(report.decision.missing, unavailable);
+  const reasons = routeReasons(report.decision.missing, unavailable).filter(
+    (reason) => reason !== outcome.reason,
+  );
   const dns = report.dns_query;
   const dnsFailed =
     dns?.status && !['resolved', 'provided'].includes(dns.status);

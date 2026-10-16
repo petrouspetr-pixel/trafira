@@ -33,7 +33,7 @@ while True:
 PY
 ip netns exec "$namespace" python3 "$WORK_DIR/dns.py" >"$WORK_DIR/dns.log" 2>&1 &
 cat >"$WORK_DIR/config.json" <<'JSON'
-{"log":{"disabled":true},"inbounds":[{"type":"direct","tag":"dns-health-active-main-in","listen":"127.0.0.42","listen_port":12053},{"type":"direct","tag":"device-dns","listen":"127.0.0.42","listen_port":1603}],"dns":{"servers":[{"type":"udp","tag":"dns-server","server":"127.0.0.1","server_port":15353},{"type":"fakeip","tag":"fakeip-server","inet4_range":"198.18.0.0/15","inet6_range":"fc00::/18"}],"rules":[{"inbound":"dns-health-active-main-in","action":"route","server":"dns-server"},{"inbound":"device-dns","action":"route","server":"fakeip-server"}],"final":"dns-server","strategy":"ipv4_only"},"route":{"rules":[{"inbound":["dns-health-active-main-in","device-dns"],"action":"sniff"},{"protocol":"dns","action":"hijack-dns"}]}}
+{"log":{"disabled":true},"inbounds":[{"type":"direct","tag":"dns-health-active-main-in","listen":"127.0.0.42","listen_port":12053},{"type":"direct","tag":"device-dns","listen":"127.0.0.42","listen_port":1603}],"dns":{"servers":[{"type":"udp","tag":"dns-server","server":"127.0.0.1","server_port":15353},{"type":"fakeip","tag":"fakeip-server","inet4_range":"198.18.0.0/15","inet6_range":"fc00::/18"}],"rules":[{"inbound":"dns-health-active-main-in","action":"route","server":"dns-server"},{"inbound":"device-dns","action":"route","server":"fakeip-server"}],"final":"dns-server","strategy":"ipv4_only"},"route":{"default_domain_resolver":"dns-server","rules":[{"inbound":["dns-health-active-main-in","device-dns"],"action":"sniff"},{"protocol":"dns","action":"hijack-dns"}]}}
 JSON
 ip netns exec "$namespace" sing-box run -c "$WORK_DIR/config.json" >"$WORK_DIR/main.log" 2>&1 &
 main_pid=$!
