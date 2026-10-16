@@ -3730,3 +3730,6 @@ msgstr "Этот вариант проверяет приложения само
 
 msgid "Select a device from the list, or enter its local IP address."
 msgstr "Выберите устройство из списка или введите его IP-адрес в локальной сети."
+
+msgid "The server IP could not be determined automatically. Try again, or enter a known real destination IP in Additional settings."
+msgstr "Не удалось автоматически определить IP сервера. Повторите проверку или укажите известный настоящий IP-адрес сервера в дополнительных настройках."

@@ -73,7 +73,7 @@ export function routeReason(reason: string): string {
       'Router application routing is disabled. Select a LAN device to check its route. To analyze router applications, Router application routing must be enabled and applied in Settings. Other firewall and system VPN routes are not calculated here.',
     ),
     router_destination_address_needed: _(
-      'Enter the real destination IP in the form above. A domain alone cannot determine the router firewall route.',
+      'The server IP could not be determined automatically. Try again, or enter a known real destination IP in Additional settings.',
     ),
     incoming_interface_missing: _(
       'Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface.',

@@ -44,7 +44,7 @@ describe('route diagnostic output', () => {
       stdout: JSON.stringify(routerRouteReport),
     });
     expect(() => renderRouteExplanationResult(report, '', false)).not.toThrow();
-    expect(text(output)).toContain('Enter the real destination IP');
+    expect(text(output)).toContain('could not be determined automatically');
     expect(text(output)).toContain(
       'lists exceed the diagnostic size or time limits',
     );
