@@ -61,9 +61,11 @@ ensure_host_deps() {
     node
     patch
     perl
+    python3
     sha256sum
     tar
     unshare
+    zopfli
     zstd
   )
 
@@ -412,6 +414,9 @@ build_ipk_package() {
   }
 
   mv "$built_file" "$output_file"
+  if [[ "$package_name" == trafira ]]; then
+    python3 "$ROOT_DIR/tools/recompress-package.py" "$output_file"
+  fi
 }
 
 write_backend_apk_scripts() {
@@ -623,6 +628,9 @@ build_apk_package() {
     -s "pre-deinstall:${temp_scripts}/${script_prefix}-pre-deinstall.sh" \
     -s "pre-upgrade:${temp_scripts}/${script_prefix}-pre-upgrade.sh" \
     -s "post-upgrade:${temp_scripts}/${script_prefix}-post-upgrade.sh"
+  if [[ "$package_name" == trafira ]]; then
+    python3 "$ROOT_DIR/tools/recompress-package.py" "$output_file"
+  fi
 }
 
 verify_ipk_metadata() {
