@@ -279,7 +279,7 @@ export const gamingPresetsPanel = {
         !(await confirmAction(
           _('Replace edited preset'),
           _(
-            'These rules were edited. Confirm replacement or keep them as ordinary rules.',
+            'This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply.',
           ),
           _('Replace'),
         ))
@@ -543,12 +543,23 @@ export const gamingPresetsPanel = {
           ),
         ),
       ),
-      row('', '', [
-        E('label', {}, [
-          enable,
-          ' ' + _('Enable these addresses in device routing if needed'),
-        ]),
-      ]),
+      row(
+        '',
+        '',
+        [
+          E('label', {}, [
+            enable,
+            ' ' + _('Enable these addresses in device routing if needed'),
+          ]),
+        ],
+        E(
+          'div',
+          { class: 'cbi-value-description' },
+          _(
+            'Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices.',
+          ),
+        ),
+      ),
       row('', '', [
         E('div', { class: 'trafira-form-controls' }, [add, cancel]),
       ]),

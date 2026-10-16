@@ -5283,3 +5283,9 @@ msgstr ""
 
 msgid "You do not have permission to change these settings."
 msgstr ""
+
+msgid "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply."
+msgstr ""
+
+msgid "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices."
+msgstr ""
