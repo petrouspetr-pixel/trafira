@@ -1,6 +1,7 @@
 import { defineConfig } from 'tsup';
 import fs from 'fs';
 import path from 'path';
+import { toLuciModule } from './scripts/luci-compaction.mjs';
 
 export default defineConfig({
   entry: ['src/main.ts'],
@@ -15,10 +16,10 @@ export default defineConfig({
   },
   esbuildOptions(options) {
     options.legalComments = 'none';
-    // LuCI imports these names through baseclass; keep identifiers stable.
+    // Public names are restored explicitly in toLuciModule().
     options.minifyWhitespace = true;
     options.minifySyntax = true;
-    options.minifyIdentifiers = false;
+    options.minifyIdentifiers = true;
   },
   onSuccess: () => {
     const outDir =
@@ -26,9 +27,7 @@ export default defineConfig({
     const file = path.join(outDir, 'main.js');
     let code = fs.readFileSync(file, 'utf8');
 
-    code = code.replace(/export\s*{([\s\S]*?)}/, (match, group) => {
-      return `return baseclass.extend({${group}})`;
-    });
+    code = toLuciModule(code);
 
     fs.writeFileSync(file, code, 'utf8');
     console.log(`✅ Patched LuCI build: ${file}`);

@@ -58,6 +58,7 @@ ensure_host_deps() {
     gcc
     git
     make
+    node
     patch
     perl
     sha256sum
@@ -196,6 +197,8 @@ build_app_root() {
 
   cp -a "$ROOT_DIR/luci-app-trafira/htdocs/." "$output_root/www/"
   cp -a "$ROOT_DIR/luci-app-trafira/root/." "$output_root/"
+  node "$ROOT_DIR/fe-app-trafira/scripts/compact-luci-package.mjs" \
+    "$output_root/www/luci-static/resources/view/trafira"
   sed -i -e "s/__COMPILED_VERSION_VARIABLE__/${RELEASE_VERSION}/g" \
     "$output_root/www/luci-static/resources/view/trafira/main.js"
 
