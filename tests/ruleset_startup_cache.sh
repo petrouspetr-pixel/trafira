@@ -96,6 +96,9 @@ let source = {type: "remote", tag: "json", url: "https://example.org/rules.json"
 check(cache.save(source, file), "source-format snapshot validated with compile");
 cache.apply({route:{rule_set:[source]}}, "1.14.2");
 check(source.initial_path && source.format == "source", "preserve source format");
+check(cache.refresh(config, "127.0.0.1:4535"), "refresh does not race a newly prepared snapshot");
+check(fs.stat(source.initial_path) != null, "new candidate snapshot survives refresh using old config");
+system("touch -t 200001010000 " + source.initial_path);
 check(cache.refresh(config, "127.0.0.1:4535"), "refresh through selected proxy");
 check(!fs.stat(source.initial_path), "obsolete URL snapshot pruned");
 check(!fs.stat(getenv("TRAFIRA_RULESET_CACHE_DIR") + "/.stage.OLD123"), "orphan staging file pruned");

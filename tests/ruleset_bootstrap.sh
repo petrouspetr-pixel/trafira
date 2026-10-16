@@ -80,9 +80,14 @@ if (ARGV[0] == "many") {
 }
 if (ARGV[0] == "offline") fs.writefile(root+"/offline", "1");
 if (ARGV[0] == "corrupt") fs.writefile(cache.path(rule), "corrupt");
-let through_file = ARGV[0] == "timeout" || ARGV[0] == "parent-death";
+let through_file = index(["cold-file","offline","timeout","parent-death"],ARGV[0]) >= 0;
 let path = root + "/candidate.json";
-if (through_file) fs.writefile(path, sprintf("%J", c));
+let provenance = require("singbox.provenance"), store = require("singbox.failure_store");
+if (through_file) {
+  fs.writefile(path, sprintf("%J", c));
+  assert(provenance.save(path,{schema:1,route:[],dns:[]}),"save provenance fixture");
+  assert(store.save_base(path,c,[{".name":"protected",action:"connection",failure_policy:"block"}]),"save baseline fixture");
+}
 let ok = through_file ? b.prepare_file(path, "1.14.1") : b.prepare(c, "1.14.1");
 if (ARGV[0] == "many") {
   assert(ok, "dead first candidate must not spend the whole budget on many lists");
@@ -98,10 +103,17 @@ if (ARGV[0] == "offline-missing") assert(!ok, "offline first boot must fail clos
 else if (ARGV[0] == "corrupt") assert(!ok, "corrupt offline snapshot must fail closed");
 else {
   assert(ok, "alternate candidate downloads missing rule set");
+  if (through_file) {
+    assert(provenance.load(path) != null,"startup preparation preserves digest-bound provenance");
+    let base = store.load(path);
+    assert(base != null && base.sections[0][".name"] == "protected", "startup preparation preserves failure-policy baseline and sections");
+    assert(base.config.route.rule_set[0].initial_path == cache.path(rule),"baseline uses the same validated snapshot");
+    rule = json(fs.readfile(path)).route.rule_set[0];
+  }
   assert(rule.initial_path == cache.path(rule) && cache.validate(rule,rule.initial_path), "validated snapshot used for core startup");
 }
 UC
-ucode -L "$LIB" "$WORK_DIR/prepare.uc" 2>"$WORK_DIR/log"
+ucode -L "$LIB" "$WORK_DIR/prepare.uc" cold-file 2>"$WORK_DIR/log"
 [ "$(wc -l <"$WORK_DIR/attempts")" -eq 2 ]
 ucode -L "$LIB" "$WORK_DIR/prepare.uc" offline 2>>"$WORK_DIR/log"
 [ "$(wc -l <"$WORK_DIR/attempts")" -eq 2 ] || { echo 'cached startup must not download'; exit 1; }

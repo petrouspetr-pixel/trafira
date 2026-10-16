@@ -2598,6 +2598,11 @@ function snapshot_unlock(file) {
     if (file) { file.lock("u"); file.close(); }
 }
 
+function schedule_queued_list_update() {
+    let command = command_from_args([ "ucode", "-L", LIB_DIR, LIB_DIR + "/components/updates.uc", "list-update" ]);
+    return command_status("sh -c " + shell_quote(command + " </dev/null >/dev/null 2>&1 &")) == 0;
+}
+
 function list_update_pid_begin() {
     ensure_parent_dir(LIST_UPDATE_LOCK_FILE);
     list_update_queue = require("service.list_queue").create(LIST_UPDATE_LOCK_FILE, LIST_UPDATE_PID_FILE + ".pending");
@@ -2620,11 +2625,6 @@ function list_update_pid_end() {
     if (list_update_queue && !list_update_queue.end(schedule_queued_list_update))
         log_message("Could not start the queued lists update; request retained for retry", "error");
     list_update_queue = null;
-}
-
-function schedule_queued_list_update() {
-    let command = command_from_args([ "ucode", "-L", LIB_DIR, LIB_DIR + "/components/updates.uc", "list-update" ]);
-    return command_status("sh -c " + shell_quote(command + " </dev/null >/dev/null 2>&1 &")) == 0;
 }
 
 function snapshot_job(locked) {

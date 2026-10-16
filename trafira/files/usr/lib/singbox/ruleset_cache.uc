@@ -40,11 +40,11 @@ function validate(rule, file) {
     fs.unlink(tmp);
     return valid;
 }
-function apply(config, version) {
+function apply(config, version, defer_validation) {
     if (!modern(version)) return;
     for (let rule in common.array_or_empty(config.route && config.route.rule_set)) {
         let file = path(rule);
-        if (file && validate(rule, file)) rule.initial_path = file;
+        if (file && (defer_validation ? size(file) > 0 && size(file) <= MAX_FILE : validate(rule, file))) rule.initial_path = file;
     }
 }
 function usage() {
@@ -57,7 +57,7 @@ function space_ok(bytes) {
     let fields = split(trim(rows[length(rows) - 1] || ""), /[ \t]+/);
     return length(fields) >= 4 && int(fields[3]) * 1024 >= bytes + RESERVE;
 }
-function save(rule, file) {
+function save_locked(rule, file) {
     let target = path(rule);
     if (!target || !validate(rule, file)) return false;
     if (success(["cmp", "-s", file, target])) return true;
@@ -72,6 +72,21 @@ function save(rule, file) {
     fs.unlink(staged);
     return !!ok;
 }
+function cache_lock() {
+    if (!success(["mkdir", "-p", CACHE_DIR]) || !success(["chmod", "700", CACHE_DIR])) return null;
+    let lock = fs.open(CACHE_DIR + "/.cache.lock", "ae", 384);
+    if (!lock) return null;
+    if (!lock.lock("x")) { lock.close(); return null; }
+    return lock;
+}
+function save(rule, file) {
+    let lock = cache_lock();
+    if (!lock) return false;
+    let ok = false;
+    try { ok = save_locked(rule, file); } catch (e) {}
+    lock.close();
+    return ok;
+}
 function refresh(config, proxy) {
     let rules = filter(common.array_or_empty(config.route && config.route.rule_set),
         (rule) => rule.type == "remote" && rule.http_client != null);
@@ -83,16 +98,20 @@ function refresh(config, proxy) {
         if (target) active[target] = true;
         if (rule.initial_path) active[rule.initial_path] = true;
     }
-    // Called under the list-update worker's serialization. Never prune a file
-    // referenced by the active config; leave recent staging files alone.
+    let guard = cache_lock();
+    if (!guard) return false;
+    // Bootstrap can prepare another configuration while the current core runs.
+    // Keep newly published snapshots past its bounded 90-second preparation and
+    // publication window, even if this worker captured the previous config.
     for (let name in fs.lsdir(CACHE_DIR) || []) {
         let target = CACHE_DIR + "/" + name;
         let info = fs.lstat(target);
         if (!info || info.type != "file" || active[target]) continue;
-        if (match(name, /^[a-f0-9]{64}[.]snapshot$/) ||
+        if ((match(name, /^[a-f0-9]{64}[.]snapshot$/) && time() - info.mtime > 300) ||
             (match(name, /^[.]stage[.][A-Za-z0-9]+$/) && time() - info.mtime > 3600))
             fs.unlink(target);
     }
+    guard.close();
     let seen = {};
     let ok = true;
     for (let rule in rules) {

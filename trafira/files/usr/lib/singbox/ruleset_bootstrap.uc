@@ -118,7 +118,10 @@ function fetch(config, rule, candidate, directory, seconds) {
     let file = directory + "/config.json";
     let script = directory + "/fetch.sh";
     let staged = candidate == "" ? null : stage(config, candidate, port, {username:"bootstrap",password:auth});
-    if (staged && staged.error) return false;
+    if (staged && staged.error) {
+        warn("Rule-set startup bootstrap refused: ", staged.error, "\n");
+        return false;
+    }
     fs.unlink(directory + "/download");
     fs.unlink(directory + "/curl.pid");
     if (staged && fs.writefile(file, sprintf("%J", staged)) == null) return false;
@@ -145,7 +148,10 @@ function prepare(config, version, workspace) {
         let groups = {}, order = [];
         for (let rule in pending) {
             let p = plan(config, rule);
-            if (p.error || !length(p.candidates)) { ok = false; break; }
+            if (p.error || !length(p.candidates)) {
+                warn("Rule-set startup bootstrap refused: ", p.error || "empty download graph", "\n");
+                ok = false; break;
+            }
             if (groups[p.target] == null) { groups[p.target] = {rules:[], candidates:p.candidates}; push(order, p.target); }
             push(groups[p.target].rules, rule);
         }
@@ -186,8 +192,20 @@ function prepare_file_inline(path, version, workspace) {
     let config = common.read_json_file(path);
     // Configuration validation remains the runtime owner's responsibility.
     if (type(config) != "object" || !length(remote_rules(config))) return true;
+    let provenance = require("singbox.provenance"), store = require("singbox.failure_store");
+    let origins = provenance.load(path), base = store.load(path);
+    if (fs.lstat(path + ".provenance.json") && !origins) return false;
+    if (fs.lstat(path + ".failure-policy.json") && !base) return false;
     if (!prepare(config, version, workspace)) return false;
-    return fs.writefile(path, sprintf("%J", config)) != null;
+    if (fs.writefile(path, sprintf("%J", config)) == null) return false;
+    if (origins && !provenance.save(path, origins)) return false;
+    if (base) {
+        // The failure-policy baseline must use the same URL/format snapshots
+        // when a later health transition republishes its configuration.
+        cache.apply(base.config, version);
+        if (!store.save_base(path, base.config, base.sections)) return false;
+    }
+    return true;
 }
 function supervise(path, version, directory, owner_pid, owner_ticks) {
     let args = ["ucode", "-L", LIB, LIB + "/singbox/ruleset_bootstrap.uc", "bootstrap-worker", path, version, directory];
@@ -216,10 +234,6 @@ function supervise(path, version, directory, owner_pid, owner_ticks) {
 function prepare_file(path, version) {
     let config = common.read_json_file(path);
     if (type(config) != "object" || !modern(version) || !length(remote_rules(config))) return true;
-    let all_cached = true;
-    for (let rule in remote_rules(config))
-        if (!cache.validate(rule, cache.path(rule))) all_cached = false;
-    if (all_cached) return prepare_file_inline(path, version);
     let owner = identity(), directory = output(["mktemp", "-d", "/tmp/trafira-ruleset-bootstrap.XXXXXX"]);
     if (!owner || !directory || !run(["chmod", "700", directory])) { cleanup(directory); return false; }
     let ok = run(["ucode", "-L", LIB, LIB + "/singbox/ruleset_bootstrap.uc", "bootstrap-supervise", path, version, directory, owner.pid, owner.ticks]);

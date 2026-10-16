@@ -5,6 +5,7 @@ on:
       - 'trafira/files/**'
       - 'tests/failure_policy*'
       - 'tests/router_origin*'
+      - 'tests/ruleset_bootstrap*'
       - 'tests/helpers/failure_policy_servers.py'
       - '.github/workflows/failure-policy-network.yml'
   push:
@@ -13,6 +14,7 @@ on:
       - 'trafira/files/**'
       - 'tests/failure_policy*'
       - 'tests/router_origin*'
+      - 'tests/ruleset_bootstrap*'
       - 'tests/helpers/failure_policy_servers.py'
       - '.github/workflows/failure-policy-network.yml'
 jobs:
@@ -40,3 +42,6 @@ jobs:
 
       - name: Verify router-origin packet paths
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/router_origin_network.sh
+
+      - name: Verify isolated rule-set bootstrap transport
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_bootstrap_network.sh
