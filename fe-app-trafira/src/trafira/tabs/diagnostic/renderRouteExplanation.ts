@@ -168,6 +168,22 @@ export const routeExplanationPanel = {
       undefined,
       true,
     );
+    let manualPort = false;
+    const preservePort = () => {
+      manualPort = true;
+    };
+    port.addEventListener('input', preservePort);
+    port.addEventListener('change', preservePort);
+    protocol.onChange(() => {
+      if (manualPort) return;
+      const standardPorts: Record<string, string> = {
+        http: '80',
+        tls: '443',
+        quic: '443',
+      };
+      const standard = standardPorts[protocol.value];
+      if (standard) port.value = standard;
+    });
     let devices: Array<{ ip: string; mac?: string; interface?: string }> = [];
     const updateSource = () => {
       const router = source.value === 'router';
@@ -380,6 +396,8 @@ export const routeExplanationPanel = {
       iface.value = pending.source.interface || '';
       domain.value = pending.domain;
       destination.value = pending.destination_ip || '';
+      // A restored request must keep its exact port, including a standard one.
+      manualPort = true;
       port.value = String(pending.port);
       protocol.value = pending.protocol || pending.network;
       updateSource();

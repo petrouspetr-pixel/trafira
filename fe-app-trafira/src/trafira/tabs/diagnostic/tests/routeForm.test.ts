@@ -145,41 +145,48 @@ it('uses native LuCI choices and no browser datalists', () => {
     nodes.some((n) => n.tag === 'div' && n.attributes.class === 'cbi-value'),
   ).toBe(true);
 });
-it('restores a pending request after refresh and resumes the same scenario', async () => {
-  routeExplanationPanel.unmount();
-  const pending = {
-    started: Date.now(),
-    request: {
-      domain: 'facebook.com',
-      source: { kind: 'device', ip: '192.168.10.234', interface: 'br-lan' },
-      port: 443,
-      network: 'tcp',
-      protocol: 'tls',
-    },
-  };
-  const storage = new Map([['trafira-route-pending', JSON.stringify(pending)]]);
-  vi.stubGlobal('sessionStorage', {
-    getItem: (key: string) => storage.get(key) || null,
-    setItem: (key: string, value: string) => storage.set(key, value),
-    removeItem: (key: string) => storage.delete(key),
-  });
-  nodes = [];
-  routeExplanationPanel.mount();
-  await vi.waitFor(() =>
-    expect(
-      vi
-        .mocked(executeShellCommand)
-        .mock.calls.some(([r]) => r.args[0] === 'route_explain_start'),
-    ).toBe(true),
-  );
-  expect(node('domain').value).toBe('facebook.com');
-  expect(widget('device').getValue()).toBe('192.168.10.234');
-  const call = vi
-    .mocked(executeShellCommand)
-    .mock.calls.find(([r]) => r.args[0] === 'route_explain_start')!;
-  expect(JSON.parse(call[0].args[1])).toEqual(pending.request);
-  await vi.waitFor(() => expect(storage.size).toBe(0));
-});
+it.each([443, 8443])(
+  'restores a pending request with port %i without overwriting it on protocol changes',
+  async (port) => {
+    routeExplanationPanel.unmount();
+    const pending = {
+      started: Date.now(),
+      request: {
+        domain: 'facebook.com',
+        source: { kind: 'device', ip: '192.168.10.234', interface: 'br-lan' },
+        port,
+        network: 'tcp',
+        protocol: 'tls',
+      },
+    };
+    const storage = new Map([
+      ['trafira-route-pending', JSON.stringify(pending)],
+    ]);
+    vi.stubGlobal('sessionStorage', {
+      getItem: (key: string) => storage.get(key) || null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    nodes = [];
+    routeExplanationPanel.mount();
+    await vi.waitFor(() =>
+      expect(
+        vi
+          .mocked(executeShellCommand)
+          .mock.calls.some(([r]) => r.args[0] === 'route_explain_start'),
+      ).toBe(true),
+    );
+    expect(node('domain').value).toBe('facebook.com');
+    expect(widget('device').getValue()).toBe('192.168.10.234');
+    const call = vi
+      .mocked(executeShellCommand)
+      .mock.calls.find(([r]) => r.args[0] === 'route_explain_start')!;
+    expect(JSON.parse(call[0].args[1])).toEqual(pending.request);
+    widget('protocol').setValue('http');
+    expect(node('port').value).toBe(String(port));
+    await vi.waitFor(() => expect(storage.size).toBe(0));
+  },
+);
 it('resolves a domain for the router without requiring a manual destination', () => {
   widget('source').setValue('router');
   expect(node('destination').required).toBe(false);
@@ -271,3 +278,76 @@ it('keeps manual selection available if discovery fails', async () => {
   );
   expect(widget('device').options.create).toBe(true);
 });
+
+it('selects standard ports until the user edits the port', () => {
+  expect(node('port').value).toBe('443');
+  widget('protocol').setValue('http');
+  expect(node('port').value).toBe('80');
+  widget('protocol').setValue('quic');
+  expect(node('port').value).toBe('443');
+  widget('protocol').setValue('http');
+  widget('protocol').setValue('tls');
+  expect(node('port').value).toBe('443');
+});
+it.each(['input', 'change'])(
+  'preserves an explicit port after a manual %s event',
+  (event) => {
+    node('port').value = '8443';
+    node('port').listeners[event]?.();
+    for (const value of ['http', 'quic', 'tls', 'bittorrent', 'tcp', 'udp']) {
+      widget('protocol').setValue(value);
+      expect(node('port').value).toBe('8443');
+    }
+  },
+);
+it('preserves a manually entered standard port or empty field', () => {
+  node('port').value = '443';
+  node('port').listeners.input?.();
+  widget('protocol').setValue('http');
+  expect(node('port').value).toBe('443');
+  node('port').value = '';
+  node('port').listeners.input?.();
+  widget('protocol').setValue('tls');
+  expect(node('port').value).toBe('');
+});
+it('does not invent default ports for BitTorrent and unspecified TCP/UDP', () => {
+  widget('protocol').setValue('http');
+  for (const value of ['bittorrent', 'tcp', 'udp']) {
+    widget('protocol').setValue(value);
+    expect(node('port').value).toBe('80');
+  }
+  widget('protocol').setValue('tls');
+  expect(node('port').value).toBe('443');
+});
+
+it.each([
+  { protocol: 'http', manual: false, port: 80, network: 'tcp' },
+  { protocol: 'quic', manual: true, port: 8443, network: 'udp' },
+])(
+  'submits $protocol with effective port $port and network $network',
+  async (scenario) => {
+    await vi.waitFor(() =>
+      expect(widget('device').choices['192.168.10.234']).toBeDefined(),
+    );
+    widget('device').setValue('192.168.10.234');
+    node('domain').value = 'ya.ru';
+    if (scenario.manual) {
+      node('port').value = String(scenario.port);
+      node('port').listeners.input();
+    }
+    widget('protocol').setValue(scenario.protocol);
+    nodes
+      .find((n) => n.tag === 'form')!
+      .listeners.submit({ preventDefault() {} });
+    const call = vi
+      .mocked(executeShellCommand)
+      .mock.calls.find(
+        ([request]) => request.args[0] === 'route_explain_start',
+      )!;
+    expect(JSON.parse(call[0].args[1])).toMatchObject({
+      protocol: scenario.protocol,
+      port: scenario.port,
+      network: scenario.network,
+    });
+  },
+);
