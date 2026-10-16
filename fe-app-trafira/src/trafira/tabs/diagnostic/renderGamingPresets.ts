@@ -152,6 +152,7 @@ export const gamingPresetsPanel = {
     mounted?.dispose();
     let disposed = false,
       loading = false,
+      refreshPending = true,
       dirty = false,
       editing: Owner | null = null;
     let catalog: Catalog | null = null,
@@ -348,7 +349,15 @@ export const gamingPresetsPanel = {
         device.value = '';
         addresses.replaceChildren();
       }
+      // Native Save renders a new host before its busy flag is cleared.
+      // Resume its first catalog load on the idle notification instead of
+      // dropping it and leaving the replacement selects permanently empty.
+      if (refreshPending && !loading && !gamingDraft.busy) {
+        void refresh();
+        return;
+      }
       const busy = loading || gamingDraft.busy;
+      refreshButton.disabled = busy;
       for (const input of [platform, device, proxy, placement, enable])
         input.disabled = !canWrite || busy;
       platform.disabled ||= Boolean(editing);
@@ -432,7 +441,12 @@ export const gamingPresetsPanel = {
         existing.append(E('p', {}, _('No gaming presets in the list yet.')));
     }
     async function refresh() {
-      if (loading || gamingDraft.busy) return;
+      if (disposed || loading) return;
+      if (gamingDraft.busy) {
+        refreshPending = true;
+        return;
+      }
+      refreshPending = false;
       loading = true;
       update();
       try {
@@ -579,7 +593,6 @@ export const gamingPresetsPanel = {
       },
     };
     update();
-    void refresh();
   },
   // Retain the editor and operation queue while switching tabs. A replaced form
   // gets a new host and disposes the old listeners on the next mount.
