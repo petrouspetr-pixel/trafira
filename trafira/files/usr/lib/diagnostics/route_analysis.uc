@@ -291,8 +291,10 @@ function explain(raw,options) {
     for(let scenario in requests) {
         let input={...r,destination_ip:scenario.destination_ip};
         let answer=!active?decision("indeterminate","applied_capture_state_unavailable"):fake_destination(config,scenario.destination_ip)?decision("indeterminate","fakeip_is_not_real_destination"):gate(settings,input,config) || matcher.explain(config,scenario,origins || {},sets);
-        if(answer.status=="indeterminate" && !scenario.destination_ip && dns_query.status && dns_query.status!="resolved")
-            push(answer.missing,"dns_"+dns_query.status);
+        if(!scenario.destination_ip && dns_query.status && dns_query.status!="resolved") {
+            if(answer.status=="indeterminate")push(answer.missing,"dns_"+dns_query.status);
+            else if(dns_query.performed)answer=decision("indeterminate","dns_"+dns_query.status);
+        }
         let node=answer.outbound?selected_node(config,answer.outbound):null;
         if(!route){route=answer;selected=node;}
         if(scenario.destination_ip)push(destinations,{ip:scenario.destination_ip,decision:{...answer,trace:slice(answer.trace,0,40),trace_truncated:answer.trace_truncated || length(answer.trace)>40},connection:connection_info(config,answer,node)});

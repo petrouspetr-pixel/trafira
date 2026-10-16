@@ -111,3 +111,13 @@ assert.equal(manual.dns_query.performed,false);
 assert.equal(manual.decision.outbound,'vpn-out');
 JS
 printf 'automatic DNS multi-address route checks passed\n'
+
+# DNS failure cannot be presented as a confirmed domain/final route.
+printf '#!/bin/sh\nexit 0\n' >"$WORK_DIR/bin/dig"
+run '{"domain":"store.example","source":{"kind":"device","ip":"192.0.2.5"},"port":443,"network":"tcp"}' >"$WORK_DIR/nxdomain.json"
+printf '#!/bin/sh\nexit 9\n' >"$WORK_DIR/bin/dig"
+run '{"domain":"store.example","source":{"kind":"device","ip":"192.0.2.5"},"port":443,"network":"tcp"}' >"$WORK_DIR/dns-timeout.json"
+node - "$WORK_DIR" <<'JS'
+const fs=require('fs'),assert=require('assert/strict'),dir=process.argv[2];
+for(const name of ['nxdomain','dns-timeout']){const r=JSON.parse(fs.readFileSync(dir+'/'+name+'.json'));assert.equal(r.decision.status,'indeterminate');assert.ok(r.decision.missing.some(x=>x.startsWith('dns_')));assert.equal(r.destinations.length,0);}
+JS

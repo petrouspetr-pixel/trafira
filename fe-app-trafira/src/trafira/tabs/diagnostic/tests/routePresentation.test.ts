@@ -1,10 +1,39 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { routeError, routeReason, routeReasons } from '../routePresentation';
+import {
+  routeError,
+  routeReason,
+  routeReasons,
+  routeOutcome,
+} from '../routePresentation';
 
 beforeEach(() => vi.stubGlobal('_', (text: string) => text));
 afterEach(() => vi.unstubAllGlobals());
 
 describe('route explanation messages', () => {
+  it('leads with the destination instead of matched rule jargon', () => {
+    const d = {
+      status: 'matched' as const,
+      outbound: 'vpn-out',
+      missing: [],
+      trace: [],
+    };
+    expect(routeOutcome(d, { label: 'My VPN', type: 'wireguard' }).title).toBe(
+      'Via My VPN',
+    );
+    expect(routeOutcome({ ...d, status: 'direct' }).title).toBe(
+      'Direct connection',
+    );
+    expect(routeOutcome({ ...d, status: 'blocked' }).title).toBe(
+      'Connection blocked',
+    );
+    expect(
+      routeOutcome({
+        ...d,
+        status: 'indeterminate',
+        missing: ['multiple_destination_routes'],
+      }).title,
+    ).toBe('The route depends on the server address');
+  });
   it('gives the router scenario an actionable destination hint', () => {
     expect(routeReason('legacy_router_output_rules')).toContain(
       'Select a LAN device',

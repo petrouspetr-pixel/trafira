@@ -2,17 +2,13 @@ import { nativeChoice } from '../../helpers/nativeChoice';
 import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
 import { executeShellCommand } from '../../../helpers/executeShellCommand';
 import {
-  ExplainDecision,
-  ExplainReport,
   ExplainRequest,
   parseRouteExplanationResult,
   RouteExplanationController,
-  PreparationProgress,
   RouteJobStatus,
   parseRouteJobCommandResult,
   runRoutePreparation,
 } from './routeExplanation';
-import { routeError, routeReasons } from './routePresentation';
 
 async function command<T>(name: string, args: string[] = []): Promise<T> {
   const result = await executeShellCommand({
@@ -26,249 +22,8 @@ async function command<T>(name: string, args: string[] = []): Promise<T> {
   if (result.code) throw new Error('Route command failed');
   return JSON.parse(result.stdout) as T;
 }
-function status(value: ExplainDecision['status']) {
-  return {
-    matched: _('Matched route'),
-    direct: _('Direct connection'),
-    blocked: _('Blocked'),
-    indeterminate: _('Route not determined'),
-  }[value];
-}
-function decisionView(
-  title: string,
-  decision: ExplainDecision,
-  unavailable: Array<{ tag: string; reason: string }> = [],
-) {
-  const matches: Record<string, string> = {
-    yes: _('Matches'),
-    no: _('Does not match'),
-    unknown: _('Needs more information'),
-  };
-  const actions: Record<string, string> = {
-    route: _('Route connection'),
-    reject: _('Block connection'),
-    sniff: _('Detect protocol'),
-    resolve: _('Resolve domain'),
-    'route-options': _('Connection options'),
-    'hijack-dns': _('Handle DNS'),
-  };
-  return E(
-    'div',
-    { class: `fkp_route-decision fkp_route-decision--${decision.status}` },
-    [
-      E('b', {}, title),
-      E(
-        'p',
-        {},
-        `${status(decision.status)}${decision.outbound ? `: ${decision.outbound}` : ''}`,
-      ),
-      ...routeReasons(decision.missing, unavailable).map((reason) =>
-        E('p', {}, reason),
-      ),
-      ...(unavailable.some((item) =>
-        decision.missing.includes('rule_set:' + item.tag),
-      )
-        ? [
-            E('details', { class: 'fkp_diagnostic-details' }, [
-              E('summary', {}, _('Lists preventing a confirmed result')),
-              ...unavailable
-                .filter((item) =>
-                  decision.missing.includes('rule_set:' + item.tag),
-                )
-                .map((item) =>
-                  E(
-                    'p',
-                    {},
-                    `${item.tag}: ${routeReasons(['rule_set:' + item.tag], [item]).join(' ')}`,
-                  ),
-                ),
-            ]),
-          ]
-        : []),
-      ...(decision.trace.length
-        ? [
-            E('details', { class: 'fkp_diagnostic-details' }, [
-              E('summary', {}, _('Rule evaluation order')),
-              ...decision.trace.map((row) =>
-                E(
-                  'p',
-                  {},
-                  `#${row.index + 1}: ${row.shadowed ? _('Not evaluated') : matches[row.match] || _('Needs more information')} · ${actions[row.action] || _('Rule action')}${row.origin?.section ? ` · ${row.origin.section}` : ''}${row.shadowed ? ` (${_('Overridden by an earlier rule')})` : ''}`,
-                ),
-              ),
-              ...(decision.trace_truncated
-                ? [E('p', {}, _('Only the first 200 rules are displayed'))]
-                : []),
-            ]),
-          ]
-        : []),
-    ],
-  );
-}
-export function renderRouteExplanationResult(
-  report: ExplainReport | null,
-  error: string,
-  busy: boolean,
-  progress?: PreparationProgress,
-) {
-  const submit = document.getElementById(
-    'trafira-route-submit',
-  ) as HTMLButtonElement | null;
-  if (submit) submit.disabled = busy;
-  const result = document.getElementById('trafira-route-explanation-result');
-  if (!result) return;
-  result.replaceChildren(
-    ...(busy
-      ? [
-          E(
-            'p',
-            { role: 'status' },
-            progress?.phase === 'evaluating'
-              ? `${_('Calculating route from prepared lists')}: ${progress.completed} / ${progress.total}`
-              : progress?.total
-                ? `${_('Checking saved rule sets')}: ${progress.completed} / ${progress.total}`
-                : _('Starting route analysis'),
-          ),
-          E(
-            'p',
-            {},
-            _(
-              'Saved lists are checked one at a time without downloading them again. Only compact results for this request are cached.',
-            ),
-          ),
-        ]
-      : error
-        ? [E('p', { class: 'alert-message warning' }, routeError(error))]
-        : report
-          ? [
-              E(
-                'p',
-                {},
-                _(
-                  'Analysis of the applied configuration, not a live connection capture.',
-                ),
-              ),
-              ...(report.generated_at
-                ? [
-                    E(
-                      'p',
-                      {},
-                      new Date(report.generated_at * 1000).toLocaleString(),
-                    ),
-                  ]
-                : []),
-              ...(report.rule_sets?.basis === 'saved_snapshots'
-                ? [
-                    E(
-                      'p',
-                      { class: 'fkp_route-basis' },
-                      _(
-                        'Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test.',
-                      ),
-                    ),
-                  ]
-                : []),
-              ...(report.decision.status === 'indeterminate'
-                ? [
-                    E(
-                      'p',
-                      { class: 'alert-message warning' },
-                      _(
-                        'The route has not been determined. Complete the request using the reasons below and run the check again.',
-                      ),
-                    ),
-                  ]
-                : []),
-              ...(report.decision.status === 'indeterminate' &&
-              report.decision.missing.some((reason) =>
-                reason.startsWith('rule_set:'),
-              ) &&
-              report.rule_sets?.unavailable_reasons?.some(
-                (item) =>
-                  item.reason === 'limit' &&
-                  report.decision.missing.includes('rule_set:' + item.tag),
-              )
-                ? [
-                    E(
-                      'p',
-                      {},
-                      _(
-                        'Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation.',
-                      ),
-                    ),
-                  ]
-                : []),
-              ...(report.decision.status === 'indeterminate' &&
-              report.decision.missing.some(
-                (reason) =>
-                  reason === 'destination_ip' ||
-                  reason === 'router_destination_address_needed' ||
-                  reason ===
-                    'wifi_calling_bypass_depends_on_real_destination' ||
-                  reason === 'ntp_bypass_depends_on_real_destination',
-              )
-                ? [
-                    E(
-                      'button',
-                      {
-                        type: 'button',
-                        class: 'btn cbi-button',
-                        click: () => {
-                          const field = document.getElementById(
-                            'trafira-route-destination',
-                          ) as HTMLInputElement | null;
-                          field?.scrollIntoView({ block: 'center' });
-                          field?.focus();
-                        },
-                      },
-                      _('Enter the real destination IP'),
-                    ),
-                  ]
-                : []),
-              ...(report.rule_sets?.cached != null
-                ? [
-                    E(
-                      'p',
-                      {},
-                      `${_('Lists available for calculation')}: ${report.rule_sets.available} / ${report.rule_sets.available + report.rule_sets.unavailable} · ${_('Reused from RAM')}: ${report.rule_sets.cached}`,
-                    ),
-                  ]
-                : []),
-              decisionView(
-                _('Connection route'),
-                report.decision,
-                report.rule_sets?.unavailable_reasons,
-              ),
-              ...(report.dns_policy
-                ? [
-                    E('details', { class: 'fkp_diagnostic-details' }, [
-                      E('summary', {}, _('DNS policy (A query)')),
-                      decisionView(
-                        _('DNS policy (A query)'),
-                        report.dns_policy,
-                        report.rule_sets?.unavailable_reasons,
-                      ),
-                      E(
-                        'p',
-                        {},
-                        _('No DNS query was sent from the selected device.'),
-                      ),
-                    ]),
-                  ]
-                : []),
-              ...(report.selector
-                ? [
-                    E(
-                      'p',
-                      {},
-                      `${_('Current selected node')}: ${report.selector.current}`,
-                    ),
-                  ]
-                : []),
-            ]
-          : []),
-  );
-}
+import { renderRouteExplanationResult } from './renderRouteResult';
+export { renderRouteExplanationResult } from './renderRouteResult';
 let updateFormBusy: ((busy: boolean) => void) | null = null;
 const controller = new RouteExplanationController(
   (request, progress, active) =>
@@ -343,9 +98,9 @@ export const routeExplanationPanel = {
     const destination = E('input', {
       id: 'trafira-route-destination',
       type: 'text',
-      placeholder: _('Real destination IP (optional)'),
+      placeholder: _('Determined automatically'),
     }) as HTMLInputElement;
-    const destinationLabel = E('span', {}, _('Real destination IP (optional)'));
+    const destinationLabel = E('span', {}, _('Server IP (optional override)'));
     const sourceHelp = E(
       'p',
       { id: 'trafira-route-source-help', class: 'cbi-value-description' },
@@ -357,7 +112,7 @@ export const routeExplanationPanel = {
       'p',
       { class: 'cbi-value-description' },
       _(
-        'You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.',
+        'Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server.',
       ),
     );
     const port = E('input', {
@@ -391,11 +146,9 @@ export const routeExplanationPanel = {
       iface.setDisabled(router);
       deviceField.hidden = router;
       metadataFields.hidden = router;
-      destination.required = router;
-      destinationLabel.textContent = router
-        ? _('Real destination IP (required for the router)')
-        : _('Real destination IP (optional)');
-      destination.placeholder = destinationLabel.textContent || '';
+      destination.required = false;
+      destinationLabel.textContent = _('Server IP (optional override)');
+      destination.placeholder = _('Determined automatically');
       sourceHelp.textContent = router
         ? _(
             'This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings.',
@@ -403,13 +156,9 @@ export const routeExplanationPanel = {
         : _(
             'For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below.',
           );
-      destinationHelp.textContent = router
-        ? _(
-            'Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address.',
-          )
-        : _(
-            'You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check.',
-          );
+      destinationHelp.textContent = _(
+        'Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server.',
+      );
     };
     source.onChange(updateSource);
     ip.onChange(() => {
@@ -431,23 +180,31 @@ export const routeExplanationPanel = {
       field(_('Device MAC (optional)'), mac.node),
       field(_('Incoming interface (optional)'), iface.node),
     ]);
+    const advanced = E(
+      'details',
+      { id: 'trafira-route-advanced', class: 'fkp_diagnostic-details' },
+      [
+        E('summary', {}, _('Additional settings')),
+        field(_('Destination port'), port),
+        field(_('Protocol'), protocol.node),
+        row(destinationLabel, destination.id, [destination], destinationHelp),
+        metadataFields,
+      ],
+    );
     const form = E('form', { class: 'cbi-section' }, [
       E(
         'p',
         { class: 'cbi-section-descr' },
         _(
-          'Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device.',
+          'Choose a device and enter a website, for example ya.ru. We will find its server addresses and explain how Trafira would route the connection. This does not open the website or change your settings.',
         ),
       ),
       E('div', {}, [
-        field(_('Domain'), domain),
         row(_('Source'), source.node.id, [source.node], sourceHelp),
         deviceField,
-        field(_('Destination port'), port),
-        field(_('Protocol'), protocol.node),
-        row(destinationLabel, destination.id, [destination], destinationHelp),
+        field(_('Website'), domain),
       ]),
-      metadataFields,
+      advanced,
       E('div', { class: 'fkp_diagnostic-actions' }, [
         E(
           'button',
@@ -456,7 +213,7 @@ export const routeExplanationPanel = {
             type: 'submit',
             class: 'cbi-button cbi-button-action',
           },
-          _('Explain route'),
+          _('Check routing'),
         ),
       ]),
     ]);
@@ -494,6 +251,7 @@ export const routeExplanationPanel = {
         'aria-live': 'polite',
       }),
     );
+    updateSource();
     let routeBusy = false,
       loadingDevices = false;
     updateFormBusy = (busy) => {

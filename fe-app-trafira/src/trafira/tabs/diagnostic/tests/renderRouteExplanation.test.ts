@@ -103,10 +103,60 @@ describe('route diagnostic output', () => {
       '',
       false,
     );
-    expect(text(output)).toContain('Matched route: <script>section</script>');
+    expect(text(output)).toContain('Via <script>section</script>');
     expect(text(output)).toContain('Current selected node: AWG');
     expect(
       output.every((node) => typeof node === 'string' || node.tag !== 'script'),
     ).toBe(true);
+  });
+  it('keeps rule internals collapsed and shows per-address differences plainly', () => {
+    const a = {
+      status: 'direct' as const,
+      outbound: 'direct-out',
+      missing: [],
+      trace: [],
+    };
+    const b = { ...a, status: 'matched' as const, outbound: 'vpn-out' };
+    renderRouteExplanationResult(
+      {
+        success: true,
+        decision: {
+          status: 'indeterminate',
+          missing: ['multiple_destination_routes'],
+          trace: [],
+        },
+        destinations: [
+          { ip: '203.0.113.1', decision: a },
+          {
+            ip: '203.0.113.2',
+            decision: b,
+            connection: { label: 'AWG', type: 'wireguard' },
+          },
+        ],
+        dns_query: {
+          performed: true,
+          origin: 'trafira_main_dns',
+          status: 'resolved',
+          addresses: ['203.0.113.1', '203.0.113.2'],
+        },
+        limitations: [],
+      },
+      '',
+      false,
+    );
+    expect(text(output)).toContain('The route depends on the server address');
+    expect(text(output)).toContain('Direct connection');
+    expect(text(output)).toContain('Via AWG');
+    expect(text(output)).toContain(
+      'A device using its own DNS may receive different addresses',
+    );
+    const details = output.find(
+      (node) => typeof node !== 'string' && node.tag === 'details',
+    ) as NodeView;
+    expect(details.children[0]).toMatchObject({
+      tag: 'summary',
+      children: ['Technical details'],
+    });
+    expect(details.attributes).not.toHaveProperty('open');
   });
 });

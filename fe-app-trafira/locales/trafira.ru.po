@@ -3574,3 +3574,147 @@ msgstr "Показать управление игровыми пресетам�
 
 msgid "Apply the gaming preset switch first, then create or update presets."
 msgstr "Сначала нажмите «Применить», чтобы включить игровые пресеты, затем создавайте или изменяйте их."
+
+msgid "Determined automatically"
+msgstr "Определяется автоматически"
+
+msgid "Server IP (optional override)"
+msgstr "IP сервера (необязательно)"
+
+msgid "Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server."
+msgstr "Оставьте поле пустым — Trafira сама узнает адреса сайта через свой DNS. Укажите IP, только если хотите проверить конкретный сервер."
+
+msgid "Additional settings"
+msgstr "Дополнительные настройки"
+
+msgid "Choose a device and enter a website, for example ya.ru. We will find its server addresses and explain how Trafira would route the connection. This does not open the website or change your settings."
+msgstr "Выберите устройство и введите сайт, например ya.ru. Trafira определит адреса сайта и покажет, как будет направлено соединение. Проверка не открывает сайт и не меняет настройки."
+
+msgid "Website"
+msgstr "Сайт"
+
+msgid "Check routing"
+msgstr "Проверить маршрут"
+
+msgid "Applies to this connection"
+msgstr "Подходит для этого соединения"
+
+msgid "Does not apply"
+msgstr "Не подходит"
+
+msgid "Could not check this condition"
+msgstr "Не удалось проверить это условие"
+
+msgid "Block the connection"
+msgstr "Заблокировать соединение"
+
+msgid "Read the application protocol"
+msgstr "Определить протокол приложения"
+
+msgid "Look up the website address"
+msgstr "Узнать IP-адрес сайта"
+
+msgid "Set connection parameters"
+msgstr "Задать параметры соединения"
+
+msgid "Send the DNS request to Trafira"
+msgstr "Передать DNS-запрос в Trafira"
+
+msgid "Rule"
+msgstr "Правило"
+
+msgid "Purpose"
+msgstr "Назначение"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "Other routing action"
+msgstr "Другое действие маршрутизации"
+
+msgid "Not needed: an earlier rule already chose the route"
+msgstr "Не требуется: маршрут уже выбран предыдущим правилом"
+
+msgid "Checking routing. Please wait…"
+msgstr "Проверяем маршрут. Пожалуйста, подождите…"
+
+msgid "Checking saved lists: %s of %s"
+msgstr "Проверяем сохранённые списки: %s из %s"
+
+msgid "Finding the website addresses and checking your settings."
+msgstr "Определяем адреса сайта и проверяем настройки маршрутизации."
+
+msgid "Lists are read from the router one at a time, without downloading them again."
+msgstr "Списки читаются по одному из памяти роутера. Повторно скачивать их не нужно."
+
+msgid "How the routing rules were checked"
+msgstr "Как проверялись правила маршрутизации"
+
+msgid "Results for the website server addresses"
+msgstr "Маршрут для каждого адреса сайта"
+
+msgid "Server IP"
+msgstr "IP-адрес сервера"
+
+msgid "Addresses were requested through the main DNS configured in Trafira. A device using its own DNS may receive different addresses."
+msgstr "Адреса получены через основной DNS, настроенный в Trafira. Если устройство использует собственный DNS, адреса могут отличаться."
+
+msgid "The check uses the server IP you entered. No DNS lookup was needed."
+msgstr "Проверен указанный вами IP сервера. DNS-запрос не выполнялся."
+
+msgid "This explains your routing settings. It does not test website availability or capture a real connection."
+msgstr "Результат объясняет настройки маршрутизации. Он не проверяет доступность сайта и не отслеживает реальное соединение."
+
+msgid "The route depends on the server address"
+msgstr "Маршрут зависит от адреса сервера"
+
+msgid "Cannot determine the route yet"
+msgstr "Пока не удалось определить маршрут"
+
+msgid "See what prevented the check below. An incomplete answer does not mean that the website is unavailable."
+msgstr "Ниже указано, что помешало проверке. Это не означает, что сайт недоступен."
+
+msgid "Connection blocked"
+msgstr "Соединение заблокировано"
+
+msgid "A Trafira rule blocks this connection."
+msgstr "Одно из правил Trafira блокирует это соединение."
+
+msgid "Trafira does not send this connection through a proxy or VPN. Other system VPN and firewall rules may still apply."
+msgstr "Trafira не направляет это соединение через прокси или VPN. На него могут влиять другие VPN и правила межсетевого экрана роутера."
+
+msgid "Selected connection"
+msgstr "Выбранное подключение"
+
+msgid "Via %s"
+msgstr "Через %s"
+
+msgid "A rule in section \"%s\" selected this connection."
+msgstr "Это подключение выбрало правило из секции «%s»."
+
+msgid "This connection is selected by the Trafira routing settings."
+msgstr "Это подключение выбрано в настройках маршрутизации Trafira."
+
+msgid "One DNS query did not finish. Results below apply only to the addresses that were returned. Try again to check all addresses."
+msgstr "Один из DNS-запросов не завершился. Ниже показаны маршруты только для полученных адресов. Повторите проверку, чтобы проверить остальные."
+
+msgid "This website has several server addresses with different routing results. See the result for each address below."
+msgstr "У сайта несколько адресов, и для них действуют разные маршруты. Ниже показан результат для каждого адреса."
+
+msgid "This website returned more addresses than can be checked at once. Results below apply only to the displayed addresses. Enter one address in Additional settings to check it separately."
+msgstr "У сайта больше адресов, чем можно проверить за один раз. Ниже показан результат только для перечисленных адресов. Чтобы проверить другой адрес, укажите его в дополнительных настройках."
+
+msgid "The configured DNS server did not respond in time. Try again, or enter a known real server IP in Additional settings."
+msgstr "Настроенный DNS-сервер не ответил вовремя. Повторите проверку или укажите известный IP сервера в дополнительных настройках."
+
+msgid "The configured DNS server returned no usable address for this website and selected IP family. Check the website name or enter a known real IP in Additional settings."
+msgstr "DNS не вернул подходящий адрес сайта для выбранной версии IP. Проверьте название сайта или укажите известный IP сервера в дополнительных настройках."
+
+msgid "DNS returned a virtual FakeIP instead of a real server address. The address cannot be used to check IP rules. Restart Trafira after updating, or enter a known real IP in Additional settings."
+msgstr "DNS вернул виртуальный FakeIP вместо настоящего адреса сервера. По нему нельзя проверить правила для IP-адресов. После обновления перезапустите Trafira или укажите настоящий IP в дополнительных настройках."
+
+msgid "Automatic address lookup is unavailable in the running configuration. Restart Trafira after updating, or enter a known real IP in Additional settings."
+msgstr "В работающей конфигурации недоступно автоматическое определение адреса. После обновления перезапустите Trafira или укажите известный IP сервера в дополнительных настройках."
+
+msgid "The configured DNS server could not resolve this website. Try again, or enter a known real IP in Additional settings."
+msgstr "Настроенный DNS-сервер не смог определить адрес сайта. Повторите проверку или укажите известный IP сервера в дополнительных настройках."

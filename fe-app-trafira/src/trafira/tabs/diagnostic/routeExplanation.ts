@@ -33,7 +33,20 @@ export interface ExplainReport {
   config_digest?: string;
   decision: ExplainDecision;
   dns_policy?: ExplainDecision;
-  dns_query?: { performed: boolean; origin: string };
+  dns_query?: {
+    performed: boolean;
+    origin: string;
+    status?: string;
+    addresses?: string[];
+    truncated?: boolean;
+    family?: string;
+  };
+  connection?: RouteConnection | null;
+  destinations?: Array<{
+    ip: string;
+    decision: ExplainDecision;
+    connection?: RouteConnection | null;
+  }>;
   selector?: { tag: string; current: string } | null;
   rule_sets?: {
     basis: 'saved_snapshots' | 'local';
@@ -44,6 +57,10 @@ export interface ExplainReport {
     unavailable_reasons?: Array<{ tag: string; reason: string }>;
   };
   limitations: string[];
+}
+export interface RouteConnection {
+  label: string;
+  type: string;
 }
 type RouteFailure =
   | 'timeout'
@@ -143,6 +160,25 @@ export function parseRouteExplanationResult(result: {
   if (
     !decision(report.decision) ||
     !strings(report.limitations) ||
+    (report.connection != null && !connection(report.connection)) ||
+    (report.dns_query != null &&
+      (!record(report.dns_query) ||
+        typeof report.dns_query.performed !== 'boolean' ||
+        typeof report.dns_query.origin !== 'string' ||
+        (report.dns_query.addresses != null &&
+          (!strings(report.dns_query.addresses) ||
+            report.dns_query.addresses.length > 4)))) ||
+    (report.destinations != null &&
+      (!Array.isArray(report.destinations) ||
+        report.destinations.length > 4 ||
+        !report.destinations.every(
+          (item) =>
+            record(item) &&
+            typeof item.ip === 'string' &&
+            item.ip.length <= 45 &&
+            decision(item.decision) &&
+            (item.connection == null || connection(item.connection)),
+        ))) ||
     (report.dns_policy != null && !decision(report.dns_policy)) ||
     (report.generated_at != null &&
       (typeof report.generated_at !== 'number' ||
@@ -163,6 +199,15 @@ export function parseRouteExplanationResult(result: {
   )
     throw new RouteExplanationError('invalid_response');
   return report as unknown as ExplainReport;
+}
+function connection(value: unknown): boolean {
+  return (
+    record(value) &&
+    typeof value.label === 'string' &&
+    value.label.length <= 256 &&
+    typeof value.type === 'string' &&
+    value.type.length <= 64
+  );
 }
 export interface PreparationProgress {
   completed: number;
