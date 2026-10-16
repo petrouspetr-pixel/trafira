@@ -340,7 +340,7 @@ function createSettingsContent(section, capabilities) {
     ),
   );
   o.depends("dns_strategy", "ipv4_only");
-  o.default = "0";
+  o.default = "1";
   o.rmempty = false;
 
   o = section.option(
