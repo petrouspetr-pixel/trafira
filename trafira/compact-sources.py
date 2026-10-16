@@ -15,19 +15,64 @@ def strip_indentation(source):
     return re.sub(rb'(?m)^[ \t]+', b'', source)
 
 
+def normalize_proof(code):
+    """Ignore ONLY function source byte positions in stripped ucode proofs.
+
+    Layout: ucode program.c write_vallist/write_function/uc_program_write,
+    be92ebd706339fd4a848b88ee516b1ac4eb62ef8. Unknown layouts fail closed.
+    Constants, instructions, argument/upvalue counts, source indices, flags and
+    exception ranges remain byte-for-byte compared. Never install these bytes.
+    """
+    result = bytearray(code)
+    position = 0
+
+    def take(size):
+        nonlocal position
+        if size < 0 or position + size > len(code):
+            raise ValueError('Truncated ucode proof')
+        data = code[position:position+size]
+        position += size
+        return data
+
+    def u32():
+        return int.from_bytes(take(4), 'big')
+
+    if take(4) != b'\x1bucb' or u32() != 0:
+        raise ValueError('Expected a stripped, headerless ucode proof')
+    take(u32() * 8)  # Constant table indices.
+    take(u32())      # Constant data, including original strings/regexps.
+    count = u32()
+    if not count:
+        raise ValueError('Missing main function')
+    for _ in range(count):
+        flags = u32()
+        if flags & ~0x8f:  # arrow, vararg, strict, exceptions, module only.
+            raise ValueError('Unexpected ucode function flags/debug layout')
+        take(8)  # nargs + nupvals (2 each), srcidx (4): all preserved.
+        result[position:position+4] = b'\0' * 4
+        take(4)  # srcpos is a byte offset, not an execution instruction.
+        size = u32()
+        take(size + (-size) % 4)  # Instruction vector and alignment.
+        if flags & 8:
+            take(u32() * 16)  # Exception ranges: from/to/target/slot.
+    if position != len(code):
+        raise ValueError('Unexpected trailing ucode proof data')
+    return bytes(result)
+
+
 def compile_source(source, strict, compiler, workspace):
     # Use the same filename for both versions, including sourcepath() constants.
     file = workspace/'source.uc'
     output = workspace/'proof.ucb'
     file.write_bytes(source)
-    command = [compiler] + (['-S'] if strict else []) + ['-s', '-c', '-o', str(output), str(file)]
+    command = [compiler] + (['-S'] if strict else []) + ['-s', '-cno-interp', '-o', str(output), str(file)]
     result = subprocess.run(command, capture_output=True, timeout=30)
     if result.returncode:
         raise ValueError(result.stderr.decode('utf-8', errors='replace'))
     code = output.read_bytes()
     if len(code) < 16:
         raise ValueError('Compiler produced an empty/invalid proof')
-    return code
+    return normalize_proof(code)
 
 
 def verified_source(source, compiler):

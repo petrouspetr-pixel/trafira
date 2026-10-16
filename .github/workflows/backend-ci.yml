@@ -68,9 +68,10 @@ jobs:
         shell: bash
         run: |
           compact_root=$(mktemp -d /tmp/trafira-compact-runtime.XXXXXX)
-          git archive HEAD | tar -xf - -C "$compact_root"
+          git worktree add --detach "$compact_root" HEAD
           python3 "$compact_root/trafira/compact-sources.py" "$compact_root/trafira/files" --report "$RUNNER_TEMP/trafira-compaction.json"
           cd "$compact_root"
+          export TRAFIRA_COMPACT_RUNTIME=1
           printf '%s\0' tests/*.sh | xargs -0 -n1 -P4 bash -c 'bash "$1" || { status=$?; echo "FAILED compact sources: $1 (exit $status)" >&2; exit "$status"; }' _
 
       - name: Upload installed size report

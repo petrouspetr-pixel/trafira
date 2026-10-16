@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import struct
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -15,6 +16,19 @@ spec.loader.exec_module(module)
 
 
 class CompactionTests(unittest.TestCase):
+    def test_proof_ignores_only_function_source_position(self):
+        def proof(position=8, source=0, args=1, instructions=b'abc', constant=b'constant', flags=0):
+            u32 = lambda n: struct.pack('>I', n)
+            return (b'\x1bucb'+u32(0)+u32(0)+u32(len(constant))+constant+u32(1)+
+                    u32(flags)+struct.pack('>HH', args, 0)+u32(source)+u32(position)+
+                    u32(len(instructions))+instructions+b'\0'*((-len(instructions)) % 4))
+        self.assertEqual(module.normalize_proof(proof(8)), module.normalize_proof(proof(99)))
+        for change in ({'source': 1}, {'args': 2}, {'instructions': b'xyz'}, {'constant': b'different'}, {'flags': 4}):
+            self.assertNotEqual(module.normalize_proof(proof()), module.normalize_proof(proof(**change)))
+        for invalid in (b'', proof()[:-1], proof()+b'extra', proof(flags=32)):
+            with self.subTest(invalid=invalid[:20]), self.assertRaises(ValueError):
+                module.normalize_proof(invalid)
+
     def test_candidate_preserves_lines_strings_comments_and_shebang(self):
         source = b'#!/usr/bin/ucode\n\n    // explanation\n    let s = "two  spaces";\n\tprint(s);\n'
         result = module.strip_indentation(source)
@@ -81,7 +95,7 @@ class CompactionTests(unittest.TestCase):
 
     def test_actual_compiler_and_runtime(self):
         self.require_ucode()
-        original = b'    let s = "two  spaces";\n    // keep source line numbers\n    print(s, "\\n", match("https://test/a", /^https?:\\/\\//)[0]);\n'
+        original = b'    let s = "two  spaces";\n    // keep source line numbers\n    function value() { return s; }\n    print(value(), "\\n", match("https://test/a", /^https?:\\/\\//)[0]);\n'
         compact = module.verified_source(original, 'ucode')
         self.assertLess(len(compact), len(original))
         results = []
@@ -106,6 +120,8 @@ class CompactionTests(unittest.TestCase):
             stats = module.compact_tree(root, 'ucode')
             self.assertGreaterEqual(stats['files'], 107)
             self.assertLessEqual(stats['after'], stats['before'])
+            if os.environ.get('TRAFIRA_COMPACT_RUNTIME') != '1':
+                self.assertGreater(stats['saved'], 200000, 'Proof metadata must not silently block compaction')
             for name, (original, mode) in before.items():
                 path = root/name
                 self.assertEqual(path.stat().st_mode, mode)
