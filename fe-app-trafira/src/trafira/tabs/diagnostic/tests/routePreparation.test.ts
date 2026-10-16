@@ -18,6 +18,24 @@ const report = {
 const job = (value: unknown) =>
   parseRouteJobCommandResult({ stdout: JSON.stringify(value), code: 0 });
 describe('background route transport', () => {
+  it('starts a fresh job only when the stored job no longer exists', async () => {
+    const calls: string[] = [];
+    const result = await runRoutePreparation(
+      async (name) => {
+        calls.push(name);
+        if (name === 'route_explain_status')
+          return job({ success: false, running: false, error: 'invalid_job' });
+        return job({ success: true, running: false, job_id: 'r-ade', report });
+      },
+      request,
+      () => {},
+      () => true,
+      async () => {},
+      'r-abcd',
+    );
+    expect(result.decision.outbound).toBe('vpn-out');
+    expect(calls).toEqual(['route_explain_status', 'route_explain_start']);
+  });
   it('restores a finished job by ID without calculating the same scenario again', async () => {
     const calls: string[] = [];
     const result = await runRoutePreparation(

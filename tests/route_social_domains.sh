@@ -8,6 +8,10 @@ export TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime"
 export TRAFIRA_UCI_STATE_FILE="$WORK_DIR/uci"
 export TRAFIRA_CONFIG_FILE="$WORK_DIR/uci"
 export REAL_UCODE="$(command -v ucode)"
+if [ "${TRAFIRA_REAL_CODEC:-0}" = 1 ]; then
+ REAL_SING_BOX=$(command -v sing-box)
+ export REAL_SING_BOX
+fi
 mkdir -p "$WORK_DIR/bin" "$TRAFIRA_RUNTIME_STATE_DIR"
 export PATH="$WORK_DIR/bin:$PATH"
 cat >"$WORK_DIR/bin/ucode" <<'SH'
@@ -18,6 +22,7 @@ SH
 printf '#!/bin/sh\nexit 0\n' >"$WORK_DIR/bin/nft"
 cat >"$WORK_DIR/bin/sing-box" <<'SH'
 #!/bin/sh
+if [ "${TRAFIRA_REAL_CODEC:-0}" = 1 ]; then exec "$REAL_SING_BOX" "$@"; fi
 [ "$1" = rule-set ] && [ "$4" = -o ] || exit 1
 printf 'codec\n' >>"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls"
 sleep 0.15
@@ -44,7 +49,7 @@ SH
 chmod +x "$WORK_DIR/bin/sha256sum"
 node - "$WORK_DIR" <<'JS'
 const fs=require('fs'),dir=process.argv[2],sets=[];
-for(const [tag,rules] of [['meta-domains',[{domain_suffix:['instagram.com']}]],['meta-addresses',[{ip_cidr:['203.0.113.0/24']}]],['youtube',[{domain_suffix:['youtube.com','googlevideo.com']}]]]) {const path=dir+'/'+tag+'.json';fs.writeFileSync(path,JSON.stringify({version:3,rules}));sets.push({tag,type:'local',format:'source',path});}
+for(const [tag,rules] of [['meta-domains',[{domain_suffix:['instagram.com']}]],['meta-addresses',[{ip_cidr:['203.0.113.0/24']}]],['youtube',[{domain_suffix:['youtube.com','googlevideo.com']}]]]) {const path=dir+'/'+tag+'.json';fs.writeFileSync(path,JSON.stringify({version:3,rules}));if(process.env.TRAFIRA_REAL_CODEC==='1'){const binary=dir+'/'+tag+'.srs';require('child_process').execFileSync(process.env.REAL_SING_BOX,['rule-set','compile',path,'-o',binary]);sets.push({tag,type:'local',format:'binary',path:binary});}else sets.push({tag,type:'local',format:'source',path});}
 fs.writeFileSync(dir+'/config.json',JSON.stringify({inbounds:[{tag:'dns-health-active-main-in',listen:'127.0.0.42',listen_port:12053}],route:{rule_set:sets,rules:[{rule_set:['meta-domains','meta-addresses'],action:'route',outbound:'awg-out'},{rule_set:'youtube',action:'route',outbound:'zapret2-out'}],final:'direct-out'},dns:{strategy:'ipv4_only',rules:[{action:"evaluate",server:"dns-server"},{match_response:true,rule_set:"set-4",action:"route",server:"fakeip-server"}],final:'dns-server'},outbounds:[]}));
 JS
 printf 'trafira.settings=settings\ntrafira.settings.config_path=%s/config.json\n' "$WORK_DIR" >"$WORK_DIR/uci"
@@ -66,6 +71,9 @@ for pass in cold warm; do
 done
 # A changed saved list must change the answer, even after warm cache hits.
 printf '{"version":3,"rules":[{"domain_suffix":["changed.example"]}]}' >"$WORK_DIR/youtube.json"
+if [ "${TRAFIRA_REAL_CODEC:-0}" = 1 ]; then
+ "$REAL_SING_BOX" rule-set compile "$WORK_DIR/youtube.json" -o "$WORK_DIR/youtube.srs"
+fi
 ucode -L "$TRAFIRA_LIB" -e '
  let r=require("diagnostics.route_analysis").explain("{\"domain\":\"youtube.com\",\"source\":{\"kind\":\"device\",\"ip\":\"192.168.10.234\"},\"port\":443,\"network\":\"tcp\"}",{background:true,workspace:ARGV[0]});
  assert(r.decision.outbound=="direct-out","list replacement invalidates cached matching result");
