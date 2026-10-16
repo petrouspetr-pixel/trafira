@@ -67,7 +67,8 @@ assert(!r.hooks(cached,directory).validate(cached_stage.path),"cached profile ca
 fs.unlink(getenv("PROFILE_TEST_DIR")+"/reject-check");
 let lib=getenv("TRAFIRA_LIB"),normal=directory+"/startup.json";
 assert(system(sprintf("ucode -L %s %s/singbox/generator.uc generate-config-fixture %s/fixture.json %s 127.0.0.1 0 1 %s 1.14.0",lib,lib,directory,normal,"\x27\x27"))==0,"normal startup generation");
-assert(filter(json(fs.readfile(normal)).route.rule_set,(rule)=>rule.initial_path==snapshot)[0],"normal startup still validates and attaches snapshots");
+assert(filter(json(fs.readfile(normal)).route.rule_set,(rule)=>rule.initial_path==snapshot)[0],"normal startup stages snapshots without unbounded validation");
+assert(require("singbox.ruleset_bootstrap").prepare_file(normal,"1.14.0"),"startup validates snapshots inside its supervised budget");
 assert(index(fs.readfile(getenv("PROFILE_TEST_DIR")+"/checks"),"rule-set decompile")>=0,"startup still invokes snapshot validator");
 let g=require("config.gaming_presets"),matcher=require("diagnostics.route_match");
 let built=g.build({id:"steam",revision:1,domains:[{value:"store.example",match:"exact"}]},{device_ips:["192.0.2.5/32","2001:db8::5/128"],proxy_section:"vpn",placement:"before-device-routes",expected_digest:"test"},{digest:"test",devices:[{interface:"br-lan",mac:"02:00:00:00:00:01",ips:["192.0.2.5","2001:db8::5"]}],sections:[document.config[0],{".name":"vpn",".type":"section",enabled:"1",action:"connection",outbound_jsons:["{\"type\":\"socks\",\"tag\":\"vpn-leaf\",\"server\":\"192.0.2.9\",\"server_port\":1080}"]}]});

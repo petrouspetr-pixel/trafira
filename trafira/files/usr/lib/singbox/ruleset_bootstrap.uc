@@ -139,7 +139,7 @@ function prepare(config, version, workspace) {
         if (cache.validate(rule, path)) { rule.initial_path = path; continue; }
         if (!seen[path]) { push(pending, rule); seen[path] = true; }
     }
-    if (!length(pending)) return true;
+    if (!length(pending)) return cache.protect(config);
     let directory = workspace ? workspace + "/fetch" : output(["mktemp", "-d", "/tmp/trafira-ruleset-bootstrap.XXXXXX"]);
     if (workspace && !fs.mkdir(directory, 448)) return false;
     if (!directory || !run(["chmod", "700", directory])) return false;
@@ -178,11 +178,7 @@ function prepare(config, version, workspace) {
                 if (complete) break;
             }
         }
-        for (let rule in rules) {
-            let path = cache.path(rule);
-            if (cache.validate(rule, path)) rule.initial_path = path;
-            else ok = false;
-        }
+        if (!cache.protect(config)) ok = false;
     } catch (e) { ok = false; }
     cleanup(directory);
     if (!ok) warn("Rule-set startup preparation failed: a validated snapshot is missing and the configured download egress is unavailable\n");

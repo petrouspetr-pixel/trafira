@@ -22,6 +22,16 @@ assert(length(stage.outbounds) == 1 && stage.outbounds[0].tag == "good", "only s
 assert(length(stage.dns.servers) == 1 && stage.dns.servers[0].server == "9.9.9.9", "independent configured bootstrap resolver");
 assert(stage.route.default_domain_resolver == "bootstrap-dns-server", "proxy hostname resolves without main DNS dependency");
 assert(b.prepare({route:{rule_set:[]}}, "1.14.1"), "no lists needs no bootstrap");
+c.outbounds[0].default = "pool";
+assert(b.plan(c).candidates[0] == "good", "selected group default is attempted first");
+push(c.outbounds,{type:"direct",tag:"explicit-direct"});
+c.outbounds[0].outbounds = ["good"];
+assert(length(b.plan(c).candidates) == 1, "unselected direct outbound is never an implicit fallback");
+c.outbounds[0].outbounds = ["explicit-direct"];
+assert(b.plan(c).candidates[0] == "explicit-direct", "explicit selected direct member remains supported");
+c.endpoints = [{type:"wireguard",tag:"endpoint"}];
+c.outbounds[0].outbounds = ["endpoint"];
+assert(b.plan(c).error != null, "interface-creating endpoints cannot be duplicated for bootstrap");
 c.outbounds[0].outbounds = ["missing"];
 assert(b.plan(c).error != null, "missing selected member fails closed");
 print("rule-set bootstrap graph checks passed\n");

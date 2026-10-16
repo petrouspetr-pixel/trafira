@@ -99,6 +99,9 @@ check(source.initial_path && source.format == "source", "preserve source format"
 check(cache.refresh(config, "127.0.0.1:4535"), "refresh does not race a newly prepared snapshot");
 check(fs.stat(source.initial_path) != null, "new candidate snapshot survives refresh using old config");
 system("touch -t 200001010000 " + source.initial_path);
+check(cache.protect({route:{rule_set:[source]}}), "reused old candidate receives publication grace under cache lock");
+check(cache.refresh(config, "127.0.0.1:4535") && fs.stat(source.initial_path) != null, "refresh with old configuration cannot prune reused candidate");
+system("touch -t 200001010000 " + source.initial_path);
 check(cache.refresh(config, "127.0.0.1:4535"), "refresh through selected proxy");
 check(!fs.stat(source.initial_path), "obsolete URL snapshot pruned");
 check(!fs.stat(getenv("TRAFIRA_RULESET_CACHE_DIR") + "/.stage.OLD123"), "orphan staging file pruned");

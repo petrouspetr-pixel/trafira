@@ -87,6 +87,25 @@ function save(rule, file) {
     lock.close();
     return ok;
 }
+function protect(config) {
+    let lock = cache_lock();
+    if (!lock) return false;
+    let ok = true;
+    try {
+        for (let rule in common.array_or_empty(config.route && config.route.rule_set)) {
+            if (rule.type != "remote" || rule.http_client == null) continue;
+            let file = path(rule);
+            if (!file || !validate(rule, file)) { ok = false; break; }
+            let info = fs.lstat(file);
+            // Reused old URLs need the same publication grace as new copies.
+            // Avoid repeated metadata writes during rapid reloads.
+            if (time() - info.mtime > 120 && !success(["touch", file])) { ok = false; break; }
+            rule.initial_path = file;
+        }
+    } catch (e) { ok = false; }
+    lock.close();
+    return ok;
+}
 function refresh(config, proxy) {
     let rules = filter(common.array_or_empty(config.route && config.route.rule_set),
         (rule) => rule.type == "remote" && rule.http_client != null);
@@ -156,4 +175,4 @@ function report(config, version) {
         entries, total_bytes: usage(), quota_bytes: MAX_TOTAL, max_file_bytes: MAX_FILE };
 }
 
-return { apply, save, refresh, path, report, validate };
+return { apply, save, refresh, path, report, validate, protect };
