@@ -64,6 +64,7 @@ ensure_host_deps() {
     python3
     sha256sum
     tar
+    ucode
     unshare
     zopfli
     zstd
@@ -182,6 +183,7 @@ build_backend_root() {
   install -m 0644 "$ROOT_DIR/trafira/files/usr/share/trafira/gaming-presets.json" \
     "$output_root/usr/share/trafira/gaming-presets.json"
   cp -a "$ROOT_DIR/trafira/files/usr/lib/." "$output_root/usr/lib/trafira/"
+  python3 "$ROOT_DIR/trafira/compact-sources.py" "$output_root"
 
   sed -i -e "s/__COMPILED_VERSION_VARIABLE__/${RELEASE_VERSION}/g" \
     "$output_root/usr/lib/trafira/core/constants.uc"

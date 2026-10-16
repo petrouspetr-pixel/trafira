@@ -5,6 +5,7 @@ on:
     paths:
       - 'trafira/files/**'
       - 'trafira/Makefile'
+      - 'trafira/compact-sources.py'
       - 'build.sh'
       - 'install.sh'
       - 'tests/**'
@@ -17,6 +18,7 @@ on:
     paths:
       - 'trafira/files/**'
       - 'trafira/Makefile'
+      - 'trafira/compact-sources.py'
       - 'build.sh'
       - 'install.sh'
       - 'tests/**'
@@ -60,4 +62,22 @@ jobs:
       - name: Run backend tests
         shell: bash
         run: |
-          printf '%s\0' tests/*.sh | xargs -0 -n1 -P4 bash -c 'bash "$1" || { status=$?; echo "FAILED: $1 (exit $status)" >&2; exit "$status"; }' _
+          printf '%s\0' tests/*.sh | xargs -0 -n1 -P4 bash -c 'bash "$1" || { status=$?; echo "FAILED: $1 (exit $status)" >&2; exit 1; }' _
+
+      - name: Run backend tests on compacted installed sources
+        shell: bash
+        run: |
+          compact_root=$(mktemp -d /tmp/trafira-compact-runtime.XXXXXX)
+          git worktree add --detach "$compact_root" HEAD
+          python3 "$compact_root/trafira/compact-sources.py" "$compact_root/trafira/files" --report "$RUNNER_TEMP/trafira-compaction.json"
+          cd "$compact_root"
+          export TRAFIRA_COMPACT_RUNTIME=1
+          printf '%s\0' tests/*.sh | xargs -0 -n1 -P4 bash -c 'bash "$1" || { status=$?; echo "FAILED compact sources: $1 (exit $status)" >&2; exit 1; }' _
+
+      - name: Upload installed size report
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: installed-backend-size
+          path: ${{ runner.temp }}/trafira-compaction.json
+          if-no-files-found: ignore
