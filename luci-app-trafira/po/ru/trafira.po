@@ -3772,3 +3772,15 @@ msgstr "Проверка выполняется на роутере. Она не
 
 msgid "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure."
 msgstr "Эта часть диагностики не умеет рассчитывать указанное действие. Это ограничение проверки, а не ошибка соединения."
+
+msgid "Conditions in section “%s”"
+msgstr "Условия секции «%s»"
+
+msgid "Lists in section “%s”"
+msgstr "Списки секции «%s»"
+
+msgid "Domains in section “%s”"
+msgstr "Домены секции «%s»"
+
+msgid "IP addresses in section “%s”"
+msgstr "IP-адреса секции «%s»"

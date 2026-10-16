@@ -20,6 +20,7 @@ export interface ExplainDecision {
     index: number;
     match: string;
     action: string;
+    match_fields?: string[];
     shadowed: boolean;
     origin?: { kind?: string; section?: string; list_tag?: string } | null;
     missing: string[];
@@ -106,6 +107,7 @@ function decision(value: unknown): boolean {
         Number(row.index) >= 0 &&
         ['yes', 'no', 'unknown'].includes(String(row.match)) &&
         typeof row.action === 'string' &&
+        (row.match_fields == null || strings(row.match_fields)) &&
         typeof row.shadowed === 'boolean' &&
         strings(row.missing) &&
         (row.origin == null ||
