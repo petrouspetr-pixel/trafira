@@ -79,11 +79,27 @@ if (ARGV[0] == "missing-offline") {
 }
 UC
 ip netns exec "$router" ucode -L "$TRAFIRA_LIB" "$WORK_DIR/driver.uc" init
+check_main_start() {
+  # 1.12 checks isolated proxy transport; 1.14 also checks the published main
+  # config with initial_path, including offline startup with a dead default.
+  case "$(sing-box version | head -n1)" in
+    *' 1.14.'*)
+      ip netns exec "$router" sing-box run -c "$WORK_DIR/candidate.json" >"$WORK_DIR/main.log" 2>&1 &
+      main_pid=$!
+      sleep 1
+      if ! kill -0 "$main_pid" 2>/dev/null; then cat "$WORK_DIR/main.log"; return 1; fi
+      kill "$main_pid"
+      wait "$main_pid" 2>/dev/null || true
+      ;;
+  esac
+}
+check_main_start
 ip netns exec "$router" nft list chain inet bootstrap_test output | grep -q 'counter packets 0 bytes 0 reject'
 kill "$proxy_pid"
 wait "$proxy_pid" 2>/dev/null || true
 ip netns exec "$router" ucode -L "$TRAFIRA_LIB" "$WORK_DIR/driver.uc" cached-offline
+check_main_start
 rm -rf "$TRAFIRA_RULESET_CACHE_DIR"
 ip netns exec "$router" ucode -L "$TRAFIRA_LIB" "$WORK_DIR/driver.uc" missing-offline
 ip netns exec "$router" nft list chain inet bootstrap_test output | grep -q 'counter packets 0 bytes 0 reject'
-printf 'Rule-set bootstrap real transport checks passed (main initial_path startup requires >=1.14)\n'
+printf 'Rule-set bootstrap real transport and supported main startup checks passed\n'
