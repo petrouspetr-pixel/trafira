@@ -34,7 +34,8 @@ function owned_by_ancestor() {
     return is_live_ancestor(owner);
 }
 
-function acquire(operation,allow_borrow) {
+function acquire(operation,allow_borrow,failure) {
+    if(type(failure)=="object") failure.busy=false;
     let directory=fs.lstat(DIRECTORY);
     if(directory && directory.type!="directory") return null;
     // Providers run without root and must retain access to their own subfolders.
@@ -45,6 +46,9 @@ function acquire(operation,allow_borrow) {
     let file=fs.open(LOCK,"ae",384);
     if(!file) return null;
     if(!file.lock("xn")) {
+        let error=fs.error();
+        if(type(failure)=="object")
+            failure.busy=error=="Resource temporarily unavailable" || error=="Operation would block";
         file.close();
         return allow_borrow!==false && owned_by_ancestor()?{borrowed:true}:null;
     }

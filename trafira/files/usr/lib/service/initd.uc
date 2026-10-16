@@ -755,9 +755,10 @@ function trigger_plan(settings) {
 let mode = ARGV[0] || "";
 let operation_lock=null;
 if(index(["start-service","stop-service","reload-service","retry-start-on-wan-up","handle-wan-up"],mode)>=0) {
-    operation_lock=require("service.operation_lock").acquire("initd");
+    let failure={};
+    operation_lock=require("service.operation_lock").acquire("initd",true,failure);
     if(!operation_lock) {
-        if (retry_busy_config_reload(mode, ARGV[1]))
+        if (failure.busy && retry_busy_config_reload(mode, ARGV[1]))
             exit(0);
         warn("Another configuration operation is already running\n");
         exit(1);

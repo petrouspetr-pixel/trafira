@@ -55,4 +55,15 @@ if ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/initd.uc" reload-service manual
 fi
 grep -q 'configuration operation is already running' "$WORK_DIR/result"
 test ! -f "$WORK_DIR/event"
+# Invalid lock storage is an error, not a busy operation to retry forever.
+kill "$owner_pid"
+wait "$owner_pid" 2>/dev/null || true
+owner_pid=''
+rm "$TRAFIRA_RUNTIME_STATE_DIR/operation.lock"
+mkdir "$TRAFIRA_RUNTIME_STATE_DIR/operation.lock"
+if ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/initd.uc" reload-service on_config_change >"$WORK_DIR/result" 2>&1; then
+  echo 'invalid lock storage unexpectedly accepted' >&2
+  exit 1
+fi
+test ! -f "$WORK_DIR/event"
 printf 'initd config-change retry checks passed\n'
