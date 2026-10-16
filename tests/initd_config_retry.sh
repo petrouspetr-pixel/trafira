@@ -37,7 +37,28 @@ for _ in $(seq 1 100); do
 done
 test -f "$WORK_DIR/ready"
 # A native config event must not disappear while another operation owns UCI.
-ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/initd.uc" reload-service on_config_change >"$WORK_DIR/result" 2>&1
+if command -v python3 >/dev/null 2>&1; then
+  python3 - <<'PY'
+import fcntl, os, pathlib, subprocess
+root = pathlib.Path(os.environ['RETRY_TEST_DIR'])
+path = root / 'procd.lock'
+descriptor = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+os.dup2(descriptor, 1000)
+os.close(descriptor)
+fcntl.flock(1000, fcntl.LOCK_EX)
+lib = os.environ['TRAFIRA_LIB']
+try:
+    subprocess.run(['ucode', '-L', lib, lib+'/service/initd.uc',
+                    'reload-service', 'on_config_change'], pass_fds=(1000,), check=True)
+finally:
+    os.close(1000)
+# The deferred child is still sleeping. It must not retain procd's lock.
+with path.open('r+') as probe:
+    fcntl.flock(probe, fcntl.LOCK_EX | fcntl.LOCK_NB)
+PY
+else
+  ucode -L "$TRAFIRA_LIB" "$TRAFIRA_LIB/service/initd.uc" reload-service on_config_change >"$WORK_DIR/result" 2>&1
+fi
 for _ in $(seq 1 100); do
   [ ! -f "$WORK_DIR/event" ] || break
   sleep 0.05
