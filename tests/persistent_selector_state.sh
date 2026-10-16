@@ -1,10 +1,26 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
+trap 'printf "FAIL: persistent selector state at line %s: %s\n" "$LINENO" "$BASH_COMMAND" >&2' ERR
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 export TRAFIRA_SELECTOR_STATE_FILE="$WORK_DIR/state/selector-state.json"
+assert_saved() {
+  node - "$TRAFIRA_SELECTOR_STATE_FILE" "$1" "$2" <<'JS'
+const fs=require('fs'),assert=require('assert/strict');
+const state=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+assert.equal(state[process.argv[3]],process.argv[4],`saved selection for ${process.argv[3]}`);
+JS
+}
+assert_result() {
+  node - "$WORK_DIR/result" "$1" "$2" <<'JS'
+const fs=require('fs'),assert=require('assert/strict');
+const result=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+assert.equal(result.success,process.argv[3]==='true','API success result');
+if(process.argv[4])assert.equal(result.error,process.argv[4],'API error result');
+JS
+}
 cat >"$WORK_DIR/check.uc" <<'UCODE'
 let fs = require('fs');
 let state = require('singbox.selector_state');
@@ -52,6 +68,7 @@ fs.unlink(path); fs.mkdir(path, 448);
 check(!choose('main', 'two', true).success, 'storage failure must not report success');
 UCODE
 ucode -L "$TRAFIRA_LIB" "$WORK_DIR/check.uc"
+printf 'persistent selector module checks passed\n'
 rm -rf "$TRAFIRA_SELECTOR_STATE_FILE"
 mkdir -p "$WORK_DIR/bin"
 cat >"$WORK_DIR/bin/curl" <<'SH'
@@ -69,23 +86,28 @@ runtime="$TRAFIRA_LIB/diagnostics/runtime.uc"
 if FAKE_HTTP_STATUS=404 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/result"; then
   echo 'HTTP failure reported success' >&2; exit 1
 fi
+assert_result false group_not_found
 test ! -f "$TRAFIRA_SELECTOR_STATE_FILE"
 if FAKE_HTTP_STATUS=204 FAKE_CURL_EXIT=7 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/result"; then
   echo 'curl failure reported success' >&2; exit 1
 fi
+assert_result false selector_api_failed
 test ! -f "$TRAFIRA_SELECTOR_STATE_FILE"
 FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/result"
-grep -q '"main":"two"' "$TRAFIRA_SELECTOR_STATE_FILE"
+assert_result true ''
+assert_saved main two
 FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main one transient >"$WORK_DIR/result"
-grep -q '"main":"two"' "$TRAFIRA_SELECTOR_STATE_FILE"
+assert_result true ''
+assert_saved main two
 # Independent processes must merge their selections under the same stable lock.
 FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/a" &
 first=$!
 FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy other beta >"$WORK_DIR/b" &
 second=$!
 wait "$first"; wait "$second"
-grep -q '"main":"two"' "$TRAFIRA_SELECTOR_STATE_FILE"
-grep -q '"other":"beta"' "$TRAFIRA_SELECTOR_STATE_FILE"
+assert_saved main two
+assert_saved other beta
+printf 'persistent selector HTTP and concurrency checks passed\n'
 cat >"$WORK_DIR/fixture.json" <<'JSON'
 {"settings":{"dns_server":"1.1.1.1"},"section":[{".name":"main",".type":"section","action":"connection","enabled":"1","selector_proxy_links":["socks5://127.0.0.1:1080#First","socks5://127.0.0.1:1081#Second"]}]}
 JSON
