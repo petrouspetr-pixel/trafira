@@ -21,6 +21,9 @@ function choose(group, node, success) {
 }
 check(choose('main', 'two', true).success, 'explicit selection should persist');
 check((fs.stat(path).mode & 511) == 384, 'state must be private');
+let inode = fs.stat(path).ino;
+check(choose('main', 'two', true).success, 'repeated selection should succeed');
+check(fs.stat(path).ino == inode, 'unchanged choice must not rewrite flash');
 check(!choose('other', 'beta', false).success, 'failed API must fail');
 check(state.read().other == null, 'failed API must not persist');
 check(!choose('main', 'removed', true).success, 'missing node must fail');
@@ -40,4 +43,38 @@ fs.unlink(path); fs.mkdir(path, 448);
 check(!choose('main', 'two', true).success, 'storage failure must not report success');
 UCODE
 ucode -L "$TRAFIRA_LIB" "$WORK_DIR/check.uc"
+rm -rf "$TRAFIRA_SELECTOR_STATE_FILE"
+mkdir -p "$WORK_DIR/bin"
+cat >"$WORK_DIR/bin/curl" <<'SH'
+#!/bin/sh
+case "$*" in
+  *'-X PUT'*) printf '\n%s' "$FAKE_HTTP_STATUS"; exit "${FAKE_CURL_EXIT:-0}" ;;
+  *) printf '%s' '{"proxies":{"main":{"type":"Selector","now":"one","all":["one","two"]},"other":{"type":"Selector","now":"alpha","all":["alpha","beta"]}}}' ;;
+esac
+SH
+chmod +x "$WORK_DIR/bin/curl"
+export PATH="$WORK_DIR/bin:$PATH" TRAFIRA_LIB
+export TRAFIRA_UCI_STATE_FILE="$WORK_DIR/uci-state"
+printf '%s\n' 'trafira.settings=settings' >"$TRAFIRA_UCI_STATE_FILE"
+runtime="$TRAFIRA_LIB/diagnostics/runtime.uc"
+if FAKE_HTTP_STATUS=404 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/result"; then
+  echo 'HTTP failure reported success' >&2; exit 1
+fi
+test ! -f "$TRAFIRA_SELECTOR_STATE_FILE"
+if FAKE_HTTP_STATUS=204 FAKE_CURL_EXIT=7 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/result"; then
+  echo 'curl failure reported success' >&2; exit 1
+fi
+test ! -f "$TRAFIRA_SELECTOR_STATE_FILE"
+FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/result"
+grep -q '"main":"two"' "$TRAFIRA_SELECTOR_STATE_FILE"
+FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main one transient >"$WORK_DIR/result"
+grep -q '"main":"two"' "$TRAFIRA_SELECTOR_STATE_FILE"
+# Independent processes must merge their selections under the same stable lock.
+FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy main two >"$WORK_DIR/a" &
+first=$!
+FAKE_HTTP_STATUS=204 ucode -L "$TRAFIRA_LIB" "$runtime" clash-api set_group_proxy other beta >"$WORK_DIR/b" &
+second=$!
+wait "$first"; wait "$second"
+grep -q '"main":"two"' "$TRAFIRA_SELECTOR_STATE_FILE"
+grep -q '"other":"beta"' "$TRAFIRA_SELECTOR_STATE_FILE"
 printf 'persistent selector state checks passed\n'
