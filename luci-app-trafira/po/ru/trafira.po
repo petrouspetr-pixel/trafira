@@ -984,7 +984,7 @@ msgid "Enable YACD"
 msgstr "Включить YACD"
 
 msgid "Enable YACD WAN Access"
-msgstr "Включить доступ YACD WAN"
+msgstr "Разрешить доступ к YACD из WAN"
 
 msgid "Enter a complete sing-box inbound object"
 msgstr "Введите полный объект inbound sing-box"
@@ -3733,3 +3733,18 @@ msgstr "Выберите устройство из списка или введ�
 
 msgid "The server IP could not be determined automatically. Try again, or enter a known real destination IP in Additional settings."
 msgstr "Не удалось автоматически определить IP сервера. Повторите проверку или укажите известный настоящий IP-адрес сервера в дополнительных настройках."
+
+msgid "Applied configuration migrations"
+msgstr "Применённые обновления формата настроек"
+
+msgid "Configuration version"
+msgstr "Версия формата настроек"
+
+msgid "Clean shutdown state"
+msgstr "Состояние корректного завершения работы"
+
+msgid "Section type"
+msgstr "Тип секции"
+
+msgid "Name"
+msgstr "Название"

@@ -337,12 +337,12 @@ it('requires successful review for the selected profile and drops it when the se
   await select('p-first');
   expect(button('Apply profile').disabled).toBe(true);
   await click('Show differences');
-  expect(text(host)).toContain('server');
+  expect(text(host)).toContain('Server');
   expect(text(host)).not.toContain('private-old');
   expect(button('Apply profile').disabled).toBe(false);
   await select('p-second');
   expect(button('Apply profile').disabled).toBe(true);
-  expect(text(host)).not.toContain('server');
+  expect(text(host)).not.toContain('Server');
   await select('p-first');
   expect(button('Apply profile').disabled).toBe(true);
   await click('Show differences');
@@ -359,6 +359,77 @@ it('requires successful review for the selected profile and drops it when the se
   await vi.advanceTimersByTimeAsync(2000);
   await drain();
   expect(reload).toHaveBeenCalledTimes(1);
+});
+it('uses the same option captions as LuCI for settings and routing sections', async () => {
+  previewResult = {
+    success: true,
+    applicable: true,
+    digest,
+    changes: [
+      {
+        section: 'settings',
+        option: 'gaming_presets_enabled',
+        change: 'changed',
+      },
+      {
+        section: 'settings',
+        option: 'enable_yacd_wan_access',
+        change: 'changed',
+      },
+      { section: 'awg3_ru_eu', option: 'failure_policy', change: 'changed' },
+      { section: 'awg3_ru_eu', option: 'community_lists', change: 'changed' },
+    ],
+  };
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  await click('Show differences');
+  for (const label of [
+    'Enable gaming presets',
+    'Enable YACD WAN Access',
+    'VPN failure policy',
+    'Built-in rule sets',
+  ])
+    expect(text(host)).toContain(label);
+  for (const key of [
+    'gaming_presets_enabled',
+    'enable_yacd_wan_access',
+    'failure_policy',
+    'community_lists',
+  ])
+    expect(text(host)).not.toContain(key);
+  expect(text(host)).toContain('awg3_ru_eu'); // User-defined section names are preserved.
+});
+it('keeps unknown option names as text without reading inherited object properties', async () => {
+  previewResult = {
+    success: true,
+    applicable: true,
+    digest,
+    changes: [
+      {
+        section: 'custom_section',
+        option: 'constructor',
+        change: 'changed',
+        before: 'private-old',
+        after: 'private-new',
+      },
+      {
+        section: 'settings',
+        option: 'unknown_custom_option',
+        change: 'changed',
+      },
+      { section: 'new_section', change: 'added' },
+    ],
+  };
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  await click('Show differences');
+  expect(text(host)).toContain('constructor');
+  expect(text(host)).toContain('unknown_custom_option');
+  expect(text(host)).not.toContain('private-old');
+  expect(text(host)).not.toContain('private-new');
+  expect(text(host)).not.toContain('function Object');
 });
 
 it.each([
