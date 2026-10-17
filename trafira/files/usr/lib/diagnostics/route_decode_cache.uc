@@ -51,9 +51,8 @@ function get(key,budget){
     let entry=read(path,min(MAX_FILE+1024,budget));
     return entry && entry.schema==1 && entry.key==key && type(entry.data)=="object" && type(entry.data.match)=="object" && index(["yes","no","unknown"],entry.data.match.value)>=0 && type(entry.data.match.missing)=="array" && hash(path)==metadata.digest?{data:entry.data,bytes:info.size}:null;
 }
-function put(key,data,workspace){
-    if(!key || !ensure())return false;
-    let text=sprintf("%J",{schema:1,key,data});if(length(text)>MAX_ENTRY)return false;
+function inventory(){
+    if(!ensure())return null;
     let entries=[],total=0;
     for(let name in fs.lsdir(ROOT)||[]) {
         if(!match(name,/^[a-f0-9]{64}[.]json$/))continue;
@@ -63,22 +62,48 @@ function put(key,data,workspace){
         total+=bytes;push(entries,{name,bytes,mtime:info.mtime});
     }
     // One worker owns publication; evict only this component's regular entries.
-    entries=sort(entries,(a,b)=>a.mtime-b.mtime);
-    while(length(entries) && (total+length(text)+128>MAX_TOTAL || length(entries)>=128)) {
-        let old=shift(entries);
+    return {entries:sort(entries,(a,b)=>a.mtime-b.mtime),total};
+}
+function store(key,data,workspace,state){
+    if(type(key)!="string" || !match(key,/^[a-f0-9]{64}$/))return false;
+    let text=sprintf("%J",{schema:1,key,data});if(length(text)>MAX_ENTRY)return false;
+    let previous=filter(state.entries,entry=>entry.name==key+".json"),old_bytes=length(previous)?previous[0].bytes:0;
+    while(length(state.entries) && (state.total-old_bytes+length(text)+128>MAX_TOTAL || length(state.entries)-length(previous)>=128)) {
+        let index=0;
+        while(index<length(state.entries) && state.entries[index].name==key+".json")index++;
+        if(index>=length(state.entries))return false;
+        let old=state.entries[index];
         if(!fs.unlink(ROOT+"/"+old.name))return false;
         fs.unlink(ROOT+"/"+substr(old.name,0,64)+".meta");
-        total-=old.bytes;
+        splice(state.entries,index,1);state.total-=old.bytes;
     }
-    if(total+length(text)+128>MAX_TOTAL)return false;
+    if(state.total-old_bytes+length(text)+128>MAX_TOTAL)return false;
     let temporary=workspace+"/cache.stage";
     let file=fs.open(temporary,"wex",384);if(!file)return false;
     let ok=file.write(text)==length(text);file.close();
     let digest=ok?hash(temporary):null,meta=temporary+".meta",output=digest?fs.open(meta,"wex",384):null;
+    let metadata=sprintf("%J",{digest});
     if(!output)ok=false;
-    else {let data=sprintf("%J",{digest});ok=output.write(data)==length(data);output.close();}
+    else {ok=output.write(metadata)==length(metadata);output.close();}
     if(ok)ok=fs.rename(temporary,ROOT+"/"+key+".json") && fs.rename(meta,ROOT+"/"+key+".meta");
-    fs.unlink(temporary);fs.unlink(meta);return !!ok;
+    fs.unlink(temporary);fs.unlink(meta);
+    if(ok){
+        state.entries=filter(state.entries,entry=>entry.name!=key+".json");
+        let bytes=length(text)+length(metadata);
+        push(state.entries,{name:key+".json",bytes,mtime:clock()[0]});
+        state.total=state.total-old_bytes+bytes;
+    }
+    return !!ok;
+}
+function put_many(values,workspace){
+    if(type(values)!="object")return false;
+    if(!length(keys(values)))return true;
+    let state=inventory();if(!state)return false;
+    for(let key,data in values)if(!store(key,data,workspace,state))return false;
+    return true;
+}
+function put(key,data,workspace){
+    let values={};values[key]=data;return put_many(values,workspace);
 }
 // Workspace is supplied by the private supervisor, never by an RPC request.
 function cleanup(workspace){
@@ -88,16 +113,36 @@ function cleanup(workspace){
         let alive=length(fields)==2?require("service.operation_lock").identity(fields[0]):null;
         if(alive && alive.ticks==fields[1])system("kill -KILL "+alive.pid+" 2>/dev/null");
     }
-    for(let name in ["codec.pid","decode-output","cache.stage","cache.stage.meta"]){
+    for(let name in ["codec.pid","decode-output","cache.stage","cache.stage.meta","source-probe"]){
         let path=workspace+"/"+name,info=fs.lstat(path);
         if(info && info.type=="file")fs.unlink(path);
     }
 }
-function decode(path,format,milliseconds,budget,workspace){
+function decode(path,format,milliseconds,budget,workspace,support){
     let limit=min(MAX_FILE,budget),temporary=workspace+"/decode-output";
     if(limit<=0)return {error:"size_limit"};
     let input=fs.stat(path);
     if(format=="source" && input && input.size>limit)return {error:"size_limit"};
+    if(format=="source" && type(support)=="object"){
+        let candidate=require("diagnostics.route_source").candidate(path,limit);
+        if(candidate){
+            let started=clock(true);
+            if(!support.checked){
+                support.checked=true;
+                let probe=workspace+"/source-probe",file=fs.open(probe,"wex",384);
+                if(file){
+                    let text="{\"version\":3,\"rules\":[{\"ip_cidr\":[\"192.0.2.0/24\",\"2001:db8::/32\"]}]}";
+                    let ok=file.write(text)==length(text);file.close();
+                    let result=ok?decode(probe,"source",milliseconds,MAX_FILE,workspace):null;
+                    fs.unlink(probe);support.accepted=result && result.data!=null;
+                    if(result && result.error=="decode_timeout")return result;
+                }
+            }
+            if(support.accepted)return candidate;
+            let ended=clock(true);
+            milliseconds=max(1,milliseconds-((ended[0]-started[0])*1000+(ended[1]-started[1])/1000000));
+        }
+    }
     let file=fs.open(temporary,"wex",384);
     if(!file)return {error:"storage_unavailable"};file.close();
     // Record the timed native child identity so the supervisor can clean up after SIGKILL.
@@ -129,4 +174,4 @@ function match_domain(path,domain,milliseconds,workspace){
     for(let line in split(text,"\n"))if(match(line,/^match rules[.]\[[0-9]+\]: /))return {match:{value:"yes",missing:[]}};
     return {error:"decode_failed"};
 }
-return {identity,unchanged,domain_only,cache_key,get,put,decode,match_domain,cleanup,MAX_FILE,MAX_TOTAL};
+return {identity,unchanged,domain_only,cache_key,get,put,put_many,decode,match_domain,cleanup,MAX_FILE,MAX_TOTAL};
