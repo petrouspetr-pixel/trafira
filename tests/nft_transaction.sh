@@ -10,7 +10,7 @@ cat >"$WORK_DIR/bin/nft" <<'SH'
 printf '%s\n' "$*" >>"$NFT_CALLS"
 test "$1" = -f && test "$2" = - || exit 2
 cat >"$NFT_SCRIPT"
-exit "${NFT_FAIL:-0}"
+test ! -e "$NFT_SCRIPT.fail"
 SH
 chmod +x "$WORK_DIR/bin/nft"
 ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
@@ -26,9 +26,9 @@ assert(t.commit() && published==1,"successful commit publishes associated state"
 assert(fs.readfile(script)=="delete table inet Fixture\nadd table inet Fixture\nadd chain inet Fixture route\n","order preserved exactly");
 assert(fs.readfile(calls)=="-f -\n","one nft invocation for the transaction");
 assert(!t.commit() && !t.command(["add","table","inet","Unexpected"]),"transaction cannot be reused");
-setenv("NFT_FAIL","1");t=batch.create();t.command(["add","table","inet","Rejected"]);
+fs.writefile(script+".fail","1");t=batch.create();t.command(["add","table","inet","Rejected"]);
 t.after_commit(()=>{published++;});assert(!t.commit() && published==1,"nft error does not publish state");
-setenv("NFT_FAIL","0");fs.unlink(calls);t=batch.create(32);
+fs.unlink(script+".fail");fs.unlink(calls);t=batch.create(32);
 assert(!t.append("add table inet "+join("",map([1,2,3,4,5,6,7,8],()=>"oversized"))),"bounded transaction rejects overflow");
 assert(!t.commit() && !fs.stat(calls),"overflow cannot apply a partial transaction");
 t=batch.create();assert(t.commit() && !fs.stat(calls),"empty transaction is a no-op");

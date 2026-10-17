@@ -20,13 +20,15 @@ function create(limit) {
     }
 
     function command(args) {
+        let words = [];
         for (let arg in args)
-            if (type(arg) != "string" || match(arg, /[\r\n]/)) {
+            if ((type(arg) != "string" && type(arg) != "int") || match("" + arg, /[\r\n]/)) {
                 failed = true;
                 return false;
             }
+            else push(words, "" + arg);
         // nft's argv interface joins arguments before parsing them too.
-        return append(join(" ", args));
+        return append(join(" ", words));
     }
 
     function after_commit(callback) {

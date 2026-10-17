@@ -27,30 +27,6 @@ let list_option = common.list_option;
 let bool_option = common.bool_option;
 let nft_transaction = null;
 
-function nft_with_transaction(build) {
-    if (nft_transaction != null)
-        return build();
-    let transaction = require("nft.transaction").create();
-    nft_transaction = transaction;
-    let ok = false;
-    try { ok = build(); }
-    catch (e) { warn("Failed to build nftables transaction: ", e, "\n"); }
-    nft_transaction = null;
-    return ok && transaction.commit();
-}
-
-function nft_write(args) {
-    return nft_transaction != null
-        ? nft_transaction.command(slice(args, 1))
-        : run_args(args);
-}
-
-function nft_submit_script(script, publish) {
-    let transaction = nft_transaction || require("nft.transaction").create();
-    return transaction.append(script) && transaction.after_commit(publish) &&
-        (nft_transaction != null || transaction.commit());
-}
-
 function as_string(value) {
     return value == null ? "" : "" + value;
 }
@@ -138,6 +114,30 @@ function command_from_args(args) {
 
 function run_args(args) {
     return system(command_from_args(args)) == 0;
+}
+
+function nft_with_transaction(build) {
+    if (nft_transaction != null)
+        return build();
+    let transaction = require("nft.transaction").create();
+    nft_transaction = transaction;
+    let ok = false;
+    try { ok = build(); }
+    catch (e) { warn("Failed to build nftables transaction: ", e, "\n"); }
+    nft_transaction = null;
+    return ok && transaction.commit();
+}
+
+function nft_write(args) {
+    return nft_transaction != null
+        ? nft_transaction.command(slice(args, 1))
+        : run_args(args);
+}
+
+function nft_submit_script(script, publish) {
+    let transaction = nft_transaction || require("nft.transaction").create();
+    return transaction.append(script) && transaction.after_commit(publish) &&
+        (nft_transaction != null || transaction.commit());
 }
 
 function run_args_quiet(args) {
@@ -1279,7 +1279,10 @@ function nft_add_chunks_to_set(table, set_name, chunks, invalid) {
             transaction = require("nft.transaction").create();
             size = 0;
         }
-        if (!transaction.command(args))
+        if (own_transaction && length(chunks) == 1) {
+            if (!nft_add_set_elements(table, set_name, elements)) return false;
+        }
+        else if (!transaction.command(args))
             return false;
         size += bytes;
         total += int(count);

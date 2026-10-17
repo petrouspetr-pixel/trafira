@@ -36,7 +36,10 @@ ip netns exec "$namespace" python3 - <<'PY'
 import socket
 for family,host in [(socket.AF_INET,'127.0.0.1'),(socket.AF_INET6,'::1')]:
     for port in range(10001,10005):
-        with socket.socket(family,socket.SOCK_DGRAM) as s: s.sendto(b'check',(host,port))
+        with socket.socket(family,socket.SOCK_DGRAM) as s:
+            try: s.sendto(b'check',(host,port))
+            except PermissionError:
+                if port!=10002: raise # intentional local drop returns EPERM
 PY
 ip netns exec "$namespace" nft -j list table inet Fixture >"$WORK_DIR/counters"
 python3 - "$WORK_DIR/counters" <<'PY'
