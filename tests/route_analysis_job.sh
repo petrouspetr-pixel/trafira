@@ -2,7 +2,15 @@
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK_DIR="$(mktemp -d)"
-trap 'rm -rf "$WORK_DIR"' EXIT
+cleanup(){
+ local result=$?
+ if [ "$result" -ne 0 ]; then
+  printf '\nBackground route fixture failure (last status):\n' >&2
+  cat "$WORK_DIR/status" "$WORK_DIR/runtime/calculator-errors" 2>/dev/null >&2 || true
+ fi
+ rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT
 export TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 export TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime"
 export TRAFIRA_UCI_STATE_FILE="$WORK_DIR/uci"
@@ -13,7 +21,7 @@ export PATH="$WORK_DIR/bin:$PATH"
 cat >"$WORK_DIR/bin/ucode" <<'SH'
 #!/bin/sh
 case "$*" in *service/state.uc*sing-box-service-running*) exit 0;; esac
-exec "$REAL_UCODE" "$@"
+exec "$REAL_UCODE" "$@" 2>>"$TRAFIRA_RUNTIME_STATE_DIR/calculator-errors"
 SH
 printf '#!/bin/sh\nexit 0\n' >"$WORK_DIR/bin/nft"
 cat >"$WORK_DIR/bin/sing-box" <<'SH'

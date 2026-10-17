@@ -50,6 +50,8 @@ for(let item in [
  {version:3,rules:[{ip_cidr:["192.168.001.0/24"]}]},
  {version:3,rules:[{ip_cidr:["::ffff:192.168.001.1/128"]}]},
  {version:3,rules:[{ip_cidr:["2001:db8::/0128"]}]},
+ {version:3,rules:[{ip_cidr:["192.0.2.0/24\u0000junk"]}]},
+ {version:3,rules:[{ip_cidr:["2001:db8::\u0000junk/32"]}]},
  {version:3,rules:[{ip_cidr:["192.0.2.0/24"]}],unexpected:true},
  {version:999,rules:[{ip_cidr:["192.0.2.0/24"]}]},
  {version:3,rules:[{}]}

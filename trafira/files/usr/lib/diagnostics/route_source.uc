@@ -14,7 +14,7 @@ function candidate(path,limit){
     for(let rule in data.rules){
         if(type(rule)!="object" || length(keys(rule))!=1 || type(rule.ip_cidr)!="array" || !length(rule.ip_cidr))return null;
         for(let cidr in rule.ip_cidr){
-            if(++count>65536 || type(cidr)!="string" || length(cidr)>64)return null;
+            if(++count>65536 || type(cidr)!="string" || length(cidr)>64 || index(cidr,"\u0000")>=0)return null;
             let slash=index(cidr,"/");
             // Narrowing the accepted fast subset never rejects a source: other
             // representations (including mapped addresses) use the native codec.
