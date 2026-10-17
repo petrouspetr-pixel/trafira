@@ -4,12 +4,14 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 export ROUTE_SOURCE_TEST="$WORK_DIR" TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime"
+if [ "${TRAFIRA_REAL_SOURCE:-0}" = 1 ]; then REAL_SING_BOX=$(command -v sing-box); export REAL_SING_BOX; fi
 mkdir -p "$WORK_DIR/bin" "$WORK_DIR/runtime"
 cat >"$WORK_DIR/bin/sing-box" <<'SH'
 #!/bin/sh
 set -eu
 printf 'compile\n' >>"$ROUTE_SOURCE_TEST/calls"
 [ ! -f "$ROUTE_SOURCE_TEST/reject" ] || exit 1
+if [ "${TRAFIRA_REAL_SOURCE:-0}" = 1 ]; then exec "$REAL_SING_BOX" "$@"; fi
 cp "$3" "$5"
 SH
 chmod +x "$WORK_DIR/bin/sing-box"
@@ -27,6 +29,15 @@ assert(length(split(trim(fs.readfile(root+"/calls")),"\n"))==1,"ten simple sourc
 fs.unlink(root+"/calls");
 let result=codec.decode(root+"/source-0","source",3000,codec.MAX_FILE,root,{});
 assert(result.data && length(split(trim(fs.readfile(root+"/calls")),"\n"))==1,"fresh analysis has fresh capability proof");
+let matcher=require("diagnostics.route_match");
+for(let address in ["192.0.2.0","192.0.2.255","192.0.3.1","2001:db8::","2001:db8:ffff::1","2001:db9::1"]){
+ let expected=index(["192.0.3.1","2001:db9::1"],address)<0?"yes":"no";
+ for(let source_mode in [false,true]){
+  let matched=matcher.match_rule({rule_set:"current",rule_set_ip_cidr_match_source:source_mode},
+      {source_ip:address,destination_ip:address},{current:result.data});
+  assert(matched.value==expected,"source/destination and IPv4/IPv6 prefix boundaries remain exact");
+ }
+}
 // Invalid and unknown fields retain the actual core compiler failure path.
 fs.writefile(root+"/reject","");
 for(let item in [

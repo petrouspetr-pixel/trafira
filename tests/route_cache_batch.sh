@@ -15,5 +15,18 @@ for(let key,value in pending)assert(codec.get(key,4096).data.match.value=="no","
 let key=sprintf("%064x",1);
 fs.writefile(root+"/route-decode-cache/"+key+".json","{}");
 assert(codec.get(key,4096)==null,"corrupt batch entry remains unusable");
+let more={};for(let n=1000;n<1200;n++)more[sprintf("%064x",n)]={rules:[],match:{value:"yes",missing:[]}};
+assert(codec.put_many(more,root),"batch larger than the entry-count limit uses bounded eviction");
+let names=filter(ls(root+"/route-decode-cache"),n=>match(n,/^[a-f0-9]{64}[.]json$/)),bytes=0;
+assert(length(names)==128,"cache entry-count cap is retained");
+for(let name in names){bytes+=fs.stat(root+"/route-decode-cache/"+name).size+fs.stat(root+"/route-decode-cache/"+substr(name,0,64)+".meta").size;}
+assert(bytes<=codec.MAX_TOTAL,"total payload and metadata remain bounded");
+let invalid={};invalid["../escape"]={match:{value:"yes",missing:[]}};
+assert(!codec.put_many(invalid,root) && !fs.stat(root+"/escape.json"),"publication rejects invalid keys");
+let rename=fs.rename,bad=sprintf("%064x",9000),partial={};partial[bad]={match:{value:"yes",missing:[]}};
+fs.rename=function(from,to){return to==root+"/route-decode-cache/"+bad+".meta"?false:rename(from,to);};
+assert(!codec.put_many(partial,root),"failed metadata publication is reported");
+fs.rename=rename;
+assert(codec.get(bad,4096)==null && !fs.stat(root+"/cache.stage"),"interrupted pair cannot become a valid match");
 print("batch cache inventory and integrity checks passed\n");
 '
