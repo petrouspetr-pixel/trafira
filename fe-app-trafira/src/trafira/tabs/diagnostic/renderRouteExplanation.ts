@@ -197,7 +197,7 @@ export const routeExplanationPanel = {
       destination.placeholder = _('Determined automatically');
       sourceHelp.textContent = router
         ? _(
-            'This checks apps running on the router itself. Device traffic is checked separately.',
+            'This checks apps running on the router itself, not your phone or computer. In Settings, enable "Route router applications" and click Apply.',
           )
         : _('Choose the device that will open the website.');
       sourceHelp.hidden = !router;

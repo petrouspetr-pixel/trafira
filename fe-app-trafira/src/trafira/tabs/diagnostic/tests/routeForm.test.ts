@@ -191,6 +191,9 @@ it('resolves a domain for the router without requiring a manual destination', ()
   widget('source').setValue('router');
   expect(node('destination').required).toBe(false);
   expect(node('device-row').hidden).toBe(true);
+  expect(node('source-help').textContent).toContain('In Settings, enable');
+  expect(node('source-help').textContent).toContain('click Apply');
+  expect(node('source-help').hidden).toBe(false);
   expect(widget('device').node.attributes.disabled).toBeDefined();
   widget('source').setValue('device');
   expect(node('destination').required).toBe(false);

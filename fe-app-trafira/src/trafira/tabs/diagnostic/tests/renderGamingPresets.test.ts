@@ -185,7 +185,8 @@ it('stages multiple platforms and deletion without persistence or service operat
   ).toBe(true);
   expect(text(host)).not.toContain('Apply reviewed changes');
   expect(text(host)).not.toContain('Preview gaming rules');
-  expect(text(host)).toContain('Save & Apply');
+  expect(text(host)).toContain('Click Apply below');
+  expect(text(host)).not.toContain('Save & Apply');
 });
 it('retains editor across tabs and discards queued changes on native Reset', async () => {
   gamingPresetsPanel.mount();
