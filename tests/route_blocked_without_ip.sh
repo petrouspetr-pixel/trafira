@@ -29,7 +29,7 @@ let rules=[{domain:'static.popmechanic.ru',action:'reject'}],sets=[];
 if(scenario==='suffix')rules=[{domain_suffix:'popmechanic.ru',action:'reject'}];
 if(scenario==='list'){sets=[{type:'inline',tag:'ads',rules:[{domain_suffix:'popmechanic.ru'}]}];rules=[{rule_set:'ads',action:'reject'}];}
 if(scenario==='earlier-ip')rules.unshift({ip_cidr:'203.0.113.0/24',action:'route',outbound:'vpn-out'});
-if(scenario==='compound-ip')rules[0].ip_cidr='203.0.113.0/24';
+if(scenario==='compound-ip')rules=[{type:'logical',mode:'and',rules:[{domain:'static.popmechanic.ru'},{ip_cidr:'203.0.113.0/24'}],action:'reject'}];
 if(scenario==='earlier-allow')rules.unshift({domain:'static.popmechanic.ru',action:'route',outbound:'direct-out'});
 if(scenario==='missing-list')rules.unshift({rule_set:'missing',action:'route',outbound:'vpn-out'});
 if(scenario==='dns-only')rules=[];
