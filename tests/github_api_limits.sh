@@ -40,6 +40,9 @@ assert(api.request(url,"",2097152,5,1800).retry_at==1920,"secondary limit honors
 fs.writefile(root+"/mode","many");
 r=api.request(url,"",2097152,5,2000);
 assert(r.retry_at==5600,"untrusted retry period is bounded to one hour");
+fs.writefile(root+"/mode","ok");
+assert(api.request("https://api.github.com/repos/shtorm-7/sing-box-extended/releases/tags/v1.14.1-extended-2.7.2","",2097152,5,6000).success,"exact rollback release tag remains available");
+assert(!api.request("https://api.github.com/repos/a/b/releases/tags/../latest","",2097152,5,6000).success,"tag lookup cannot traverse API paths");
 assert(!api.request("https://other.example/repos/a/b/releases","",2097152,5,6000).success,"API helper does not fetch arbitrary hosts");
 print("GitHub API cooldown and recovery checks passed\n");
 '
