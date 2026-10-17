@@ -17,6 +17,8 @@ assert(n(original)!=n(reverse),"section priority remains significant");
 assert(n(original)!=n(replace(original,"list ip_cidr 192.0.2.0/24\n list ip_cidr 198.51.100.0/24","list ip_cidr 198.51.100.0/24\n list ip_cidr 192.0.2.0/24")),"list ordering remains significant");
 assert(n("config section x\n option label \u0027a  # b\u0027\n")!=n("config section x\n option label \u0027a # b\u0027\n"),"spaces and hashes inside values are significant");
 assert(n("config section x\n option shutdown_correctly 1\n")!=n("config section x\n option shutdown_correctly 0\n"),"only the settings lifecycle flag is ignored");
+assert(n("config settings settings\n option bootstrap_dns_server \u0027\u0027\n list bootstrap_dns_server 1.1.1.1\n")!=n("config settings settings\n list bootstrap_dns_server \u0027\u0027\n list bootstrap_dns_server 1.1.1.1\n"),"an empty scalar deletes an option; an empty list item remains significant");
+assert(n("config settings settings\n option unused \u0027\u0027\n")==n("config settings settings\n"),"libuci drops empty scalar options when committing");
 fs.writefile(getenv("TRAFIRA_CONFIG_FILE"),original);fs.writefile(getenv("FIXTURE_CORE"),"{}");
 let checkpoint=applied.capture({config_path:getenv("FIXTURE_CORE")},[]);
 fs.writefile(getenv("TRAFIRA_CONFIG_FILE"),canonical);
