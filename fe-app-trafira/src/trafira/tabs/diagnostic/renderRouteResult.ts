@@ -150,6 +150,8 @@ export function renderRouteExplanationResult(
   const dns = report.dns_query;
   const dnsFailed =
     dns?.status && !['resolved', 'provided'].includes(dns.status);
+  const blockedWithoutIp =
+    report.decision.status === 'blocked' && !dns?.addresses?.length;
   const details = E(
     'details',
     { class: 'cbi-section fkp_diagnostic-details' },
@@ -243,6 +245,15 @@ export function renderRouteExplanationResult(
     E('div', { class: 'cbi-section' }, [
       E('h3', {}, outcome.title),
       E('p', {}, outcome.reason),
+      ...(blockedWithoutIp
+        ? [
+            E(
+              'p',
+              {},
+              _('No server IP is needed: a matching rule blocks this domain.'),
+            ),
+          ]
+        : []),
       ...(dns?.status === 'resolved'
         ? [E('p', {}, _('DNS lookup: website addresses found'))]
         : []),
@@ -260,7 +271,9 @@ export function renderRouteExplanationResult(
             ),
           ]
         : []),
-      ...(dnsFailed && !report.decision.missing.includes('dns_' + dns.status)
+      ...(dnsFailed &&
+      !blockedWithoutIp &&
+      !report.decision.missing.includes('dns_' + dns.status)
         ? routeReasons(['dns_' + dns.status]).map((message) =>
             E('p', { class: 'alert-message warning' }, message),
           )
