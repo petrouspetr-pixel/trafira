@@ -192,12 +192,7 @@ function external_config_fingerprint() {
     if (data == null)
         return "";
 
-    let lines = [];
-    for (let line in split(as_string(data), "\n"))
-        if (match(as_string(line), /^[ \t]*option[ \t]+shutdown_correctly([ \t]|$)/) == null)
-            push(lines, line);
-
-    return join("\n", lines);
+    return require("service.applied_config").normalized(data);
 }
 
 function trim(value) {

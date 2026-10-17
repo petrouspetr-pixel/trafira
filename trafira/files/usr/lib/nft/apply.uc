@@ -25,6 +25,7 @@ const BYEDPI_RUNTIME_UID_OVERRIDE = getenv("BYEDPI_RUNTIME_UID") || "";
 let common_read_json_file = common.read_json_file;
 let list_option = common.list_option;
 let bool_option = common.bool_option;
+let nft_transaction = null;
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -113,6 +114,30 @@ function command_from_args(args) {
 
 function run_args(args) {
     return system(command_from_args(args)) == 0;
+}
+
+function nft_with_transaction(build) {
+    if (nft_transaction != null)
+        return build();
+    let transaction = require("nft.transaction").create();
+    nft_transaction = transaction;
+    let ok = false;
+    try { ok = build(); }
+    catch (e) { warn("Failed to build nftables transaction: ", e, "\n"); }
+    nft_transaction = null;
+    return ok && transaction.commit();
+}
+
+function nft_write(args) {
+    return nft_transaction != null
+        ? nft_transaction.command(slice(args, 1))
+        : run_args(args);
+}
+
+function nft_submit_script(script, publish) {
+    let transaction = nft_transaction || require("nft.transaction").create();
+    return transaction.append(script) && transaction.after_commit(publish) &&
+        (nft_transaction != null || transaction.commit());
 }
 
 function run_args_quiet(args) {
@@ -433,11 +458,11 @@ function csv_to_lines_file(csv, path) {
 }
 
 function nft_create_table(name) {
-    return run_args([ "nft", "add", "table", "inet", name ]);
+    return nft_write([ "nft", "add", "table", "inet", name ]);
 }
 
 function nft_create_set(table, name, definition) {
-    return run_args([ "nft", "add", "set", "inet", table, name, definition ]);
+    return nft_write([ "nft", "add", "set", "inet", table, name, definition ]);
 }
 
 function nft_create_ipv4_set(table, name) {
@@ -465,7 +490,7 @@ function nft_create_ifname_set(table, name) {
 }
 
 function nft_add_set_elements(table, set_name, elements) {
-    return run_args([ "nft", "add", "element", "inet", table, set_name, "{ " + as_string(elements) + " }" ]);
+    return nft_write([ "nft", "add", "element", "inet", table, set_name, "{ " + as_string(elements) + " }" ]);
 }
 
 function whitespace_values(value) {
@@ -481,14 +506,14 @@ function whitespace_values(value) {
 }
 
 function nft_create_chain(table, name, definition) {
-    return run_args([ "nft", "add", "chain", "inet", table, name, definition ]);
+    return nft_write([ "nft", "add", "chain", "inet", table, name, definition ]);
 }
 
 function nft_add_rule(table, chain, args) {
     let command = [ "nft", "add", "rule", "inet", table, chain ];
     for (let arg in args)
         push(command, arg);
-    return run_args(command);
+    return nft_write(command);
 }
 
 function nft_add_byedpi_runtime_owner_rule(table, outbound_mark) {
@@ -507,7 +532,7 @@ function nft_insert_rule(table, chain, args) {
     let command = [ "nft", "insert", "rule", "inet", table, chain ];
     for (let arg in args)
         push(command, arg);
-    return run_args(command);
+    return nft_write(command);
 }
 
 let LOCALV4_RANGES = [
@@ -1232,6 +1257,9 @@ function nft_log_invalid_elements(invalid) {
 
 function nft_add_chunks_to_set(table, set_name, chunks, invalid) {
     nft_log_invalid_elements(invalid);
+    let own_transaction = nft_transaction == null;
+    let transaction = nft_transaction || require("nft.transaction").create();
+    let size = 0, total = 0;
 
     for (let item in chunks) {
         let separator = index(item, "\t");
@@ -1243,12 +1271,25 @@ function nft_add_chunks_to_set(table, set_name, chunks, invalid) {
         if (elements == "")
             continue;
 
-        log_debug("Adding " + count + " elements to nft set " + set_name);
-        if (!nft_add_set_elements(table, set_name, elements))
+        let args = [ "add", "element", "inet", table, set_name, "{ " + elements + " }" ];
+        let bytes = length(join(" ", args)) + 1;
+        // Remote lists can be large: keep each independent fill batch bounded.
+        if (own_transaction && size > 0 && size + bytes > 65536) {
+            if (!transaction.commit()) return false;
+            transaction = require("nft.transaction").create();
+            size = 0;
+        }
+        if (own_transaction && length(chunks) == 1) {
+            if (!nft_add_set_elements(table, set_name, elements)) return false;
+        }
+        else if (!transaction.command(args))
             return false;
+        size += bytes;
+        total += int(count);
     }
-
-    return true;
+    if (total > 0)
+        log_debug("Adding " + total + " elements to nft set " + set_name);
+    return !own_transaction || transaction.commit();
 }
 
 function nft_add_file_chunks_to_set(path, table, set_name, kind, ports_csv, chunk_size_text, family_filter) {
@@ -1619,7 +1660,7 @@ function nft_create_full_runtime_from_uci(rt_table, table, localv4_set, common_s
         nft_create_provider_output_rules_from_uci(table, "zapret", zapret_bin, zapret_route_mark_base, zapret_queue_base, zapret_desync_mark, zapret_desync_mark_postnat) &&
         nft_create_provider_output_rules_from_uci(table, "zapret2", zapret2_bin, zapret2_route_mark_base, zapret2_queue_base, zapret2_desync_mark, zapret2_desync_mark_postnat) &&
         nft_create_runtime_output_rules(table, localv4_set, common_set, port_set, ip_port_set, fakeip_mark, fakeip_range, localv6_set, common6_set, ip_port6_set, fakeip6_range) &&
-        require("nft.router_origin").install(uci_settings(), uci_sections("section"), table, localv4_set, localv6_set, fakeip_mark);
+        require("nft.router_origin").install(uci_settings(), uci_sections("section"), table, localv4_set, localv6_set, fakeip_mark, nft_submit_script);
 }
 
 function nft_table_present(table) {
@@ -1627,16 +1668,18 @@ function nft_table_present(table) {
 }
 
 function nft_delete_table(table) {
-    return run_args([ "nft", "delete", "table", "inet", table ]);
+    return nft_write([ "nft", "delete", "table", "inet", table ]);
 }
 
 function nft_rebuild_runtime_from_uci(rt_table, table, localv4_set, common_set, port_set, ip_port_set, interface_set, fakeip_mark, outbound_mark, fakeip_range, tproxy_port, zapret_bin, zapret_route_mark_base, zapret_queue_base, zapret_desync_mark, zapret_desync_mark_postnat, zapret2_bin, zapret2_route_mark_base, zapret2_queue_base, zapret2_desync_mark, zapret2_desync_mark_postnat, localv6_set, common6_set, ip_port6_set, fakeip6_range, tproxy6_address) {
     log_debug("Applying nftables runtime rules");
 
-    if (nft_table_present(table) && !nft_delete_table(table))
-        return false;
-
-    return nft_create_full_runtime_from_uci(rt_table, table, localv4_set, common_set, port_set, ip_port_set, interface_set, fakeip_mark, outbound_mark, fakeip_range, tproxy_port, zapret_bin, zapret_route_mark_base, zapret_queue_base, zapret_desync_mark, zapret_desync_mark_postnat, zapret2_bin, zapret2_route_mark_base, zapret2_queue_base, zapret2_desync_mark, zapret2_desync_mark_postnat, localv6_set, common6_set, ip_port6_set, fakeip6_range, tproxy6_address);
+    let present = nft_table_present(table);
+    return nft_with_transaction(function() {
+        if (present && !nft_delete_table(table))
+            return false;
+        return nft_create_full_runtime_from_uci(rt_table, table, localv4_set, common_set, port_set, ip_port_set, interface_set, fakeip_mark, outbound_mark, fakeip_range, tproxy_port, zapret_bin, zapret_route_mark_base, zapret_queue_base, zapret_desync_mark, zapret_desync_mark_postnat, zapret2_bin, zapret2_route_mark_base, zapret2_queue_base, zapret2_desync_mark, zapret2_desync_mark_postnat, localv6_set, common6_set, ip_port6_set, fakeip6_range, tproxy6_address);
+    });
 }
 
 function nft_runtime_signature_from_uci() {

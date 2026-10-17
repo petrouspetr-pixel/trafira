@@ -4,7 +4,7 @@ const ROOT=getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira";
 const PATH=ROOT+"/applied-config.json";
 const CONFIG=getenv("TRAFIRA_CONFIG_FILE")||"/etc/config/trafira";
 function text(){let info=fs.lstat(CONFIG);return info && info.type=="file" && info.size<=1048576?fs.readfile(CONFIG):null;}
-function normalized(value){return join("\n",filter(split(value||"","\n"),(line)=>!match(line,/^[ \t]*option[ \t]+shutdown_correctly([ \t]|$)/)));}
+let normalized=require("config.identity").normalized;
 function capture(settings,sections){
     let source=text();if(source==null)return null;
     let selected={};

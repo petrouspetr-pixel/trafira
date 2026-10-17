@@ -58,18 +58,24 @@ function snapshot(settings,sections) {
             if(!known_interfaces[iface])return null;
     return result;
 }
-function install(settings,sections,table,local4,local6,mark) {
+function install(settings,sections,table,local4,local6,mark,submit) {
     let selected=model.config(settings,sections);
     if(!selected.enabled)return true;
     if(selected.error)return false;
     let data=snapshot(settings,sections);if(!data) {warn("Router-origin bootstrap or native VPN transport could not be verified\n");return false;}
     let script=model.nft(table,local4,local6,mark,data);if(!script)return false;
+    function publish() {
+        let path=(getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json";
+        if(require("singbox.failure_store").write(path,{section:selected.section,...data}))return true;
+        fs.unlink(path);return false;
+    }
+    if(type(submit)=="function")return submit(script,publish);
     let path=(getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.nft";
     let old=fs.lstat(path);if(old && old.type!="file")return false;
     let file=fs.open(path,"w",384);if(!file)return false;
     let saved=file.write(script)==length(script);file.close();
     let ok=saved && system("exec nft -f "+quote(path),15000)==0;fs.unlink(path);
-    if(ok)require("singbox.failure_store").write((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json",{section:selected.section,...data});
+    if(ok)publish();
     return ok;
 }
 return {snapshot,install};
