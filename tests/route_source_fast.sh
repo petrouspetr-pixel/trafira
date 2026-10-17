@@ -38,7 +38,7 @@ for(let address in ["192.0.2.0","192.0.2.255","192.0.3.1","2001:db8::","2001:db8
   assert(matched.value==expected,"source/destination and IPv4/IPv6 prefix boundaries remain exact");
  }
  if(getenv("TRAFIRA_REAL_SOURCE")=="1"){
-  let pipe=fs.popen(getenv("REAL_SING_BOX")+" rule-set match -f source "+root+"/source-0 "+address+" 2>/dev/null","re");
+  let pipe=fs.popen(getenv("REAL_SING_BOX")+" rule-set match -f source "+root+"/source-0 "+address+" 2>&1","re");
   let text=pipe.read("all"),status=pipe.close();
   assert(status==0 && (length(text)?"yes":"no")==expected,"fast subset agrees with real sing-box prefix matching");
  }
