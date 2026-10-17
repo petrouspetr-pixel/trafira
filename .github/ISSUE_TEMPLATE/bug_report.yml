@@ -1,74 +1,31 @@
----
-name: 🐛 Сообщение об ошибке
-description: Создавайте только, если проблема точно не на вашей стороне.
-title: "[BUG] "
-labels: ["bug"]
-assignees: []
+name: Сообщить об ошибке
+description: Помогите воспроизвести и исправить проблему Trafira.
+title: "[Ошибка]: "
 body:
   - type: markdown
     attributes:
-      value: |
-        Спасибо за создание отчета об ошибке!
-        
-        Перед отправкой, пожалуйста:
-        - Проверьте [существующие issues](https://github.com/petrouspetr-pixel/trafira/issues)
-        - Просмотрите [README проекта](https://github.com/petrouspetr-pixel/trafira#readme)
-
-  - type: textarea
-    id: description
+      value: "Не публикуйте пароли, ключи, ссылки подписок и полные конфигурации. Проверьте, нет ли уже такого сообщения в Issues."
+  - type: input
+    id: versions
     attributes:
-      label: 📝 Описание проблемы
-      description: Четкое и краткое описание того, что не работает
-      placeholder: Опишите проблему
+      label: Версии Trafira и OpenWrt, модель роутера
     validations:
       required: true
-
   - type: textarea
-    id: reproduction
+    id: steps
     attributes:
-      label: Шаги для воспроизведения
-      description: Шаги для воспроизведения проблемы. Если вы настраваете что-то по мануалу, приложите ссылку на него.
-      placeholder: |
-        1. 
-        2. 
-        3. 
-        4. 
+      label: Как повторить ошибку
+      description: Укажите вкладку, действия и нажатые кнопки.
     validations:
       required: true
-
   - type: textarea
     id: expected
     attributes:
-      label: ✅ Ожидаемое поведение
-      description: Четкое и краткое описание того, что должно было произойти
-      placeholder: Опишите ожидаемое поведение
+      label: Что ожидалось и что произошло
     validations:
       required: true
-
   - type: textarea
-    id: environment
+    id: logs
     attributes:
-      label: 🖥️ Информация о системе
-      description: |
-        Информация о вашей системе (заполните всё применимое)
-      value: |
-        - **OpenWrt версия**: 
-        - **Trafira версия**:
-        - **Роутер модель**: 
-        - **Sing-box версия**: 
-      render: markdown
-    validations:
-      required: true
-
-  - type: textarea
-    id: config
-    attributes:
-      label: ⚙️ Конфигурация
-      description: |
-        Релевантные части конфигурации (удалите чувствительную информацию!)
-      placeholder: |
-        Например:
-        - Содержимое /etc/config/trafira
-        - Конфигурация sing-box (если релевантно)
-        - Дополнительные конфиги, которые потребуются wireless/network/dhcp и т.д.
-      render: shell
+      label: Журнал и снимки экрана
+      description: Только относящиеся к ошибке фрагменты без секретов и персональных данных.
