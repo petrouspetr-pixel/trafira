@@ -1582,17 +1582,6 @@ async function renderBandwidthWidget() {
     return;
   }
 
-  if (traffic.loading || traffic.failed) {
-    const renderedWidget = renderWidget({
-      loading: traffic.loading,
-      failed: traffic.failed,
-      title: '',
-      items: [],
-    });
-
-    return container.replaceChildren(renderedWidget);
-  }
-
   const renderedWidget = renderWidget({
     loading: traffic.loading,
     failed: traffic.failed,
@@ -1614,17 +1603,6 @@ async function renderTrafficTotalWidget() {
 
   if (!container) {
     return;
-  }
-
-  if (trafficTotalWidget.loading || trafficTotalWidget.failed) {
-    const renderedWidget = renderWidget({
-      loading: trafficTotalWidget.loading,
-      failed: trafficTotalWidget.failed,
-      title: '',
-      items: [],
-    });
-
-    return container.replaceChildren(renderedWidget);
   }
 
   const renderedWidget = renderWidget({

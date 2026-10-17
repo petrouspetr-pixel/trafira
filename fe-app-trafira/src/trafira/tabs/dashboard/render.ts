@@ -27,8 +27,11 @@ export function render() {
             renderWidget({
               loading: true,
               failed: false,
-              title: '',
-              items: [],
+              title: _('Traffic'),
+              items: [
+                { key: _('Uplink'), value: '' },
+                { key: _('Downlink'), value: '' },
+              ],
             }),
           ),
           E(
@@ -37,8 +40,11 @@ export function render() {
             renderWidget({
               loading: true,
               failed: false,
-              title: '',
-              items: [],
+              title: _('Traffic Total'),
+              items: [
+                { key: _('Uplink'), value: '' },
+                { key: _('Downlink'), value: '' },
+              ],
             }),
           ),
           E(
