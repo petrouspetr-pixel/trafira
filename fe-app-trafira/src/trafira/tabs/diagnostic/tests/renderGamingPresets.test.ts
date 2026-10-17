@@ -402,3 +402,23 @@ it('allows one explicit retry after catalog failure without an automatic retry l
   fill();
   expect(button('Add to list').disabled).toBe(false);
 });
+
+it('waits for a long runtime apply and restores the catalog without a page reload', async () => {
+  vi.useFakeTimers();
+  const call = vi.mocked(executeShellCommand);
+  const normal = call.getMockImplementation()!;
+  let applying = true;
+  call.mockImplementation(async (options) => applying
+    ? { code: 0, stdout: JSON.stringify({ success: false, error: 'busy' }), stderr: '' }
+    : normal(options));
+  gamingPresetsPanel.mount();
+  await vi.advanceTimersByTimeAsync(4000);
+  expect(text(host)).not.toContain('Another configuration operation is already running.');
+  expect(text(host)).toContain('Waiting for configuration changes to finish');
+  applying = false;
+  await vi.advanceTimersByTimeAsync(6000);
+  await drain();
+  expect(text(host)).not.toContain('Waiting for configuration changes to finish');
+  fill();
+  expect(button('Add to list').disabled).toBe(false);
+});
