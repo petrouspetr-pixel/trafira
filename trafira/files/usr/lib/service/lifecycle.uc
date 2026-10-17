@@ -565,9 +565,9 @@ function release_start_subscription_update_lock() {
     start_subscription_update_lock_held = false;
 }
 
-function nft_rebuild_runtime() {
+function nft_rebuild_runtime(retain_lists) {
     return module_status(NFT_UC, [
-        "nft-rebuild-runtime-from-uci",
+        retain_lists ? "nft-rebuild-retaining-lists-from-uci" : "nft-rebuild-runtime-from-uci",
         RT_TABLE_NAME,
         NFT_TABLE_NAME,
         NFT_LOCALV4_SET_NAME,
@@ -613,6 +613,20 @@ function nft_populate_runtime_sets() {
         NFT_IP_PORT6_SET_NAME,
         NFT_LOCALV6_SET_NAME
     ]);
+}
+
+function rebuild_nft_for_reload(plan, has_nft_lists) {
+    if (plan.changed_list == 0 && has_nft_lists == 1) {
+        let status = nft_rebuild_runtime(true);
+        if (status == 2)
+            return nft_rebuild_runtime();
+        if (status == 0) {
+            plan.needs_list_update = 0;
+            log_message("Reused unchanged remote-list nftables sets without downloading lists", "info");
+        }
+        return status;
+    }
+    return nft_rebuild_runtime();
 }
 
 function singbox_init_config() {
@@ -1215,7 +1229,7 @@ function reload(reason) {
 
     if (plan.needs_nft_rebuild == 1) {
         log_message("Rebuilding nftables rules", "info");
-        status = nft_rebuild_runtime();
+        status = rebuild_nft_for_reload(plan, nft_list_update_sources);
         if (status != 0)
             return abort_reload(status, true);
     }

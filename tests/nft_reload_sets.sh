@@ -32,7 +32,7 @@ else {
  assert(index(result.v6,ARGV[0]=="empty"?"type ipv6_addr":"2001:db8::/32")>=0,"IPv6 snapshot retained exactly");
  let tx=require("nft.transaction").create();
  assert(tx.append("delete table inet Fixture\nadd table inet Fixture\n"),"rebuild staged");
- for(let name in keys(result))assert(tx.command(["add","set","inet","Fixture",name,result[name]]),"snapshot in same transaction");
+ for(let name in keys(result))assert(tx.append("add set inet Fixture "+name+" "+result[name]+"\n"),"snapshot in same transaction");
 }
 assert(retained.load("bad;name",definitions)==null,"invalid table never executed");
 UC

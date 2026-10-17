@@ -26,6 +26,7 @@ let common_read_json_file = common.read_json_file;
 let list_option = common.list_option;
 let bool_option = common.bool_option;
 let nft_transaction = null;
+let retained_destination_sets = null;
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -462,6 +463,8 @@ function nft_create_table(name) {
 }
 
 function nft_create_set(table, name, definition) {
+    if (retained_destination_sets != null && retained_destination_sets[name] != null)
+        return nft_transaction != null && nft_transaction.append("add set inet " + table + " " + name + " " + retained_destination_sets[name] + "\n");
     return nft_write([ "nft", "add", "set", "inet", table, name, definition ]);
 }
 
@@ -1671,6 +1674,27 @@ function nft_delete_table(table) {
     return nft_write([ "nft", "delete", "table", "inet", table ]);
 }
 
+function prepare_retained_destination_sets(table) {
+    let definitions = {};
+    for (let section in uci_sections("section")) {
+        if (!bool_option(section, "enabled", true) || !section_needs_priority_sets(section) || section_action(section) == "dns")
+            continue;
+        if (!rule_config.has_community_subnet_list(connections.community_lists_value(section)) &&
+            option(section, "remote_subnet_lists", "") == "" && connections.rule_sets_with_subnets_value(section) == "" &&
+            !match(option(section, "domain_ip_lists", ""), /https?:\/\//))
+            continue;
+        let sets = section_priority_sets(section);
+        definitions[sets.subnets] = "{ type ipv4_addr; flags interval; auto-merge; }";
+        definitions[sets.subnets6] = "{ type ipv6_addr; flags interval; auto-merge; }";
+        definitions[sets.ip_ports] = "{ type ipv4_addr . inet_service; flags interval; auto-merge; }";
+        definitions[sets.ip6_ports] = "{ type ipv6_addr . inet_service; flags interval; auto-merge; }";
+    }
+    if (!length(keys(definitions)))
+        return false;
+    retained_destination_sets = require("nft.reload_sets").load(table, definitions);
+    return retained_destination_sets != null;
+}
+
 function nft_rebuild_runtime_from_uci(rt_table, table, localv4_set, common_set, port_set, ip_port_set, interface_set, fakeip_mark, outbound_mark, fakeip_range, tproxy_port, zapret_bin, zapret_route_mark_base, zapret_queue_base, zapret_desync_mark, zapret_desync_mark_postnat, zapret2_bin, zapret2_route_mark_base, zapret2_queue_base, zapret2_desync_mark, zapret2_desync_mark_postnat, localv6_set, common6_set, ip_port6_set, fakeip6_range, tproxy6_address) {
     log_debug("Applying nftables runtime rules");
 
@@ -1993,8 +2017,12 @@ else if (mode == "nft-add-section-priority-rules-fixture")
     exit(nft_add_section_priority_rules_from_sections(fixture_section_list(object_or_empty(common_read_json_file(ARGV[1])), "section"), ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6], ARGV[7], ARGV[8]) ? 0 : 1);
 else if (mode == "nft-create-full-runtime-from-uci")
     exit(nft_create_full_runtime_from_uci(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6], ARGV[7], ARGV[8], ARGV[9], ARGV[10], ARGV[11], ARGV[12], ARGV[13], ARGV[14], ARGV[15], ARGV[16], ARGV[17], ARGV[18], ARGV[19], ARGV[20], ARGV[21], ARGV[22], ARGV[23], ARGV[24], ARGV[25], ARGV[26]) ? 0 : 1);
-else if (mode == "nft-rebuild-runtime-from-uci")
+else if (mode == "nft-rebuild-runtime-from-uci" || mode == "nft-rebuild-retaining-lists-from-uci") {
+    // Status 2 is a preflight miss: no table/route/transaction has been changed.
+    if (mode == "nft-rebuild-retaining-lists-from-uci" && !prepare_retained_destination_sets(ARGV[2]))
+        exit(2);
     exit(nft_rebuild_runtime_from_uci(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6], ARGV[7], ARGV[8], ARGV[9], ARGV[10], ARGV[11], ARGV[12], ARGV[13], ARGV[14], ARGV[15], ARGV[16], ARGV[17], ARGV[18], ARGV[19], ARGV[20], ARGV[21], ARGV[22], ARGV[23], ARGV[24], ARGV[25], ARGV[26]) ? 0 : 1);
+}
 else if (mode == "nft-prepare-chunks")
     nft_prepare_chunks(ARGV[1], ARGV[2], ARGV[3] || "", ARGV[4], ARGV[5], ARGV[6]);
 else if (mode == "nft-add-file-chunks-to-set")
