@@ -72,6 +72,17 @@ mkdir -p "$WORK_DIR/bin"
 cat >"$WORK_DIR/bin/nft" <<'NFT'
 #!/usr/bin/env bash
 set -eo pipefail
+if [ "$*" = '-f -' ]; then
+  python3 -c '
+import os,sys
+with open(os.environ["NFT_LOG"],"a") as output:
+    for line in sys.stdin:
+        parts=line.rstrip("\n").split(" ",5)
+        assert parts[:2]==["add","element"], parts
+        output.write("nft\t"+"\t".join(parts)+"\n")
+'
+  exit 0
+fi
 {
   printf 'nft'
   for arg in "$@"; do

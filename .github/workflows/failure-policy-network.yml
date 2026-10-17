@@ -44,6 +44,9 @@ jobs:
       - name: Verify packet paths and crash guards
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/failure_policy_network.sh
 
+      - name: Verify atomic nft transactions and packet priority
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/nft_transaction_network.sh
+
       - name: Verify router-origin packet paths
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/router_origin_network.sh
 
