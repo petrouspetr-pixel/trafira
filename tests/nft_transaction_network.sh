@@ -11,6 +11,32 @@ cleanup() { ip netns del "$namespace" 2>/dev/null || true; rm -rf "$WORK_DIR"; }
 trap cleanup EXIT
 ip netns add "$namespace"
 ip -n "$namespace" link set lo up
+# Replay the actual runtime commands both ways and compare the resulting kernel
+# model, including Alice/source DNS/TPROXY/provider queues and all chain priorities.
+TRAFIRA_NFT_SCRIPT_OUTPUT="$WORK_DIR" bash "$ROOT_DIR/tests/nft_batch_runtime.sh"
+python3 - "$namespace" "$WORK_DIR" <<'PY'
+import json,subprocess,sys,time
+from pathlib import Path
+ns,root=sys.argv[1],Path(sys.argv[2])
+prefix=['ip','netns','exec',ns,'nft']
+lines=(root/'original.nft').read_text().splitlines()
+start=time.monotonic()
+for line in lines: subprocess.run(prefix+['-f','-'],input=line+'\n',text=True,check=True)
+old_time=time.monotonic()-start
+def model():
+    document=json.loads(subprocess.check_output(prefix+['-j','list','table','inet','TrafiraTable']))
+    def clean(value):
+        if isinstance(value,dict): return {k:clean(v) for k,v in value.items() if k not in ('handle','metainfo')}
+        if isinstance(value,list): return [clean(v) for v in value if not isinstance(v,dict) or 'metainfo' not in v]
+        return value
+    return clean(document)
+before=model()
+start=time.monotonic()
+subprocess.run(prefix+['-f',str(root/'replace.nft')],check=True)
+new_time=time.monotonic()-start
+assert before==model(),'generated batch changed the actual kernel rules, order or priorities'
+print(f'Actual runtime kernel models identical; {len(lines)} writes -> 1; CI replay {old_time:.3f}s -> {new_time:.3f}s',flush=True)
+PY
 cat >"$WORK_DIR/apply.uc" <<'UC'
 let t=require("nft.transaction").create();
 if(ARGV[0]=="replace")t.command(["delete","table","inet","Fixture"]);

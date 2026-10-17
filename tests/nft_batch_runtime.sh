@@ -84,4 +84,26 @@ diff -u "$WORK_DIR/before" "$NFT_COMMANDS"
 : >"$NFT_CALLS"
 if NFT_FAIL=1 ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$runtime" nft-rebuild-runtime-from-uci "${args[@]}"; then echo 'nft failure was ignored' >&2; exit 1; fi
 test "$(grep -c '^-f -$' "$NFT_CALLS")" = 1
+if [ -n "${TRAFIRA_NFT_SCRIPT_OUTPUT:-}" ]; then
+  cp "$WORK_DIR/before" "$TRAFIRA_NFT_SCRIPT_OUTPUT/original.nft"
+  cp "$WORK_DIR/expected" "$TRAFIRA_NFT_SCRIPT_OUTPUT/replace.nft"
+fi
+
+# A large remote list uses bounded batches instead of one process per chunk.
+python3 - "$WORK_DIR/large.txt" <<'PY'
+from pathlib import Path
+import sys
+Path(sys.argv[1]).write_text(''.join(f'10.{i//256}.{i%256}.1\n' for i in range(16000)))
+PY
+: >"$NFT_CALLS"; : >"$NFT_COMMANDS"
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$runtime" nft-add-file-chunks-to-set "$WORK_DIR/large.txt" TrafiraTable large ips '' 1000
+test "$(wc -l <"$NFT_CALLS")" -lt 16
+python3 - "$NFT_COMMANDS" <<'PY'
+from pathlib import Path
+import sys
+lines=Path(sys.argv[1]).read_text().splitlines()
+elements=[value.strip() for line in lines for value in line.split('{',1)[1].split('}',1)[0].split(',')]
+expected=[f'10.{i//256}.{i%256}.1' for i in range(16000)]
+assert elements==expected,'all elements and their order must survive batch boundaries'
+PY
 printf 'nft runtime command equivalence and single-transaction checks passed\n'
