@@ -222,13 +222,6 @@
     ]
   },
   {
-    "call": "Add a gaming preset",
-    "key": "Add a gaming preset",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Add a section",
     "key": "Add a section",
     "places": [
@@ -264,24 +257,10 @@
     ]
   },
   {
-    "call": "Add platforms to the list, then use Save & Apply below.",
-    "key": "Add platforms to the list, then use Save & Apply below.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Add prefix to nodes",
     "key": "Add prefix to nodes",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2462"
-    ]
-  },
-  {
-    "call": "Add to list",
-    "key": "Add to list",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -368,13 +347,6 @@
     "key": "Address",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:1649"
-    ]
-  },
-  {
-    "call": "Advanced",
-    "key": "Advanced",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -595,13 +567,6 @@
     "key": "Another list update is already running. Wait for it to finish, then download the copies again.",
     "places": [
       "src/trafira/tabs/diagnostic/renderSnapshots.ts:65"
-    ]
-  },
-  {
-    "call": "Another route calculation is preparing lists. Wait for it to finish, then try again.",
-    "key": "Another route calculation is preparing lists. Wait for it to finish, then try again.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:149"
     ]
   },
   {
@@ -970,20 +935,6 @@
     ]
   },
   {
-    "call": "Calculating route from prepared lists",
-    "key": "Calculating route from prepared lists",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:121"
-    ]
-  },
-  {
-    "call": "Cancel editing",
-    "key": "Cancel editing",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Cannot receive checks result",
     "key": "Cannot receive checks result",
     "places": [
@@ -1060,13 +1011,6 @@
     "key": "Changed rules",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:237"
-    ]
-  },
-  {
-    "call": "Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.",
-    "key": "Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -1167,13 +1111,6 @@
     "key": "Choose a platform",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:336"
-    ]
-  },
-  {
-    "call": "Choose a platform, device addresses and connection, or cancel editing before saving.",
-    "key": "Choose a platform, device addresses and connection, or cancel editing before saving.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -1345,13 +1282,6 @@
     "key": "Conditions",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7249"
-    ]
-  },
-  {
-    "call": "Conditions in section “%s”",
-    "key": "Conditions in section “%s”",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:18"
     ]
   },
   {
@@ -1755,13 +1685,6 @@
     ]
   },
   {
-    "call": "Device gaming rule priority",
-    "key": "Device gaming rule priority",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Device IP address",
     "key": "Device IP address",
     "places": [
@@ -1880,13 +1803,6 @@
     ]
   },
   {
-    "call": "Disable selected IPv6 probes",
-    "key": "Disable selected IPv6 probes",
-    "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js"
-    ]
-  },
-  {
     "call": "Disable the QUIC protocol to improve compatibility or fix issues with video streaming",
     "key": "Disable the QUIC protocol to improve compatibility or fix issues with video streaming",
     "places": [
@@ -1920,13 +1836,6 @@
     "key": "DNS Failures Before Switching",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:278"
-    ]
-  },
-  {
-    "call": "DNS lookup: website addresses found",
-    "key": "DNS lookup: website addresses found",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:226"
     ]
   },
   {
@@ -2191,13 +2100,6 @@
     ]
   },
   {
-    "call": "Domains in section “%s”",
-    "key": "Domains in section “%s”",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:22"
-    ]
-  },
-  {
     "call": "Dont Touch My DHCP!",
     "key": "Dont Touch My DHCP!",
     "places": [
@@ -2340,20 +2242,6 @@
     ]
   },
   {
-    "call": "Edit",
-    "key": "Edit",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
-    "call": "Edit gaming preset",
-    "key": "Edit gaming preset",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Edit rule action",
     "key": "Edit rule action",
     "places": [
@@ -2366,13 +2254,6 @@
     "key": "Edited",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:367"
-    ]
-  },
-  {
-    "call": "Editing was cancelled. Your changes have not been saved.",
-    "key": "Editing was cancelled. Your changes have not been saved.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -2451,13 +2332,6 @@
     "key": "Enable Output Network Interface",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:380"
-    ]
-  },
-  {
-    "call": "Enable these addresses in device routing if needed",
-    "key": "Enable these addresses in device routing if needed",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -2943,13 +2817,6 @@
     "key": "Filters disabled",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3291"
-    ]
-  },
-  {
-    "call": "Finishing the check and verifying that the configuration has not changed.",
-    "key": "Finishing the check and verifying that the configuration has not changed.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:94"
     ]
   },
   {
@@ -3912,13 +3779,6 @@
     ]
   },
   {
-    "call": "IP addresses in section “%s”",
-    "key": "IP addresses in section “%s”",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:23"
-    ]
-  },
-  {
     "call": "IPs",
     "key": "IPs",
     "places": [
@@ -4139,27 +3999,6 @@
     "key": "Listening port",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:125"
-    ]
-  },
-  {
-    "call": "Lists available for calculation",
-    "key": "Lists available for calculation",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200"
-    ]
-  },
-  {
-    "call": "Lists in section “%s”",
-    "key": "Lists in section “%s”",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:20"
-    ]
-  },
-  {
-    "call": "Lists preventing a confirmed result",
-    "key": "Lists preventing a confirmed result",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:71"
     ]
   },
   {
@@ -4593,13 +4432,6 @@
     ]
   },
   {
-    "call": "No gaming presets in the list yet.",
-    "key": "No gaming presets in the list yet.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "No known devices. Connect the device to the router and refresh the list.",
     "key": "No known devices. Connect the device to the router and refresh the list.",
     "places": [
@@ -4663,13 +4495,6 @@
     ]
   },
   {
-    "call": "No server IP is needed: a matching rule blocks this domain.",
-    "key": "No server IP is needed: a matching rule blocks this domain.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:253"
-    ]
-  },
-  {
     "call": "Node list is empty",
     "key": "Node list is empty",
     "places": [
@@ -4693,6 +4518,13 @@
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2596",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2888",
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2897"
+    ]
+  },
+  {
+    "call": "No server IP is needed: a matching rule blocks this domain.",
+    "key": "No server IP is needed: a matching rule blocks this domain.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:253"
     ]
   },
   {
@@ -5175,20 +5007,6 @@
     ]
   },
   {
-    "call": "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists.",
-    "key": "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:74"
-    ]
-  },
-  {
-    "call": "Preparing rule sets",
-    "key": "Preparing rule sets",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:123"
-    ]
-  },
-  {
     "call": "Preview deletion",
     "key": "Preview deletion",
     "places": [
@@ -5545,13 +5363,6 @@
     ]
   },
   {
-    "call": "Reload the page before editing gaming presets.",
-    "key": "Reload the page before editing gaming presets.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Remove",
     "key": "Remove",
     "places": [
@@ -5594,31 +5405,10 @@
     ]
   },
   {
-    "call": "Replace",
-    "key": "Replace",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
-    "call": "Replace edited preset",
-    "key": "Replace edited preset",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Replace my edits to this preset after preview",
     "key": "Replace my edits to this preset after preview",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:459"
-    ]
-  },
-  {
-    "call": "Request a DNS answer for later rules",
-    "key": "Request a DNS answer for later rules",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:21"
     ]
   },
   {
@@ -5736,34 +5526,6 @@
     ]
   },
   {
-    "call": "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected.",
-    "key": "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected.",
-    "places": [
-      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js"
-    ]
-  },
-  {
-    "call": "Return a predefined DNS answer",
-    "key": "Return a predefined DNS answer",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:23"
-    ]
-  },
-  {
-    "call": "Return the received DNS answer",
-    "key": "Return the received DNS answer",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:22"
-    ]
-  },
-  {
-    "call": "Reused from RAM",
-    "key": "Reused from RAM",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200"
-    ]
-  },
-  {
     "call": "Route",
     "key": "Route",
     "places": [
@@ -5804,13 +5566,6 @@
     "key": "Route router applications",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:599"
-    ]
-  },
-  {
-    "call": "Route the connection",
-    "key": "Route the connection",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:15"
     ]
   },
   {
@@ -6796,13 +6551,6 @@
     ]
   },
   {
-    "call": "Starting route analysis",
-    "key": "Starting route analysis",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:124"
-    ]
-  },
-  {
     "call": "Starting the copy download…",
     "key": "Starting the copy download…",
     "places": [
@@ -6850,13 +6598,6 @@
     "key": "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic.",
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:417"
-    ]
-  },
-  {
-    "call": "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together.",
-    "key": "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -7059,34 +6800,6 @@
     ]
   },
   {
-    "call": "The background route calculation reached its time limit. Already verified lists remain cached for another attempt.",
-    "key": "The background route calculation reached its time limit. Already verified lists remain cached for another attempt.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:152"
-    ]
-  },
-  {
-    "call": "The background route worker stopped unexpectedly. Try again.",
-    "key": "The background route worker stopped unexpectedly. Try again.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:155"
-    ]
-  },
-  {
-    "call": "The check runs on the router. It does not send a request from the selected device or open the website.",
-    "key": "The check runs on the router. It does not send a request from the selected device or open the website.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteResult.ts:159"
-    ]
-  },
-  {
-    "call": "The configuration has more rule sets than this diagnostic can process safely.",
-    "key": "The configuration has more rule sets than this diagnostic can process safely.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:161"
-    ]
-  },
-  {
     "call": "The desync fwmark is managed by Trafira for loop prevention and must not be overridden here.",
     "key": "The desync fwmark is managed by Trafira for loop prevention and must not be overridden here.",
     "places": [
@@ -7099,20 +6812,6 @@
     "key": "The entered address is a FakeIP. Enter the real destination IP instead.",
     "places": [
       "src/trafira/tabs/diagnostic/routePresentation.ts:33"
-    ]
-  },
-  {
-    "call": "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.",
-    "key": "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129"
-    ]
-  },
-  {
-    "call": "The gaming draft could not be processed. Reduce the number of pending changes and try again.",
-    "key": "The gaming draft could not be processed. Reduce the number of pending changes and try again.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -7210,13 +6909,6 @@
     ]
   },
   {
-    "call": "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure.",
-    "key": "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure.",
-    "places": [
-      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:86"
-    ]
-  },
-  {
     "call": "The routing configuration changed during the check. Try again.",
     "key": "The routing configuration changed during the check. Try again.",
     "places": [
@@ -7292,13 +6984,6 @@
     "key": "There are rules using Zapret2",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:81"
-    ]
-  },
-  {
-    "call": "There is not enough available RAM storage to prepare this route check.",
-    "key": "There is not enough available RAM storage to prepare this route check.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:158"
     ]
   },
   {
@@ -7392,31 +7077,10 @@
     ]
   },
   {
-    "call": "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure.",
-    "key": "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:164"
-    ]
-  },
-  {
-    "call": "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply.",
-    "key": "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected.",
     "key": "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:3383"
-    ]
-  },
-  {
-    "call": "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first.",
-    "key": "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   },
   {
@@ -7431,20 +7095,6 @@
     "key": "This router",
     "places": [
       "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:205"
-    ]
-  },
-  {
-    "call": "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed.",
-    "key": "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:68"
-    ]
-  },
-  {
-    "call": "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed.",
-    "key": "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed.",
-    "places": [
-      "src/trafira/tabs/diagnostic/routePresentation.ts:71"
     ]
   },
   {
@@ -7963,13 +7613,6 @@
     ]
   },
   {
-    "call": "Update in list",
-    "key": "Update in list",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Update is available",
     "key": "Update is available",
     "places": [
@@ -8208,13 +7851,6 @@
     ]
   },
   {
-    "call": "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices.",
-    "key": "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Use Trafira",
     "key": "Use Trafira",
     "places": [
@@ -8430,13 +8066,6 @@
     ]
   },
   {
-    "call": "You do not have permission to change these settings.",
-    "key": "You do not have permission to change these settings.",
-    "places": [
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
-    ]
-  },
-  {
     "call": "Zapret hostlist templates are not supported here because Trafira does not expand them for per-rule NFQWS strategies.",
     "key": "Zapret hostlist templates are not supported here because Trafira does not expand them for per-rule NFQWS strategies.",
     "places": [
@@ -8532,6 +8161,377 @@
     "key": "Zapret2 sing-box outbound is not configured",
     "places": [
       "src/trafira/tabs/diagnostic/checks/runZapret2Check.ts:107"
+    ]
+  },
+  {
+    "call": "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure.",
+    "key": "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure.",
+    "places": [
+      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:86"
+    ]
+  },
+  {
+    "call": "Lists preventing a confirmed result",
+    "key": "Lists preventing a confirmed result",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:71"
+    ]
+  },
+  {
+    "call": "Calculating route from prepared lists",
+    "key": "Calculating route from prepared lists",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:121"
+    ]
+  },
+  {
+    "call": "Preparing rule sets",
+    "key": "Preparing rule sets",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:123"
+    ]
+  },
+  {
+    "call": "Starting route analysis",
+    "key": "Starting route analysis",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:124"
+    ]
+  },
+  {
+    "call": "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.",
+    "key": "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:129"
+    ]
+  },
+  {
+    "call": "Lists available for calculation",
+    "key": "Lists available for calculation",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200"
+    ]
+  },
+  {
+    "call": "Reused from RAM",
+    "key": "Reused from RAM",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteExplanation.ts:200"
+    ]
+  },
+  {
+    "call": "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed.",
+    "key": "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:68"
+    ]
+  },
+  {
+    "call": "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed.",
+    "key": "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:71"
+    ]
+  },
+  {
+    "call": "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists.",
+    "key": "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:74"
+    ]
+  },
+  {
+    "call": "Another route calculation is preparing lists. Wait for it to finish, then try again.",
+    "key": "Another route calculation is preparing lists. Wait for it to finish, then try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:149"
+    ]
+  },
+  {
+    "call": "The background route calculation reached its time limit. Already verified lists remain cached for another attempt.",
+    "key": "The background route calculation reached its time limit. Already verified lists remain cached for another attempt.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:152"
+    ]
+  },
+  {
+    "call": "The background route worker stopped unexpectedly. Try again.",
+    "key": "The background route worker stopped unexpectedly. Try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:155"
+    ]
+  },
+  {
+    "call": "There is not enough available RAM storage to prepare this route check.",
+    "key": "There is not enough available RAM storage to prepare this route check.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:158"
+    ]
+  },
+  {
+    "call": "The configuration has more rule sets than this diagnostic can process safely.",
+    "key": "The configuration has more rule sets than this diagnostic can process safely.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:161"
+    ]
+  },
+  {
+    "call": "Disable selected IPv6 probes",
+    "key": "Disable selected IPv6 probes",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js"
+    ]
+  },
+  {
+    "call": "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected.",
+    "key": "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js"
+    ]
+  },
+  {
+    "call": "DNS lookup: website addresses found",
+    "key": "DNS lookup: website addresses found",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:226"
+    ]
+  },
+  {
+    "call": "Finishing the check and verifying that the configuration has not changed.",
+    "key": "Finishing the check and verifying that the configuration has not changed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:94"
+    ]
+  },
+  {
+    "call": "Request a DNS answer for later rules",
+    "key": "Request a DNS answer for later rules",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:21"
+    ]
+  },
+  {
+    "call": "Return a predefined DNS answer",
+    "key": "Return a predefined DNS answer",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:23"
+    ]
+  },
+  {
+    "call": "Return the received DNS answer",
+    "key": "Return the received DNS answer",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:22"
+    ]
+  },
+  {
+    "call": "Route the connection",
+    "key": "Route the connection",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:15"
+    ]
+  },
+  {
+    "call": "The check runs on the router. It does not send a request from the selected device or open the website.",
+    "key": "The check runs on the router. It does not send a request from the selected device or open the website.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:159"
+    ]
+  },
+  {
+    "call": "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure.",
+    "key": "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure.",
+    "places": [
+      "src/trafira/tabs/diagnostic/routePresentation.ts:164"
+    ]
+  },
+  {
+    "call": "Conditions in section “%s”",
+    "key": "Conditions in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:18"
+    ]
+  },
+  {
+    "call": "Lists in section “%s”",
+    "key": "Lists in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:20"
+    ]
+  },
+  {
+    "call": "Domains in section “%s”",
+    "key": "Domains in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:22"
+    ]
+  },
+  {
+    "call": "IP addresses in section “%s”",
+    "key": "IP addresses in section “%s”",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:23"
+    ]
+  },
+  {
+    "call": "Add a gaming preset",
+    "key": "Add a gaming preset",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Add platforms to the list, then use Save & Apply below.",
+    "key": "Add platforms to the list, then use Save & Apply below.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Add to list",
+    "key": "Add to list",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Advanced",
+    "key": "Advanced",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Cancel editing",
+    "key": "Cancel editing",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.",
+    "key": "Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Choose a platform, device addresses and connection, or cancel editing before saving.",
+    "key": "Choose a platform, device addresses and connection, or cancel editing before saving.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Device gaming rule priority",
+    "key": "Device gaming rule priority",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Edit",
+    "key": "Edit",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Edit gaming preset",
+    "key": "Edit gaming preset",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Editing was cancelled. Your changes have not been saved.",
+    "key": "Editing was cancelled. Your changes have not been saved.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Enable these addresses in device routing if needed",
+    "key": "Enable these addresses in device routing if needed",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "No gaming presets in the list yet.",
+    "key": "No gaming presets in the list yet.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Reload the page before editing gaming presets.",
+    "key": "Reload the page before editing gaming presets.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Replace",
+    "key": "Replace",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Replace edited preset",
+    "key": "Replace edited preset",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together.",
+    "key": "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "The gaming draft could not be processed. Reduce the number of pending changes and try again.",
+    "key": "The gaming draft could not be processed. Reduce the number of pending changes and try again.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first.",
+    "key": "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Update in list",
+    "key": "Update in list",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "You do not have permission to change these settings.",
+    "key": "You do not have permission to change these settings.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply.",
+    "key": "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
+    ]
+  },
+  {
+    "call": "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices.",
+    "key": "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
   }
 ]
