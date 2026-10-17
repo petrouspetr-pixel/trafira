@@ -83,6 +83,34 @@ finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 45
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 45
+# A fast warm calculator can finish and be reaped before its supervisor reads
+# the launcher identity. Its completed report must still be collected.
+cp "$WORK_DIR/bin/ucode" "$WORK_DIR/bin/ucode.original"
+cat >"$WORK_DIR/bin/ucode" <<'SH'
+#!/bin/sh
+case "$*" in *service/state.uc*sing-box-service-running*) exit 0;; esac
+case "$*" in *route_job.uc*supervisor*)
+ for argument in "$@"; do id=$argument; done
+ exec "$REAL_UCODE" -L "$TRAFIRA_LIB" -e '
+ let fs=require("fs"),lock=require("service.operation_lock"),popen=fs.popen,identity=lock.identity,launcher=null;
+ lock.identity=function(pid){return pid && pid==launcher?null:identity(pid);};
+ fs.popen=function(command,mode){
+  let pipe=popen(command,mode);
+  if(index(command,"exit.status")<0)return pipe;
+  return {read:function(size){let text=pipe.read(size);launcher=trim(text);return text;},close:function(){
+   let code=pipe.close(),path=getenv("TRAFIRA_RUNTIME_STATE_DIR")+"/route-analysis/"+ARGV[1]+"/exit.status";
+   for(let n=0;n<200 && !fs.stat(path);n++)system("sleep 0.02");
+   assert(fs.stat(path),"calculator finished before launcher identity lookup");return code;
+  }};
+ };
+ require("diagnostics.route_job");
+ ' supervisor "$id"
+esac
+exec "$REAL_UCODE" "$@" 2>>"$TRAFIRA_RUNTIME_STATE_DIR/calculator-errors"
+SH
+id="$(start)"; finish "$id"
+mv "$WORK_DIR/bin/ucode.original" "$WORK_DIR/bin/ucode"
+printf 'completed fast calculator survives launcher identity race\n'
 printf '{"version":3,"rules":[{"domain":"new.example"}]}' >"$WORK_DIR/set-0.json"
 id="$(start)"; finish "$id"
 test "$(wc -l <"$TRAFIRA_RUNTIME_STATE_DIR/codec-calls")" = 46
