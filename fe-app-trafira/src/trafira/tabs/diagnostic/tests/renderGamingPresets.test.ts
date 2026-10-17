@@ -10,6 +10,7 @@ vi.mock('../../../helpers/configurationSync', () => ({
   confirmAction: vi.fn(async () => true),
 }));
 class Node {
+  isConnected = true;
   children: Array<Node | string> = [];
   value = '';
   disabled = false;
@@ -431,4 +432,37 @@ it('waits for a long runtime apply and restores the catalog without a page reloa
   );
   fill();
   expect(button('Add to list').disabled).toBe(false);
+});
+
+it('stops background catalog retries for a detached form', async () => {
+  vi.useFakeTimers();
+  vi.mocked(executeShellCommand).mockResolvedValue({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  gamingPresetsPanel.mount();
+  await vi.advanceTimersByTimeAsync(2000);
+  host.isConnected = false;
+  const count = vi.mocked(executeShellCommand).mock.calls.length;
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(vi.mocked(executeShellCommand).mock.calls.length).toBe(count);
+});
+
+it('bounds automatic catalog waiting and enables a manual retry afterwards', async () => {
+  vi.useFakeTimers();
+  vi.mocked(executeShellCommand).mockResolvedValue({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  gamingPresetsPanel.mount();
+  await vi.advanceTimersByTimeAsync(130000);
+  expect(text(host)).toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(button('Refresh devices').disabled).toBe(false);
+  const count = vi.mocked(executeShellCommand).mock.calls.length;
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(vi.mocked(executeShellCommand).mock.calls.length).toBe(count);
 });

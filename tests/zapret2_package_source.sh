@@ -66,6 +66,7 @@ fake_lib="$WORK_DIR/lib"
 fake_bin="$WORK_DIR/bin"
 mkdir -p "$fake_lib/components" "$fake_lib/core" "$fake_lib/providers/zapret2" "$fake_bin"
 cp "$UPDATER" "$fake_lib/components/updater.uc"
+cp "$TRAFIRA_LIB/components/github_api.uc" "$fake_lib/components/github_api.uc"
 mkdir -p "$fake_lib/service"
 cp "$TRAFIRA_LIB/service/operation_lock.uc" "$fake_lib/service/operation_lock.uc"
 

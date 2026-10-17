@@ -450,7 +450,7 @@ export const gamingPresetsPanel = {
         existing.append(E('p', {}, _('No gaming presets in the list yet.')));
     }
     async function refresh() {
-      if (disposed || loading) return;
+      if (disposed || !host || host.isConnected === false || loading) return;
       if (gamingDraft.busy) {
         refreshPending = true;
         return;

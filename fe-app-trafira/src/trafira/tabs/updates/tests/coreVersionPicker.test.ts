@@ -12,14 +12,12 @@ const catalog = {
   ],
 };
 it('explains GitHub throttling while retaining installed version and stale versions', async () => {
-  const call = vi
-    .fn()
-    .mockResolvedValue({
-      ...catalog,
-      success: false,
-      error: 'github_rate_limited',
-      retry_at: 2200,
-    });
+  const call = vi.fn().mockResolvedValue({
+    ...catalog,
+    success: false,
+    error: 'github_rate_limited',
+    retry_at: 2200,
+  });
   const render = vi.fn(),
     picker = new CoreVersionPicker(call, render);
   picker.mount();
