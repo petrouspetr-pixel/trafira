@@ -29,9 +29,10 @@ function resolve(config,request,settings,workspace){
     let failed=false,timed_out=false,fake_seen=false;
     try {
         for(let type in types){
-            let args=["dig","@127.0.0.42","-p","12053",request.domain,type,"+short","+tcp","+timeout=2","+tries=1","+nosearch"];
+            let args=["dig","@127.0.0.42","-p","12053",request.domain,type,"+short","+tcp","+timeout=5","+tries=1","+nosearch"];
             result.performed=true;
-            let code=system("ulimit -f 128; exec "+join(" ",map(args,quote))+" >"+quote(temporary)+" 2>/dev/null",3000);
+            // Leave one second for dig to finish after its five-second DNS wait.
+            let code=system("ulimit -f 128; exec "+join(" ",map(args,quote))+" >"+quote(temporary)+" 2>/dev/null",6000);
             let info=fs.lstat(temporary);
             if(code!=0 || !info || info.type!="file" || info.size>65536){failed=true;if(code==-9 || code==9)timed_out=true;continue;}
             for(let line in split(fs.readfile(temporary)||"","\n")){

@@ -16,7 +16,7 @@ trap cleanup EXIT
 ip netns add "$namespace"
 ip -n "$namespace" link set lo up
 cat >"$WORK_DIR/dns.py" <<'PY'
-import socket, struct
+import socket, struct, time
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind(('127.0.0.1', 15353))
 while True:
@@ -25,6 +25,10 @@ while True:
     while data[end]: end += data[end] + 1
     end += 5
     kind = struct.unpack('!H', data[end-4:end-2])[0]
+    if data[12:20] == b'\x07delayed':
+        time.sleep(4.2)
+    if data[12:21] == b'\x08too-late':
+        time.sleep(5.5)
     answers = [socket.inet_aton('203.0.113.5'), socket.inet_aton('203.0.113.6')] if kind == 1 else []
     response = data[:2] + struct.pack('!HHHHH', 0x8180, 1, len(answers), 0, 0) + data[12:end]
     for answer in answers:
@@ -49,5 +53,15 @@ let dns=require("diagnostics.route_dns"),fs=require("fs"),c=json(fs.readfile(ARG
 let report=dns.resolve(c,{domain:"example.org",source:{kind:"device",ip:"192.168.10.234"}},{});
 assert(report.status=="resolved" && length(report.addresses)==2,"real main DNS through running sing-box");
 assert(report.addresses[0]=="203.0.113.5" && report.addresses[1]=="203.0.113.6","never use fake DNS final for diagnostic addresses");
+let started=clock(true);
+report=dns.resolve(c,{domain:"delayed.example",source:{kind:"device",ip:"192.168.10.234"}},{});
+let ended=clock(true),elapsed=(ended[0]-started[0])+(ended[1]-started[1])/1000000000;
+assert(report.status=="resolved" && length(report.addresses)==2,"a real DNS reply delayed 4.2 seconds survives both dig and outer process deadlines");
+assert(elapsed>=4,"delayed DNS fixture actually waited before replying");
+started=clock(true);
+report=dns.resolve(c,{domain:"too-late.example",source:{kind:"device",ip:"192.168.10.234"}},{});
+ended=clock(true);elapsed=(ended[0]-started[0])+(ended[1]-started[1])/1000000000;
+assert(report.status=="timeout" && !length(report.addresses),"a real DNS answer after five seconds remains a timeout");
+assert(elapsed>=5 && elapsed<6.5,"dig enforces the five-second deadline before the outer process cap");
 print("Real sing-box routing DNS and FakeIP isolation passed\n");
 ' "$WORK_DIR/config.json"
