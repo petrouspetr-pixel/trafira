@@ -371,11 +371,13 @@ export const gamingPresetsPanel = {
       heading.textContent = editing
         ? _('Edit gaming preset')
         : _('Add a gaming preset');
-      status.textContent = gamingDraft.pending
-        ? _(
-            'Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.',
-          )
-        : _('Add platforms to the list, then use Save & Apply below.');
+      status.textContent = loading
+        ? _('Loading...')
+        : gamingDraft.pending
+          ? _(
+              'Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.',
+            )
+          : _('Add platforms to the list, then use Save & Apply below.');
       existing.replaceChildren();
       let sections: GamingSection[];
       try {
@@ -448,6 +450,8 @@ export const gamingPresetsPanel = {
       }
       refreshPending = false;
       loading = true;
+      error.textContent = '';
+      error.className = 'hidden';
       update();
       try {
         const priorDevice =

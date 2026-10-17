@@ -2534,6 +2534,13 @@ function add_section_dns_matcher_rule(config, section, matchers, rewrite_ttl) {
     let source_ip_cidr = legacy_condition_values(section, "source_ip_cidr");
     add_source_dns_matchers(matchers, source_ip_cidr);
 
+    if (option(section, "action", "") == "block") {
+        matchers.action = "predefined";
+        matchers.rcode = "NXDOMAIN";
+        push_dns_matcher_rule(config, matchers);
+        return;
+    }
+
     if (option(section, "action", "") == "bypass" && length(source_ip_cidr) > 0) {
         add_source_aware_bypass_dns_rules(config, matchers, rewrite_ttl);
         return;

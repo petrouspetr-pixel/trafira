@@ -159,6 +159,7 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
+  vi.useRealTimers();
   gamingPresetsPanel.unmount();
   vi.unstubAllGlobals();
 });
@@ -242,7 +243,8 @@ it('allows immediate draft editing while the saved switch is off', async () => {
   expect(write).not.toHaveBeenCalled();
 });
 
-it('clears a catalog error after a successful refresh without discarding the draft', async () => {
+it('recovers a briefly busy catalog automatically without discarding the draft', async () => {
+  vi.useFakeTimers();
   gamingPresetsPanel.mount();
   await drain();
   fill();
@@ -256,11 +258,11 @@ it('clears a catalog error after a successful refresh without discarding the dra
   });
   button('Refresh devices').fire('click');
   await drain();
-  expect(text(host)).toContain(
+  expect(text(host)).not.toContain(
     'Another configuration operation is already running.',
   );
   expect(gamingDraft.pending).toBe(1);
-  button('Refresh devices').fire('click');
+  await vi.runAllTimersAsync();
   await drain();
   expect(text(host)).not.toContain(
     'Another configuration operation is already running.',
@@ -274,6 +276,7 @@ it('clears a catalog error after a successful refresh without discarding the dra
 });
 
 it('keeps the error visible when refreshing the catalog fails again', async () => {
+  vi.useFakeTimers();
   vi.mocked(executeShellCommand).mockResolvedValue({
     code: 0,
     stdout: JSON.stringify({ success: false, error: 'busy' }),
@@ -281,8 +284,10 @@ it('keeps the error visible when refreshing the catalog fails again', async () =
   });
   gamingPresetsPanel.mount();
   await drain();
+  await vi.runAllTimersAsync();
   button('Refresh devices').fire('click');
   await drain();
+  await vi.runAllTimersAsync();
   expect(text(host)).toContain(
     'Another configuration operation is already running.',
   );
