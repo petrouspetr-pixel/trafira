@@ -157,6 +157,8 @@ export const gamingPresetsPanel = {
       editing: Owner | null = null;
     let catalog: Catalog | null = null,
       epoch = gamingDraft.epoch;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let waitingSince: number | null = null;
     const platform = E('select', {
       id: 'trafira-game-platform',
       class: 'cbi-input-select',
@@ -356,7 +358,7 @@ export const gamingPresetsPanel = {
         void refresh();
         return;
       }
-      const busy = loading || gamingDraft.busy;
+      const busy = loading || gamingDraft.busy || waitingSince !== null;
       refreshButton.disabled = busy;
       for (const input of [platform, device, proxy, placement, enable])
         input.disabled = !canWrite || busy;
@@ -371,13 +373,18 @@ export const gamingPresetsPanel = {
       heading.textContent = editing
         ? _('Edit gaming preset')
         : _('Add a gaming preset');
-      status.textContent = loading
-        ? _('Loading...')
-        : gamingDraft.pending
+      status.textContent =
+        waitingSince !== null
           ? _(
-              'Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.',
+              'Waiting for configuration changes to finish. Devices will refresh automatically.',
             )
-          : _('Add platforms to the list, then use Save & Apply below.');
+          : loading
+            ? _('Loading...')
+            : gamingDraft.pending
+              ? _(
+                  'Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.',
+                )
+              : _('Add platforms to the list, then use Save & Apply below.');
       existing.replaceChildren();
       let sections: GamingSection[];
       try {
@@ -514,10 +521,25 @@ export const gamingPresetsPanel = {
           : connections.length === 1
             ? String(connections[0]['.name'])
             : '';
+        waitingSince = null;
         error.textContent = '';
         error.className = 'hidden';
       } catch (cause) {
-        if (!disposed) showError(cause);
+        if (
+          !disposed &&
+          cause instanceof Error &&
+          cause.message === 'busy' &&
+          Date.now() - (waitingSince ?? Date.now()) < 120000
+        ) {
+          waitingSince ??= Date.now();
+          retryTimer = setTimeout(() => {
+            retryTimer = null;
+            if (!disposed) void refresh();
+          }, 2000);
+        } else if (!disposed) {
+          waitingSince = null;
+          showError(cause);
+        }
       } finally {
         loading = false;
         update();
@@ -533,6 +555,7 @@ export const gamingPresetsPanel = {
       showAddresses();
     });
     const refreshButton = button(_('Refresh devices'), () => {
+      waitingSince = null;
       void refresh();
     });
     host.replaceChildren(
@@ -594,6 +617,7 @@ export const gamingPresetsPanel = {
       },
       dispose: () => {
         disposed = true;
+        if (retryTimer !== null) clearTimeout(retryTimer);
         unsubscribe();
         unprepare();
       },

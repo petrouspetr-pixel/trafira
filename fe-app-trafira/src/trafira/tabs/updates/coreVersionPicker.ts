@@ -17,6 +17,7 @@ export interface VersionState {
   currentVersion: string;
   currentVariant: string;
   cachedAt: number;
+  retryAt: number;
   pinnedVersion: string;
   selected: string;
   jobId: string;
@@ -40,6 +41,7 @@ const initial = (): VersionState => ({
   currentVersion: '',
   currentVariant: '',
   cachedAt: 0,
+  retryAt: 0,
   pinnedVersion: '',
   selected: '',
   jobId: '',
@@ -159,6 +161,7 @@ export class CoreVersionPicker {
           currentVariant:
             text(result.current_variant) || this.state.currentVariant,
           cachedAt: Number(result.cached_at) || 0,
+          retryAt: Number(result.retry_at) || 0,
           pinnedVersion:
             result.pin && typeof result.pin === 'object'
               ? text((result.pin as Record<string, unknown>).version)
@@ -178,7 +181,9 @@ export class CoreVersionPicker {
           error:
             result.success === true
               ? ''
-              : 'Could not load available versions. Check the connection and refresh the list.',
+              : result.error === 'github_rate_limited'
+                ? 'GitHub request limit reached. Saved versions are shown for reference. Try again later.'
+                : 'Could not load available versions. Check the connection and refresh the list.',
         };
       } else if (
         request.action === 'status' &&

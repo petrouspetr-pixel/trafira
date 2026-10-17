@@ -59,6 +59,10 @@ export const coreVersionsPanel = {
       _('Pin installed version'),
     ) as HTMLButtonElement;
     const errors: Record<string, string> = {
+      'GitHub request limit reached. Saved versions are shown for reference. Try again later.':
+        _(
+          'GitHub request limit reached. Saved versions are shown for reference. Try again later.',
+        ),
       'Restoration failed. Check the service before continuing.': _(
         'Restoration failed. Check the service before continuing.',
       ),
@@ -145,6 +149,9 @@ export const coreVersionsPanel = {
                     )
                   : '',
           state.restored ? _('The previous version was restored.') : '',
+          state.retryAt
+            ? `${_('Next attempt')}: ${new Date(state.retryAt * 1000).toLocaleString()}`
+            : '',
         ]
           .filter(Boolean)
           .join(' ');

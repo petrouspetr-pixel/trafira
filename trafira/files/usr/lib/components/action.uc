@@ -30,6 +30,7 @@ let retain_rollback_files = false;
 let selected_request = null, selected_core = null, selected_hooks = null;
 let selected_error = "", selected_original_config = null, selected_result = {};
 let selected_release = null;
+let github_error = null;
 let core_selection = null;
 const CONFIG_FILE = getenv("TRAFIRA_CONFIG_FILE") || "/etc/config/trafira";
 
@@ -490,6 +491,11 @@ function restore_selected_config() {
 }
 
 function action_fail(component, action, message, current_version, latest_version, status, release_url) {
+    if(github_error && github_error.error=="github_rate_limited") {
+        message="GitHub request limit reached. Try again later.";
+        selected_result.error=github_error.error;
+        selected_result.retry_at=github_error.retry_at;
+    }
     updates_log(message, "error");
     if (selected_core && trafira_stopped_for_sing_box_change) {
         selected_result.error = selected_error || "install_failed";
@@ -736,6 +742,13 @@ function http_get_once(url, output_path, proxy_address, timeout) {
 }
 
 function http_get(url) {
+    if(index(as_string(url),"https://api.github.com/repos/")==0) {
+        let response=require("components.github_api").request(url,service_proxy_address(),8388608,25);
+        if(!response.success && response.error!="github_rate_limited" && service_proxy_address()!="")
+            response=require("components.github_api").request(url,"",8388608,25);
+        if(!response.success){github_error=response;return "";}
+        github_error=null;return response.body;
+    }
     init_tmp_dir();
     let output_path = make_tmp_file("http");
     if (output_path == "")

@@ -165,17 +165,18 @@ function fetch(config, rule, candidate, directory, seconds) {
     return run(["sh", script, directory, owner.pid, owner.ticks, seconds,
         rule.url, "bootstrap:" + auth, staged ? "" + port : "-"]);
 }
-function prepare(config, version, workspace) {
+function prepare(config, version, workspace, validation) {
+    validation = validation || {};
     let rules = remote_rules(config);
     if (!modern(version) || length(rules) == 0) return true;
     let pending = [], seen = {};
     for (let rule in rules) {
         let path = cache.path(rule);
         if (!path) return false;
-        if (cache.validate(rule, path)) { rule.initial_path = path; continue; }
+        if (cache.validate(rule, path, validation)) { rule.initial_path = path; continue; }
         if (!seen[path]) { push(pending, rule); seen[path] = true; }
     }
-    if (!length(pending)) return cache.protect(config);
+    if (!length(pending)) return cache.protect(config, validation);
     let directory = workspace ? workspace + "/fetch" : output(["mktemp", "-d", "/tmp/trafira-ruleset-bootstrap.XXXXXX"]);
     if (workspace && !fs.mkdir(directory, 448)) return false;
     if (!directory || !run(["chmod", "700", directory])) return false;
@@ -198,7 +199,7 @@ function prepare(config, version, workspace) {
                 if (tried++ >= MAX_CANDIDATES || int(clock(true)[0]) >= deadline) break;
                 for (let rule in group.rules) {
                     let path = cache.path(rule);
-                    if (cache.validate(rule, path)) continue;
+                    if (cache.validate(rule, path, validation)) continue;
                     let remaining = deadline - int(clock(true)[0]);
                     if (remaining <= 0) break;
                     // One failed request is enough to try the next member.
@@ -206,15 +207,15 @@ function prepare(config, version, workspace) {
                     if (!fetch(config, rule, candidate, directory, min(10, remaining))) break;
                     let info = fs.lstat(directory + "/download");
                     if (!info || info.type != "file" || info.size <= 0 || info.size > MAX_FILE ||
-                        !cache.save(rule, directory + "/download")) break;
+                        !cache.save(rule, directory + "/download", validation)) break;
                 }
                 let complete = true;
                 for (let rule in group.rules)
-                    if (!cache.validate(rule, cache.path(rule))) complete = false;
+                    if (!cache.validate(rule, cache.path(rule), validation)) complete = false;
                 if (complete) break;
             }
         }
-        if (!cache.protect(config)) ok = false;
+        if (!cache.protect(config, validation)) ok = false;
     } catch (e) { ok = false; }
     cleanup(directory);
     if (!ok) warn("Rule-set startup preparation failed: a validated snapshot is missing and the configured download egress is unavailable\n");
@@ -228,13 +229,14 @@ function prepare_file_inline(path, version, workspace) {
     let origins = provenance.load(path), base = store.load(path);
     if (fs.lstat(path + ".provenance.json") && !origins) return false;
     if (fs.lstat(path + ".failure-policy.json") && !base) return false;
-    if (!prepare(config, version, workspace)) return false;
+    let validation = {};
+    if (!prepare(config, version, workspace, validation)) return false;
     if (fs.writefile(path, sprintf("%J", config)) == null) return false;
     if (origins && !provenance.save(path, origins)) return false;
     if (base) {
         // The failure-policy baseline must use the same URL/format snapshots
         // when a later health transition republishes its configuration.
-        cache.apply(base.config, version);
+        cache.apply(base.config, version, false, validation);
         if (!store.save_base(path, base.config, base.sections)) return false;
     }
     return true;

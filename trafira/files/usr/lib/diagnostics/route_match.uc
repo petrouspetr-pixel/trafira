@@ -95,33 +95,7 @@ function evaluate(rule, request, rulesets, budget, depth, source_mode) {
         "reject", "method", "no_drop", "rcode", "rule_set_ip_cidr_match_source", "rule_set_ipcidr_match_source"];
     for (let key, expected in rule) {
         if (index(ignored, key) >= 0) continue;
-        if (key == "rule_set") {
-            let matches = [];
-            for (let tag in values(expected)) {
-                if (type(rulesets) == "function") {
-                    let evaluated=rulesets(tag, request,
-                        rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true);
-                    push(matches,evaluated);
-                    if(evaluated.value=="yes")break;
-                    continue;
-                }
-                let set = obj(rulesets)[tag];
-                if (type(set) != "object" || type(set.rules) != "array") {
-                    push(matches, result("unknown", "rule_set:" + common.as_string(tag))); continue;
-                }
-                let children = [];
-                for (let child in set.rules) {
-                    let evaluated=evaluate(child, request, rulesets, budget, depth+1,
-                        rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true);
-                    push(children,evaluated);
-                    if(evaluated.value=="yes")break;
-                }
-                let evaluated=join_results(children,"or");
-                push(matches,evaluated);
-                if(evaluated.value=="yes")break;
-            }
-            push(clauses, join_results(matches, "or")); continue;
-        }
+        if (key == "rule_set") continue;
         let item = simple_field(key, expected, request, source_mode);
         if (index(["domain", "domain_suffix", "domain_keyword", "domain_regex", "geosite", "geoip", "ip_cidr", "ip_is_private"], key) >= 0)
             push(groups.destination, item);
@@ -132,6 +106,36 @@ function evaluate(rule, request, rulesets, budget, depth, source_mode) {
     }
     for (let key, group in groups)
         if (length(group)) push(clauses, join_results(group, "or"));
+    // All ordinary fields are AND guards for a referenced set. Reject a
+    // failed source/port condition before invoking the lazy list resolver.
+    if (rule.rule_set != null && join_results(clauses, "and").value != "no") {
+        let expected = rule.rule_set;
+        let matches = [];
+        for (let tag in values(expected)) {
+            if (type(rulesets) == "function") {
+                let evaluated=rulesets(tag, request,
+                    rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true);
+                push(matches,evaluated);
+                if(evaluated.value=="yes")break;
+                continue;
+            }
+            let set = obj(rulesets)[tag];
+            if (type(set) != "object" || type(set.rules) != "array") {
+                push(matches, result("unknown", "rule_set:" + common.as_string(tag))); continue;
+            }
+            let children = [];
+            for (let child in set.rules) {
+                let evaluated=evaluate(child, request, rulesets, budget, depth+1,
+                    rule.rule_set_ip_cidr_match_source == true || rule.rule_set_ipcidr_match_source == true);
+                push(children,evaluated);
+                if(evaluated.value=="yes")break;
+            }
+            let evaluated=join_results(children,"or");
+            push(matches,evaluated);
+            if(evaluated.value=="yes")break;
+        }
+        push(clauses, join_results(matches, "or"));
+    }
     let answer = join_results(clauses, "and");
     if (rule.invert && answer.value != "unknown") answer.value = answer.value == "yes" ? "no" : "yes";
     return answer;
