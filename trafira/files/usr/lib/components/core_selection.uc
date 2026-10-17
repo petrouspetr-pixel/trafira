@@ -6,6 +6,8 @@ function prepare(request,hooks) {
     let current=hooks.current(),digest=hooks.digest();
     if(current!=request.expected_current_version || !digest)return fail("conflict");
     let env=hooks.environment(),releases=hooks.fetch(env);
+    if(type(releases)=="object" && releases.error=="github_rate_limited")
+        return {success:false,error:releases.error,retry_at:releases.retry_at};
     let candidate=versions.resolve(request.candidate_id,releases,env);
     if(!candidate)return fail("candidate_unavailable");
     let archive=hooks.download(candidate);

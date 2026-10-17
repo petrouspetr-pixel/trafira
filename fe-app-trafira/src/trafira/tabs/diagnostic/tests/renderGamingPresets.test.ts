@@ -10,6 +10,7 @@ vi.mock('../../../helpers/configurationSync', () => ({
   confirmAction: vi.fn(async () => true),
 }));
 class Node {
+  isConnected = true;
   children: Array<Node | string> = [];
   value = '';
   disabled = false;
@@ -401,4 +402,67 @@ it('allows one explicit retry after catalog failure without an automatic retry l
   expect(vi.mocked(executeShellCommand)).toHaveBeenCalledTimes(2);
   fill();
   expect(button('Add to list').disabled).toBe(false);
+});
+
+it('waits for a long runtime apply and restores the catalog without a page reload', async () => {
+  vi.useFakeTimers();
+  const call = vi.mocked(executeShellCommand);
+  const normal = call.getMockImplementation()!;
+  let applying = true;
+  call.mockImplementation(async (options) =>
+    applying
+      ? {
+          code: 0,
+          stdout: JSON.stringify({ success: false, error: 'busy' }),
+          stderr: '',
+        }
+      : normal(options),
+  );
+  gamingPresetsPanel.mount();
+  await vi.advanceTimersByTimeAsync(4000);
+  expect(text(host)).not.toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(text(host)).toContain('Waiting for configuration changes to finish');
+  applying = false;
+  await vi.advanceTimersByTimeAsync(6000);
+  await drain();
+  expect(text(host)).not.toContain(
+    'Waiting for configuration changes to finish',
+  );
+  fill();
+  expect(button('Add to list').disabled).toBe(false);
+});
+
+it('stops background catalog retries for a detached form', async () => {
+  vi.useFakeTimers();
+  vi.mocked(executeShellCommand).mockResolvedValue({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  gamingPresetsPanel.mount();
+  await vi.advanceTimersByTimeAsync(2000);
+  host.isConnected = false;
+  const count = vi.mocked(executeShellCommand).mock.calls.length;
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(vi.mocked(executeShellCommand).mock.calls.length).toBe(count);
+});
+
+it('bounds automatic catalog waiting and enables a manual retry afterwards', async () => {
+  vi.useFakeTimers();
+  vi.mocked(executeShellCommand).mockResolvedValue({
+    code: 0,
+    stdout: JSON.stringify({ success: false, error: 'busy' }),
+    stderr: '',
+  });
+  gamingPresetsPanel.mount();
+  await vi.advanceTimersByTimeAsync(130000);
+  expect(text(host)).toContain(
+    'Another configuration operation is already running.',
+  );
+  expect(button('Refresh devices').disabled).toBe(false);
+  const count = vi.mocked(executeShellCommand).mock.calls.length;
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(vi.mocked(executeShellCommand).mock.calls.length).toBe(count);
 });

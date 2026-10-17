@@ -173,7 +173,10 @@ function load_background_sets(config,limitations,options) {
     let resolve=function(tag,request,source_mode) {
         let rule=by_tag[tag],reason=null,matched=null,hit=null;
         if(!rule)return {value:"unknown",missing:["rule_set:"+tag]};
-        let scenario=sprintf("%J",{request,source_mode}),memo_key=tag+"\n"+scenario;
+        let native_domain=codec.domain_only(rule) && type(request.domain)=="string";
+        // Domain-only providers have the same answer for every DNS address,
+        // device and port. Full-context keys remain mandatory for mixed sets.
+        let scenario=sprintf("%J",native_domain?{domain:replace(lc(request.domain),/[.]$/,"")}: {request,source_mode}),memo_key=tag+"\n"+scenario;
         if(memo[memo_key])return memo[memo_key];
         if(length(keys(memo))>=512)return {value:"unknown",missing:["evaluation_limit"]};
         if(options.progress)options.progress({completed:length(keys(seen)),total:length(rules),phase:"evaluating"});
@@ -196,15 +199,18 @@ function load_background_sets(config,limitations,options) {
                 else if(!digest)reason="decode_failed";
                 else if(clock()[0]>=deadline)reason="job_timeout";
                 else {
-                    let native_domain=rule.type=="remote" && rule.url=="https://github.com/zxc-rv/ad-filter/releases/latest/download/adlist.srs" && format=="binary" && type(request.domain)=="string";
-                    let decoded=native_domain?codec.match_domain(path,request.domain,min(30000,max(1,(deadline-clock()[0])*1000)),options.workspace):codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
+                    let decoded=native_domain?codec.match_domain(path,replace(lc(request.domain),/[.]$/,""),min(30000,max(1,(deadline-clock()[0])*1000)),options.workspace):codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
+                    // Older cores may lack `rule-set match`; preserve the
+                    // conservative interpreter instead of losing functionality.
+                    if(native_domain && decoded.error=="decode_failed" && clock()[0]<deadline)
+                        decoded=codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
                     if(decoded.match)matched=decoded.match;
                     else if(decoded.data) {
                         let wrapper={rule_set:"current",rule_set_ip_cidr_match_source:source_mode},data={current:decoded.data};
                         matched=matcher.match_rule(wrapper,request,data);
                         // Evaluate the other DNS addresses while this single decoded
                         // list is in memory; never retain decoded lists between calls.
-                        for(let other in options.scenarios||[]) {
+                        for(let other in native_domain?[]:(options.scenarios||[])) {
                             let other_scenario=sprintf("%J",{request:other,source_mode}),other_memo=tag+"\n"+other_scenario;
                             if(memo[other_memo] || length(keys(memo))>=512)continue;
                             let value=matcher.match_rule(wrapper,other,data);

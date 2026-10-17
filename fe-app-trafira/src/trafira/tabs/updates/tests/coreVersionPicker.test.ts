@@ -11,6 +11,29 @@ const catalog = {
     { id: 'wrong', version: '1.14.2', available: false },
   ],
 };
+it('explains GitHub throttling while retaining installed version and stale versions', async () => {
+  const call = vi.fn().mockResolvedValue({
+    ...catalog,
+    success: false,
+    error: 'github_rate_limited',
+    retry_at: 2200,
+  });
+  const render = vi.fn(),
+    picker = new CoreVersionPicker(call, render);
+  picker.mount();
+  await picker.load();
+  expect(render.mock.lastCall?.[0]).toMatchObject({
+    currentVersion: '1.14.2',
+    retryAt: 2200,
+    error:
+      'GitHub request limit reached. Saved versions are shown for reference. Try again later.',
+  });
+  expect(
+    render.mock.lastCall?.[0].entries.every(
+      (entry: { available: boolean }) => !entry.available,
+    ),
+  ).toBe(true);
+});
 it('pins the installed version without selecting or reinstalling a catalog version', async () => {
   const call = vi
     .fn()

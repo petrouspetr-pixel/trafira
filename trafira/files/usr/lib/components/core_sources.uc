@@ -1,6 +1,5 @@
 let fs=require("fs"),uci=require("core.uci"),versions=require("components.core_versions");
 const LIB=getenv("TRAFIRA_LIB")||"/usr/lib/trafira";
-const ROOT=getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira";
 const LIMIT=2097152;
 function quote(value){return "'"+replace(""+value,/'/g,"'\\''")+"'";}
 function command(args){return join(" ",map(args,quote));}
@@ -26,26 +25,21 @@ function download(url,destination,maximum,timeout) {
     return system("exec "+command(args)+" </dev/null >/dev/null 2>&1",(timeout+5)*1000)==0;
 }
 function github(env) {
-    let info=fs.lstat(ROOT);
-    if(info && info.type!="directory")return null;
-    if(!info && !fs.mkdir(ROOT,493))return null;
-    let dir=ROOT+sprintf("/core-query-%x-%x",clock()[0],clock()[1]);
-    if(!fs.mkdir(dir,448))return null;
-    let file=dir+"/response.json",result=[],started=clock()[0];
+    let result=[],started=clock()[0];
     try {
         // Release assets for every architecture make the full API response exceed
         // the size bound. Normalize each small page before fetching the next one.
         // Keep the existing 100-release bound and one shared network deadline.
         for(let page=1;page<=20;page++) {
-            let remaining=30-(clock()[0]-started);
+            // rpcd has a 30s execution ceiling; reserve time for current/pinned
+            // metadata and serialization even when the API is unreachable.
+            let remaining=18-(clock()[0]-started);
             let url="https://api.github.com/repos/shtorm-7/sing-box-extended/releases?per_page=5&page="+page;
-            if(remaining<=0 || !download(url,file,LIMIT,remaining)) {result=null;break;}
-            let stat=fs.lstat(file);
-            if(!stat || stat.type!="file" || stat.size>LIMIT) {result=null;break;}
-            let f=fs.open(file,"re"),text=f?f.read(LIMIT+1):null;
-            if(f)f.close();
-            if(text==null || length(text)>LIMIT) {result=null;break;}
-            let releases=json(text);
+            let selected=transport();
+            if(remaining<=0 || !selected) {result=null;break;}
+            let response=require("components.github_api").request(url,selected.proxy,LIMIT,remaining);
+            if(!response.success){result=response.error=="github_rate_limited"?{error:response.error,retry_at:response.retry_at}:null;break;}
+            let releases=json(response.body);
             if(type(releases)!="array" || length(releases)>5) {result=null;break;}
             let normalized=versions.from_github(releases,env);
             if(normalized==null) {result=null;break;}
@@ -53,7 +47,7 @@ function github(env) {
             if(length(releases)<5)break;
         }
     }catch(e){result=null;}
-    fs.unlink(file);fs.rmdir(dir);return result;
+    return result;
 }
 function environment() {
     let variant=module_output("singbox/runtime.uc",["variant"]);

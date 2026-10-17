@@ -28,6 +28,9 @@ export function componentSuccessMessage(
 // and transient RPC failures. Keep additional package-manager details intact.
 export function componentErrorMessage(message: string) {
   const translations: Record<string, string> = {
+    'GitHub request limit reached. Try again later.': _(
+      'GitHub request limit reached. Try again later.',
+    ),
     'Failed to execute': _('Failed to execute'),
     'Failed to create temporary directory': _(
       'Failed to create temporary directory',

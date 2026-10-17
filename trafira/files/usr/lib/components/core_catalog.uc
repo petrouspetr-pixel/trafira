@@ -37,7 +37,9 @@ function load(env,refresh,fetch,now) {
     if(!refresh && cached && now>=cached.cached_at && now-cached.cached_at<900)return response(cached,env);
     let releases=fetch(env),checked=versions.catalog(releases,env);
     if(releases==null || index(["invalid_catalog","catalog_too_large"],checked.unavailable_reason)>=0)
-        return {success:false,error:"catalog_fetch_failed",entries:cached?map(response(cached,env).entries,(entry)=>({...entry,available:false,reason:"stale_catalog"})):[],cached_at:cached?cached.cached_at:0,stale:!!cached};
+        return {success:false,error:type(releases)=="object" && releases.error=="github_rate_limited"?"github_rate_limited":"catalog_fetch_failed",
+            retry_at:type(releases)=="object"?releases.retry_at||0:0,
+            entries:cached?map(response(cached,env).entries,(entry)=>({...entry,available:false,reason:"stale_catalog"})):[],cached_at:cached?cached.cached_at:0,stale:!!cached};
     let data={cached_at:now,releases};
     let saved=store(file,data);
     return {...response(data,env),cache_saved:saved};

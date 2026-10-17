@@ -4,6 +4,7 @@ set -eo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 WORK_DIR="$(mktemp -d)"
+export TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 fail() { printf 'FAIL: %s\n' "$1" >&2; exit 1; }
@@ -81,6 +82,7 @@ fake_bin="$WORK_DIR/bin"
 mkdir -p "$fake_lib/core" "$fake_lib/components" "$fake_lib/singbox" "$fake_bin"
 cp "$TRAFIRA_LIB/core/constants.uc" "$fake_lib/core/constants.uc"
 cp "$TRAFIRA_LIB/components/updater.uc" "$fake_lib/components/updater.uc"
+cp "$TRAFIRA_LIB/components/github_api.uc" "$fake_lib/components/github_api.uc"
 printf 'return {};\n' >"$fake_lib/core/uci.uc"
 printf 'exit(0);\n' >"$fake_lib/singbox/runtime.uc"
 export TRAFIRA_IDENTITY_WORK="$WORK_DIR"

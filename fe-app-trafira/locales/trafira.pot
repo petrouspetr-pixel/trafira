@@ -5292,3 +5292,15 @@ msgstr ""
 
 msgid "No server IP is needed: a matching rule blocks this domain."
 msgstr ""
+
+msgid "Waiting for configuration changes to finish. Devices will refresh automatically."
+msgstr ""
+
+msgid "GitHub request limit reached. Saved versions are shown for reference. Try again later."
+msgstr ""
+
+msgid "Next attempt"
+msgstr ""
+
+msgid "GitHub request limit reached. Try again later."
+msgstr ""

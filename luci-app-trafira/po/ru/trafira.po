@@ -3856,3 +3856,15 @@ msgstr "Включите, если выбранные IP-адреса исклю
 
 msgid "No server IP is needed: a matching rule blocks this domain."
 msgstr "IP-адрес сервера не требуется: подходящее правило блокирует этот домен."
+
+msgid "Waiting for configuration changes to finish. Devices will refresh automatically."
+msgstr "Ожидаем завершения применения настроек. Список устройств обновится автоматически."
+
+msgid "GitHub request limit reached. Saved versions are shown for reference. Try again later."
+msgstr "Достигнут лимит запросов GitHub. Сохранённые версии показаны для справки. Повторите попытку позже."
+
+msgid "Next attempt"
+msgstr "Следующая попытка"
+
+msgid "GitHub request limit reached. Try again later."
+msgstr "Достигнут лимит запросов GitHub. Повторите попытку позже."

@@ -35,6 +35,8 @@ function resolve(id,releases,environment) {
     return null;
 }
 function select(releases,environment,pin) {
+    if(type(releases)=="object" && releases.error=="github_rate_limited")
+        return {error:releases.error,retry_at:releases.retry_at};
     if(pin && pin.version && pin.variant!=environment.variant)return {error:"pinned_variant_mismatch"};
     for(let entry in catalog(releases,environment).entries) {
         if(!entry.available || (pin && pin.version && entry.version!=pin.version))continue;

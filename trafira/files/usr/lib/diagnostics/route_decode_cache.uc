@@ -27,6 +27,15 @@ function identity(){
     return digest && before==signature(path)?{path,digest,signature:before}:null;
 }
 function unchanged(core){return core && core.signature==signature(core.path);}
+function domain_only(rule){
+    if(rule.type!="remote" || (rule.format||"binary")!="binary")return false;
+    // Exact published providers only; a URL containing "domains" is not proof.
+    // Mixed services retain destination/source IP and protocol-aware evaluation.
+    let community=require("singbox.rulesets");
+    for(let name in ["russia_inside","russia_outside","ukraine_inside","geoblock","block","porn","news","anime","youtube","hdrezka","tiktok","google_ai","google_play","hodca","ads_hagezi_pro","supercell","github"])
+        if(community.community_kind(name)=="domains" && rule.url==community.community_url(name))return true;
+    return false;
+}
 function cache_key(digest,format,core){
     let pipe=fs.popen("printf %s "+quote("route-v2\n"+digest+"\n"+format+"\n"+core)+" | sha256sum","re");
     if(!pipe)return null;
@@ -115,9 +124,9 @@ function match_domain(path,domain,milliseconds,workspace){
     let command="ulimit -Sv unlimited; umask 077; ticks=$(awk '{print $22}' /proc/$$/stat); printf '%s %s' $$ \"$ticks\" > "+quote(marker)+"; "+verify+"ulimit -f 128; exec sing-box rule-set match -f binary "+quote(path)+" "+quote(domain)+" >"+quote(temporary)+" 2>&1";
     let status=system(command,milliseconds),info=fs.lstat(temporary),text=status==0 && info && info.type=="file" && info.size<=65536?fs.readfile(temporary):null;
     fs.unlink(temporary);fs.unlink(marker);
-    if(text==null)return {error:"decode_failed"};
+    if(text==null)return {error:status==-9?"decode_timeout":"decode_failed"};
     if(text=="")return {match:{value:"no",missing:[]}};
     for(let line in split(text,"\n"))if(match(line,/^match rules[.]\[[0-9]+\]: /))return {match:{value:"yes",missing:[]}};
     return {error:"decode_failed"};
 }
-return {identity,unchanged,cache_key,get,put,decode,match_domain,cleanup,MAX_FILE,MAX_TOTAL};
+return {identity,unchanged,domain_only,cache_key,get,put,decode,match_domain,cleanup,MAX_FILE,MAX_TOTAL};
