@@ -60,18 +60,21 @@ touch "$TRAFIRA_RUNTIME_STATE_DIR/operation.lock"
 ucode -L "$TRAFIRA_LIB" -e 'let a=require("service.applied_config");assert(a.save(a.capture(require("core.uci").get_all("trafira","settings"),[])));'
 check(){
  ucode -L "$TRAFIRA_LIB" -e '
+ let matcher=require("diagnostics.route_match"),original=matcher.match_rule,matches=0;
+ matcher.match_rule=function(a,b,c){matches++;return original(a,b,c);};
  let r=require("diagnostics.route_analysis").explain(sprintf("%J",{domain:"youtube.com",source:{kind:"device",ip:ARGV[0]},port:int(ARGV[1]),network:"tcp",protocol:"tls"}),{background:true,workspace:ARGV[3]});
  assert(r.success && r.decision.outbound==ARGV[2],sprintf("%J",r));
  assert(length(r.destinations)==4 && r.rule_sets.unavailable==0,"all four destination addresses are checked without losing lists");
- ' "$1" "$2" "$3" "$WORK_DIR"
+ if(ARGV[4]=="4")assert(matches==4,"each of four destination addresses is interpreted once, not current plus all four again");
+ ' "$1" "$2" "$3" "$WORK_DIR" "${4:-}"
 }
 check 192.0.2.5 443 zapret2-out
 test "$(wc -l <"$WORK_DIR/native-calls")" = 2
 test ! -e "$WORK_DIR/decode-calls"
-check 198.51.100.5 443 direct-out
+check 198.51.100.5 443 direct-out 4
 test "$(wc -l <"$WORK_DIR/native-calls")" = 2
 test "$(wc -l <"$WORK_DIR/decode-calls")" = 1
-check 192.0.2.5 80 direct-out
+check 192.0.2.5 80 direct-out 4
 test "$(wc -l <"$WORK_DIR/native-calls")" = 2
 test "$(wc -l <"$WORK_DIR/decode-calls")" = 2
 # An old core without the native command still uses the full interpreter.
