@@ -36,6 +36,15 @@ subprocess.run(prefix+['-f',str(root/'replace.nft')],check=True)
 new_time=time.monotonic()-start
 assert before==model(),'generated batch changed the actual kernel rules, order or priorities'
 print(f'Actual runtime kernel models identical; {len(lines)} writes -> 1; CI replay {old_time:.3f}s -> {new_time:.3f}s',flush=True)
+# Retained definitions come from the same production rebuild path. Their
+# elements survive replacement while all chains/rule priorities stay identical.
+for name,element in [('subnets','198.51.100.0/24'),('subnets6','2001:db8::/48'),
+                     ('ip_ports','198.51.100.0/24 . 443'),('ip6_ports','2001:db8::/48 . 443')]:
+    subprocess.run(prefix+['add','element','inet','TrafiraTable','trafira_rule_vpn_'+name,'{ '+element+' }'],check=True)
+before=model()
+subprocess.run(prefix+['-f',str(root/'retained.nft')],check=True)
+assert before==model(),'retained IPv4/IPv6/port sets changed the kernel model or rule order'
+print('Real runtime rebuild retains remote nft contents and exact rule priority',flush=True)
 PY
 cat >"$WORK_DIR/apply.uc" <<'UC'
 let t=require("nft.transaction").create();

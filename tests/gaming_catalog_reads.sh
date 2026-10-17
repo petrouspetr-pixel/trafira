@@ -43,14 +43,14 @@ wait_ready reader-a
 CATALOG_READER=b call '{"action":"catalog"}' >"$WORK_DIR/b.json" &
 reader_b=$!
 wait_ready reader-b
-# Readers coexist, but a writer cannot enter until both have finished.
-ucode -L "$TRAFIRA_LIB" -e 'let l=require("service.operation_lock"); assert(!l.acquire("writer",false),"writer must not overlap catalog readers");'
-test "$(cat "$TRAFIRA_RUNTIME_STATE_DIR/operation-owner.json")" = stale-owner
+# Catalogs read an isolated, digest-checked file snapshot, not mutable runtime.
+ucode -L "$TRAFIRA_LIB" -e 'let l=require("service.operation_lock"),h=l.acquire("writer",false); assert(h,"catalog discovery must not lock configuration writers"); l.release(h);'
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/operation-owner.json"
 inode=$(stat -c %i "$TRAFIRA_RUNTIME_STATE_DIR/operation.lock")
 touch "$WORK_DIR/release-readers"
 wait "$reader_a"; reader_a=''
 wait "$reader_b"; reader_b=''
-test "$(cat "$TRAFIRA_RUNTIME_STATE_DIR/operation-owner.json")" = stale-owner
+test ! -e "$TRAFIRA_RUNTIME_STATE_DIR/operation-owner.json"
 node - "$WORK_DIR" <<'JS'
 const assert=require('assert'),fs=require('fs'),root=process.argv[2];
 for(const name of ['a','b']) {
@@ -73,7 +73,12 @@ wait_ready writer-ready
 call '{"action":"catalog"}' >"$WORK_DIR/busy.json"
 node - "$WORK_DIR/busy.json" <<'JS'
 const assert=require('assert'),fs=require('fs'),r=JSON.parse(fs.readFileSync(process.argv[2]));
-assert.equal(r.success,false);assert.equal(r.error,'busy','catalog must not read during a write');
+assert.equal(r.success,true,'catalog snapshot remains available during a runtime/list update');
+JS
+call '{"action":"remove"}' >"$WORK_DIR/mutation.json"
+node - "$WORK_DIR/mutation.json" <<'JS'
+const assert=require('assert'),fs=require('fs'),r=JSON.parse(fs.readFileSync(process.argv[2]));
+assert.equal(r.success,false);assert.equal(r.error,'busy','mutations must still wait for the writer');
 JS
 touch "$WORK_DIR/release-writer"
 wait "$writer_pid"; writer_pid=''

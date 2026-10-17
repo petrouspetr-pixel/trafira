@@ -1119,6 +1119,10 @@ function append_list_update_signature_body(body, section) {
         return body;
 
     let action = option(section, "action", "");
+    if (!rule_has_list_update_source(true, action, connections.community_lists_value(section),
+        option(section, "remote_domain_lists", ""), option(section, "remote_subnet_lists", ""),
+        connections.rule_sets_with_subnets_value(section), option(section, "domain_ip_lists", "")))
+        return body;
     body = signature_add_value(body, "lists." + name + ".action", action);
     if (action == "dns") {
         body = signature_add_value(body, "lists." + name + ".domain_ip_lists", option(section, "domain_ip_lists", ""));
@@ -1126,6 +1130,9 @@ function append_list_update_signature_body(body, section) {
     }
 
     body = signature_add_value(body, "lists." + name + ".ports", section_rule_ports_csv(section));
+    // Remote and inline destinations share nft sets. Never retain removed
+    // inline elements merely because the remote URL stayed the same.
+    body = signature_add_value(body, "lists." + name + ".ip_cidr", section_rule_condition_csv(section, "ip_cidr", "subnets"));
     body = signature_add_value(body, "lists." + name + ".community_subnet_lists", rule_config.filter_community_subnet_lists_value(connections.community_lists_value(section)));
     body = signature_add_value(body, "lists." + name + ".remote_domain_lists", option(section, "remote_domain_lists", ""));
     body = signature_add_value(body, "lists." + name + ".remote_subnet_lists", option(section, "remote_subnet_lists", ""));

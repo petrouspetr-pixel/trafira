@@ -14,6 +14,15 @@ from pathlib import Path
 args=sys.argv[1:]
 with open(os.environ['NFT_CALLS'],'a') as f: f.write(' '.join(args)+'\n')
 if args[:2]==['list','table']: sys.exit(int(os.getenv('NFT_MISSING','0')))
+if args[:4]==['-s','list','set','inet']:
+    if os.getenv('NFT_SNAPSHOT_FAIL')=='1': sys.exit(1)
+    table,name=args[4:]
+    ipv6=name.endswith(('subnets6','ip6_ports'))
+    ports=name.endswith(('ip_ports','ip6_ports'))
+    kind=('ipv6_addr' if ipv6 else 'ipv4_addr')+(' . inet_service' if ports else '')
+    value=('2001:db8::/48' if ipv6 else '198.51.100.0/24')+(' . 443' if ports else '')
+    print('table inet '+table+' {\n set '+name+' {\n type '+kind+'\n flags interval\n auto-merge\n elements = { '+value+' }\n }\n}')
+    sys.exit(0)
 text=sys.stdin.read() if args==['-f','-'] else ' '.join(args)+'\n'
 with open(os.environ['NFT_COMMANDS'],'a') as f: f.write(text)
 sys.exit(int(os.getenv('NFT_FAIL','0')))
@@ -47,6 +56,7 @@ trafira.vpn.action=proxy
 trafira.vpn.ip_cidr=0.0.0.0/0
 trafira.vpn.source_ip_cidr=192.168.1.10
 trafira.vpn.ports=443
+trafira.vpn.remote_subnet_lists=https://example.invalid/list.txt
 trafira.zapret=section
 trafira.zapret.action=zapret
 trafira.zapret.ip_cidr=192.0.2.0/24
@@ -107,3 +117,28 @@ expected=[f'10.{i//256}.{i%256}.1' for i in range(16000)]
 assert elements==expected,'all elements and their order must survive batch boundaries'
 PY
 printf 'nft runtime command equivalence and single-transaction checks passed\n'
+
+: >"$NFT_COMMANDS"; : >"$NFT_CALLS"
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$runtime" nft-rebuild-retaining-lists-from-uci "${args[@]}"
+test "$(grep -c '^-f -$' "$NFT_CALLS")" = 1
+grep -q '198.51.100.0/24 . 443' "$NFT_COMMANDS"
+grep -q '2001:db8::/48 . 443' "$NFT_COMMANDS"
+test "$(head -n1 "$NFT_COMMANDS")" = 'delete table inet TrafiraTable'
+if [ -n "${TRAFIRA_NFT_SCRIPT_OUTPUT:-}" ]; then
+  cp "$NFT_COMMANDS" "$TRAFIRA_NFT_SCRIPT_OUTPUT/retained.nft"
+fi
+: >"$NFT_CALLS"
+set +e
+NFT_SNAPSHOT_FAIL=1 ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$runtime" nft-rebuild-retaining-lists-from-uci "${args[@]}"
+status=$?
+set -e
+test "$status" = 2
+! grep -q '^-f -$' "$NFT_CALLS"
+: >"$NFT_CALLS"
+set +e
+NFT_FAIL=1 ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$runtime" nft-rebuild-retaining-lists-from-uci "${args[@]}"
+status=$?
+set -e
+test "$status" = 1
+test "$(grep -c '^-f -$' "$NFT_CALLS")" = 1
+printf 'Remote nft sets retained atomically; missing snapshots fall back before writes\n'

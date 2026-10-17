@@ -84,7 +84,11 @@ function action(text){
     for(let key in request)if(index(["action","preset","device_ips","proxy_section","placement","expected_digest","enable_device","enable_gaming","replace_edited","owner","mode","confirm","enabled"],key)<0)return fail("invalid_request");
     if(request.action=="status")return jobs.status();
     if(index(["catalog","preview","apply","preview_remove","remove","set_enabled"],request.action)<0)return fail("unsupported_action");
-    let lock=request.action=="catalog"?locks.acquire_read():locks.acquire("gaming-preset");if(!lock)return fail("busy");
+    // Discovery reads an isolated file snapshot, checked by digest in
+    // current_action(). It never reads or writes the mutable runtime. A list
+    // update must not prevent the user from editing their local LuCI draft.
+    let lock=request.action=="catalog"?null:locks.acquire("gaming-preset");
+    if(request.action!="catalog" && !lock)return fail("busy");
     let work=jobs.new_directory(),result;
     try{result=work?current_action(request,work):fail("storage_unavailable");}catch(e){result=fail("gaming_operation_failed");}
     if(work)jobs.cleanup(work.directory);
