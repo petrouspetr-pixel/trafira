@@ -19,6 +19,11 @@ assert(n("config section x\n option label \u0027a  # b\u0027\n")!=n("config sect
 assert(n("config section x\n option shutdown_correctly 1\n")!=n("config section x\n option shutdown_correctly 0\n"),"only the settings lifecycle flag is ignored");
 assert(n("config settings settings\n option bootstrap_dns_server \u0027\u0027\n list bootstrap_dns_server 1.1.1.1\n")!=n("config settings settings\n list bootstrap_dns_server \u0027\u0027\n list bootstrap_dns_server 1.1.1.1\n"),"an empty scalar deletes an option; an empty list item remains significant");
 assert(n("config settings settings\n option unused \u0027\u0027\n")==n("config settings settings\n"),"libuci drops empty scalar options when committing");
+assert(n("config section \u0027\u0027\n option unused\n")==n("config section\n"),"optional empty name/value survives UCI commit");
+assert(n("c section x\n o value example\n l servers 1.1.1.1\n")==n("config section x\n option value example\n list servers 1.1.1.1\n"),"native UCI command aliases are canonicalized");
+assert(n("\u0027config\u0027 settings settings\n")!=n("config settings settings\n"),"quoted command must not match valid UCI");
+assert(n("con\u0027fig\u0027 settings settings\n")!=n("config settings settings\n"),"quote concatenation is allowed for arguments, not commands");
+assert(n("config section x\n option label \u0027a\u0027\\\u0027\u0027b\u0027\n")==n("config section x\n option label \"a\u0027b\"\n"),"exported single quote escaping preserves literal values");
 fs.writefile(getenv("TRAFIRA_CONFIG_FILE"),original);fs.writefile(getenv("FIXTURE_CORE"),"{}");
 let checkpoint=applied.capture({config_path:getenv("FIXTURE_CORE")},[]);
 fs.writefile(getenv("TRAFIRA_CONFIG_FILE"),canonical);

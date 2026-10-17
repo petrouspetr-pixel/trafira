@@ -64,7 +64,11 @@ function install(settings,sections,table,local4,local6,mark,submit) {
     if(selected.error)return false;
     let data=snapshot(settings,sections);if(!data) {warn("Router-origin bootstrap or native VPN transport could not be verified\n");return false;}
     let script=model.nft(table,local4,local6,mark,data);if(!script)return false;
-    let publish=()=>require("singbox.failure_store").write((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json",{section:selected.section,...data});
+    function publish() {
+        let path=(getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json";
+        if(require("singbox.failure_store").write(path,{section:selected.section,...data}))return true;
+        fs.unlink(path);return false;
+    }
     if(type(submit)=="function")return submit(script,publish);
     let path=(getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.nft";
     let old=fs.lstat(path);if(old && old.type!="file")return false;
