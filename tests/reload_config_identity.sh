@@ -23,6 +23,8 @@ assert(n("config section \u0027\u0027\n option unused\n")==n("config section\n")
 assert(n("c section x\n o value example\n l servers 1.1.1.1\n")==n("config section x\n option value example\n list servers 1.1.1.1\n"),"native UCI command aliases are canonicalized");
 assert(n("\u0027config\u0027 settings settings\n")!=n("config settings settings\n"),"quoted command must not match valid UCI");
 assert(n("con\u0027fig\u0027 settings settings\n")!=n("config settings settings\n"),"quote concatenation is allowed for arguments, not commands");
+assert(n("config settings settings\n option \u0027\u0027 \u0027\u0027\n")!=n("config settings settings\n"),"invalid empty option name cannot masquerade as a no-op");
+assert(n("config \u0027\u0027 settings\n")!=n("config settings settings\n"),"invalid empty section type keeps exact identity");
 assert(n("config section x\n option label \u0027a\u0027\\\u0027\u0027b\u0027\n")==n("config section x\n option label \"a\u0027b\"\n"),"exported single quote escaping preserves literal values");
 fs.writefile(getenv("TRAFIRA_CONFIG_FILE"),original);fs.writefile(getenv("FIXTURE_CORE"),"{}");
 let checkpoint=applied.capture({config_path:getenv("FIXTURE_CORE")},[]);

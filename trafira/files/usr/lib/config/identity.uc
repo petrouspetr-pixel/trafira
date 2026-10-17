@@ -46,12 +46,13 @@ function normalized(text) {
         if (words == null) return "raw:" + text;
         let aliases = { c: "config", o: "option", l: "list" };
         words[0] = aliases[words[0]] || words[0];
-        if (words[0] == "config" && length(words) >= 2 && length(words) <= 3) {
+        if (words[0] == "config" && length(words) >= 2 && length(words) <= 3 && words[1] != "") {
             current = { type: words[1], name: words[2] || null, options: {} };
             push(sections, current);
         }
         else if (current && length(words) >= 2 && length(words) <= 3 && (words[0] == "option" || words[0] == "list")) {
             let key = words[1], value = words[2] || "";
+            if (key == "") return "raw:" + text;
             if (current.type == "settings" && current.name == "settings" && key == "shutdown_correctly")
                 continue;
             if (words[0] == "option") {
