@@ -20,7 +20,6 @@ printf '#!/bin/sh\necho unexpected-network >&2\nexit 91\n' >"$WORK_DIR/bin/curl"
 chmod +x "$WORK_DIR/bin/"*
 touch "$TRAFIRA_RUNTIME_STATE_DIR/operation.lock"
 printf 'trafira.settings=settings\ntrafira.settings.config_path=%s/config.json\n' "$WORK_DIR" >"$TRAFIRA_UCI_STATE_FILE"
-ucode -L "$TRAFIRA_LIB" -e 'let a=require("service.applied_config"),u=require("core.uci");assert(a.save(a.capture(u.get_all("trafira","settings"),[])));'
 before=$(sha256sum "$TRAFIRA_UCI_STATE_FILE")
 for mode in sync background; do
  for scenario in exact suffix list earlier-ip compound-ip earlier-allow missing-list dns-only router; do
@@ -36,6 +35,7 @@ if(scenario==='missing-list')rules.unshift({rule_set:'missing',action:'route',ou
 if(scenario==='dns-only')rules=[];
 fs.writeFileSync(root+'/config.json',JSON.stringify({inbounds:[{tag:'dns-health-active-main-in',listen:'127.0.0.42',listen_port:12053}],route:{rules,rule_set:sets,final:'direct-out'},dns:{rules:[{domain:'static.popmechanic.ru',action:'predefined',rcode:'NXDOMAIN'}],final:'dns-server',strategy:'ipv4_only'},outbounds:[]}));
 JS
+  ucode -L "$TRAFIRA_LIB" -e 'let a=require("service.applied_config"),u=require("core.uci");assert(a.save(a.capture(u.get_all("trafira","settings"),[])));'
   for DNS_EXIT in 0 9; do
    export DNS_EXIT
    ucode -L "$TRAFIRA_LIB" - "$mode" "$scenario" "$WORK_DIR" <<'UC'
