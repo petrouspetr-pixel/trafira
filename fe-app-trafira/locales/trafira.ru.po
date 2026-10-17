@@ -3853,3 +3853,6 @@ msgstr "Этот пресет был изменён вручную в «Секц
 
 msgid "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices."
 msgstr "Включите, если выбранные IP-адреса исключены из маршрутизации во вкладке «Устройства» — иначе игровые пресеты для них не сработают. После «Сохранить и применить» Trafira разрешит обработку только этих адресов, не затрагивая другие устройства. Исключение для целой подсети, MAC-адреса или интерфейса нужно изменить вручную во вкладке «Устройства»."
+
+msgid "No server IP is needed: a matching rule blocks this domain."
+msgstr "IP-адрес сервера не требуется: подходящее правило блокирует этот домен."

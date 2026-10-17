@@ -4521,6 +4521,13 @@
     ]
   },
   {
+    "call": "No server IP is needed: a matching rule blocks this domain.",
+    "key": "No server IP is needed: a matching rule blocks this domain.",
+    "places": [
+      "src/trafira/tabs/diagnostic/renderRouteResult.ts:253"
+    ]
+  },
+  {
     "call": "Not captured",
     "key": "Not captured",
     "places": [

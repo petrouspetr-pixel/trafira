@@ -5289,3 +5289,6 @@ msgstr ""
 
 msgid "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices."
 msgstr ""
+
+msgid "No server IP is needed: a matching rule blocks this domain."
+msgstr ""

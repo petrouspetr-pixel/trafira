@@ -38,6 +38,32 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('route diagnostic output', () => {
+  it.each(['no_address', 'timeout', 'failed', 'unavailable', 'fakeip'])(
+    'explains a confirmed block without asking for an IP when DNS returns %s',
+    (status) => {
+      renderRouteExplanationResult(
+        {
+          success: true,
+          decision: { status: 'blocked', missing: [], trace: [] },
+          dns_query: {
+            performed: true,
+            origin: 'trafira_main_dns',
+            status,
+            addresses: [],
+          },
+          limitations: [],
+        },
+        '',
+        false,
+      );
+      expect(text(output)).toContain('Connection blocked');
+      expect(text(output)).toContain(
+        'No server IP is needed: a matching rule blocks this domain.',
+      );
+      expect(text(output)).not.toContain('Additional settings');
+      expect(text(output)).not.toContain('DNS lookup: website addresses found');
+    },
+  );
   it('distinguishes manual domains and lists belonging to the same section', () => {
     const report = {
       success: true,

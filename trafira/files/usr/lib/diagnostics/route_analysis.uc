@@ -310,7 +310,9 @@ function explain(raw,options) {
                 if(dns_query.performed)answer.missing=filter(answer.missing,(reason)=>index(["destination_ip","router_destination_address_needed","wifi_calling_bypass_depends_on_real_destination","ntp_bypass_depends_on_real_destination"],reason)<0);
                 push(answer.missing,"dns_"+dns_query.status);
             }
-            else if(dns_query.performed)answer=decision("indeterminate","dns_"+dns_query.status);
+            // A reject already proven in rule order needs no destination address.
+            // Unknown earlier conditions still take the indeterminate branch above.
+            else if(dns_query.performed && answer.status!="blocked")answer=decision("indeterminate","dns_"+dns_query.status);
         }
         if(answer.outbound && !nodes[answer.outbound])nodes[answer.outbound]={node:selected_node(config,answer.outbound)};
         let node=answer.outbound?nodes[answer.outbound].node:null;
