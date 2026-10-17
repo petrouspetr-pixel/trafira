@@ -6,7 +6,7 @@ cleanup(){
  local result=$?
  if [ "$result" -ne 0 ]; then
   printf '\nBackground route fixture failure (last status):\n' >&2
-  cat "$WORK_DIR/status" "$WORK_DIR/runtime/calculator-errors" 2>/dev/null >&2 || true
+  cat "$WORK_DIR/status" "$WORK_DIR/runtime/calculator-errors" >&2 2>/dev/null || true
  fi
  rm -rf "$WORK_DIR"
 }

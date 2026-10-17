@@ -126,8 +126,10 @@ function supervisor(id){
     let command="(ulimit -Sv 131072; "+join(" ",map(["ucode","-L",LIB,LIB+"/diagnostics/route_job.uc","calculate",id],quote))+" >/dev/null 2>&1; printf '%s' $? > "+quote(dir+"/exit.status")+") </dev/null >/dev/null 2>&1 & echo $!";
     let pipe=fs.popen(command,"re"),pid=pipe?trim(pipe.read(64)||""):"",started=clock(true),launcher=match(pid,/^[1-9][0-9]*$/)?identity(pid):null;
     if(pipe)pipe.close();
-    let code=-1;
-    for(let n=0;launcher && n<2500;n++) {
+    // A fast calculator may have exited and been reaped before identity(pid).
+    // Its private completion marker is authoritative even without a live PID.
+    let completed=fs.readfile(dir+"/exit.status"),code=completed!=null?int(completed):-1;
+    for(let n=0;launcher && completed==null && n<2500;n++) {
         let alive=identity(monitor.pid);
         if(!alive || alive.ticks!=monitor.ticks || alive.state=="Z") {
             // A memory stop intentionally ends the monitor after writing error.
