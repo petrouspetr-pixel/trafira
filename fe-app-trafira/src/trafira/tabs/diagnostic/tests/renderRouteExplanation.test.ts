@@ -38,6 +38,49 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('route diagnostic output', () => {
+  it.each([
+    {
+      match: 'yes',
+      shadowed: false,
+      result: 'Service step: later rules choose the route',
+    },
+    { match: 'no', shadowed: false, result: 'Does not apply' },
+    {
+      match: 'unknown',
+      shadowed: false,
+      result: 'Could not check this condition',
+    },
+    {
+      match: 'yes',
+      shadowed: true,
+      result: 'Not needed: an earlier rule already chose the route',
+    },
+  ])(
+    'explains protocol recognition without presenting it as a selected route: $match/$shadowed',
+    ({ match, shadowed, result }) => {
+      renderRouteExplanationResult(
+        {
+          success: true,
+          decision: {
+            status: 'direct',
+            missing: [],
+            trace: [
+              { index: 0, action: 'sniff', match, shadowed, missing: [] },
+            ],
+          },
+          limitations: [],
+        },
+        '',
+        false,
+      );
+      expect(text(output)).toContain(
+        'Recognize the connection protocol (e.g. HTTPS)',
+      );
+      expect(text(output)).toContain(result);
+      expect(text(output)).not.toContain('Applies to this connection');
+    },
+  );
+
   it.each(['no_address', 'timeout', 'failed', 'unavailable', 'fakeip'])(
     'explains a confirmed block without asking for an IP when DNS returns %s',
     (status) => {

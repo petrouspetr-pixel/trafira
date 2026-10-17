@@ -282,7 +282,7 @@ export const gamingPresetsPanel = {
         !(await confirmAction(
           _('Replace edited preset'),
           _(
-            'This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply.',
+            'This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after clicking Apply.',
           ),
           _('Replace'),
         ))
@@ -382,9 +382,9 @@ export const gamingPresetsPanel = {
             ? _('Loading...')
             : gamingDraft.pending
               ? _(
-                  'Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes.',
+                  'Changes are not applied. Click Apply below to activate all changes together. Save stores settings without applying them; Reset discards unsaved changes.',
                 )
-              : _('Add platforms to the list, then use Save & Apply below.');
+              : _('Add platforms to the list, then click Apply below.');
       existing.replaceChildren();
       let sections: GamingSection[];
       try {
@@ -599,7 +599,7 @@ export const gamingPresetsPanel = {
           'div',
           { class: 'cbi-value-description' },
           _(
-            'Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices.',
+            'Use if Devices excludes these IPs. Apply lets Trafira handle only these addresses; other devices are unchanged. Edit subnet, MAC or interface exclusions in Devices.',
           ),
         ),
       ),

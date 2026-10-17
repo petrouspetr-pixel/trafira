@@ -33,7 +33,7 @@ function ruleDetails(decision: ExplainDecision) {
   const actions: Record<string, string> = {
     route: _('Route the connection'),
     reject: _('Block the connection'),
-    sniff: _('Read the application protocol'),
+    sniff: _('Recognize the connection protocol (e.g. HTTPS)'),
     resolve: _('Look up the website address'),
     'route-options': _('Set connection parameters'),
     'hijack-dns': _('Send the DNS request to Trafira'),
@@ -78,7 +78,9 @@ function ruleDetails(decision: ExplainDecision) {
                     {},
                     item.shadowed
                       ? _('Not needed: an earlier rule already chose the route')
-                      : matches[item.match],
+                      : item.action === 'sniff' && item.match === 'yes'
+                        ? _('Service step: later rules choose the route')
+                        : matches[item.match],
                   ),
                 ]),
               ),
