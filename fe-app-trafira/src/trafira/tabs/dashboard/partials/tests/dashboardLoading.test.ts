@@ -75,6 +75,8 @@ it('keeps a stable labelled card while the first traffic frame is pending', () =
   expect(text(waiting)).not.toContain('12 KB/s');
   expect(waiting.children).toHaveLength(ready.children.length);
   expect(waiting.attrs['aria-busy']).toBe('true');
+  expect(ready.attrs['aria-busy']).toBe('false');
+  expect(text(ready)).not.toContain('Loading...');
   expect(text(ready)).toContain('12 KB/s');
   expect(text(ready)).toContain('3 MB/s');
 });
