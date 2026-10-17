@@ -20,6 +20,8 @@ let fetch=hooks.fetch;
 hooks.fetch=()=>({error:"github_rate_limited",retry_at:1600});
 let limited=selection.prepare(request,hooks);
 assert(!limited.success && limited.error=="github_rate_limited" && limited.retry_at==1600 && pin_writes==0,"selected install preserves GitHub cooldown without changing pin");
+let pinned=require("components.core_versions").select({error:"github_rate_limited",retry_at:1600},hooks.environment(),{version:"1.14.1-r1",variant:"stable"});
+assert(pinned.error=="github_rate_limited" && pinned.retry_at==1600,"pinned update preserves cooldown rather than reporting a missing version");
 hooks.fetch=fetch;
 missing=false;stage_error="checksum_mismatch";
 assert(selection.prepare(request,hooks).error=="checksum_mismatch" && pin_writes==0,"artifact failure keeps pin");
