@@ -37,6 +37,11 @@ for(let address in ["192.0.2.0","192.0.2.255","192.0.3.1","2001:db8::","2001:db8
       {source_ip:address,destination_ip:address},{current:result.data});
   assert(matched.value==expected,"source/destination and IPv4/IPv6 prefix boundaries remain exact");
  }
+ if(getenv("TRAFIRA_REAL_SOURCE")=="1"){
+  let pipe=fs.popen(getenv("REAL_SING_BOX")+" rule-set match -f source "+root+"/source-0 "+address+" 2>/dev/null","re");
+  let text=pipe.read("all"),status=pipe.close();
+  assert(status==0 && (length(text)?"yes":"no")==expected,"fast subset agrees with real sing-box prefix matching");
+ }
 }
 // Invalid and unknown fields retain the actual core compiler failure path.
 fs.writefile(root+"/reject","");
@@ -53,6 +58,9 @@ for(let item in [
  assert(!codec.decode(root+"/invalid","source",3000,codec.MAX_FILE,root,proof).data,"unsupported source cannot use successful subset proof");
 }
 assert(!codec.decode(root+"/source-0","source",3000,codec.MAX_FILE,root,{}).data,"a core rejecting version 3 cannot use the fast path");
+let timed=root+"/bin/sing-box";
+fs.writefile(timed,"#!/bin/sh\nexec sleep 3\n");
+assert(codec.decode(root+"/source-0","source",50,codec.MAX_FILE,root,{}).error=="decode_timeout","capability probe cannot extend the codec deadline or start a fallback after timeout");
 codec.cleanup(root);
 assert(!fs.stat(root+"/source-probe") && !fs.stat(root+"/codec.pid"),"probe and child marker are cleaned");
 print("source compatibility proof and strict subset checks passed\n");

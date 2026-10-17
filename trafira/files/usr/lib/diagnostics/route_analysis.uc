@@ -160,7 +160,7 @@ function load_sets(config,limitations) {
 }
 function load_background_sets(config,limitations,options) {
     let codec=require("diagnostics.route_decode_cache"),cache=require("singbox.ruleset_cache"),core=null,core_checked=false,output=null;
-    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],hashes={},seen={},memo={},pending={},deadline=min(clock()[0]+120,options.deadline||clock()[0]+120);
+    let rules=arr(obj(config.route).rule_set),by_tag={},checked=[],hashes={},seen={},memo={},pending={},source_support={},deadline=min(clock()[0]+120,options.deadline||clock()[0]+120);
     let report={basis:"local",live_verified:false,available:0,unavailable:0,cached:0,unavailable_reasons:[]};
     if(length(rules)>256)return {error:"too_many_rule_sets"};
     for(let rule in rules)if(type(rule.tag)=="string") {
@@ -199,7 +199,7 @@ function load_background_sets(config,limitations,options) {
                 else if(!digest)reason="decode_failed";
                 else if(clock()[0]>=deadline)reason="job_timeout";
                 else {
-                    let decoded=native_domain?codec.match_domain(path,replace(lc(request.domain),/[.]$/,""),min(30000,max(1,(deadline-clock()[0])*1000)),options.workspace):codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace);
+                    let decoded=native_domain?codec.match_domain(path,replace(lc(request.domain),/[.]$/,""),min(30000,max(1,(deadline-clock()[0])*1000)),options.workspace):codec.decode(path,format,min(30000,max(1,(deadline-clock()[0])*1000)),codec.MAX_FILE,options.workspace,source_support);
                     // Older cores may lack `rule-set match`; preserve the
                     // conservative interpreter instead of losing functionality.
                     if(native_domain && decoded.error=="decode_failed" && clock()[0]<deadline)
@@ -212,7 +212,7 @@ function load_background_sets(config,limitations,options) {
                         // list is in memory; never retain decoded lists between calls.
                         for(let other in native_domain?[]:(options.scenarios||[])) {
                             let other_scenario=sprintf("%J",{request:other,source_mode}),other_memo=tag+"\n"+other_scenario;
-                            if(memo[other_memo] || length(keys(memo))>=512)continue;
+                            if(other_memo==memo_key || memo[other_memo] || length(keys(memo))>=512)continue;
                             let value=matcher.match_rule(wrapper,other,data);
                             memo[other_memo]=value;
                             if(digest && core)pending[codec.cache_key(digest,format+"\n"+other_scenario,core.digest)]={rules:[],match:value};
@@ -235,7 +235,7 @@ function load_background_sets(config,limitations,options) {
         let answer=matched||{value:"unknown",missing:["rule_set:"+tag]};
         memo[memo_key]=answer;return answer;
     };
-    output={sets:resolve,checked,core,report,publish:()=>{for(let key in pending)codec.put(key,pending[key],options.workspace);}};
+    output={sets:resolve,checked,core,report,publish:()=>codec.put_many(pending,options.workspace)};
     return output;
 }
 function selected_node(config,tag) {
