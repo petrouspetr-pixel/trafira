@@ -24,7 +24,7 @@ function save_limit(now,retry){
     file.close();if(ok)fs.rename(path,STATE);fs.unlink(path);
 }
 function request(url,proxy,maximum,seconds,now){
-    if(type(url)!="string" || !match(url,/^https:\/\/api[.]github[.]com\/repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/releases(\/latest|[?]per_page=[0-9]+(&page=[0-9]+)?)?$/))
+    if(type(url)!="string" || !match(url,/^https:\/\/api[.]github[.]com\/repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/releases(\/latest|\/tags\/[A-Za-z0-9_+-][A-Za-z0-9_.+-]{0,199}|[?]per_page=[0-9]+(&page=[0-9]+)?)?$/))
         return {success:false,error:"invalid_github_url"};
     now=now==null?clock()[0]:now;
     let wait=cooldown(now);if(wait)return wait;

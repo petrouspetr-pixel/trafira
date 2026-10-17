@@ -493,8 +493,6 @@ function restore_selected_config() {
 function action_fail(component, action, message, current_version, latest_version, status, release_url) {
     if(github_error && github_error.error=="github_rate_limited") {
         message="GitHub request limit reached. Try again later.";
-        selected_result.error=github_error.error;
-        selected_result.retry_at=github_error.retry_at;
     }
     updates_log(message, "error");
     if (selected_core && trafira_stopped_for_sing_box_change) {
@@ -510,6 +508,10 @@ function action_fail(component, action, message, current_version, latest_version
             selected_hooks.restored();
         if (!selected_result.restored) selected_result.rollback_error = "restore_failed";
         if (!selected_result.restored) retain_rollback_files = true;
+    }
+    if(github_error && github_error.error=="github_rate_limited") {
+        selected_result.error=github_error.error;
+        selected_result.retry_at=github_error.retry_at;
     }
     updates_response(false, component, action, message, current_version || "", latest_version || "", 0, status || "", release_url || "");
     cleanup_action();
@@ -2384,6 +2386,7 @@ function prepare_selected_core(action) {
         }
         let resolved=versions.select(sources.fetch(env),env,pin);
         if (!resolved.candidate) {
+            if (resolved.error=="github_rate_limited") github_error=resolved;
             selected_error=resolved.error;
             action_fail("sing_box",action,"Pinned core is unavailable from its configured source");
         }
@@ -2432,7 +2435,10 @@ function prepare_selected_core(action) {
             (!trafira_was_running || trafira_status_running_with_timeout())
     };
     let prepared=core_selection.prepare(selected_request,selected_hooks);
-    if (!prepared.success) {selected_error=prepared.error;action_fail("sing_box",action,"Selected core preflight failed");}
+    if (!prepared.success) {
+        if (prepared.error=="github_rate_limited") github_error=prepared;
+        selected_error=prepared.error;action_fail("sing_box",action,"Selected core preflight failed");
+    }
     if (hash(directory+"/original.uci")!=prepared.expected_digest) {
         selected_error="conflict";action_fail("sing_box",action,"Configuration changed while preserving rollback settings");
     }
