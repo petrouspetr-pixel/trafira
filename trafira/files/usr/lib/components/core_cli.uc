@@ -40,7 +40,7 @@ function action(text) {
     try {request=json(text);}catch(e){return failure("invalid_request");}
     if(!pin.request_valid(request))return failure("invalid_request");
     if(request.action=="status")return status(request);
-    let lock=locks.acquire("core-version-action");if(!lock)return failure("busy");
+    let lock=request.action=="catalog"?locks.acquire_read():locks.acquire("core-version-action");if(!lock)return failure("busy");
     let result;
     try {result=dispatch(request);}catch(e){result=failure("version_action_failed");}
     locks.release(lock);return result;
