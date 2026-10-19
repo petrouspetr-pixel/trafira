@@ -158,6 +158,20 @@ class BytecodeCacheTests(unittest.TestCase):
         os.utime(lock, (1, 1))
         self.assert_ok(self.run_cache('hello'))
 
+    def test_real_dispatchers_use_cache_without_changing_arguments(self):
+        (self.lib / 'core').mkdir()
+        shutil.copy2(LIB / 'core/bytecode.uc', self.lib / 'core/bytecode.uc')
+        env = dict(self.env, TRAFIRA_LIB=str(self.lib))
+        result = subprocess.run([UCODE, str(REPO / 'trafira/files/usr/bin/trafira'), 'show_version'], env=env, capture_output=True, text=True, timeout=10)
+        self.assert_ok(result, 'original:show-version\n')
+        self.assertEqual(len(self.compiled()), 1)
+        (self.lib / 'config').mkdir()
+        (self.lib / 'config/profile_cli.uc').write_text('print(ARGV[1], "\\n");\n')
+        request = json.dumps({'action': 'list', 'name': "a'b; echo injected"})
+        result = subprocess.run([UCODE, str(REPO / 'trafira/files/usr/bin/trafira-config'), 'profile_action', request], env=env, capture_output=True, text=True, timeout=10)
+        self.assert_ok(result, request + '\n')
+        self.assertEqual(len(self.compiled()), 2)
+
     def test_production_gate_does_not_use_non_tmpfs(self):
         result = self.run_cache(env={'TRAFIRA_BYTECODE_TEST_ROOT': str(self.root / 'missing')})
         self.assertEqual(result.returncode, 77, result.stderr)

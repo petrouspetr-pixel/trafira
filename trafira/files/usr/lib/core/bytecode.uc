@@ -52,7 +52,8 @@ function context() {
     if (disk == null || disk.bavail * (disk.frsize || disk.bsize) < 4194304) return null;
     if (fs.lstat(root) == null && !fs.mkdir(root, 0700)) return null;
     if (!private_dir(root, uid)) return null;
-    return { root, uid, limit: testing ? min(LIMIT, int(getenv("TRAFIRA_BYTECODE_TEST_LIMIT") || LIMIT)) : LIMIT };
+    let requested = testing ? int(getenv("TRAFIRA_BYTECODE_TEST_LIMIT") || LIMIT) : LIMIT;
+    return { root, uid, limit: requested < LIMIT ? requested : LIMIT };
 }
 function unlock(root) {
     fs.unlink(root + "/lock/owner.json");
@@ -102,7 +103,7 @@ function prepare(c, lib, relative, source) {
     erase(base);
     let current = used(c.root);
     if (current + length(text) + length(stamp) + MAX_FILE > c.limit) return null;
-    let exe = fs.readlink("/proc/self/exe");
+    let exe = "/proc/" + fs.readlink("/proc/self") + "/exe";
     if (exe == null || identity() == null) return null;
     // Compile with this running interpreter, never a build-host bytecode ABI.
     // A file-size ulimit also bounds the compiler's temporary output.
@@ -129,14 +130,17 @@ function run(lib, relative, args) {
         if (c == null || !lock(c)) return null;
         locked = true;
         entry = prepare(c, lib, relative, lib + "/" + relative);
-    } catch (e) { entry = null; }
+    } catch (e) {
+        if (getenv("TRAFIRA_BYTECODE_TEST_ROOT")) warn("bytecode-cache: ", e, "\n");
+        entry = null;
+    }
     if (entry == null) {
         if (locked) unlock(c.root);
         return null;
     }
     // Once execution begins, a failing application must never be retried.
     let result = 1;
-    try { result = status(system(command([ "ucode", "-L", lib, entry, ...args ]))); } catch (e) { result = 1; }
+    try { result = status(system(command([ "/proc/" + fs.readlink("/proc/self") + "/exe", "-L", lib, entry, ...args ]))); } catch (e) { result = 1; }
     unlock(c.root);
     return result;
 }
