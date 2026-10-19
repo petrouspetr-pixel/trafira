@@ -15,11 +15,6 @@ UCODE = shutil.which('ucode')
 
 @unittest.skipUnless(UCODE, 'ucode required')
 class BytecodeCacheTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        probe = 'let f=require("fs"); print(sprintf("%J", { zero_null:0==null, proc:f.readlink("/proc/self"), stat:f.stat("/tmp"), vfs:type(f.statvfs) }),"\\n");'
-        print(subprocess.check_output([UCODE, '-e', probe], text=True))
-
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='trafira-bytecode-test-')
         self.addCleanup(self.tmp.cleanup)
@@ -178,6 +173,30 @@ class BytecodeCacheTests(unittest.TestCase):
         result = subprocess.run([UCODE, str(REPO / 'trafira/files/usr/bin/trafira-config'), 'profile_action', request], env=env, capture_output=True, text=True, timeout=10)
         self.assert_ok(result, request + '\n')
         self.assertEqual(len(self.compiled()), 2)
+
+    def test_location_sensitive_source_uses_original_file(self):
+        self.source.write_text('print(sourcepath (), "\\n");\n')
+        result = self.run_cache()
+        self.assertEqual(result.returncode, 77, result.stderr)
+        self.assertFalse(self.compiled())
+
+    def test_missing_or_partial_metadata_is_rebuilt(self):
+        self.assert_ok(self.run_cache('hello'))
+        next(self.cache.glob('*.json')).write_text('{broken')
+        self.assert_ok(self.run_cache('hello'))
+        next(self.cache.glob('*.proof')).unlink()
+        self.assert_ok(self.run_cache('hello'))
+
+    def test_lock_symlink_is_rejected_without_touching_target(self):
+        self.cache.mkdir(mode=0o700)
+        outside = self.root / 'external-lock'
+        outside.mkdir()
+        marker = outside / 'owner.json'
+        marker.write_text('unchanged')
+        (self.cache / 'lock').symlink_to(outside, target_is_directory=True)
+        result = self.run_cache()
+        self.assertEqual(result.returncode, 77, result.stderr)
+        self.assertEqual(marker.read_text(), 'unchanged')
 
     def test_production_gate_does_not_use_non_tmpfs(self):
         result = self.run_cache(env={'TRAFIRA_BYTECODE_TEST_ROOT': str(self.root / 'missing')})

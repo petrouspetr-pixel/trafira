@@ -79,7 +79,8 @@ function lock(c) {
         if (!fs.mkdir(path, 0700)) return false;
     }
     let pid = fs.readlink("/proc/self");
-    if (fs.writefile(path + "/owner.json", sprintf("%J", { pid, start: start_time(pid) })) == null) {
+    let owner_data = sprintf("%J", { pid, start: start_time(pid) });
+    if (fs.writefile(path + "/owner.json", owner_data) != length(owner_data)) {
         unlock(c.root);
         return false;
     }
@@ -100,7 +101,7 @@ function erase(base) {
 }
 function prepare(c, lib, relative, source) {
     let text = bounded(source, MAX_FILE);
-    if (text == null || index(text, "sourcepath(") >= 0) {
+    if (text == null || index(text, "sourcepath") >= 0 || index(text, "include(") >= 0) {
         if (getenv("TRAFIRA_BYTECODE_TEST_ROOT")) warn("cache source rejected\n");
         return null;
     }
