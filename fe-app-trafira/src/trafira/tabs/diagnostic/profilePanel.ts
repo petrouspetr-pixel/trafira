@@ -88,6 +88,7 @@ export function profileErrorMessage(error: string): string {
 }
 export class ProfilePanelController {
   private active = false;
+  private applying = false;
   private generation = 0;
   private state = initial();
   constructor(
@@ -108,6 +109,31 @@ export class ProfilePanelController {
     if (!this.active || this.state.busy || this.state.running) return;
     this.state = { ...this.state, preview: null, error: '', restored: false };
     this.render(this.state);
+  }
+  async applySelected(id: string) {
+    if (
+      !this.active ||
+      this.applying ||
+      this.state.busy ||
+      this.state.running ||
+      !id
+    )
+      return;
+    this.applying = true;
+    const generation = this.generation;
+    try {
+      // Always validate against the current saved configuration, even after a manual review.
+      const checked = await this.submit({ action: 'preview', id });
+      if (
+        !checked?.success ||
+        !this.active ||
+        this.generation !== generation + 1
+      )
+        return;
+      return await this.applyReviewed(id);
+    } finally {
+      this.applying = false;
+    }
   }
   async applyReviewed(id: string) {
     const preview = this.state.preview;

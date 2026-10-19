@@ -200,4 +200,32 @@ TRAFIRA_RT_TABLES="$WORK_DIR/rt_tables_upgrade" \
 [ ! -e "$TRAFIRA_PACKAGE_UPGRADE_STATE" ] ||
   fail "package pre-upgrade must not mark an already stopped service"
 
+# The standalone uninstaller can preserve a marker-managed binary core.
+for keep_components in 0 1; do
+  cat >"$WORK_DIR/managed-sing-box-init" <<'SH'
+#!/bin/sh
+# Trafira managed sing-box service for binary variants
+exit 0
+SH
+  chmod 0755 "$WORK_DIR/managed-sing-box-init"
+  printf 'binary\n' >"$WORK_DIR/managed-sing-box-bin"
+  printf 'cronet\n' >"$WORK_DIR/managed-cronet"
+  printf '105 trafira\n' >"$WORK_DIR/rt_tables_keep"
+  TRAFIRA_UCI_STATE_FILE="$WORK_DIR/stop-order.state" \
+  TRAFIRA_INIT="$WORK_DIR/noop-init" \
+  TRAFIRA_SING_BOX_INIT="$WORK_DIR/managed-sing-box-init" \
+  TRAFIRA_SING_BOX_BIN="$WORK_DIR/managed-sing-box-bin" \
+  TRAFIRA_SING_BOX_CRONET="$WORK_DIR/managed-cronet" \
+  TRAFIRA_RT_TABLES="$WORK_DIR/rt_tables_keep" \
+  TRAFIRA_UNINSTALL_KEEP_COMPONENTS="$keep_components" \
+    ucode -L "$TRAFIRA_LIB" "$PACKAGE_UC" prerm remove
+  for managed in managed-sing-box-init managed-sing-box-bin managed-cronet; do
+    if [ "$keep_components" = 1 ]; then
+      [ -f "$WORK_DIR/$managed" ] || fail "uninstaller must preserve $managed"
+    else
+      [ ! -e "$WORK_DIR/$managed" ] || fail "ordinary removal must delete $managed"
+    fi
+  done
+done
+
 printf 'package lifecycle checks passed\n'

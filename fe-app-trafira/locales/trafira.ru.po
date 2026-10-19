@@ -2567,9 +2567,6 @@ msgstr "Настройки"
 msgid "Show differences"
 msgstr "Показать различия"
 
-msgid "Show differences before applying the selected profile."
-msgstr "Перед применением выбранного профиля проверьте различия."
-
 msgid "Show each device's routing status on the dashboard."
 msgstr "Показывать на дашборде, как маршрутизируется каждое устройство."
 
@@ -3868,3 +3865,6 @@ msgstr "Следующая попытка"
 
 msgid "GitHub request limit reached. Try again later."
 msgstr "Достигнут лимит запросов GitHub. Повторите попытку позже."
+
+msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
+msgstr "При применении профиль проверяется автоматически. Просматривать различия необязательно."

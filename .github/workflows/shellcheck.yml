@@ -9,6 +9,7 @@ on:
     paths:
       - 'build.sh'
       - 'install.sh'
+      - 'uninstall.sh'
       - 'trafira/files/etc/init.d/**'
       - 'luci-app-trafira/root/etc/uci-defaults/**'
       - 'tests/**/*.sh'
@@ -20,6 +21,7 @@ on:
     paths:
       - 'build.sh'
       - 'install.sh'
+      - 'uninstall.sh'
       - 'trafira/files/etc/init.d/**'
       - 'luci-app-trafira/root/etc/uci-defaults/**'
       - 'tests/**/*.sh'

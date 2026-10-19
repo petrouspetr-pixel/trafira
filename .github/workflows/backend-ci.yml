@@ -8,18 +8,21 @@ on:
       - 'trafira/compact-sources.py'
       - 'build.sh'
       - 'install.sh'
+      - 'uninstall.sh'
       - 'tests/**'
       - '.github/workflows/build.yml'
       - '.github/workflows/backend-ci.yml'
   push:
     branches:
       - main
+      - 'rc/**'
     paths:
       - 'trafira/files/**'
       - 'trafira/Makefile'
       - 'trafira/compact-sources.py'
       - 'build.sh'
       - 'install.sh'
+      - 'uninstall.sh'
       - 'tests/**'
       - '.github/workflows/build.yml'
       - '.github/workflows/backend-ci.yml'
