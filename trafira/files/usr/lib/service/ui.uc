@@ -855,6 +855,22 @@ function sing_box_enabled() {
     return file_executable("/etc/rc.d/S99sing-box");
 }
 
+// PID plus /proc start ticks distinguishes a core restart, including PID reuse.
+function sing_box_instance_id() {
+    let value;
+    try { value=json(command_output_from_args([ "ubus", "call", "service", "list", "{\"name\":\"sing-box\"}" ])); }
+    catch(e) { return null; }
+    let service=type(value)=="object"?value["sing-box"]:null;
+    let instances=type(service)=="object"?service.instances:null;
+    if(type(instances)!="object")return null;
+    for(let _,instance in instances) {
+        if(instance?.running!==true || !match(""+instance.pid,/^[1-9][0-9]*$/))continue;
+        let process=require("service.operation_lock").identity(instance.pid);
+        if(process && process.state!="Z")return process.pid+":"+process.ticks;
+    }
+    return null;
+}
+
 function sing_box_running() {
     return module_success(LIB_DIR + "/service/state.uc", [
         "sing-box-service-stable",
@@ -1105,7 +1121,8 @@ function current_ui_state_json() {
             sing_box: {
                 running: sing_box_is_running,
                 enabled: sing_box_is_enabled,
-                status: sing_box_status
+                status: sing_box_status,
+                instance_id: sing_box_is_running && active_action == "" ? sing_box_instance_id() : null
             }
         },
         capabilities,
@@ -1519,6 +1536,8 @@ else if (mode == "cached-sing-box-version") {
 }
 else if (mode == "get-ui-capabilities")
     ui_capabilities_json();
+else if (mode == "sing-box-instance-id")
+    print(sing_box_instance_id() || "", "\n");
 else if (mode == "get-ui-state")
     current_ui_state_json();
 else if (mode == "service-status-text")

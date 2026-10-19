@@ -1,3 +1,4 @@
+import { formatLatency } from '../../../helpers/latencyStatus';
 import {
   renderLoaderCircleIcon24,
   renderCopyIcon24,
@@ -277,6 +278,8 @@ function renderDefaultState({
 
   function renderOutbound(outbound: Trafira.Outbound) {
     function getLatencyClass() {
+      if (outbound.latencyStatus === 'unavailable')
+        return 'fkp_dashboard-page__outbound-grid__item__latency--red';
       if (!outbound.latency) {
         return 'fkp_dashboard-page__outbound-grid__item__latency--empty';
       }
@@ -432,13 +435,18 @@ function renderDefaultState({
             'div',
             {
               class: getLatencyClass(),
-              title: !outbound.latency
-                ? _(
-                    'No latency result is available. Use the latency test button to check this connection.',
-                  )
-                : undefined,
+              title:
+                outbound.latencyStatus === 'unavailable'
+                  ? _(
+                      'The last connection check failed. Repeat the latency test to check availability.',
+                    )
+                  : !outbound.latency
+                    ? _(
+                        'No latency result is available. Use the latency test button to check this connection.',
+                      )
+                    : undefined,
             },
-            outbound.latency ? `${outbound.latency}ms` : _('No measurement'),
+            formatLatency(outbound.latency, outbound.latencyStatus),
           ),
         ]),
       ],

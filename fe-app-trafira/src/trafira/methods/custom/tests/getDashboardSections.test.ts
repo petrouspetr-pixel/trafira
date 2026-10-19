@@ -1308,4 +1308,34 @@ describe('getDashboardSections', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(mocks.getClashApiProxies).toHaveBeenCalledTimes(1);
   });
+  it('carries known failures into cards and URLTest members, resetting on core restart', async () => {
+    mocks.getConfigSections.mockResolvedValue([proxySection()]);
+    const values = structuredClone(clashProxies);
+    mocks.getClashApiProxies.mockImplementation(async () => ({
+      success: true,
+      data: { proxies: values },
+    }));
+    await getDashboardSections({ latencyRuntimeId: 'availability-core-1' });
+    values['main-1-out'].history = [];
+    const failed = await getDashboardSections({
+      latencyRuntimeId: 'availability-core-1',
+    });
+    expect(
+      failed.data[0].outbounds.find((n) => n.code === 'main-1-out')
+        ?.latencyStatus,
+    ).toBe('unavailable');
+    const members = failed.data[0].outbounds.flatMap(
+      (n) => n.urlTestInfo?.outbounds || [],
+    );
+    expect(members.find((n) => n.code === 'main-1-out')?.latencyStatus).toBe(
+      'unavailable',
+    );
+    const restarted = await getDashboardSections({
+      latencyRuntimeId: 'availability-core-2',
+    });
+    expect(
+      restarted.data[0].outbounds.find((n) => n.code === 'main-1-out')
+        ?.latencyStatus,
+    ).toBe('unmeasured');
+  });
 });

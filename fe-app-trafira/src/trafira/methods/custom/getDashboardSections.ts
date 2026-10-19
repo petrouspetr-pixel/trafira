@@ -1,3 +1,4 @@
+import { LatencyObservations } from '../../helpers/latencyStatus';
 import { getConfigSections } from './getConfigSections';
 import { ClashAPI, Trafira } from '../../types';
 import {
@@ -14,7 +15,10 @@ interface IGetDashboardSectionsResponse {
   data: Trafira.OutboundGroup[];
 }
 
+const latencyObservations = new LatencyObservations();
+
 interface IGetDashboardSectionsOptions {
+  latencyRuntimeId?: string;
   includeSubscriptionCopyState?: boolean;
 }
 
@@ -1562,8 +1566,24 @@ export async function getDashboardSections(
       }),
   );
 
-  return {
-    success: true,
-    data,
-  };
+  const groups: Trafira.OutboundGroup[] = data;
+  const scope = options.latencyRuntimeId
+    ? JSON.stringify([options.latencyRuntimeId, configSections])
+    : '';
+  // Auxiliary reads must not reset the dashboard's current observation.
+  const observer =
+    options.latencyRuntimeId === undefined
+      ? new LatencyObservations()
+      : latencyObservations;
+  const statuses = observer.update(scope, clashProxies.data.proxies);
+  for (const group of groups)
+    for (const outbound of group.outbounds) {
+      outbound.latencyStatus = statuses.get(outbound.code) || 'unmeasured';
+      for (const member of [
+        ...(outbound.urlTestInfo?.outbounds || []),
+        ...(outbound.priorityInfo?.outbounds || []),
+      ])
+        member.latencyStatus = statuses.get(member.code) || 'unmeasured';
+    }
+  return { success: true, data: groups };
 }

@@ -3877,3 +3877,9 @@ msgstr "Активный узел"
 
 msgid "Currently used"
 msgstr "Используется сейчас"
+
+msgid "Unavailable"
+msgstr "Недоступен"
+
+msgid "The last connection check failed. Repeat the latency test to check availability."
+msgstr "Последняя проверка соединения завершилась неудачно. Повторите проверку задержки, чтобы уточнить доступность."
