@@ -67,4 +67,43 @@ describe('latency availability evidence', () => {
     expect(formatLatency(0, 'unmeasured')).toBe('No measurement');
     expect(formatLatency(30, 'available')).toBe('30ms');
   });
+  it('does not mistake switching a group to an untested member for failure', () => {
+    const state = new LatencyObservations();
+    const a = snapshot(20).node,
+      b = { ...snapshot().node, name: 'other' };
+    const group = {
+      ...a,
+      type: 'Selector',
+      all: ['node', 'other'],
+      now: 'node',
+    };
+    state.update('core', { node: a, other: b, group });
+    const next = state.update('core', {
+      node: a,
+      other: b,
+      group: { ...group, now: 'other', history: [] },
+    });
+    expect(next.get('other')).toBe('unmeasured');
+    expect(next.get('group')).toBe('unmeasured');
+  });
+  it('resolves group status through live selected members without cycles', () => {
+    const state = new LatencyObservations();
+    const group = {
+      ...snapshot().node,
+      type: 'URLTest',
+      all: ['node'],
+      now: 'node',
+    };
+    expect(state.update('core', { ...snapshot(20), group }).get('group')).toBe(
+      'available',
+    );
+    expect(state.update('core', { ...snapshot(), group }).get('group')).toBe(
+      'unavailable',
+    );
+    expect(
+      state
+        .update('core', { group: { ...group, all: ['group'], now: 'group' } })
+        .get('group'),
+    ).toBe('unmeasured');
+  });
 });
