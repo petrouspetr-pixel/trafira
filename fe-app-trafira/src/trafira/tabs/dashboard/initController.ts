@@ -1,3 +1,4 @@
+import { formatLatency } from '../../helpers/latencyStatus';
 import {
   getClashWsUrl,
   isCopyableProxyLink,
@@ -85,7 +86,10 @@ async function fetchDashboardSectionsOnce(mountId: number) {
   });
 
   try {
-    const { data, success } = await CustomTrafiraMethods.getDashboardSections();
+    const { data, success } = await CustomTrafiraMethods.getDashboardSections({
+      latencyRuntimeId:
+        getCachedRuntimeUiState()?.service.sing_box.instance_id || '',
+    });
 
     if (
       !dashboardMounted ||
@@ -803,7 +807,12 @@ function formatUrlTestModalValue(value: unknown) {
   return text || _('No');
 }
 
-function getUrlTestLatencyClass(latency: number) {
+function getUrlTestLatencyClass(
+  latency: number,
+  status?: Trafira.Outbound['latencyStatus'],
+) {
+  if (status === 'unavailable')
+    return 'fkp_dashboard-page__outbound-grid__item__latency--red';
   if (!latency) {
     return 'fkp_dashboard-page__outbound-grid__item__latency--empty';
   }
@@ -817,10 +826,6 @@ function getUrlTestLatencyClass(latency: number) {
   }
 
   return 'fkp_dashboard-page__outbound-grid__item__latency--red';
-}
-
-function formatUrlTestLatency(latency: number) {
-  return latency ? `${latency}ms` : _('No measurement');
 }
 
 function renderDetailsUrl(value: unknown) {
@@ -902,8 +907,16 @@ function renderUrlTestSelectedValue(info: Trafira.UrlTestInfo) {
         ? [
             E(
               'span',
-              { class: getUrlTestLatencyClass(selectedMember.latency) },
-              formatUrlTestLatency(selectedMember.latency),
+              {
+                class: getUrlTestLatencyClass(
+                  selectedMember.latency,
+                  selectedMember.latencyStatus,
+                ),
+              },
+              formatLatency(
+                selectedMember.latency,
+                selectedMember.latencyStatus,
+              ),
             ),
           ]
         : []),
@@ -1022,8 +1035,13 @@ function renderUrlTestInfoModal(outbound: Trafira.Outbound) {
                     [
                       E(
                         'span',
-                        { class: getUrlTestLatencyClass(member.latency) },
-                        formatUrlTestLatency(member.latency),
+                        {
+                          class: getUrlTestLatencyClass(
+                            member.latency,
+                            member.latencyStatus,
+                          ),
+                        },
+                        formatLatency(member.latency, member.latencyStatus),
                       ),
                     ],
                   ),
@@ -1118,8 +1136,16 @@ function renderPrioritySelectedValue(info: Trafira.PriorityInfo) {
         ? [
             E(
               'span',
-              { class: getUrlTestLatencyClass(selectedMember.latency) },
-              formatUrlTestLatency(selectedMember.latency),
+              {
+                class: getUrlTestLatencyClass(
+                  selectedMember.latency,
+                  selectedMember.latencyStatus,
+                ),
+              },
+              formatLatency(
+                selectedMember.latency,
+                selectedMember.latencyStatus,
+              ),
             ),
           ]
         : []),
@@ -1290,8 +1316,13 @@ function renderPriorityInfoModal(outbound: Trafira.Outbound) {
                     [
                       E(
                         'span',
-                        { class: getUrlTestLatencyClass(member.latency) },
-                        formatUrlTestLatency(member.latency),
+                        {
+                          class: getUrlTestLatencyClass(
+                            member.latency,
+                            member.latencyStatus,
+                          ),
+                        },
+                        formatLatency(member.latency, member.latencyStatus),
                       ),
                     ],
                   ),

@@ -114,3 +114,30 @@ it('highlights the used node without changing the manual selector choice', () =>
   (nodes[0].attrs.click as () => void)();
   expect(choose).toHaveBeenCalledWith('main', 'main-out', 'main-1');
 });
+
+it('distinguishes unavailable, unmeasured and recovered node cards', () => {
+  const node: Trafira.Outbound = {
+    code: 'node',
+    displayName: 'Node',
+    latency: 0,
+    type: 'VLESS',
+    selected: false,
+  };
+  const failed = cards(render([{ ...node, latencyStatus: 'unavailable' }]))[0];
+  expect(text(failed)).toContain('Unavailable');
+  expect(text(failed)).not.toContain('No measurement');
+  const footer = failed.children.find(
+    (c) => typeof c !== 'string' && String(c.attrs.class).endsWith('__footer'),
+  ) as Node;
+  expect(
+    footer.children.some(
+      (c) => typeof c !== 'string' && String(c.attrs.class).endsWith('--red'),
+    ),
+  ).toBe(true);
+  expect(text(render([{ ...node, latencyStatus: 'unmeasured' }]))).toContain(
+    'No measurement',
+  );
+  expect(
+    text(render([{ ...node, latency: 25, latencyStatus: 'available' }])),
+  ).toContain('25ms');
+});

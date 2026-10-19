@@ -5310,3 +5310,9 @@ msgstr ""
 
 msgid "Currently used"
 msgstr ""
+
+msgid "Unavailable"
+msgstr ""
+
+msgid "The last connection check failed. Repeat the latency test to check availability."
+msgstr ""

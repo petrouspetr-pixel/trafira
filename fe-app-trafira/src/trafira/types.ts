@@ -109,6 +109,7 @@ export namespace Trafira {
     code: string;
     displayName: string;
     latency: number;
+    latencyStatus?: 'unmeasured' | 'available' | 'unavailable';
     type: string;
     selected: boolean;
     link?: string;
@@ -124,6 +125,7 @@ export namespace Trafira {
     code: string;
     displayName: string;
     latency: number;
+    latencyStatus?: 'unmeasured' | 'available' | 'unavailable';
     type: string;
     selected: boolean;
     link?: string;
@@ -473,6 +475,7 @@ export namespace Trafira {
   }
 
   export interface GetSingBoxStatus {
+    instance_id?: string | null;
     running: number;
     enabled: number;
     status: string;
