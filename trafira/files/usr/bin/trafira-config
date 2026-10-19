@@ -8,4 +8,14 @@ if(index(["profile_action","core_action","gaming_preset_action"],ARGV[0])<0 || l
 }
 function quote(value){return "'"+replace(""+value,/'/g,"'\\''")+"'";}
 let module=ARGV[0]=="gaming_preset_action"?"config/gaming_cli.uc":ARGV[0]=="core_action"?"components/core_cli.uc":"config/profile_cli.uc";
+let cache;
+try {
+    let fs=require("fs");
+    let helper=LIB+"/core/bytecode.uc";
+    if(fs.stat(helper)!=null) cache=require(helper);
+} catch(e) { cache=null; }
+if(cache!=null && type(cache.run)=="function") {
+    let result=cache.run(LIB,module,["action",ARGV[1]]);
+    if(result!=null) exit(result);
+}
 exit(system(join(" ",map(["ucode","-L",LIB,LIB+"/"+module,"action",ARGV[1]],quote))));

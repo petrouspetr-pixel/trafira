@@ -227,6 +227,18 @@ function run_spec(command, spec, user_args) {
     for (let i = 0; i < count; i++)
         push(args, user_args[i] || "");
 
+    let cache;
+    try {
+        let helper = module_path("core/bytecode.uc");
+        if (file_readable(helper)) cache = require(helper);
+    } catch (e) { cache = null; }
+    if (cache != null && type(cache.run) == "function") {
+        let values = [];
+        for (let i = 4; i < length(args); i++) push(values, args[i]);
+        let result = cache.run(LIB_DIR, spec[0], values);
+        if (result != null) return result;
+    }
+
     return normalize_status(system(command_from_args(args)));
 }
 
