@@ -5304,3 +5304,9 @@ msgstr ""
 
 msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
 msgstr ""
+
+msgid "Active node"
+msgstr ""
+
+msgid "Currently used"
+msgstr ""

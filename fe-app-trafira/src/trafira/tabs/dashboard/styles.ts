@@ -476,8 +476,16 @@ export const styles = `
     border-color: var(--primary-color-high, dodgerblue);
 }
 
-.fkp_dashboard-page__outbound-grid__item--active {
+.fkp_dashboard-page__outbound-grid__item--active,
+.fkp_dashboard-page__outbound-grid__item--in-use {
     border-color: var(--success-color-medium, green);
+}
+
+.fkp_dashboard-page__outbound-grid__item__activity {
+    color: var(--success-color-medium, green);
+    font-size: 0.9em;
+    margin: 6px 0;
+    overflow-wrap: anywhere;
 }
 
 .fkp_dashboard-page__outbound-grid__item--disabled {

@@ -1199,7 +1199,52 @@ function buildProxyGroupOutbounds(
     ];
   });
 
-  const sortedOutbounds = sortOutboundsForDashboard(outbounds, {
+  // Use only the live API chain. An idle automatic group may have its own
+  // choice, but that does not mean the section currently uses that node.
+  const activeChain = new Set<string>();
+  let activeCode = selector?.code || '';
+  let activeLeaf = '';
+  while (activeCode && !activeChain.has(activeCode)) {
+    const entry = proxyByCode.get(activeCode);
+    if (!entry) break;
+    activeChain.add(activeCode);
+    if (!entry.value.all?.length) {
+      if (
+        !['selector', 'urltest', 'fallback'].includes(
+          entry.value.type.toLowerCase(),
+        )
+      )
+        activeLeaf = activeCode;
+      break;
+    }
+    const next = entry.value.now;
+    if (!next || !entry.value.all.includes(next)) break;
+    activeCode = next;
+  }
+  const activeItem = proxyByCode.get(activeLeaf);
+  const activeName = activeItem
+    ? getOutboundDisplayName(
+        activeLeaf,
+        activeItem,
+        manualLinkByCode.get(activeLeaf) ||
+          cachedProxyLinks.get(activeLeaf) ||
+          '',
+        outboundMetadata,
+        cachedProxyLinks.has(activeLeaf),
+      )
+    : '';
+  const markedOutbounds: Trafira.Outbound[] = outbounds.map((outbound) => ({
+    ...outbound,
+    active: Boolean(activeLeaf && outbound.code === activeLeaf),
+    activeNode:
+      activeLeaf &&
+      activeChain.has(outbound.code) &&
+      outbound.code !== activeLeaf
+        ? { code: activeLeaf, displayName: activeName }
+        : undefined,
+  }));
+
+  const sortedOutbounds = sortOutboundsForDashboard(markedOutbounds, {
     pinnedCodes: [
       ...urlTestEntries
         .filter(({ config }) => config.pinDashboard)

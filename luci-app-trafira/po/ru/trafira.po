@@ -3871,3 +3871,9 @@ msgstr "Служебный этап: маршрут выбирают следу�
 
 msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
 msgstr "При применении профиль проверяется автоматически. Просматривать различия необязательно."
+
+msgid "Active node"
+msgstr "Активный узел"
+
+msgid "Currently used"
+msgstr "Используется сейчас"

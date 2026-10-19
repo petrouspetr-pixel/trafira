@@ -104,6 +104,8 @@ export namespace Trafira {
   }
 
   export interface Outbound {
+    active?: boolean;
+    activeNode?: { code: string; displayName: string };
     code: string;
     displayName: string;
     latency: number;
