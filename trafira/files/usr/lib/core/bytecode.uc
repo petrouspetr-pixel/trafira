@@ -5,7 +5,7 @@ const LIMIT = 524288;
 const MAX_FILE = 131072;
 
 function quote(value) { return "'" + replace("" + value, /'/g, "'\\''") + "'"; }
-function command(args) { return join(map(args, quote), " "); }
+function command(args) { return join(" ", map(args, quote)); }
 function status(code) { return code == null || code < 0 ? 1 : code > 255 ? code >> 8 : code; }
 function bounded(path, limit) {
     let s = fs.lstat(path);
