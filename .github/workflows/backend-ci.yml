@@ -57,6 +57,9 @@ jobs:
           command -v ucode
           ucode -e 'print("ucode ready\n")'
 
+      - name: Test RAM bytecode cache
+        run: python3 -B tests/test_bytecode_cache.py
+
       - name: Measure source and bytecode startup
         run: python3 tools/benchmark-ucode.py --report "${{ runner.temp }}/trafira-bytecode-benchmark.json"
 
