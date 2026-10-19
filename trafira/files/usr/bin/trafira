@@ -230,7 +230,7 @@ function run_spec(command, spec, user_args) {
     let cache;
     try {
         let helper = module_path("core/bytecode.uc");
-        if (file_readable(helper)) cache = require(helper);
+        if (spec[0] == "diagnostics/runtime.uc" && getenv("TRAFIRA_BYTECODE_CACHE") != "0" && file_readable(helper)) cache = require(helper);
     } catch (e) { cache = null; }
     if (cache != null && type(cache.run) == "function") {
         let values = [];

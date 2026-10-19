@@ -12,7 +12,7 @@ let cache;
 try {
     let fs=require("fs");
     let helper=LIB+"/core/bytecode.uc";
-    if(fs.stat(helper)!=null) cache=require(helper);
+    if(getenv("TRAFIRA_BYTECODE_CACHE")!="0" && fs.stat(helper)!=null) cache=require(helper);
 } catch(e) { cache=null; }
 if(cache!=null && type(cache.run)=="function") {
     let result=cache.run(LIB,module,["action",ARGV[1]]);

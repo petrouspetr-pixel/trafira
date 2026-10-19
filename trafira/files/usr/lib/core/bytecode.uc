@@ -41,7 +41,7 @@ function context() {
     let uid = fs.stat("/proc/self")?.uid;
     let test = getenv("TRAFIRA_BYTECODE_TEST_ROOT") || "";
     let marker = test + "/.trafira-bytecode-cache-test";
-    let testing = test != "" && index(test, "/tmp/trafira-bytecode-test-") == 0 && bounded(marker, 32) != null;
+    let testing = test != "" && index(test, "/tmp/trafira-bytecode-test-") == 0 && private_dir(test, uid) && bounded(marker, 32) != null;
     if (test != "" && !testing) return null;
     if (!testing && (uid != 0 || !ram_mount("/tmp") || fs.lstat("/tmp")?.type != "directory")) return null;
     let root = testing ? test + "/cache" : "/tmp/trafira-bytecode";
@@ -118,9 +118,10 @@ function prepare(c, lib, relative, source) {
     }
     let exe = "/proc/" + fs.readlink("/proc/self") + "/exe";
     if (exe == null || identity() == null) return null;
-    // Compile with this running interpreter, never a build-host bytecode ABI.
+    if (fs.writefile(base + ".source", text) != length(text)) { erase(base); return null; }
+    // Compile an immutable snapshot with this interpreter, never a build-host ABI.
     // A file-size ulimit also bounds the compiler's temporary output.
-    let rc = system("(ulimit -f 128; " + command([ exe, "-s", "-cno-interp", "-o", base + ".part", source ]) + ") >/dev/null 2>&1");
+    let rc = system("(ulimit -f 128; " + command([ exe, "-s", "-cno-interp", "-o", base + ".part", base + ".source" ]) + ") >/dev/null 2>&1");
     code = bounded(base + ".part", MAX_FILE);
     if (status(rc) != 0 || code == null || substr(code, 0, 4) != "\x1bucb" || bounded(source, MAX_FILE) != text ||
         current + length(text) + length(stamp) + 2 * length(code) > c.limit) {
@@ -129,8 +130,8 @@ function prepare(c, lib, relative, source) {
         return null;
     }
     // Publish only under the nonblocking cache lock; keep an exact corruption proof.
-    if (fs.writefile(base + ".source", text) == null || fs.writefile(base + ".proof", code) == null ||
-        !fs.rename(base + ".part", base + ".ucb") || fs.writefile(base + ".json", stamp) == null) {
+    if (fs.writefile(base + ".proof", code) != length(code) ||
+        !fs.rename(base + ".part", base + ".ucb") || fs.writefile(base + ".json", stamp) != length(stamp)) {
         erase(base);
         return null;
     }
