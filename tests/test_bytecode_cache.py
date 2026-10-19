@@ -15,6 +15,11 @@ UCODE = shutil.which('ucode')
 
 @unittest.skipUnless(UCODE, 'ucode required')
 class BytecodeCacheTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        probe = 'let f=require("fs"); print(sprintf("%J", { zero_null:0==null, proc:f.readlink("/proc/self"), stat:f.stat("/tmp"), vfs:type(f.statvfs) }),"\\n");'
+        print(subprocess.check_output([UCODE, '-e', probe], text=True))
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='trafira-bytecode-test-')
         self.addCleanup(self.tmp.cleanup)

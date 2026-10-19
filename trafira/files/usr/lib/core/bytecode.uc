@@ -100,7 +100,10 @@ function erase(base) {
 }
 function prepare(c, lib, relative, source) {
     let text = bounded(source, MAX_FILE);
-    if (text == null || index(text, "sourcepath(") >= 0) return null;
+    if (text == null || index(text, "sourcepath(") >= 0) {
+        if (getenv("TRAFIRA_BYTECODE_TEST_ROOT")) warn("cache source rejected\n");
+        return null;
+    }
     let base = c.root + "/" + replace(relative, /\//g, "_");
     let stamp = sprintf("%J", { schema: 1, lib, relative, runtime: identity(), flags: "-s -cno-interp" });
     let code = bounded(base + ".ucb", MAX_FILE);
@@ -109,7 +112,10 @@ function prepare(c, lib, relative, source) {
         bounded(base + ".proof", MAX_FILE) == code && used(c.root) <= c.limit) return base + ".ucb";
     erase(base);
     let current = used(c.root);
-    if (current + length(text) + length(stamp) + MAX_FILE > c.limit) return null;
+    if (current + length(text) + length(stamp) + MAX_FILE > c.limit) {
+        if (getenv("TRAFIRA_BYTECODE_TEST_ROOT")) warn("cache budget rejected\n");
+        return null;
+    }
     let exe = "/proc/" + fs.readlink("/proc/self") + "/exe";
     if (exe == null || identity() == null) return null;
     // Compile with this running interpreter, never a build-host bytecode ABI.
@@ -118,6 +124,7 @@ function prepare(c, lib, relative, source) {
     code = bounded(base + ".part", MAX_FILE);
     if (status(rc) != 0 || code == null || substr(code, 0, 4) != "\x1bucb" || bounded(source, MAX_FILE) != text ||
         current + length(text) + length(stamp) + 2 * length(code) > c.limit) {
+        if (getenv("TRAFIRA_BYTECODE_TEST_ROOT")) warn("cache compile rejected: ", sprintf("%J", { rc, size: length(code), magic: substr(code || "",0,4), source_changed: bounded(source,MAX_FILE)!=text }), "\n");
         erase(base);
         return null;
     }
