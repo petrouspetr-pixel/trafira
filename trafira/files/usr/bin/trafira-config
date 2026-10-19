@@ -12,8 +12,8 @@ let cache;
 try {
     let fs=require("fs");
     let helper=LIB+"/core/bytecode.uc";
-    if(getenv("TRAFIRA_BYTECODE_CACHE")!="0" && fs.stat(helper)!=null) cache=require(helper);
-} catch(e) { cache=null; }
+    if(getenv("TRAFIRA_BYTECODE_CACHE")!="0" && fs.stat(helper)!=null) cache=loadfile(helper,{raw_mode:true})();
+} catch(e) { if(getenv("TRAFIRA_BYTECODE_TEST_ROOT")) warn("cache import: ",e,"\n"); cache=null; }
 if(cache!=null && type(cache.run)=="function") {
     let result=cache.run(LIB,module,["action",ARGV[1]]);
     if(result!=null) exit(result);

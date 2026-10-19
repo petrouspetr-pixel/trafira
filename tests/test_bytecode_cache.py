@@ -171,7 +171,7 @@ class BytecodeCacheTests(unittest.TestCase):
         env = dict(self.env, TRAFIRA_LIB=str(self.lib))
         result = subprocess.run([UCODE, str(REPO / 'trafira/files/usr/bin/trafira'), 'show_version'], env=env, capture_output=True, text=True, timeout=10)
         self.assert_ok(result, 'original:show-version\n')
-        self.assertEqual(len(self.compiled()), 1)
+        self.assertEqual(len(self.compiled()), 1, result.stderr)
         (self.lib / 'config').mkdir()
         (self.lib / 'config/profile_cli.uc').write_text('print(ARGV[1], "\\n");\n')
         request = json.dumps({'action': 'list', 'name': "a'b; echo injected"})

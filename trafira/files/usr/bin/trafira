@@ -230,8 +230,11 @@ function run_spec(command, spec, user_args) {
     let cache;
     try {
         let helper = module_path("core/bytecode.uc");
-        if (spec[0] == "diagnostics/runtime.uc" && getenv("TRAFIRA_BYTECODE_CACHE") != "0" && file_readable(helper)) cache = require(helper);
-    } catch (e) { cache = null; }
+        if (spec[0] == "diagnostics/runtime.uc" && getenv("TRAFIRA_BYTECODE_CACHE") != "0" && file_readable(helper)) cache = loadfile(helper, { raw_mode: true })();
+    } catch (e) {
+        if (getenv("TRAFIRA_BYTECODE_TEST_ROOT")) warn("cache import: ", e, "\n");
+        cache = null;
+    }
     if (cache != null && type(cache.run) == "function") {
         let values = [];
         for (let i = 4; i < length(args); i++) push(values, args[i]);
