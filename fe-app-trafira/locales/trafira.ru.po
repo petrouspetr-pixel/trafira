@@ -3605,8 +3605,8 @@ msgstr "Не удалось проверить это условие"
 msgid "Block the connection"
 msgstr "Заблокировать соединение"
 
-msgid "Read the application protocol"
-msgstr "Определить протокол приложения"
+msgid "Recognize the connection protocol (e.g. HTTPS)"
+msgstr "Распознать протокол соединения (например, HTTPS)"
 
 msgid "Look up the website address"
 msgstr "Узнать IP-адрес сайта"
@@ -3722,8 +3722,8 @@ msgstr "Телефон или компьютер"
 msgid "Choose the device that will open the website."
 msgstr "Выберите устройство, с которого будете открывать сайт."
 
-msgid "This checks apps running on the router itself. Device traffic is checked separately."
-msgstr "Этот вариант проверяет приложения самого роутера. Для телефона или компьютера выберите устройство."
+msgid "This checks apps running on the router itself, not your phone or computer. In Settings, enable \"Route router applications\" and click Apply."
+msgstr "Проверяются приложения самого роутера, а не телефона или компьютера. Во вкладке «Настройки» включите «Маршрутизацию приложений роутера» и нажмите «Применить»."
 
 msgid "Select a device from the list, or enter its local IP address."
 msgstr "Выберите устройство из списка или введите его IP-адрес в локальной сети."
@@ -3785,8 +3785,8 @@ msgstr "IP-адреса секции «%s»"
 msgid "Add a gaming preset"
 msgstr "Добавить игровой пресет"
 
-msgid "Add platforms to the list, then use Save & Apply below."
-msgstr "Добавьте нужные платформы в список, затем нажмите «Сохранить и применить» внизу страницы."
+msgid "Add platforms to the list, then click Apply below."
+msgstr "Добавьте нужные платформы в список, затем нажмите «Применить» внизу страницы."
 
 msgid "Add to list"
 msgstr "Добавить в список"
@@ -3797,8 +3797,8 @@ msgstr "Дополнительно"
 msgid "Cancel editing"
 msgstr "Отменить редактирование"
 
-msgid "Changes are not applied. Use Save & Apply below to activate all changes together. Reset discards unsaved changes."
-msgstr "Изменения ещё не применены. Нажмите «Сохранить и применить» внизу страницы, чтобы применить их вместе. «Сброс» отменяет несохранённые изменения."
+msgid "Changes are not applied. Click Apply below to activate all changes together. Save stores settings without applying them; Reset discards unsaved changes."
+msgstr "Изменения ещё не применены. Нажмите «Применить» внизу страницы, чтобы применить их вместе. «Сохранить» записывает настройки без применения, «Сброс» отменяет несохранённые изменения."
 
 msgid "Choose a platform, device addresses and connection, or cancel editing before saving."
 msgstr "Перед сохранением выберите платформу, адреса устройства и подключение либо отмените редактирование."
@@ -3845,11 +3845,11 @@ msgstr "Обновить в списке"
 msgid "You do not have permission to change these settings."
 msgstr "У вас нет прав на изменение этих настроек."
 
-msgid "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after Save & Apply."
-msgstr "Этот пресет был изменён вручную в «Секциях». При замене его правила будут созданы заново по выбранным настройкам, а ваши ручные правки этих правил — удалены. Другие пресеты и обычные секции сохранятся. Замена вступит в силу только после нажатия «Сохранить и применить»."
+msgid "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after clicking Apply."
+msgstr "Этот пресет был изменён вручную в «Секциях». Замена создаст его правила заново, удалив ваши правки этих правил. Другие пресеты и секции сохранятся. Изменения вступят в силу после нажатия «Применить»."
 
-msgid "Use this if device routing excludes the selected IP addresses: allow Trafira to handle them so the gaming presets can work. Only these addresses are changed when you Save & Apply. Other devices are not affected. Exceptions for a whole subnet, MAC or interface must be edited in Devices."
-msgstr "Включите, если выбранные IP-адреса исключены из маршрутизации во вкладке «Устройства» — иначе игровые пресеты для них не сработают. После «Сохранить и применить» Trafira разрешит обработку только этих адресов, не затрагивая другие устройства. Исключение для целой подсети, MAC-адреса или интерфейса нужно изменить вручную во вкладке «Устройства»."
+msgid "Use if Devices excludes these IPs. Apply lets Trafira handle only these addresses; other devices are unchanged. Edit subnet, MAC or interface exclusions in Devices."
+msgstr "Нужно, если выбранные IP исключены во вкладке «Устройства». После «Применить» Trafira обработает только эти адреса, не затрагивая остальные. Исключения по подсети, MAC или интерфейсу измените в «Устройствах»."
 
 msgid "No server IP is needed: a matching rule blocks this domain."
 msgstr "IP-адрес сервера не требуется: подходящее правило блокирует этот домен."
@@ -3865,6 +3865,9 @@ msgstr "Следующая попытка"
 
 msgid "GitHub request limit reached. Try again later."
 msgstr "Достигнут лимит запросов GitHub. Повторите попытку позже."
+
+msgid "Service step: later rules choose the route"
+msgstr "Служебный этап: маршрут выбирают следующие правила"
 
 msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
 msgstr "При применении профиль проверяется автоматически. Просматривать различия необязательно."
