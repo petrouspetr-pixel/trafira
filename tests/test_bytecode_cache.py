@@ -37,7 +37,9 @@ class BytecodeCacheTests(unittest.TestCase):
         return subprocess.run(self.command(*args, binary=binary), env=dict(self.env, **(env or {})), capture_output=True, text=True, timeout=15)
 
     def assert_ok(self, result, text='original:hello\n'):
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        details = [(str(p.relative_to(self.root)), oct(p.lstat().st_mode), p.lstat().st_size) for p in self.cache.rglob('*')] if self.cache.exists() else []
+        root_mode = oct(self.cache.stat().st_mode) if self.cache.exists() else 'absent'
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr + repr({'root_mode': root_mode, 'cache': details}))
         self.assertEqual(result.stdout, text)
 
     def compiled(self):

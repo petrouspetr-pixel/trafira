@@ -55,7 +55,10 @@ function context() {
         if (disk == null || disk.bavail * (disk.frsize || disk.bsize) < 4194304) return null;
     }
     if (fs.lstat(root) == null && !fs.mkdir(root, 0700)) return null;
-    if (!private_dir(root, uid)) return null;
+    if (!private_dir(root, uid)) {
+        if (testing) warn("cache root: ", sprintf("%J", fs.lstat(root)), " expected uid=", uid, "\n");
+        return null;
+    }
     let requested = testing ? int(getenv("TRAFIRA_BYTECODE_TEST_LIMIT") || LIMIT) : LIMIT;
     return { root, uid, limit: requested < LIMIT ? requested : LIMIT };
 }
