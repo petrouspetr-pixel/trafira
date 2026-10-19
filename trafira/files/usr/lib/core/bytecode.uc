@@ -43,7 +43,7 @@ function context() {
     let marker = test + "/.trafira-bytecode-cache-test";
     let testing = test != "" && index(test, "/tmp/trafira-bytecode-test-") == 0 && private_dir(test, uid) && bounded(marker, 32) != null;
     if (test != "" && !testing) return null;
-    if (!testing && (uid != 0 || !ram_mount("/tmp") || fs.lstat("/tmp")?.type != "directory")) return null;
+    if (!testing && (uid != 0 || !ram_mount("/tmp/trafira-bytecode") || fs.lstat("/tmp")?.type != "directory")) return null;
     let root = testing ? test + "/cache" : "/tmp/trafira-bytecode";
     let info = fs.readfile(testing ? test + "/meminfo" : "/proc/meminfo") || "";
     let available = match(info, /MemAvailable:[ \t]+([0-9]+)/);
@@ -60,7 +60,7 @@ function context() {
         return null;
     }
     let requested = testing ? int(getenv("TRAFIRA_BYTECODE_TEST_LIMIT") || LIMIT) : LIMIT;
-    return { root, uid, limit: requested < LIMIT ? requested : LIMIT };
+    return { root, uid, limit: (requested < LIMIT ? requested : LIMIT) - 512 };
 }
 function unlock(root) {
     fs.unlink(root + "/lock/owner.json");
