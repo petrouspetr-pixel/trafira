@@ -13,7 +13,7 @@ function bounded(path, limit) {
 }
 function identity() {
     let s = fs.stat("/proc/self/exe");
-    return s == null ? null : sprintf("%J", [ s.dev, s.ino, s.size, s.mtime, s.ctime ]);
+    return s == null ? null : sprintf("%J", [ s.dev, s.inode, s.size, s.mtime, s.ctime ]);
 }
 function start_time(pid) {
     if (!match("" + pid, /^[0-9]+$/)) return null;
@@ -48,8 +48,12 @@ function context() {
     let info = fs.readfile(testing ? test + "/meminfo" : "/proc/meminfo") || "";
     let available = match(info, /MemAvailable:[ \t]+([0-9]+)/);
     if (available == null || int(available[1]) < 16384) return null;
-    let disk = fs.statvfs(testing ? test : "/tmp");
-    if (disk == null || disk.bavail * (disk.frsize || disk.bsize) < 4194304) return null;
+    // statvfs is absent in older supported ucode builds; allocation errors
+    // still fail closed, and the MemAvailable gate applies on every build.
+    if (type(fs.statvfs) == "function") {
+        let disk = fs.statvfs(testing ? test : "/tmp");
+        if (disk == null || disk.bavail * (disk.frsize || disk.bsize) < 4194304) return null;
+    }
     if (fs.lstat(root) == null && !fs.mkdir(root, 0700)) return null;
     if (!private_dir(root, uid)) return null;
     let requested = testing ? int(getenv("TRAFIRA_BYTECODE_TEST_LIMIT") || LIMIT) : LIMIT;
