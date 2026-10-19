@@ -303,6 +303,7 @@ function renderDefaultState({
       !outbound.selected;
     const className = [
       'fkp_dashboard-page__outbound-grid__item',
+      outbound.active ? 'fkp_dashboard-page__outbound-grid__item--in-use' : '',
       outbound.selected
         ? 'fkp_dashboard-page__outbound-grid__item--active'
         : '',
@@ -408,6 +409,17 @@ function renderDefaultState({
               ]
             : []),
         ]),
+        ...(outbound.activeNode || outbound.active
+          ? [
+              E(
+                'div',
+                { class: 'fkp_dashboard-page__outbound-grid__item__activity' },
+                outbound.activeNode
+                  ? `${_('Active node')}: ${outbound.activeNode.displayName}`
+                  : _('Currently used'),
+              ),
+            ]
+          : []),
         E('div', { class: 'fkp_dashboard-page__outbound-grid__item__footer' }, [
           E(
             'div',

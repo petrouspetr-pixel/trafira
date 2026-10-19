@@ -243,7 +243,7 @@ function prerm_cleanup(action) {
             return false;
         // opkg may provide no action during replacement; only explicit removal
         // owns deletion of separately installed compressed binary variants.
-        if (as_string(action) == "remove")
+        if (as_string(action) == "remove" && env("TRAFIRA_UNINSTALL_KEEP_COMPONENTS", "0") != "1")
             remove_managed_sing_box();
     }
 

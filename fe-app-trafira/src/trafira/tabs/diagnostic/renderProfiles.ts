@@ -110,12 +110,7 @@ export const profilesPanel = {
         renameName.value.trim() === selected?.name;
       remove.disabled ||= !canWrite || !selected;
       review.disabled ||= !usable;
-      apply.disabled ||=
-        !canWrite ||
-        !usable ||
-        !last?.preview?.applicable ||
-        !last.preview.digest ||
-        last.preview.id !== select.value;
+      apply.disabled ||= !canWrite || !usable;
       restore.disabled ||= !canWrite || !last?.canRestore || !last.digest;
       exportButton.disabled ||= !canWrite || !usable;
       const upload = file.files?.[0];
@@ -195,7 +190,7 @@ export const profilesPanel = {
         )
           return;
         notify('');
-        void controller.applyReviewed(id);
+        void controller.applySelected(id);
       },
       true,
     );
@@ -602,7 +597,9 @@ export const profilesPanel = {
                 E(
                   'p',
                   { class: 'cbi-section-descr' },
-                  _('Show differences before applying the selected profile.'),
+                  _(
+                    'Compatibility is checked automatically when you apply a profile. Viewing differences is optional.',
+                  ),
                 ),
               ]
             : []),

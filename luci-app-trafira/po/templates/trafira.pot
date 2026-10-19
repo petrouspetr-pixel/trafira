@@ -3650,9 +3650,6 @@ msgid "Show differences"
 msgstr ""
 
 #: src/trafira/tabs/diagnostic/renderProfiles.ts:545
-msgid "Show differences before applying the selected profile."
-msgstr ""
-
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/alice.js:47
 msgid "Show each device's routing status on the dashboard."
 msgstr ""
@@ -5303,4 +5300,13 @@ msgid "Next attempt"
 msgstr ""
 
 msgid "GitHub request limit reached. Try again later."
+msgstr ""
+
+msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
+msgstr ""
+
+msgid "Active node"
+msgstr ""
+
+msgid "Currently used"
 msgstr ""

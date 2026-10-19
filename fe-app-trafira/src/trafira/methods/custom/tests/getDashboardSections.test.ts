@@ -152,6 +152,151 @@ describe('getDashboardSections', () => {
     mocks.canUseDirectClashApi.mockReturnValue(false);
   });
 
+  it('highlights the live URLTest leaf and refreshes when sing-box switches nodes', async () => {
+    mocks.getConfigSections.mockResolvedValue([proxySection()]);
+    const proxies = {
+      ...clashProxies,
+      'main-out': proxy('Selector', {
+        now: 'main-urltest-out',
+        all: clashProxies['main-out'].all,
+      }),
+      'main-urltest-out': proxy('URLTest', {
+        now: 'main-3-out',
+        all: ['main-1-out', 'main-3-out'],
+      }),
+    };
+    mocks.getClashApiProxies.mockResolvedValue({
+      success: true,
+      data: { proxies },
+    });
+    let result = await getDashboardSections();
+    expect(
+      result.data[0].outbounds.find((item) => item.code === 'main-3-out'),
+    ).toMatchObject({ active: true, selected: false });
+    expect(
+      result.data[0].outbounds.find((item) => item.code === 'main-urltest-out'),
+    ).toMatchObject({
+      selected: true,
+      activeNode: { code: 'main-3-out', displayName: 'Included 3' },
+    });
+    proxies['main-urltest-out'].now = 'main-1-out';
+    result = await getDashboardSections();
+    expect(
+      result.data[0].outbounds.find((item) => item.code === 'main-1-out')
+        ?.active,
+    ).toBe(true);
+    expect(
+      result.data[0].outbounds.find((item) => item.code === 'main-3-out')
+        ?.active,
+    ).toBe(false);
+  });
+
+  it('does not mark the internal URLTest choice active when the section uses another node', async () => {
+    mocks.getConfigSections.mockResolvedValue([proxySection()]);
+    mocks.getClashApiProxies.mockResolvedValue({
+      success: true,
+      data: {
+        proxies: {
+          ...clashProxies,
+          'main-urltest-out': proxy('URLTest', {
+            now: 'main-3-out',
+            all: ['main-1-out', 'main-3-out'],
+          }),
+        },
+      },
+    });
+    const result = await getDashboardSections();
+    expect(
+      result.data[0].outbounds.find((item) => item.code === 'main-1-out')
+        ?.active,
+    ).toBe(true);
+    expect(
+      result.data[0].outbounds.find((item) => item.code === 'main-3-out')
+        ?.active,
+    ).toBe(false);
+    expect(
+      result.data[0].outbounds.find((item) => item.code === 'main-urltest-out')
+        ?.activeNode,
+    ).toBeUndefined();
+  });
+
+  it('follows Priority to URLTest without selecting the first listed child', async () => {
+    mocks.getConfigSections.mockResolvedValue([
+      proxySection(),
+      priorityGroup('pg_main'),
+    ]);
+    mocks.getClashApiProxies.mockResolvedValue({
+      success: true,
+      data: {
+        proxies: {
+          ...clashProxies,
+          'main-out': proxy('Selector', {
+            now: 'main-priority-pg_main-out',
+            all: [
+              'main-priority-pg_main-out',
+              'main-1-out',
+              'main-2-out',
+              'main-3-out',
+            ],
+          }),
+          'main-priority-pg_main-out': proxy('Selector', {
+            now: 'main-urltest-out',
+            all: ['main-1-out', 'main-urltest-out'],
+          }),
+          'main-urltest-out': proxy('URLTest', {
+            now: 'main-3-out',
+            all: ['main-1-out', 'main-3-out'],
+          }),
+        },
+      },
+    });
+    const result = await getDashboardSections();
+    const outbounds = result.data[0].outbounds;
+    expect(
+      outbounds.filter((item) => item.active).map((item) => item.code),
+    ).toEqual(['main-3-out']);
+    for (const code of ['main-priority-pg_main-out', 'main-urltest-out'])
+      expect(
+        outbounds.find((item) => item.code === code)?.activeNode?.code,
+      ).toBe('main-3-out');
+    expect(
+      outbounds.find((item) => item.code === 'main-urltest-out')?.selected,
+    ).toBe(false);
+  });
+
+  it.each(['missing', 'cycle', 'stale'])(
+    'does not invent an active leaf for %s runtime selection',
+    async (reason) => {
+      mocks.getConfigSections.mockResolvedValue([proxySection()]);
+      mocks.getClashApiProxies.mockResolvedValue({
+        success: true,
+        data: {
+          proxies: {
+            ...clashProxies,
+            'main-out': proxy('Selector', {
+              now: 'main-urltest-out',
+              all: ['main-urltest-out'],
+            }),
+            'main-urltest-out': proxy('URLTest', {
+              now:
+                reason === 'missing'
+                  ? undefined
+                  : reason === 'cycle'
+                    ? 'main-out'
+                    : 'main-3-out',
+              all: reason === 'stale' ? ['main-1-out'] : ['main-out'],
+            }),
+          },
+        },
+      });
+      const result = await getDashboardSections();
+      expect(result.data[0].outbounds.some((item) => item.active)).toBe(false);
+      expect(result.data[0].outbounds.some((item) => item.activeNode)).toBe(
+        false,
+      );
+    },
+  );
+
   it('shows the full selector group by default', async () => {
     mocks.getConfigSections.mockResolvedValue([proxySection()]);
 
@@ -387,6 +532,7 @@ describe('getDashboardSections', () => {
       displayName: 'Codex Priority',
       type: 'Priority',
       selected: true,
+      activeNode: { code: 'main-2-out', displayName: 'Second cached' },
     });
     expect(priority?.priorityInfo).toMatchObject({
       implementation: 'watchdog',

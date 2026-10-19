@@ -19,6 +19,118 @@ afterEach(() => {
 });
 
 describe('configuration profiles controller', () => {
+  it('checks compatibility automatically before applying a profile without a prior review', async () => {
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        applicable: true,
+        digest: 'fresh',
+        changes: [],
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        running: true,
+        job_id: 'automatic',
+      });
+    const controller = new ProfilePanelController(call, vi.fn());
+    controller.mount();
+    await controller.applySelected('p-first');
+    expect(call.mock.calls.map(([request]) => request)).toEqual([
+      { action: 'preview', id: 'p-first' },
+      { action: 'apply', id: 'p-first', digest: 'fresh' },
+    ]);
+  });
+  it.each([
+    { success: true, applicable: false, digest: 'fresh', changes: [] },
+    { success: false, error: 'candidate_check_failed' },
+    { success: true, applicable: true, changes: [] },
+  ])(
+    'does not apply after a failed or incomplete automatic check: %j',
+    async (result) => {
+      const call = vi.fn().mockResolvedValue(result);
+      const controller = new ProfilePanelController(call, vi.fn());
+      controller.mount();
+      await controller.applySelected('p-first');
+      expect(call).toHaveBeenCalledTimes(1);
+      expect(call).toHaveBeenCalledWith({ action: 'preview', id: 'p-first' });
+    },
+  );
+  it('does not apply when the automatic compatibility request fails to return', async () => {
+    const call = vi.fn().mockRejectedValue(new Error('timeout'));
+    const render = vi.fn();
+    const controller = new ProfilePanelController(call, render);
+    controller.mount();
+    await controller.applySelected('p-first');
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(render.mock.lastCall?.[0]).toMatchObject({
+      busy: false,
+      preview: null,
+      error: 'The profile operation failed.',
+    });
+  });
+  it('rechecks instead of using an old manually reviewed digest', async () => {
+    const call = vi
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        applicable: true,
+        digest: 'old',
+        changes: [],
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        applicable: true,
+        digest: 'fresh',
+        changes: [],
+      })
+      .mockResolvedValueOnce({ success: false, error: 'conflict' });
+    const render = vi.fn();
+    const controller = new ProfilePanelController(call, render);
+    controller.mount();
+    await controller.submit({ action: 'preview', id: 'p-first' });
+    await controller.applySelected('p-first');
+    expect(call.mock.lastCall?.[0]).toEqual({
+      action: 'apply',
+      id: 'p-first',
+      digest: 'fresh',
+    });
+    expect(render.mock.lastCall?.[0].error).toBe(
+      'Configuration changed. Review the differences again.',
+    );
+  });
+  it.each([false, true])(
+    'guards duplicate clicks and leaving during an automatic check (leave=%s)',
+    async (leave) => {
+      let finish!: (value: object) => void;
+      const call = vi
+        .fn()
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              finish = resolve;
+            }),
+        )
+        .mockResolvedValue({
+          success: true,
+          running: true,
+          job_id: 'automatic',
+        });
+      const controller = new ProfilePanelController(call, vi.fn());
+      controller.mount();
+      const pending = controller.applySelected('p-first');
+      await controller.applySelected('p-first');
+      expect(call).toHaveBeenCalledTimes(1);
+      if (leave) {
+        controller.unmount();
+        controller.mount();
+      }
+      finish({ success: true, applicable: true, digest: 'fresh', changes: [] });
+      await pending;
+      expect(call).toHaveBeenCalledTimes(leave ? 1 : 2);
+    },
+  );
+
   it('does not claim a previous configuration is absent before availability can be checked', async () => {
     const render = vi.fn();
     const controller = new ProfilePanelController(

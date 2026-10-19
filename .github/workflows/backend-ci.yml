@@ -1,6 +1,7 @@
 name: Backend CI
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'trafira/files/**'
@@ -8,18 +9,23 @@ on:
       - 'trafira/compact-sources.py'
       - 'build.sh'
       - 'install.sh'
+      - 'uninstall.sh'
+      - 'tools/benchmark-ucode.py'
       - 'tests/**'
       - '.github/workflows/build.yml'
       - '.github/workflows/backend-ci.yml'
   push:
     branches:
       - main
+      - 'rc/**'
     paths:
       - 'trafira/files/**'
       - 'trafira/Makefile'
       - 'trafira/compact-sources.py'
       - 'build.sh'
       - 'install.sh'
+      - 'uninstall.sh'
+      - 'tools/benchmark-ucode.py'
       - 'tests/**'
       - '.github/workflows/build.yml'
       - '.github/workflows/backend-ci.yml'
@@ -51,6 +57,12 @@ jobs:
           command -v ucode
           ucode -e 'print("ucode ready\n")'
 
+      - name: Test RAM bytecode cache
+        run: python3 -B tests/test_bytecode_cache.py
+
+      - name: Measure source and bytecode startup
+        run: python3 tools/benchmark-ucode.py --report "${{ runner.temp }}/trafira-bytecode-benchmark.json"
+
       - name: Check ucode syntax
         shell: bash
         run: |
@@ -72,10 +84,27 @@ jobs:
           export TRAFIRA_COMPACT_RUNTIME=1
           printf '%s\0' tests/*.sh | xargs -0 -n1 -P4 bash -c 'bash "$1" || { status=$?; echo "FAILED compact sources: $1 (exit $status)" >&2; exit 1; }' _
 
+      - name: Test cache with current ucode runtime
+        shell: bash
+        run: |
+          current_root=$(mktemp -d /tmp/trafira-ucode-current.XXXXXX)
+          git clone https://github.com/ucode-lang/ucode.git "$current_root/source"
+          git -C "$current_root/source" checkout d2e8b8d2052778557ccca7e781d2ad423324961b
+          cmake -S "$current_root/source" -B "$current_root/build" \
+            -DCMAKE_INSTALL_PREFIX="$current_root/runtime" \
+            -DUBUS_SUPPORT=OFF -DUCI_SUPPORT=OFF -DULOOP_SUPPORT=OFF
+          cmake --build "$current_root/build" --parallel
+          cmake --install "$current_root/build"
+          PATH="$current_root/runtime/bin:$PATH" \
+          LD_LIBRARY_PATH="$current_root/runtime/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+            python3 -B tests/test_bytecode_cache.py
+
       - name: Upload installed size report
         if: always()
         uses: actions/upload-artifact@v4.6.2
         with:
           name: installed-backend-size
-          path: ${{ runner.temp }}/trafira-compaction.json
+          path: |
+            ${{ runner.temp }}/trafira-compaction.json
+            ${{ runner.temp }}/trafira-bytecode-benchmark.json
           if-no-files-found: ignore

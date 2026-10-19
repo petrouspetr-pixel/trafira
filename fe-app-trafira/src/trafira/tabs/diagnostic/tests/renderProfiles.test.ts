@@ -331,21 +331,41 @@ it('creates, selects, renames and deletes the intended profile with separate nam
   expect(all(host).find((n) => n.tag === 'select')!.value).toBe('');
 });
 
-it('requires successful review for the selected profile and drops it when the selection changes', async () => {
+it('applies directly from the selected profile and validates only after confirmation', async () => {
+  profilesPanel.mount();
+  await drain();
+  expect(button('Apply profile').disabled).toBe(true);
+  await select('p-first');
+  expect(text(host)).toContain('Compatibility is checked automatically');
+  expect(requests.some((r) => r.action === 'preview')).toBe(false);
+  confirm.mockReturnValueOnce(false);
+  await click('Apply profile');
+  expect(
+    requests.some((r) => ['preview', 'apply'].includes(String(r.action))),
+  ).toBe(false);
+  await click('Apply profile');
+  expect(
+    requests.filter((r) => ['preview', 'apply'].includes(String(r.action))),
+  ).toEqual([
+    { action: 'preview', id: 'p-first' },
+    { action: 'apply', id: 'p-first', digest },
+  ]);
+});
+
+it('allows automatic application without reviewing and drops optional differences on selection changes', async () => {
   profilesPanel.mount();
   await drain();
   await select('p-first');
-  expect(button('Apply profile').disabled).toBe(true);
+  expect(button('Apply profile').disabled).toBe(false);
   await click('Show differences');
   expect(text(host)).toContain('Server');
   expect(text(host)).not.toContain('private-old');
   expect(button('Apply profile').disabled).toBe(false);
   await select('p-second');
-  expect(button('Apply profile').disabled).toBe(true);
+  expect(button('Apply profile').disabled).toBe(false);
   expect(text(host)).not.toContain('Server');
   await select('p-first');
-  expect(button('Apply profile').disabled).toBe(true);
-  await click('Show differences');
+  expect(button('Apply profile').disabled).toBe(false);
   confirm.mockReturnValueOnce(false);
   await click('Apply profile');
   expect(requests.some((r) => r.action === 'apply')).toBe(false);
@@ -437,14 +457,14 @@ it.each([
   { success: true, applicable: true, changes: [] },
   { success: false, error: 'candidate_check_failed' },
 ])(
-  'does not enable application from an incomplete or unsuccessful preview: %j',
+  'does not apply after an incomplete or unsuccessful automatic check: %j',
   async (result) => {
     previewResult = result;
     profilesPanel.mount();
     await drain();
     await select('p-first');
-    await click('Show differences');
-    expect(button('Apply profile').disabled).toBe(true);
+    await click('Apply profile');
+    expect(button('Apply profile').disabled).toBe(false);
     expect(requests.some((r) => r.action === 'apply')).toBe(false);
     expect(text(host)).toContain(
       result.success === false
@@ -565,7 +585,7 @@ it('clears stale review and shows a configuration conflict without reloading', a
   expect(text(host)).toContain(
     'Configuration changed. Review the differences again.',
   );
-  expect(button('Apply profile').disabled).toBe(true);
+  expect(button('Apply profile').disabled).toBe(false);
   expect(reload).not.toHaveBeenCalled();
 });
 

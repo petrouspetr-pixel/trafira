@@ -2567,9 +2567,6 @@ msgstr "Настройки"
 msgid "Show differences"
 msgstr "Показать различия"
 
-msgid "Show differences before applying the selected profile."
-msgstr "Перед применением выбранного профиля проверьте различия."
-
 msgid "Show each device's routing status on the dashboard."
 msgstr "Показывать на дашборде, как маршрутизируется каждое устройство."
 
@@ -3871,3 +3868,12 @@ msgstr "Достигнут лимит запросов GitHub. Повторит�
 
 msgid "Service step: later rules choose the route"
 msgstr "Служебный этап: маршрут выбирают следующие правила"
+
+msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
+msgstr "При применении профиль проверяется автоматически. Просматривать различия необязательно."
+
+msgid "Active node"
+msgstr "Активный узел"
+
+msgid "Currently used"
+msgstr "Используется сейчас"
