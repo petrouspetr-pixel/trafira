@@ -7,8 +7,13 @@ if ! command -v unshare >/dev/null || ! command -v sudo >/dev/null || ! sudo -n 
   printf 'SKIP: private mount namespace requires root capability\n'
   exit 0
 fi
-WORK_DIR="$(mktemp -d "$ROOT_DIR/.bytecode-tmpfs.XXXXXX")"
-trap 'rmdir "$WORK_DIR"' EXIT
+temp_parent="${RUNNER_TEMP:-/var/tmp}"
+WORK_DIR="$(mktemp -d "$temp_parent/trafira-real-tmpfs.XXXXXX")"
+case "$WORK_DIR" in "$temp_parent"/trafira-real-tmpfs.*) ;; *) exit 1 ;; esac
+trap 'rm -rf "$WORK_DIR"' EXIT
+mkdir "$WORK_DIR/lib"
+cp -a "$LIB/." "$WORK_DIR/lib/"
+LIB="$WORK_DIR/lib"
 sudo -n unshare --mount --fork bash -s -- "$LIB" "$UCODE" "$WORK_DIR" <<'SH'
 set -euo pipefail
 lib="$1"; compiler="$2"; work="$3"
