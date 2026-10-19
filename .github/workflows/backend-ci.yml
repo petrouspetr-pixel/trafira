@@ -84,6 +84,21 @@ jobs:
           export TRAFIRA_COMPACT_RUNTIME=1
           printf '%s\0' tests/*.sh | xargs -0 -n1 -P4 bash -c 'bash "$1" || { status=$?; echo "FAILED compact sources: $1 (exit $status)" >&2; exit 1; }' _
 
+      - name: Test cache with current ucode runtime
+        shell: bash
+        run: |
+          current_root=$(mktemp -d /tmp/trafira-ucode-current.XXXXXX)
+          git clone https://github.com/ucode-lang/ucode.git "$current_root/source"
+          git -C "$current_root/source" checkout d2e8b8d2052778557ccca7e781d2ad423324961b
+          cmake -S "$current_root/source" -B "$current_root/build" \
+            -DCMAKE_INSTALL_PREFIX="$current_root/runtime" \
+            -DUBUS_SUPPORT=OFF -DUCI_SUPPORT=OFF -DULOOP_SUPPORT=OFF
+          cmake --build "$current_root/build" --parallel
+          cmake --install "$current_root/build"
+          PATH="$current_root/runtime/bin:$PATH" \
+          LD_LIBRARY_PATH="$current_root/runtime/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+            python3 -B tests/test_bytecode_cache.py
+
       - name: Upload installed size report
         if: always()
         uses: actions/upload-artifact@v4.6.2
