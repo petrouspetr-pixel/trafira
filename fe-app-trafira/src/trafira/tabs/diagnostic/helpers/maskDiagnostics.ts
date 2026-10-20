@@ -45,7 +45,6 @@ const TRAFIRA_MASK_AFTER_TOKEN = [
   'option reality_public_key',
   'option reality_short_id',
   'list reality_short_id',
-  'option yacd_secret_key',
 ];
 
 const TRAFIRA_MASK_AFTER_TOKEN_SPACE = [
@@ -151,6 +150,9 @@ function maskOptionPath(line: string, token: string) {
 
 function maskGlobalCheckLine(line: string) {
   let maskedLine = line;
+  const secretOption = line.match(/option[ \t]+([A-Za-z0-9_]*secret_key)[ \t]/);
+  if (secretOption)
+    maskedLine = maskAfterToken(maskedLine, `option ${secretOption[1]}`);
 
   for (const token of TRAFIRA_MASK_AFTER_TOKEN) {
     maskedLine = maskAfterToken(maskedLine, token);

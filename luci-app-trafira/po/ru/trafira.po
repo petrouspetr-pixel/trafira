@@ -215,9 +215,6 @@ msgstr "Разрешить прямой выход без VPN"
 msgid "Allowed domain prefixes are full:, keyword:, and regex:"
 msgstr "Разрешённые префиксы доменов: full:, keyword: и regex:"
 
-msgid "Allows access to YACD from the WAN. Make sure to open the appropriate port in your firewall."
-msgstr "Обеспечивает доступ к YACD из WAN. Убедитесь, что в брандмауэре открыт соответствующий порт."
-
 msgid "Allows limiting the list of servers for URLTest"
 msgstr "Позволяет ограничить список серверов для URLTest"
 
@@ -979,12 +976,6 @@ msgstr "При необходимости включить маршрутиза�
 
 msgid "Enable Output Network Interface"
 msgstr "Включить выходной сетевой интерфейс"
-
-msgid "Enable YACD"
-msgstr "Включить YACD"
-
-msgid "Enable YACD WAN Access"
-msgstr "Разрешить доступ к YACD из WAN"
 
 msgid "Enter a complete sing-box inbound object"
 msgstr "Введите полный объект inbound sing-box"
@@ -2402,9 +2393,6 @@ msgstr "Секунд с последнего переключения"
 msgid "Secret"
 msgstr "Секрет"
 
-msgid "Secret key for authenticating remote access to YACD when WAN access is enabled."
-msgstr "Секретный ключ для аутентификации удаленного доступа к YACD при включенном доступе через WAN."
-
 msgid "Section"
 msgstr "Секция"
 
@@ -3320,9 +3308,6 @@ msgstr "Данные о пирах WireGuard недоступны — списо
 msgid "XHTTP mode"
 msgstr "Режим XHTTP"
 
-msgid "YACD Secret Key"
-msgstr "Секретный ключ YACD"
-
 msgid "Yes"
 msgstr "Да"
 
@@ -3487,9 +3472,6 @@ msgstr "Указать реальный IP назначения"
 
 msgid "Proxy"
 msgstr "Прокси"
-
-msgid "If YACD asks for a backend, enter the router address shown in the link as Host and 9090 as Port. 127.0.0.1 refers to the computer running your browser."
-msgstr "Если YACD запрашивает подключение к серверу, укажите адрес роутера из ссылки в поле Host и 9090 в поле Port. Адрес 127.0.0.1 относится к компьютеру, на котором открыт браузер."
 
 msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and device routing bypass settings. This result alone does not identify which setting caused the bypass."
 msgstr "Проверка FakeIP DNS роутера пройдена, но браузерный тест не подтвердил FakeIP. Проверьте защищённый DNS браузера, VPN или прокси на устройстве и исключения маршрутизации устройств. Этот результат сам по себе не определяет, какая настройка вызвала обход."

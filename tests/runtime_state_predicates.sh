@@ -425,9 +425,6 @@ cat >"$WORK_DIR/sing-box-signature.json" <<'JSON'
     "config_path": "/etc/sing-box/custom.json",
     "log_level": "debug",
     "service_listen_address": "127.0.0.1",
-    "enable_yacd": "yes",
-    "enable_yacd_wan_access": "1",
-    "yacd_secret_key": "secret",
     "download_lists_via_proxy": "0",
     "download_subscriptions_via_proxy": "on",
     "download_components_via_proxy": "0",
@@ -598,12 +595,6 @@ debug
 127.0.0.1
 [runtime.mwan3_active]
 1
-[settings.enable_yacd]
-1
-[settings.enable_yacd_wan_access]
-1
-[settings.yacd_secret_key]
-secret
 [settings.download_lists_via_proxy]
 0
 [settings.download_components_via_proxy]

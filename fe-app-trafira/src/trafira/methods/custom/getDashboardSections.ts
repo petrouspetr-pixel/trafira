@@ -141,23 +141,14 @@ function getDisplayName(section: Trafira.ConfigSection) {
   return section.label || section['.name'];
 }
 
-function getSettingsSection(configSections: Trafira.ConfigSection[]) {
-  return configSections.find((section) => section['.type'] === 'settings');
-}
-
-function getClashApiSecret(configSections: Trafira.ConfigSection[]) {
-  return getSettingsSection(configSections)?.yacd_secret_key || '';
-}
-
 function canFetchClashApiDirectly() {
   return canUseDirectClashApi() && typeof fetch === 'function';
 }
 
-async function getClashApiProxies(
-  configSections: Trafira.ConfigSection[],
-): Promise<Trafira.MethodResponse<ClashAPI.Proxies>> {
+async function getClashApiProxies(): Promise<
+  Trafira.MethodResponse<ClashAPI.Proxies>
+> {
   if (canFetchClashApiDirectly()) {
-    const secret = getClashApiSecret(configSections);
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
@@ -166,7 +157,6 @@ async function getClashApiProxies(
 
     try {
       const response = await fetch(`${getClashHttpUrl()}/proxies`, {
-        headers: secret ? { Authorization: `Bearer ${secret}` } : undefined,
         signal: controller.signal,
       });
 
@@ -1435,7 +1425,7 @@ export async function getDashboardSections(
   const includeSubscriptionCopyState =
     options.includeSubscriptionCopyState ?? true;
   const configSections = hydrateConfigSections(await getConfigSections());
-  const clashProxies = await getClashApiProxies(configSections);
+  const clashProxies = await getClashApiProxies();
 
   if (!clashProxies.success || !clashProxies.data?.proxies) {
     return {

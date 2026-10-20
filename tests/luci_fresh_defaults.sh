@@ -17,7 +17,7 @@ function options(values) {
     form: {}, widgets: {}, _: s => s,
     L: {toArray: v => v == null ? [] : [].concat(v)},
     uci: {get: (_pkg, _section, key) => values[key]},
-    main: {TRAFIRA_UCI_PACKAGE:'trafira', DNS_SERVER_OPTIONS:{}, BOOTSTRAP_DNS_SERVER_OPTIONS:{}, getClashUIUrl: () => 'http://localhost:9090'},
+    main: {TRAFIRA_UCI_PACKAGE:'trafira', DNS_SERVER_OPTIONS:{}, BOOTSTRAP_DNS_SERVER_OPTIONS:{}},
     baseclass: {extend: x => x}
   };
   const api = vm.runInNewContext(`(function(){${settingsSource}})()`, context);

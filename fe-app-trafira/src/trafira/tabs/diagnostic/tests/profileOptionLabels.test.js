@@ -52,9 +52,7 @@ it('has a Russian translation for every known profile option caption', () => {
   expect(labels.settings.gaming_presets_enabled).toBe(
     'Включить игровые пресеты',
   );
-  expect(labels.settings.enable_yacd_wan_access).toBe(
-    'Разрешить доступ к YACD из WAN',
-  );
+  expect(labels.settings.exclude_ntp).toBe('Исключить NTP');
   expect(labels.options.failure_policy).toBe('Поведение при отказе VPN');
   expect(labels.options.community_lists).toBe('Встроенные наборы правил');
   for (const key of [

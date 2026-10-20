@@ -397,7 +397,8 @@ function trafira_config_masked_line(line) {
     line = mask_after_token_space(line, "option url");
     line = mask_option_path(line, "option dns_server '");
     line = mask_option_path(line, "list dns_server '");
-    line = mask_after_token(line, "option yacd_secret_key");
+    let secret_option = match(line, /option[ \t]+([A-Za-z0-9_]*secret_key)[ \t]/);
+    if (secret_option) line = mask_after_token(line, "option " + secret_option[1]);
 
     return line;
 }

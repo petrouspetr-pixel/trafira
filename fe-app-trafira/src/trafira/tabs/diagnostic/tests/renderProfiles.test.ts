@@ -393,7 +393,7 @@ it('uses the same option captions as LuCI for settings and routing sections', as
       },
       {
         section: 'settings',
-        option: 'enable_yacd_wan_access',
+        option: 'exclude_ntp',
         change: 'changed',
       },
       { section: 'awg3_ru_eu', option: 'failure_policy', change: 'changed' },
@@ -406,14 +406,14 @@ it('uses the same option captions as LuCI for settings and routing sections', as
   await click('Show differences');
   for (const label of [
     'Enable gaming presets',
-    'Enable YACD WAN Access',
+    'Exclude NTP',
     'VPN failure policy',
     'Built-in rule sets',
   ])
     expect(text(host)).toContain(label);
   for (const key of [
     'gaming_presets_enabled',
-    'enable_yacd_wan_access',
+    'exclude_ntp',
     'failure_policy',
     'community_lists',
   ])

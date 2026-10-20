@@ -20,7 +20,6 @@ export { parseValueList } from './helpers/parseValueList';
 export { getProxyUrlName } from './helpers/getProxyUrlName';
 export { injectGlobalStyles } from './helpers/injectGlobalStyles';
 export { showToast } from './helpers/showToast';
-export { getClashUIUrl } from './helpers/getClashApiUrl';
 export { TrafiraShellMethods } from './trafira/methods/shell';
 export { coreService } from './trafira/services/core.service';
 export { store } from './trafira/services/store.service';

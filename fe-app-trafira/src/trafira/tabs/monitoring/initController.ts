@@ -9,7 +9,6 @@ import {
 } from '../../../icons';
 import { CustomTrafiraMethods, TrafiraShellMethods } from '../../methods';
 import { getOutboundTagBySection } from '../../runtimeTags';
-import { getClashApiSecret } from '../../methods/custom/getClashApiSecret';
 import { logger, socket, store, StoreType } from '../../services';
 import { Trafira } from '../../types';
 import {
@@ -1416,7 +1415,6 @@ function startConnectionsPolling() {
 
 async function connectToConnectionsSocket(updatesId: number) {
   const mountId = monitoringMountId;
-  const clashApiSecret = await getClashApiSecret();
 
   if (
     !monitoringMounted ||
@@ -1427,7 +1425,7 @@ async function connectToConnectionsSocket(updatesId: number) {
     return;
   }
 
-  connectionsSocketUrl = `${getClashWsUrl()}/connections?token=${clashApiSecret}`;
+  connectionsSocketUrl = `${getClashWsUrl()}/connections`;
 
   socket.subscribe(
     connectionsSocketUrl,
