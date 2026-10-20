@@ -79,7 +79,14 @@ function field(text,key) {
 function package_matches(name,version,arch,candidate) {
     let expected=candidate.variant=="tiny"?"sing-box-tiny":candidate.variant=="extended"?"sing-box-extended":"sing-box";
     if(name!=expected || arch!=candidate.architecture)return false;
-    return version==candidate.version || (candidate.variant=="extended" && replace(version,/(-r[0-9]+|-[0-9]+)$/,"")==candidate.version);
+    if(version==candidate.version || (candidate.variant=="extended" && replace(version,/(-r[0-9]+|-[0-9]+)$/,"")==candidate.version))return true;
+    // APK package versions encode the Extended build as numeric components,
+    // e.g. 1.14.3.2.7.3-r0; the release and executable retain -extended-.
+    // Keep architecture/name checks above and the executable version check below.
+    if(candidate.variant!="extended" || candidate.package_type!="apk" ||
+       !match(candidate.version,/^[0-9]+[.][0-9]+[.][0-9]+-extended-[0-9]+([.][0-9]+)*$/))return false;
+    let numeric=match(version,/^([0-9]+([.][0-9]+)*)-r[0-9]+$/);
+    return numeric!=null && numeric[1]==replace(candidate.version,/-extended-/,".");
 }
 function stage_ipk(file,candidate,directory) {
     let outer=archive_members(file);if(!outer)return failure("unsafe_archive");

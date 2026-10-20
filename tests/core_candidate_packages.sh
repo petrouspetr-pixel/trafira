@@ -62,3 +62,25 @@ ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
 let s=require("components.core_candidate"),root=getenv("CORE_CANDIDATE_TEST");
 assert(s.stage(root+"/revision.ipk",{version:"1.14.2-1",variant:"stable",repository_package:"sing-box",architecture:"aarch64",package_type:"ipk"},root+"/ipk-revision-stage").success,"opkg revision stripped only for binary comparison");
 '
+
+# Real Extended release uses numeric APK metadata, but textual binary versions.
+mkdir -p "$WORK_DIR/extended-stage" "$WORK_DIR/extended-mismatch-stage"
+printf '#!/bin/sh\necho "sing-box version 1.14.3-extended-2.7.3"\n' >"$WORK_DIR/data/usr/bin/sing-box"
+cat >"$WORK_DIR/apk-metadata" <<'TEXT'
+info:
+  name: sing-box-extended
+  version: 1.14.3.2.7.3-r0
+  arch: aarch64
+  installed-size: 100
+paths:
+  - name: usr/bin
+    files:
+      - name: sing-box
+TEXT
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
+let fs=require("fs"),s=require("components.core_candidate"),root=getenv("CORE_CANDIDATE_TEST");
+let candidate={version:"1.14.3-extended-2.7.3",variant:"extended",architecture:"aarch64",package_type:"apk"};
+assert(s.stage(root+"/valid.apk",candidate,root+"/extended-stage").success,"numeric Extended APK metadata maps to release, binary version remains exact");
+fs.writefile(root+"/data/usr/bin/sing-box","#!/bin/sh\necho \"sing-box version 1.14.4-extended-2.7.3\"\n");
+assert(s.stage(root+"/valid.apk",candidate,root+"/extended-mismatch-stage").error=="candidate_version_mismatch","matching metadata cannot bypass executable version check");
+'

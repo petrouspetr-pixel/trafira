@@ -1958,19 +1958,24 @@ function fail_package_sing_box_install(action, tiny, reason, current_version, la
     action_fail("sing_box", action, prefix + " " + reason + " and previous sing-box variant could not be restored", current_version, latest_version);
 }
 
+function ram_prepare_failure(stage, error) {
+    install_failure_detail = stage + "/" + error;
+    return null;
+}
+
 function prepare_ram_extended_update(package_file, release) {
     let hash = require("singbox.provenance").hash_file;
     let config_digest = hash(CONFIG_FILE);
     if (!config_digest)
-        return null;
+        return ram_prepare_failure("configuration_digest", "read_failed");
     let directory = tmp_dir + "/ram-core";
     if (!fs.mkdir(directory, 448))
-        return null;
+        return ram_prepare_failure("private_directory", "create_failed");
     // Selected-version actions already validated this exact private archive.
     if (!selected_core) {
         let binary_dir = directory + "/candidate", config_dir = directory + "/config";
         if (!fs.mkdir(binary_dir, 448) || !fs.mkdir(config_dir, 448))
-            return null;
+            return ram_prepare_failure("candidate_directory", "create_failed");
         let candidate = {
             variant: "extended", architecture: read_openwrt_release_value("DISTRIB_ARCH"),
             package_type: is_apk() ? "apk" : "ipk", version: normalize_sing_box_version(release.tag),
@@ -1978,16 +1983,18 @@ function prepare_ram_extended_update(package_file, release) {
         };
         let core = require("components.core_candidate").stage(package_file, candidate, binary_dir);
         if (!core.success)
-            return null;
+            return ram_prepare_failure("candidate", core.error || "unknown_error");
         let profile = require("config.profile_runtime");
         let read = profile.read_document(CONFIG_FILE, config_dir, "Core preflight");
         if (!read.success)
-            return null;
+            return ram_prepare_failure("configuration_read", read.error || "read_failed");
         let prepared = profile.prepare(read.document, config_dir);
-        if (!prepared.success || !profile.hooks(read.document, config_dir, core).validate(prepared.path))
-            return null;
+        if (!prepared.success)
+            return ram_prepare_failure("configuration_prepare", prepared.error || "prepare_failed");
+        if (!profile.hooks(read.document, config_dir, core).validate(prepared.path))
+            return ram_prepare_failure("configuration_check", "check_failed");
         if (!command_success_from_args([ "rm", "-rf", binary_dir, config_dir ]))
-            return null;
+            return ram_prepare_failure("candidate_cleanup", "remove_failed");
     }
     return { files: [], directory, config_digest };
 }
@@ -2092,7 +2099,7 @@ function install_sing_box_extended_package(action) {
     if (ram_extended_update_eligible("sing_box", action)) {
         ram_backup = prepare_ram_extended_update(package_file, release);
         if (!ram_backup)
-            action_fail("sing_box", action, "Cannot prepare verified Extended rollback in RAM; running service was not changed", current_version, latest_version);
+            action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
     }
     if (!stage_previous_sing_box_package(current_variant, action))
         action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
