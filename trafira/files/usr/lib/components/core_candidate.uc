@@ -76,6 +76,11 @@ function field(text,key) {
     }
     return "";
 }
+function extended_apk_version_matches(version,release_version) {
+    if(!match(release_version,/^[0-9]+[.][0-9]+[.][0-9]+-extended-[0-9]+([.][0-9]+)*$/))return false;
+    let numeric=match(version,/^([0-9]+([.][0-9]+)*)-r[0-9]+$/);
+    return numeric!=null && numeric[1]==replace(release_version,/-extended-/,".");
+}
 function package_matches(name,version,arch,candidate) {
     let expected=candidate.variant=="tiny"?"sing-box-tiny":candidate.variant=="extended"?"sing-box-extended":"sing-box";
     if(name!=expected || arch!=candidate.architecture)return false;
@@ -83,10 +88,8 @@ function package_matches(name,version,arch,candidate) {
     // APK package versions encode the Extended build as numeric components,
     // e.g. 1.14.3.2.7.3-r0; the release and executable retain -extended-.
     // Keep architecture/name checks above and the executable version check below.
-    if(candidate.variant!="extended" || candidate.package_type!="apk" ||
-       !match(candidate.version,/^[0-9]+[.][0-9]+[.][0-9]+-extended-[0-9]+([.][0-9]+)*$/))return false;
-    let numeric=match(version,/^([0-9]+([.][0-9]+)*)-r[0-9]+$/);
-    return numeric!=null && numeric[1]==replace(candidate.version,/-extended-/,".");
+    return candidate.variant=="extended" && candidate.package_type=="apk" &&
+        extended_apk_version_matches(version,candidate.version);
 }
 function stage_ipk(file,candidate,directory) {
     let outer=archive_members(file);if(!outer)return failure("unsafe_archive");
@@ -141,4 +144,4 @@ function stage(file,candidate,directory) {
     if(candidate.package_type=="apk")return stage_apk(file,candidate,directory);
     return failure("unsupported_package_preflight");
 }
-return {stage,safe_path};
+return {stage,safe_path,extended_apk_version_matches};

@@ -1685,6 +1685,13 @@ function stage_rollback_archive(name, version, directory) {
     if (name != "sing-box-extended")
         return null;
     let upstream_version = replace(version, /-r?[0-9]+$/, "");
+    // The executable identifies the release unambiguously; only trust it if
+    // its numeric APK representation exactly matches the installed package.
+    if (is_apk()) {
+        let executable_version = normalize_sing_box_version(sing_box_runtime_output("version", []));
+        if (require("components.core_candidate").extended_apk_version_matches(version, executable_version))
+            upstream_version = executable_version;
+    }
     for (let tag in [ "v" + upstream_version, upstream_version ]) {
         let metadata = http_get("https://api.github.com/repos/shtorm-7/sing-box-extended/releases/tags/" + tag);
         let release = set_sing_box_extended_release_from_json(metadata, false);
