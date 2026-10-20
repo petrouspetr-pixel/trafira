@@ -65,6 +65,10 @@ function fail(message) {
 }
 
 const retiredMissingCurrent = new Set([
+  // External web panel removed; the LAN controller remains internal to Trafira.
+  "enable_yacd",
+  "enable_yacd_wan_access",
+  "yacd_secret_key",
   "urltest_hide_filtered_outbounds",
   // These old-project fields were only referenced by the removed Podkop
   // importer. Transitions now require manual configuration; keep the rest
