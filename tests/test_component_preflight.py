@@ -45,6 +45,13 @@ function updates_response(success,component,action,message,current,latest,change
 
 
 class ComponentPreflightTests(unittest.TestCase):
+    def test_guard_is_declared_before_all_install_and_rollback_callers(self):
+        source = (ROOT / 'trafira/files/usr/lib/components/action.uc').read_text(encoding='utf-8')
+        declaration = source.index('function ensure_install_storage(')
+        calls = list(re.finditer(r'(?<!function )\bensure_install_storage\(', source))
+        self.assertTrue(calls)
+        self.assertTrue(all(declaration < call.start() for call in calls))
+
     def test_extended_free_space_failure_is_structured_and_cleans_up(self):
         result = run_ucode(storage_fixture(21 * 1048576, 'extended'))
         self.assertEqual(result.returncode, 1, result.stderr.decode())
