@@ -24,14 +24,14 @@ let log_message = (message, level) => null;
 UC
 sed -n '/^function download_to_file(/,/^}/p' "$ROOT_DIR/trafira/files/usr/lib/components/updates.uc" >>"$WORK_DIR/test.uc"
 printf '\nexit(download_to_file(ARGV[0], ARGV[1], ARGV[2]) ? 0 : 1);\n' >>"$WORK_DIR/test.uc"
-ucode "$WORK_DIR/test.uc" https://example.com/list "$WORK_DIR/list" ''
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$WORK_DIR/test.uc" https://example.com/list "$WORK_DIR/list" ''
 grep -Eq -- '--max-time [1-9][0-9]*' "$DOWNLOAD_LOG"
 grep -Fq -- '--fail' "$DOWNLOAD_LOG"
 grep -Fq -- '--connect-timeout' "$DOWNLOAD_LOG"
-ucode "$WORK_DIR/test.uc" https://example.com/list "$WORK_DIR/list" 127.0.0.1:1604
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$WORK_DIR/test.uc" https://example.com/list "$WORK_DIR/list" 127.0.0.1:1604
 grep -Fq -- '--proxy http://127.0.0.1:1604' "$DOWNLOAD_LOG"
 : >"$DOWNLOAD_LOG"
-if DOWNLOAD_EXIT=28 ucode "$WORK_DIR/test.uc" https://example.com/list "$WORK_DIR/list" ''; then
+if DOWNLOAD_EXIT=28 ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$WORK_DIR/test.uc" https://example.com/list "$WORK_DIR/list" ''; then
   printf 'FAIL: timed out downloads reported success\n' >&2
   exit 1
 fi
