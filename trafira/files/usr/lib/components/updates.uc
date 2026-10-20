@@ -268,6 +268,17 @@ function file_last_nonblank_line_value(path, fallback, max_chars) {
     return text_first_chars(result, max_chars);
 }
 
+function file_error_message_value(path, fallback, max_chars) {
+    let data = fs.readfile(path);
+    // Interpreter traces end with a source pointer, which is not the error.
+    for (let line in split(as_string(data), "\n")) {
+        line = trim(line);
+        if (match(line, /^(Type error|Syntax error|Reference error|Runtime error|Error|ERROR):/) != null)
+            return text_first_chars(line, max_chars);
+    }
+    return file_last_nonblank_line_value(path, fallback, max_chars);
+}
+
 function array_or_empty(value) {
     return type(value) == "array" ? value : [];
 }
@@ -1705,7 +1716,7 @@ function finish_component_job(path, component, action, exit_code, output_file) {
         ok = write_state_file(path, value);
     }
     else {
-        let raw_output = file_last_nonblank_line_value(output_file, "Failed to execute", 240);
+        let raw_output = file_error_message_value(output_file, "Failed to execute", 240);
         ok = write_state_file(path, component_fallback_job_state(component, action, raw_output, exit_code, updated_at));
     }
 
