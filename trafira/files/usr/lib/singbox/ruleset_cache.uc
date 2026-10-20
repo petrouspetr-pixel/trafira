@@ -16,6 +16,14 @@ function output(cmd) {
     return pipe.close() == 0 ? trim(data || "") : "";
 }
 function success(args) { return system(command(args) + " >/dev/null 2>&1") == 0; }
+function download_status(args) {
+    let pipe = fs.popen(command(args) + " 2>/dev/null", "r");
+    if (!pipe) return { code: -1, http_status: null };
+    // curl writes its body to the bounded temporary file; stdout is only a code.
+    let text = trim(pipe.read(32) || ""), code = pipe.close();
+    return { code: code == null || code < 0 ? -1 : code > 255 ? int(code / 256) : code,
+        http_status: match(text, /^[1-5][0-9][0-9]$/) ? int(text) : null };
+}
 function warning(message) { warn("Rule-set startup cache: ", message, "\n"); }
 function size(path) {
     let info = fs.lstat(path);
@@ -66,20 +74,28 @@ function space_ok(bytes) {
     let fields = split(trim(rows[length(rows) - 1] || ""), /[ \t]+/);
     return length(fields) >= 4 && int(fields[3]) * 1024 >= bytes + RESERVE;
 }
-function save_locked(rule, file, session) {
+function failure(diagnostic, reason) {
+    if (type(diagnostic) == "object") diagnostic.reason = reason;
+    return false;
+}
+function save_locked(rule, file, session, diagnostic) {
     let target = path(rule);
-    if (!target || !validate(rule, file, session)) return false;
+    if (!target) return failure(diagnostic, "invalid_source");
+    if (size(file) <= 0) return failure(diagnostic, "empty_download");
+    if (size(file) > MAX_FILE) return failure(diagnostic, "file_size_limit");
+    if (!validate(rule, file, session)) return failure(diagnostic, "invalid_rule_set");
     if (success(["cmp", "-s", file, target])) return true;
-    if (!success(["mkdir", "-p", CACHE_DIR]) || !success(["chmod", "700", CACHE_DIR])) return false;
+    if (!success(["mkdir", "-p", CACHE_DIR]) || !success(["chmod", "700", CACHE_DIR])) return failure(diagnostic, "cache_directory_failed");
     let bytes = size(file);
     // Bound the final cache, but reserve physical space for the entire staged
     // copy while the old file still exists. Full caches must remain updatable.
-    if (usage() - size(target) + bytes > MAX_TOTAL || !space_ok(bytes)) return false;
+    if (usage() - size(target) + bytes > MAX_TOTAL) return failure(diagnostic, "cache_quota_exceeded");
+    if (!space_ok(bytes)) return failure(diagnostic, "insufficient_space");
     let staged = output(command(["mktemp", CACHE_DIR + "/.stage.XXXXXX"]));
-    if (!staged) return false;
+    if (!staged) return failure(diagnostic, "staging_failed");
     let ok = success(["cp", file, staged]) && success(["chmod", "600", staged]) && fs.rename(staged, target);
     fs.unlink(staged);
-    return !!ok;
+    return ok ? true : failure(diagnostic, "write_failed");
 }
 function cache_lock() {
     if (!success(["mkdir", "-p", CACHE_DIR]) || !success(["chmod", "700", CACHE_DIR])) return null;
@@ -88,11 +104,12 @@ function cache_lock() {
     if (!lock.lock("x")) { lock.close(); return null; }
     return lock;
 }
-function save(rule, file, session) {
+function save(rule, file, session, diagnostic) {
     let lock = cache_lock();
-    if (!lock) return false;
+    if (!lock) return failure(diagnostic, "cache_lock_failed");
     let ok = false;
-    try { ok = save_locked(rule, file, session); } catch (e) {}
+    try { ok = save_locked(rule, file, session, diagnostic); }
+    catch (e) { failure(diagnostic, "internal_error"); }
     lock.close();
     return ok;
 }
@@ -115,7 +132,26 @@ function protect(config, session) {
     lock.close();
     return ok;
 }
-function refresh(config, proxy) {
+function download_reason(code) {
+    let reasons = { "6": "dns_resolution_failed", "7": "connection_failed", "22": "http_error",
+        "23": "download_write_failed", "28": "download_timeout", "35": "tls_failed",
+        "60": "certificate_failed", "63": "file_size_limit" };
+    return reasons["" + code] || "download_failed";
+}
+function notify_failure(report, rule, stage, reason, code, previous, http_status) {
+    // Tags are useful identifiers; URLs and free-form stderr can contain secrets.
+    let tag = "" + (rule.tag || "unnamed");
+    tag = match(tag, /:\/\/|[?@]/) ? "custom-list" : substr(replace(tag, /[\r\n\t]/g, " "), 0, 160);
+    let event = { tag, stage, reason, code: code == null ? null : code,
+        http_status, previous_snapshot: previous ? "kept" : "missing" };
+    if (type(report) == "function") {
+        try { report(event); return; } catch (e) {}
+    }
+    warning("list=" + tag + " stage=" + stage + " reason=" + reason +
+        (code == null ? "" : " exit=" + code) + (http_status == null ? "" : " http=" + http_status) +
+        "; previous snapshot " + event.previous_snapshot);
+}
+function refresh(config, proxy, report) {
     let rules = filter(common.array_or_empty(config.route && config.route.rule_set),
         (rule) => rule.type == "remote" && rule.http_client != null);
     // Legacy configurations cannot use initial_path; do not download unused copies.
@@ -127,7 +163,10 @@ function refresh(config, proxy) {
         if (rule.initial_path) active[rule.initial_path] = true;
     }
     let guard = cache_lock();
-    if (!guard) return false;
+    if (!guard) {
+        for (let rule in rules) notify_failure(report, rule, "cache", "cache_lock_failed", null, size(path(rule)) > 0);
+        return false;
+    }
     // Bootstrap can prepare another configuration while the current core runs.
     // Keep newly published snapshots past its bounded 90-second preparation and
     // publication window, even if this worker captured the previous config.
@@ -144,17 +183,23 @@ function refresh(config, proxy) {
     let ok = true;
     for (let rule in rules) {
         let target = path(rule);
-        if (!target || seen[target]) continue;
+        if (!target) { notify_failure(report, rule, "prepare", "invalid_source", null, false); ok = false; continue; }
+        if (seen[target]) continue;
         seen[target] = true;
+        let previous = size(target) > 0;
         let tmp = output("mktemp /tmp/trafira-ruleset-download.XXXXXX");
-        if (!tmp) { ok = false; continue; }
+        if (!tmp) { notify_failure(report, rule, "prepare", "temporary_file_failed", null, previous); ok = false; continue; }
         let args = ["curl", "--fail", "--location", "--silent", "--show-error", "--connect-timeout", "10",
             "--max-time", "30", "--max-filesize", "" + MAX_FILE, "--output", tmp];
         if (proxy) push(args, "--proxy", "http://" + proxy, "--noproxy", "");
         else push(args, "--noproxy", "*");
-        push(args, rule.url);
-        if (!success(args) || !save(rule, tmp)) {
-            warning("could not refresh '" + rule.tag + "'; keeping its previous snapshot (download, validation or storage limit)");
+        push(args, "--write-out", "%{http_code}", rule.url);
+        let result = download_status(args), code = result.code, diagnostic = {};
+        if (code != 0 || !save(rule, tmp, null, diagnostic)) {
+            let reason = diagnostic.reason || "cache_failed";
+            let stage = match(reason, /^(invalid_rule_set|empty_download|file_size_limit)$/) ? "validation" : "storage";
+            notify_failure(report, rule, code != 0 ? "download" : stage,
+                code != 0 ? download_reason(code) : reason, code != 0 ? code : null, previous, result.http_status);
             ok = false;
         }
         fs.unlink(tmp);
@@ -184,4 +229,4 @@ function report(config, version) {
         entries, total_bytes: usage(), quota_bytes: MAX_TOTAL, max_file_bytes: MAX_FILE };
 }
 
-return { apply, save, refresh, path, report, validate, protect };
+return { apply, save, refresh, path, report, validate, protect, download_status, download_reason };

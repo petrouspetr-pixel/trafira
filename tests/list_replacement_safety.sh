@@ -7,7 +7,7 @@ node - "$ROOT_DIR/trafira/files/usr/lib/components/updates.uc" "$WORK_DIR/test.u
 const fs = require('fs');
 const [sourcePath, target] = process.argv.slice(2);
 const source = fs.readFileSync(sourcePath, 'utf8');
-const names = ['domain_ip_list_ruleset_path','reset_domain_ip_list_ruleset','cleanup_empty_ruleset',
+const names = ['list_reference_label','domain_ip_list_ruleset_path','reset_domain_ip_list_ruleset','cleanup_empty_ruleset',
   'add_plain_subnet_file_to_nft_for_section','import_domain_ip_list_file_into_rulesets',
   'import_domain_ip_list_reference_into_rulesets','rebuild_domain_ip_lists_from_rule'];
 const bodies = names.map(name => {const start=source.indexOf(`function ${name}(`);if(start<0)throw Error(name);return {start,code:source.slice(start,source.indexOf('\n}',start)+2)};}).sort((a,b)=>a.start-b.start);
