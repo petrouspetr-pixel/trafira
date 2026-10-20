@@ -70,3 +70,37 @@ it('uses the shipped Russian catalog for component notifications', () => {
     translations['Failed to execute'],
   );
 });
+
+it('translates RAM update preparation errors from the shipped catalog', () => {
+  const translations = Object.fromEntries(
+    [...catalog.matchAll(/msgid "([^"\n]+)"\nmsgstr "([^"\n]+)"/g)].map((m) => [
+      m[1],
+      m[2],
+    ]),
+  );
+  vi.stubGlobal('_', (text: string) => translations[text] || text);
+  expect(
+    componentErrorMessage(
+      'Cannot prepare verified Extended rollback in RAM; running service was not changed',
+    ),
+  ).toBe(
+    'Не удалось проверить обновление Extended в RAM. Работающая служба не изменена.',
+  );
+  expect(
+    componentErrorMessage(
+      'Cannot preserve verified Extended rollback in RAM; running service was not changed',
+    ),
+  ).toBe(
+    'Не хватает ресурсов для безопасного отката Extended в RAM. Работающая служба не изменена.',
+  );
+  expect(
+    componentErrorMessage(
+      'Previous sing-box process did not stop; existing package files were not removed',
+    ),
+  ).toBe(
+    'Предыдущий процесс sing-box не остановился. Файлы установленного пакета сохранены.',
+  );
+  expect(
+    componentErrorMessage('Cannot finish already installed core selection'),
+  ).toBe('Не удалось завершить выбор уже установленной версии sing-box.');
+});

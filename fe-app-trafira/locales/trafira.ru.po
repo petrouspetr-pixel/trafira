@@ -3865,3 +3865,15 @@ msgstr "Недоступен"
 
 msgid "The last connection check failed. Repeat the latency test to check availability."
 msgstr "Последняя проверка соединения завершилась неудачно. Повторите проверку задержки, чтобы уточнить доступность."
+
+msgid "Cannot prepare verified Extended rollback in RAM; running service was not changed"
+msgstr "Не удалось проверить обновление Extended в RAM. Работающая служба не изменена."
+
+msgid "Cannot preserve verified Extended rollback in RAM; running service was not changed"
+msgstr "Не хватает ресурсов для безопасного отката Extended в RAM. Работающая служба не изменена."
+
+msgid "Previous sing-box process did not stop; existing package files were not removed"
+msgstr "Предыдущий процесс sing-box не остановился. Файлы установленного пакета сохранены."
+
+msgid "Cannot finish already installed core selection"
+msgstr "Не удалось завершить выбор уже установленной версии sing-box."

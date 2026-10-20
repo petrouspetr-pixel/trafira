@@ -5293,3 +5293,15 @@ msgstr ""
 
 msgid "The last connection check failed. Repeat the latency test to check availability."
 msgstr ""
+
+msgid "Cannot prepare verified Extended rollback in RAM; running service was not changed"
+msgstr ""
+
+msgid "Cannot preserve verified Extended rollback in RAM; running service was not changed"
+msgstr ""
+
+msgid "Previous sing-box process did not stop; existing package files were not removed"
+msgstr ""
+
+msgid "Cannot finish already installed core selection"
+msgstr ""

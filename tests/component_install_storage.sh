@@ -47,6 +47,7 @@ for (const component of ['sing_box', 'trafira', 'zapret', 'zapret2', 'byedpi']) 
     const checked = [];
     const context = {
         int, install_storage_required_bytes, install_storage_error,
+        ram_extended_update_eligible: () => false,
         file_exists: () => true,
         sing_box_runtime_output: () => 'tiny',
         filesystem_available_bytes: path => { checked.push(path); return path === '/opt' ? 0 : 12 * MiB; },

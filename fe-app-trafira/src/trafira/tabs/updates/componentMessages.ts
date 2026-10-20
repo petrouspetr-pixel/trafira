@@ -28,6 +28,22 @@ export function componentSuccessMessage(
 // and transient RPC failures. Keep additional package-manager details intact.
 export function componentErrorMessage(message: string) {
   const translations: Record<string, string> = {
+    'Cannot prepare verified Extended rollback in RAM; running service was not changed':
+      _(
+        'Cannot prepare verified Extended rollback in RAM; running service was not changed',
+      ),
+    'Cannot preserve verified Extended rollback in RAM; running service was not changed':
+      _(
+        'Cannot preserve verified Extended rollback in RAM; running service was not changed',
+      ),
+    'Previous sing-box process did not stop; existing package files were not removed':
+      _(
+        'Previous sing-box process did not stop; existing package files were not removed',
+      ),
+    'Cannot finish already installed core selection': _(
+      'Cannot finish already installed core selection',
+    ),
+
     'GitHub request limit reached. Try again later.': _(
       'GitHub request limit reached. Try again later.',
     ),

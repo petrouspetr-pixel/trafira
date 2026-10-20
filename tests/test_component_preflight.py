@@ -22,12 +22,14 @@ def run_ucode(source):
     return subprocess.run(['ucode', '-'], input=source.encode(), capture_output=True, timeout=15)
 
 
-def storage_fixture(available, variant):
+def storage_fixture(available, variant, owned=False):
     source = (ROOT / 'trafira/files/usr/lib/components/action.uc').read_text(encoding='utf-8')
     setup = '''
 let LIB_DIR="/fixture", github_error=null, selected_core=null, selected_request=null;
 let selected_result={}, selected_error="", trafira_stopped_for_sing_box_change=false;
 let retain_rollback_files=false;
+let fs={lstat:()=>({type:"file"})};
+function pkg_is_installed(name){return OWNED;}
 function file_exists(path) {return true;}
 function filesystem_available_bytes(path) {return AVAILABLE;}
 function module_output(args) {return VARIANT;}
@@ -37,10 +39,10 @@ function cleanup_action() {print("CLEANUP\\n");}
 function updates_response(success,component,action,message,current,latest,changed,status,url) {
     print(sprintf("%J\\n",{success,component,action,message}));
 }
-'''.replace('AVAILABLE', str(available)).replace('VARIANT', json.dumps(variant))
+'''.replace('AVAILABLE', str(available)).replace('VARIANT', json.dumps(variant)).replace('OWNED', 'true' if owned else 'false')
     return setup + declarations(source, {
         'as_string', 'install_storage_required_bytes', 'install_storage_error',
-        'ensure_install_storage', 'sing_box_runtime_output', 'action_fail',
+        'ensure_install_storage', 'sing_box_runtime_output', 'action_fail', 'ram_extended_update_eligible',
     }) + '\nensure_install_storage("sing_box","install",0); print("PROCEED\\n");\n'
 
 
@@ -69,6 +71,14 @@ class ComponentPreflightTests(unittest.TestCase):
                 result = run_ucode(storage_fixture(available, variant))
                 self.assertEqual(result.returncode, 0, result.stderr.decode())
                 self.assertEqual(result.stdout, b'PROCEED\n')
+
+    def test_package_owned_extended_can_use_ram_with_limited_flash(self):
+        result = run_ucode(storage_fixture(int(13.13 * 1048576), 'extended', owned=True))
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(result.stdout, b'PROCEED\n')
+        result = run_ucode(storage_fixture(7 * 1048576, 'extended', owned=True))
+        self.assertEqual(result.returncode, 1, result.stderr.decode())
+        self.assertIn(b'8 MiB required', result.stdout)
 
     def test_component_failure_keeps_error_not_ucode_pointer(self):
         source = (ROOT / 'trafira/files/usr/lib/components/updates.uc').read_text(encoding='utf-8')
