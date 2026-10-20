@@ -41,8 +41,6 @@ export function profileOptionLabels(): Record<string, Record<string, string>> {
       download_lists_via_proxy_section: _('Download lists through'),
       enable_badwan_interface_monitoring: _('Interface Monitoring'),
       enable_output_network_interface: _('Enable Output Network Interface'),
-      enable_yacd: _('Enable YACD'),
-      enable_yacd_wan_access: _('Enable YACD WAN Access'),
       exclude_bittorrent: _('Bypass BitTorrent'),
       exclude_ntp: _('Exclude NTP'),
       exclude_wifi_calling: _('Bypass Wi-Fi Calling'),
@@ -56,7 +54,6 @@ export function profileOptionLabels(): Record<string, Record<string, string>> {
       shutdown_correctly: _('Clean shutdown state'),
       source_network_interfaces: _('Source Network Interface'),
       update_interval: _('List Update Frequency'),
-      yacd_secret_key: _('YACD Secret Key'),
     },
     options: {
       '.type': _('Section type'),

@@ -296,10 +296,6 @@ msgstr ""
 msgid "Allowed domain prefixes are full:, keyword:, and regex:"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:499
-msgid "Allows access to YACD from the WAN. Make sure to open the appropriate port in your firewall."
-msgstr ""
-
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:2641
 msgid "Allows limiting the list of servers for URLTest"
 msgstr ""
@@ -1386,14 +1382,6 @@ msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:380
 msgid "Enable Output Network Interface"
-msgstr ""
-
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:489
-msgid "Enable YACD"
-msgstr ""
-
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:498
-msgid "Enable YACD WAN Access"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/server.js:2582
@@ -3413,10 +3401,6 @@ msgstr ""
 msgid "Secret"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:511
-msgid "Secret key for authenticating remote access to YACD when WAN access is enabled."
-msgstr ""
-
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:397
 #: src/trafira/tabs/dashboard/renderFailurePolicies.ts:51
 #: src/trafira/tabs/diagnostic/renderProfiles.ts:498
@@ -4737,10 +4721,6 @@ msgstr ""
 msgid "XHTTP mode"
 msgstr ""
 
-#: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:510
-msgid "YACD Secret Key"
-msgstr ""
-
 #: src/trafira/tabs/dashboard/initController.ts:799
 msgid "Yes"
 msgstr ""
@@ -4922,9 +4902,6 @@ msgid "Enter the real destination IP"
 msgstr ""
 
 msgid "Proxy"
-msgstr ""
-
-msgid "If YACD asks for a backend, enter the router address shown in the link as Host and 9090 as Port. 127.0.0.1 refers to the computer running your browser."
 msgstr ""
 
 msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and device routing bypass settings. This result alone does not identify which setting caused the bypass."

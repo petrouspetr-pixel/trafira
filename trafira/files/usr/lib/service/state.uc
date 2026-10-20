@@ -1453,13 +1453,6 @@ function sing_box_signature_body(settings, sections, servers, mwan3_active) {
     body = signature_add_value(body, "settings.service_listen_address", option(settings, "service_listen_address", ""));
     body = signature_add_value(body, "runtime.mwan3_active", bool_value(mwan3_active));
 
-    let enable_yacd = bool_option_value(settings, "enable_yacd", false);
-    body = signature_add_value(body, "settings.enable_yacd", enable_yacd);
-    if (enable_yacd == "1") {
-        body = signature_add_value(body, "settings.enable_yacd_wan_access", bool_option_value(settings, "enable_yacd_wan_access", false));
-        body = signature_add_value(body, "settings.yacd_secret_key", option(settings, "yacd_secret_key", ""));
-    }
-
     body = signature_add_value(body, "settings.download_lists_via_proxy", bool_option_value(settings, "download_lists_via_proxy", false));
     body = signature_add_value(body, "settings.download_components_via_proxy", bool_option_value(settings, "download_components_via_proxy", false));
     if (download_via_proxy_enabled(settings, "lists"))

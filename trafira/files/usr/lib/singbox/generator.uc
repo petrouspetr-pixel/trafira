@@ -424,7 +424,7 @@ function ensure_custom_ruleset(config, reference) {
 }
 
 function clash_api_config(settings, service_address) {
-    return require("singbox.clash_ui").config(settings, service_address);
+    return require("singbox.clash_api").config(settings, service_address);
 }
 
 function cli_bool(value) {

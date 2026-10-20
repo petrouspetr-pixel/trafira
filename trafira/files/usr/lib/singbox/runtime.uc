@@ -831,10 +831,9 @@ function init_config(populate_nft, caches_prepared, no_refresh, prepared_deferre
     }
     log_file_lines(runtime_log, "warn", "sing-box config generator: ");
 
-    // Check the saved UI flag again at the publication boundary. Never keep
-    // stale panel settings merely because the generator reused an old API.
-    if(!require("singbox.clash_ui").reconcile(temp_config,settings,service_listen_address_value(settings))) {
-        log_message("Cannot reconcile YACD configuration and runtime metadata", "fatal");
+    // Normalize the local API before binding runtime metadata.
+    if(!require("singbox.clash_api").reconcile(temp_config,settings,service_listen_address_value(settings))) {
+        log_message("Cannot reconcile local API configuration and runtime metadata", "fatal");
         remove_files([temp_config,runtime_log]);exit(1);
     }
 

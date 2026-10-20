@@ -28,7 +28,6 @@ import {
   renderWidget,
 } from './partials';
 import { fetchServicesInfo } from '../../fetchers/fetchServicesInfo';
-import { getClashApiSecret } from '../../methods/custom/getClashApiSecret';
 import { Trafira } from '../../types';
 import {
   getCachedRuntimeUiState,
@@ -500,7 +499,6 @@ function stopActionStateWatcher() {
 
 async function connectToClashSockets(dataUpdatesId: number) {
   const mountId = dashboardMountId;
-  const clashApiSecret = await getClashApiSecret();
 
   if (
     !dashboardMounted ||
@@ -512,7 +510,7 @@ async function connectToClashSockets(dataUpdatesId: number) {
   }
 
   socket.subscribe(
-    `${getClashWsUrl()}/traffic?token=${clashApiSecret}`,
+    `${getClashWsUrl()}/traffic`,
     (msg) => {
       if (
         dataUpdatesId !== dashboardDataUpdatesId ||
@@ -555,7 +553,7 @@ async function connectToClashSockets(dataUpdatesId: number) {
   );
 
   socket.subscribe(
-    `${getClashWsUrl()}/connections?token=${clashApiSecret}`,
+    `${getClashWsUrl()}/connections`,
     (msg) => {
       if (
         dataUpdatesId !== dashboardDataUpdatesId ||
