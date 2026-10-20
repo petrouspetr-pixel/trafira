@@ -47,9 +47,21 @@ function finish(binary,library_path,candidate,directory) {
     if(!version || version!=expected)return failure("candidate_version_mismatch");
     return {success:true,binary,library_path,version,variant:candidate.variant};
 }
+function stage_capacity(directory, expanded) {
+    let required = expanded + 33554432;
+    if (storage.available_bytes(directory) < required)
+        return false;
+    for (let line in split(fs.readfile("/proc/meminfo") || "", "\n")) {
+        let found = match(line, /^MemAvailable:[ \t]+([0-9]+)[ \t]+kB/);
+        if (found)
+            return int(found[1], 10) * 1024 >= required;
+    }
+    return false;
+}
+
 function stage_tar(file,candidate,directory) {
     let listing=archive_members(file);if(!listing)return failure("unsafe_archive");
-    if(storage.available_bytes(directory)<listing.expanded+16777216)return failure("insufficient_space");
+    if(!stage_capacity(directory,listing.expanded))return failure("insufficient_space");
     let binaries=filter(listing.members,(name)=>match(name,/(^|\/)sing-box$/)),libraries=filter(listing.members,(name)=>match(name,/(^|\/)libcronet\.so$/));
     if(length(binaries)!=1 || length(libraries)>1)return failure("invalid_archive_contents");
     let binary=directory+"/sing-box";
@@ -73,7 +85,7 @@ function stage_ipk(file,candidate,directory) {
     let outer=archive_members(file);if(!outer)return failure("unsafe_archive");
     let controls=filter(outer.members,(name)=>match(name,/(^|\/)control\.tar\.gz$/)),data=filter(outer.members,(name)=>match(name,/(^|\/)data\.tar\.gz$/));
     if(length(controls)!=1 || length(data)!=1)return failure("unsupported_package_preflight");
-    if(storage.available_bytes(directory)<outer.expanded+16777216)return failure("insufficient_space");
+    if(!stage_capacity(directory,outer.expanded))return failure("insufficient_space");
     let control_file=directory+"/control.tar.gz",data_file=directory+"/data.tar.gz";
     if(!extract(file,controls[0],control_file))return failure("extract_failed");
     let listing=archive_members(control_file);if(!listing)return failure("unsafe_archive");
@@ -101,7 +113,7 @@ function stage_apk(file,candidate,directory) {
     }
     let size=field(text,"installed-size");
     if(!match(size,/^[0-9]+$/) || int(size)<=0 || int(size)>268435456)return failure("invalid_package_metadata");
-    if(storage.available_bytes(directory)<int(size)+16777216)return failure("insufficient_space");
+    if(!stage_capacity(directory,int(size)))return failure("insufficient_space");
     let root=directory+"/payload";
     if(!fs.mkdir(root,448) || system(command(["apk","--allow-untrusted","extract","--no-chown","--destination",root,file])+" >/dev/null 2>&1")!=0)return failure("extract_failed");
     let binary=root+"/usr/bin/sing-box",library_path=root+"/usr/lib",stat=fs.lstat(binary),resolved=fs.realpath(binary),prefix=fs.realpath(root)+"/";

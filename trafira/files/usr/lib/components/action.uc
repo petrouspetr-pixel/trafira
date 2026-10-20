@@ -27,6 +27,7 @@ let rollback_package_files = [];
 let rollback_packages = [];
 let rollback_apk_world = null;
 let retain_rollback_files = false;
+let ram_extended_update = false;
 let selected_request = null, selected_core = null, selected_hooks = null;
 let selected_error = "", selected_original_config = null, selected_result = {};
 let selected_release = null;
@@ -515,24 +516,6 @@ function sing_box_runtime_success(mode, args) {
 
 // ucode resolves function references in declaration order. Keep this guard after
 // the runtime variant reader and action_fail(), including the failure path.
-function ensure_install_storage(component, action, staged_bytes) {
-    let path = file_exists("/overlay") ? "/overlay" : "/";
-    let storage_action = action;
-    if (component == "sing_box" && action == "install" && sing_box_runtime_output("variant", []) == "tiny")
-        storage_action = "install_tiny";
-    let required = install_storage_required_bytes(component, staged_bytes, storage_action);
-    let message = install_storage_error(path, filesystem_available_bytes(path), required);
-    if (message != "")
-        action_fail(component, action, message);
-    // Component destinations can be separate filesystems.
-    for (let target in [ "/usr/bin", "/usr/lib", "/etc", "/opt" ]) {
-        if (target == "/opt" && ((component != "zapret" && component != "zapret2" && component != "byedpi") || !file_exists(target)))
-            continue;
-        message = install_storage_error(target, filesystem_available_bytes(target), required);
-        if (message != "")
-            action_fail(component, action, message);
-    }
-}
 
 function run_logged(description, command, capture_install_error) {
     init_tmp_dir();
@@ -569,6 +552,42 @@ function pkg_is_installed(package_name) {
         return command_success_from_args([ "apk", "info", "-e", package_name ]);
     return module_success([ LIB_DIR + "/core/packages.uc", "opkg-installed", package_name ]);
 }
+
+// Limit the smaller flash reserve to an existing regular, package-owned core.
+// Fresh installs, variant changes and compressed binaries keep their old guard.
+function ram_extended_update_eligible(component, action) {
+    if (component != "sing_box" || (action != "install" && action != "install_extended") ||
+        sing_box_runtime_output("variant", []) != "extended" || !pkg_is_installed("sing-box-extended"))
+        return false;
+    let stat = fs.lstat("/usr/bin/sing-box");
+    return stat != null && stat.type == "file";
+}
+
+function ensure_install_storage(component, action, staged_bytes) {
+    let path = file_exists("/overlay") ? "/overlay" : "/";
+    let storage_action = action;
+    if (component == "sing_box" && action == "install" && sing_box_runtime_output("variant", []) == "tiny")
+        storage_action = "install_tiny";
+    // Only the verified same-variant RAM transaction may avoid duplicate flash
+    // payloads. Rollback archives are in /tmp, not installation bytes.
+    if (ram_extended_update_eligible(component, action)) {
+        storage_action = "install_tiny";
+        staged_bytes = 0;
+    }
+    let required = install_storage_required_bytes(component, staged_bytes, storage_action);
+    let message = install_storage_error(path, filesystem_available_bytes(path), required);
+    if (message != "")
+        action_fail(component, action, message);
+    // Component destinations can be separate filesystems.
+    for (let target in [ "/usr/bin", "/usr/lib", "/etc", "/opt" ]) {
+        if (target == "/opt" && ((component != "zapret" && component != "zapret2" && component != "byedpi") || !file_exists(target)))
+            continue;
+        message = install_storage_error(target, filesystem_available_bytes(target), required);
+        if (message != "")
+            action_fail(component, action, message);
+    }
+}
+
 
 function installed_package_version(package_name) {
     package_name = as_string(package_name);
@@ -1364,7 +1383,33 @@ function move_file_to_backup(target_path, backup_path) {
     return move_file_portable(target_path, backup_path);
 }
 
+function compressed_backup_digest(path) {
+    if (!command_success_from_args([ "gzip", "-t", path ]))
+        return "";
+    return trim(split(command_output("gzip -dc " + shell_quote(path) + " 2>/dev/null | sha256sum"), /[ \t]+/)[0] || "");
+}
+
+function restore_ram_backup(target, backup, mode) {
+    let hash = require("singbox.provenance").hash_file;
+    let digest = compressed_backup_digest(backup);
+    if (match(digest, /^[0-9a-f]{64}$/) == null)
+        return false;
+    if (hash(target) == digest)
+        return true;
+    let staged = target + ".trafira-restore." + owner_pid();
+    remove_file(staged);
+    if (!command_success("gzip -dc " + shell_quote(backup) + " >" + shell_quote(staged)) ||
+        hash(staged) != digest || !command_success_from_args([ "chmod", mode, staged ]) ||
+        !fs.rename(staged, target)) {
+        remove_file(staged);
+        return false;
+    }
+    return true;
+}
+
 function restore_sing_box_backup(backup_binary) {
+    if (ram_extended_update && backup_binary == tmp_dir + "/ram-core/sing-box.gz")
+        return restore_ram_backup("/usr/bin/sing-box", backup_binary, "0755");
     if (as_string(backup_binary) != "" && file_nonempty(backup_binary)) {
         if (!move_file_portable(backup_binary, "/usr/bin/sing-box"))
             return false;
@@ -1375,6 +1420,8 @@ function restore_sing_box_backup(backup_binary) {
 }
 
 function restore_file_backup(target_path, backup_path) {
+    if (ram_extended_update && backup_path == tmp_dir + "/ram-core/libcronet.so.gz")
+        return restore_ram_backup(target_path, backup_path, "0644");
     if (as_string(backup_path) != "" && file_nonempty(backup_path))
         return move_file_portable(backup_path, target_path);
     remove_file(target_path);
@@ -1819,6 +1866,10 @@ function restore_sing_box_install_backup(previous_variant, backup_binary) {
         if (restore_sing_box_package_variant(previous_variant))
             return true;
         retain_rollback_files = true;
+        // A failed install may have left a new payload. Release it before the
+        // RAM fallback, otherwise restoration itself would require two cores.
+        if (ram_extended_update)
+            remove_file("/usr/bin/sing-box");
         if (as_string(backup_binary) != "" && restore_sing_box_backup(backup_binary)) {
             updates_log("Package rollback failed; restored the previous sing-box binary backup", "warn");
             return restore_rollback_apk_world();
@@ -1853,7 +1904,8 @@ function restore_sing_box_after_failed_extended_package_install(previous_variant
     pkg_remove_sing_box_conflict("sing-box-extended");
     let restore_status = restore_sing_box_install_backup(previous_variant, backup_binary);
     if (cronet_touched) {
-        restore_file_backup("/usr/lib/libcronet.so", backup_cronet);
+        if (!restore_file_backup("/usr/lib/libcronet.so", backup_cronet))
+            restore_status = false;
         if (file_nonempty("/usr/lib/libcronet.so"))
             command_success_from_args([ "chmod", "0644", "/usr/lib/libcronet.so" ]);
     }
@@ -1906,6 +1958,89 @@ function fail_package_sing_box_install(action, tiny, reason, current_version, la
     action_fail("sing_box", action, prefix + " " + reason + " and previous sing-box variant could not be restored", current_version, latest_version);
 }
 
+function prepare_ram_extended_update(package_file, release) {
+    let hash = require("singbox.provenance").hash_file;
+    let config_digest = hash(CONFIG_FILE);
+    if (!config_digest)
+        return null;
+    let directory = tmp_dir + "/ram-core";
+    if (!fs.mkdir(directory, 448))
+        return null;
+    // Selected-version actions already validated this exact private archive.
+    if (!selected_core) {
+        let binary_dir = directory + "/candidate", config_dir = directory + "/config";
+        if (!fs.mkdir(binary_dir, 448) || !fs.mkdir(config_dir, 448))
+            return null;
+        let candidate = {
+            variant: "extended", architecture: read_openwrt_release_value("DISTRIB_ARCH"),
+            package_type: is_apk() ? "apk" : "ipk", version: normalize_sing_box_version(release.tag),
+            asset_size: release.asset_size
+        };
+        let core = require("components.core_candidate").stage(package_file, candidate, binary_dir);
+        if (!core.success)
+            return null;
+        let profile = require("config.profile_runtime");
+        let read = profile.read_document(CONFIG_FILE, config_dir, "Core preflight");
+        if (!read.success)
+            return null;
+        let prepared = profile.prepare(read.document, config_dir);
+        if (!prepared.success || !profile.hooks(read.document, config_dir, core).validate(prepared.path))
+            return null;
+        if (!command_success_from_args([ "rm", "-rf", binary_dir, config_dir ]))
+            return null;
+    }
+    return { files: [], directory, config_digest };
+}
+
+function stage_ram_extended_backup(saved) {
+    let hash = require("singbox.provenance").hash_file;
+    for (let path in [ "/usr/bin/sing-box", "/usr/lib/libcronet.so" ]) {
+        let stat = fs.lstat(path);
+        if (stat == null && path != "/usr/bin/sing-box")
+            continue;
+        if (stat == null || stat.type != "file" || stat.size <= 0)
+            return false;
+        // Stream compressed recovery files instead of retaining another 100 MiB
+        // expanded binary. Bound output by BOTH available tmpfs and RAM, keeping
+        // a reserve even for an incompressible input; no flash writes here.
+        let available = filesystem_available_bytes(tmp_dir), memory = mem_available_bytes();
+        if (memory < available)
+            available = memory;
+        let limit = int((available - 33554432) / 1024);
+        if (limit <= 0)
+            return false;
+        let item = { path, backup: saved.directory + "/" + path_basename(path) + ".gz", digest: hash(path) };
+        let command = command_from_args([ "sh", "-c", 'ulimit -f "$1" && exec gzip -c "$2"', "sh", limit, path ]);
+        if (!item.digest || !command_success(command + " >" + shell_quote(item.backup)) ||
+            compressed_backup_digest(item.backup) != item.digest ||
+            !ensure_tmp_download_capacity(1, "Extended RAM rollback reserve"))
+            return false;
+        push(saved.files, item);
+    }
+    return length(saved.files) > 0;
+}
+
+function ram_extended_update_unchanged(saved) {
+    let hash = require("singbox.provenance").hash_file;
+    if (hash(CONFIG_FILE) != saved.config_digest)
+        return false;
+    for (let item in saved.files)
+        if (hash(item.path) != item.digest || compressed_backup_digest(item.backup) != item.digest)
+            return false;
+    return true;
+}
+
+function wait_ram_core_stopped() {
+    if (!command_exists("pidof"))
+        return false;
+    for (let n = 0; n < 10; n++) {
+        if (trim(command_output_from_args([ "pidof", "sing-box" ])) == "")
+            return true;
+        command_success_from_args([ "sleep", "1" ]);
+    }
+    return false;
+}
+
 function install_sing_box_extended_package(action) {
     init_tmp_dir() || action_fail("sing_box", action, "Failed to create temporary directory");
     let current_version = sing_box_runtime_output("version", []);
@@ -1933,16 +2068,45 @@ function install_sing_box_extended_package(action) {
     if (!run_logged("Updating package lists before sing-box-extended package installation", pkg_list_update_command()))
         action_fail("sing_box", action, "Failed to update package lists", current_version, latest_version);
 
+    let ram_backup = null;
+    if (ram_extended_update_eligible("sing_box", action)) {
+        ram_backup = prepare_ram_extended_update(package_file, release);
+        if (!ram_backup)
+            action_fail("sing_box", action, "Cannot prepare verified Extended rollback in RAM; running service was not changed", current_version, latest_version);
+    }
     if (!stage_previous_sing_box_package(current_variant, action))
         action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
+    if (ram_backup) {
+        if (!stage_ram_extended_backup(ram_backup) || !ram_extended_update_unchanged(ram_backup))
+            action_fail("sing_box", action, "Cannot preserve verified Extended rollback in RAM; running service was not changed", current_version, latest_version);
+        ram_extended_update = true;
+        updates_log("Updating Extended using temporary RAM rollback; the old payload will not be duplicated in flash");
+    }
     stop_trafira_before_sing_box_change();
+    if (ram_backup && !wait_ram_core_stopped())
+        action_fail("sing_box", action, "Previous sing-box process did not stop; existing package files were not removed", current_version, latest_version);
     prepare_sing_box_package_service_install();
 
     let backup_binary = "";
     let backup_cronet = "";
     let cronet_touched = false;
-    // Preserve the binary BEFORE removing Tiny/stable as well as Extended.
-    if (current_variant != "not-installed") {
+    if (ram_backup) {
+        for (let item in ram_backup.files) {
+            if (item.path == "/usr/bin/sing-box")
+                backup_binary = item.backup;
+            else {
+                backup_cronet = item.backup;
+                cronet_touched = true;
+            }
+        }
+        // Stop released executable mappings; now the old flash blocks can be
+        // reclaimed. Keep package ownership intact for the normal upgrade.
+        for (let item in ram_backup.files)
+            remove_file(item.path);
+        command_success_from_args([ "sync" ]);
+    }
+    // Other variant transitions retain their original rollback path.
+    else if (current_variant != "not-installed") {
         if (file_exists("/usr/bin/sing-box")) {
             backup_binary = "/usr/bin/sing-box.trafira-backup." + owner_pid();
             if (!move_file_to_backup("/usr/bin/sing-box", backup_binary))
