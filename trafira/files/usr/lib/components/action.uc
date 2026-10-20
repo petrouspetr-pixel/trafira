@@ -168,25 +168,6 @@ function install_storage_error(path, available, required) {
         " MiB required as a safety minimum. Free disk space and retry; installation stopped before proceeding";
 }
 
-function ensure_install_storage(component, action, staged_bytes) {
-    let path = file_exists("/overlay") ? "/overlay" : "/";
-    let storage_action = action;
-    if (component == "sing_box" && action == "install" && sing_box_runtime_output("variant", []) == "tiny")
-        storage_action = "install_tiny";
-    let required = install_storage_required_bytes(component, staged_bytes, storage_action);
-    let message = install_storage_error(path, filesystem_available_bytes(path), required);
-    if (message != "")
-        action_fail(component, action, message);
-    // Component destinations can be separate filesystems.
-    for (let target in [ "/usr/bin", "/usr/lib", "/etc", "/opt" ]) {
-        if (target == "/opt" && ((component != "zapret" && component != "zapret2" && component != "byedpi") || !file_exists(target)))
-            continue;
-        message = install_storage_error(target, filesystem_available_bytes(target), required);
-        if (message != "")
-            action_fail(component, action, message);
-    }
-}
-
 function staged_install_bytes(binary, library) {
     let binary_stat = fs.stat(binary);
     let library_stat = library != "" ? fs.stat(library) : null;
@@ -516,6 +497,41 @@ function action_fail(component, action, message, current_version, latest_version
     updates_response(false, component, action, message, current_version || "", latest_version || "", 0, status || "", release_url || "");
     cleanup_action();
     exit(1);
+}
+
+function sing_box_runtime_output(mode, args) {
+    let command_args = [ LIB_DIR + "/singbox/runtime.uc", mode ];
+    for (let arg in (type(args) == "array" ? args : []))
+        push(command_args, arg);
+    return trim(module_output(command_args));
+}
+
+function sing_box_runtime_success(mode, args) {
+    let command_args = [ LIB_DIR + "/singbox/runtime.uc", mode ];
+    for (let arg in (type(args) == "array" ? args : []))
+        push(command_args, arg);
+    return module_success(command_args);
+}
+
+// ucode resolves function references in declaration order. Keep this guard after
+// the runtime variant reader and action_fail(), including the failure path.
+function ensure_install_storage(component, action, staged_bytes) {
+    let path = file_exists("/overlay") ? "/overlay" : "/";
+    let storage_action = action;
+    if (component == "sing_box" && action == "install" && sing_box_runtime_output("variant", []) == "tiny")
+        storage_action = "install_tiny";
+    let required = install_storage_required_bytes(component, staged_bytes, storage_action);
+    let message = install_storage_error(path, filesystem_available_bytes(path), required);
+    if (message != "")
+        action_fail(component, action, message);
+    // Component destinations can be separate filesystems.
+    for (let target in [ "/usr/bin", "/usr/lib", "/etc", "/opt" ]) {
+        if (target == "/opt" && ((component != "zapret" && component != "zapret2" && component != "byedpi") || !file_exists(target)))
+            continue;
+        message = install_storage_error(target, filesystem_available_bytes(target), required);
+        if (message != "")
+            action_fail(component, action, message);
+    }
 }
 
 function run_logged(description, command, capture_install_error) {
@@ -1736,20 +1752,6 @@ function pkg_install_rollback_files(files) {
         if (installed_package_version(info.name) != info.version)
             return false;
     return true;
-}
-
-function sing_box_runtime_output(mode, args) {
-    let command_args = [ LIB_DIR + "/singbox/runtime.uc", mode ];
-    for (let arg in (type(args) == "array" ? args : []))
-        push(command_args, arg);
-    return trim(module_output(command_args));
-}
-
-function sing_box_runtime_success(mode, args) {
-    let command_args = [ LIB_DIR + "/singbox/runtime.uc", mode ];
-    for (let arg in (type(args) == "array" ? args : []))
-        push(command_args, arg);
-    return module_success(command_args);
 }
 
 function write_sing_box_variant_state(marker, version) {
