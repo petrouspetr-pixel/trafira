@@ -50,11 +50,13 @@ assert(!capContext.stage_capacity('/tmp',64*MiB));
 assert(capContext.stage_capacity('/tmp',16*MiB));
 capContext.fs.readfile=()=>'';assert(!capContext.stage_capacity('/tmp',1));
 
-for(const failure of ['', 'preflight', 'ram-copy', 'stop', 'install', 'validate', 'start']) {
+for(const failure of ['same-version', '', 'preflight', 'ram-copy', 'stop', 'install', 'validate', 'start']) {
  const events=[], present=new Set(['/usr/bin/sing-box','/usr/lib/libcronet.so']);
  const saved={files:[{path:'/usr/bin/sing-box',backup:'/tmp/private/ram-core/sing-box.gz'},{path:'/usr/lib/libcronet.so',backup:'/tmp/private/ram-core/libcronet.so.gz'}]};
  let ctx={...base,tmp_dir:'/tmp/private',SERVICE_INIT:'/etc/init.d/test',selected_core:null,ram_extended_update:false,
- init_tmp_dir:()=>true,sing_box_runtime_output:k=>k==='variant'?'extended':'1.0-extended',
+ init_tmp_dir:()=>true,sing_box_runtime_output:k=>k==='variant'?'extended':failure==='same-version'?'2.0-extended':'1.0-extended',
+ installed_package_version:()=>failure==='same-version'?'2.0-r1':'1.0-r1',
+ rollback_archive_field:()=> '2.0-r1',
  resolve_sing_box_extended_release:()=>({tag:'2.0-extended',asset_name:'new.apk',asset_url:'https://example.test/new',asset_size:35*MiB}),
  normalize_sing_box_version:x=>x,ensure_tmp_download_capacity:()=>true,download_with_retry:()=>true,
  pkg_list_update_command:()=>'',run_logged:()=>true,
@@ -72,13 +74,14 @@ for(const failure of ['', 'preflight', 'ram-copy', 'stop', 'install', 'validate'
  restore_sing_box_after_failed_extended_package_install:()=>{events.push('rollback');return true},
  validate_sing_box_extended_binary:()=>failure==='validate'?'':'2.0-extended',
  write_sing_box_variant_state:()=>{},restart_trafira_after_successful_change:()=>events.push('start'),
- wait_trafira_running_after_sing_box_change:()=>failure!=='start',finish_selected_core:()=>true,
+ wait_trafira_running_after_sing_box_change:()=>failure!=='start',finish_selected_core:()=>true,selected_core_unchanged:()=>true,
  clear_version_caches:()=>{},action_success:()=>{throw Error('success')},
  action_fail:(_c,_a,m)=>{throw Error(m)}
  };
  vm.createContext(ctx);vm.runInContext(body('ram_extended_update_eligible')+'\n'+body('install_sing_box_extended_package'),ctx);
  let outcome='';try{ctx.install_sing_box_extended_package('install')}catch(e){outcome=e.message}
- if(!failure){assert.equal(outcome,'success');assert(events.indexOf('ram-copy')<events.indexOf('stop'));assert(events.indexOf('stop')<events.indexOf('remove:/usr/bin/sing-box'));assert(events.indexOf('remove:/usr/bin/sing-box')<events.indexOf('install'));}
+ if(failure==='same-version'){assert.equal(outcome,'success');assert(!events.includes('stop'));assert(!events.includes('install'));}
+ else if(!failure){assert.equal(outcome,'success');assert(events.indexOf('ram-copy')<events.indexOf('stop'));assert(events.indexOf('stop')<events.indexOf('remove:/usr/bin/sing-box'));assert(events.indexOf('remove:/usr/bin/sing-box')<events.indexOf('install'));}
  else if(['preflight','ram-copy','stop'].includes(failure)) {assert(!events.some(x=>x.startsWith('remove:')));assert(!events.includes('install'));if(failure!=='stop')assert(!events.includes('stop'));}
  else {assert(events.includes('rollback'),failure+' must restore offline');assert.notEqual(outcome,'success');}
 }

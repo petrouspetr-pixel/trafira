@@ -2065,6 +2065,19 @@ function install_sing_box_extended_package(action) {
     if (!selected_core && !download_with_retry(release.asset_url, package_file, release.asset_name))
         action_fail("sing_box", action, "Failed to download sing-box-extended package", current_version, latest_version);
 
+    // apk add / opkg install may skip unpacking an identical installed package.
+    // Finish pin changes without removing a valid, already-current payload.
+    let package_version = rollback_archive_field(package_file, "version");
+    if (current_variant == "extended" && package_version != "" &&
+        installed_package_version("sing-box-extended") == package_version &&
+        normalize_sing_box_version(current_version) == latest_version &&
+        validate_sing_box_extended_binary("/usr/bin/sing-box", "/usr/lib") == current_version) {
+        if (!selected_core_unchanged() || !finish_selected_core())
+            action_fail("sing_box", action, "Cannot finish already installed core selection", current_version, latest_version);
+        clear_version_caches();
+        action_success("sing_box", action, "sing-box-extended has been installed", current_version, latest_version, 0, "latest", release.release_url);
+    }
+
     if (!run_logged("Updating package lists before sing-box-extended package installation", pkg_list_update_command()))
         action_fail("sing_box", action, "Failed to update package lists", current_version, latest_version);
 

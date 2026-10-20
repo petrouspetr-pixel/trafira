@@ -163,6 +163,7 @@ let rollback_packages = [];
 let rollback_apk_world = null;
 let retain_rollback_files = false;
 let ram_extended_update = false;
+let remove_file = path => null;
 let tmp_dir = "/stage";
 let apk = false;
 let world = "base-files\\nsing-box-tiny~1.11\\n";
@@ -268,6 +269,7 @@ assert(length(removed) == 1 && removed[0] == "/tmp/trafira-updates.success");
 fs.writeFileSync(`${dir}/recovery-failure.uc`, common + `
 let retain_rollback_files = false;
 let ram_extended_update = false;
+let remove_file = path => null;
 let package_ok = false;
 let binary_ok = true;
 let sing_box_variant_is_package_managed = variant => true;
