@@ -28,6 +28,7 @@ let rollback_packages = [];
 let rollback_apk_world = null;
 let retain_rollback_files = false;
 let ram_extended_update = false;
+let isolated_extended_apk_update = false;
 let selected_request = null, selected_core = null, selected_hooks = null;
 let selected_error = "", selected_original_config = null, selected_result = {};
 let selected_release = null;
@@ -643,6 +644,18 @@ function pkg_install_name_downgrade(package_name, package_version) {
 
 function pkg_install_files_command(files) {
     let args = is_apk() ? [ "apk", "add", "--allow-untrusted" ] : [ "opkg", "install", "--force-overwrite", "--force-downgrade" ];
+    for (let file in files)
+        push(args, file);
+    return command_from_args(args) + " </dev/null";
+}
+
+function isolated_apk_core_command(files, simulate) {
+    // No repository candidates: the solver can use only installed dependencies
+    // and the explicitly supplied, verified local core archive.
+    let args = [ "apk", "--no-network", "--repositories-file", "/dev/null", "add",
+        "--allow-untrusted", "--force-reinstall" ];
+    if (simulate)
+        push(args, "--simulate");
     for (let file in files)
         push(args, file);
     return command_from_args(args) + " </dev/null";
@@ -1734,7 +1747,11 @@ function stage_previous_sing_box_package(variant, action) {
         if (rollback_apk_world == null)
             return false;
     }
-    let packages = rollback_installed_packages(name, installed_package_version(name));
+    // The isolated Extended APK transaction cannot replace dependencies. Do
+    // not require obsolete archives for packages that will remain installed.
+    let packages = isolated_extended_apk_update ?
+        [ { name, version: installed_package_version(name) } ] :
+        rollback_installed_packages(name, installed_package_version(name));
     if (packages == null)
         return false;
     let directory = tmp_dir + "/rollback";
@@ -1796,6 +1813,8 @@ function pkg_install_rollback_files(files) {
     for (let file in files)
         push(args, file);
     let command = (is_apk() ? "" : "OPKG_CONF_DIR=" + shell_quote(directory + "/empty") + " ") + command_from_args(args);
+    if (isolated_extended_apk_update)
+        command = isolated_apk_core_command(files, false);
     let installed = run_logged_install("Restoring staged sing-box packages without network", command + " </dev/null");
     // A failed transaction can also have changed world; do not leave dependency
     // pins behind even when the caller must fall back to the binary backup.
@@ -1848,6 +1867,9 @@ function restore_sing_box_package_variant(previous_variant) {
         if (!rollback_files_valid())
             return false;
         prepare_sing_box_package_service_install();
+        if (isolated_extended_apk_update)
+            return pkg_install_rollback_files(rollback_package_files) &&
+                installed_package_version(name) == rollback_package.version;
         // Removing even the same package ensures apk restores missing payload
         // files after a failure that happened before the old package was removed.
         for (let other in [ "sing-box-tiny", "sing-box", "sing-box-extended" ])
@@ -1908,7 +1930,8 @@ function restore_sing_box_after_failed_extended_install(previous_variant, backup
 function restore_sing_box_after_failed_extended_package_install(previous_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched) {
     if (as_string(package_file) != "")
         remove_file(package_file);
-    pkg_remove_sing_box_conflict("sing-box-extended");
+    if (!isolated_extended_apk_update)
+        pkg_remove_sing_box_conflict("sing-box-extended");
     let restore_status = restore_sing_box_install_backup(previous_variant, backup_binary);
     if (cronet_touched) {
         if (!restore_file_backup("/usr/lib/libcronet.so", backup_cronet))
@@ -1968,6 +1991,20 @@ function fail_package_sing_box_install(action, tiny, reason, current_version, la
 function ram_prepare_failure(stage, error) {
     install_failure_detail = stage + "/" + error;
     return null;
+}
+
+function isolated_apk_update_ready(package_file) {
+    let available;
+    try {
+        available = json(command_output_from_args([ "apk", "--no-network", "--repositories-file", "/dev/null",
+            "query", "--from", "repositories", "--format", "json", "--fields", "name", "*" ]));
+    } catch (e) { return ram_prepare_failure("dependency_check", "repository_isolation_failed"); }
+    if (type(available) != "array" || length(available) != 0)
+        return ram_prepare_failure("dependency_check", "repository_isolation_failed");
+    if (!run_logged("Checking isolated Extended upgrade with installed dependencies",
+        isolated_apk_core_command([ package_file ], true)))
+        return ram_prepare_failure("dependency_check", "installed_dependencies_incompatible");
+    return true;
 }
 
 function prepare_ram_extended_update(package_file, release) {
@@ -2108,6 +2145,11 @@ function install_sing_box_extended_package(action) {
         if (!ram_backup)
             action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
     }
+    if (ram_backup && is_apk()) {
+        if (!isolated_apk_update_ready(package_file))
+            action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
+        isolated_extended_apk_update = true;
+    }
     if (!stage_previous_sing_box_package(current_variant, action))
         action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
     if (ram_backup) {
@@ -2181,7 +2223,7 @@ function install_sing_box_extended_package(action) {
         }
     }
 
-    if (!run_logged_install("Installing sing-box-extended package " + release.asset_name, pkg_install_files_command([ package_file ]))) {
+    if (!run_logged_install("Installing sing-box-extended package " + release.asset_name, (isolated_extended_apk_update ? isolated_apk_core_command([ package_file ], false) : pkg_install_files_command([ package_file ])))) {
         let install_error = package_failure_message("Failed to install sing-box-extended package");
         restore_sing_box_after_failed_extended_package_install(current_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched);
         action_fail("sing_box", action, install_error, current_version, latest_version);
