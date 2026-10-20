@@ -98,8 +98,10 @@ const prefix=`
 let messages=[],order=[],writes=0,fail="",throw_at="",cache_fail=false,dns_ok=true;
 function check(ok,message){if(!ok)die(message+"\\n");}
 function reset(){messages=[];order=[];writes=0;fail="";throw_at="";cache_fail=false;dns_ok=true;}
-function log_message(text,level){push(messages,{text,level});}
+function command_success_from_args(args){if(args[0]=="logger"){let fields=match(args[3],/^\\[([^\\]]+)\\] (.*)$/);push(messages,{text:fields[2],level:fields[1]});return true;}if(args[0]=="sleep")return true;return system(command_from_args(args)+" >/dev/null 2>&1")==0;}
 function section_name(section){return section[".name"];}
+function list_option_values(section,kind){return section[kind]||[];}
+let connections={rule_sets_with_subnets:function(section){return section.refs||[];}};
 function uci_settings(){return {};}
 function service_proxy_address(settings,kind){return "";}
 function dns_probe_passed(proxy){return dns_ok;}
@@ -114,6 +116,14 @@ let rebuild_domain_ip_lists_from_rule=operation("domain_ip"),import_builtin_subn
 let startup_cache_stub={refresh:function(config,proxy,report){if(cache_fail)report({tag:"failed-list",stage:"download",reason:"download_timeout",code:28,previous_snapshot:"kept"});return !cache_fail;}};
 `;
 const suffix=`
+check(list_reference_label({".name":"one",remote_domain_lists:["first","second"]},"remote_domain_lists","second")=="section=one list=remote_domain_lists[2]","identify the configured list by position without its URL");
+check(list_reference_label({".name":"one",refs:["private-url"]},"ruleset_subnets","private-url")=="section=one list=ruleset_subnets[1]","identify custom subnet rule sets");
+reset();require("fs").writefile(getenv("TEST_DIR")+"/mode","http");
+check(!download_to_file("https://user:password@example.org/private?token=hidden",getenv("TEST_DIR")+"/transport","127.0.0.1:4535","section=one list=remote_domain_lists[1]"),"failed remote list download");
+check(index(sprintf("%J",messages),"password")<0 && index(sprintf("%J",messages),"hidden")<0,"remote list download errors must not leak source secrets");
+check(length(messages)==3 && index(messages[0].text,"http=429")>=0 && index(messages[0].text,"section=one list=remote_domain_lists[1]")>=0,"ordinary downloads identify list, HTTP status and retries");
+reset();
+
 check(list_update_pass(),"successful pass");check(writes==1 && messages[length(messages)-1].level=="info","success updates timestamp once");
 check(join("|",order)=="domain_ip:one|domain_ip:two|builtin_subnets:one|builtin_subnets:two|remote_domains:one|remote_domains:two|remote_subnets:one|remote_subnets:two|ruleset_subnets:one|ruleset_subnets:two","preserve stage and section order");
 reset();fail="builtin_subnets:two";
@@ -128,6 +138,6 @@ check(index(sprintf("%J",messages),"list=failed-list stage=download reason=downl
 reset();dns_ok=false;check(!list_update_pass() && length(order)==0 && messages[length(messages)-1].level=="error","DNS failure logs stage without modifying lists");
 print("List update stage order, error severity and timestamp tests passed\\n");
 `;
-fs.writeFileSync(`${dir}/stages.uc`,prefix+extract('log_list_refresh_failure')+extract('run_list_update_stage')+extract('list_update_pass').replace('require("singbox.ruleset_cache")','startup_cache_stub')+suffix);
+fs.writeFileSync(`${dir}/stages.uc`,extract('as_string')+extract('shell_quote')+extract('command_from_args')+prefix+extract('safe_list_log_text')+extract('log_message')+extract('list_reference_label')+extract('download_to_file')+extract('log_list_refresh_failure')+extract('run_list_update_stage')+extract('list_update_pass').replace('require("singbox.ruleset_cache")','startup_cache_stub')+suffix);
 JS
-ucode "$WORK_DIR/stages.uc"
+ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$WORK_DIR/stages.uc"

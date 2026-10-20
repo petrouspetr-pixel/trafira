@@ -158,9 +158,13 @@ function ensure_dir(path) {
     return command_success_from_args([ "mkdir", "-p", path ]);
 }
 
+function safe_list_log_text(message) {
+    return replace(as_string(message), /https?:\/\/[^ \t\r\n"'<>]+/gi, "<remote-url>");
+}
+
 function log_message(message, level) {
     level = as_string(level || "info");
-    command_success_from_args([ "logger", "-t", "trafira", "[" + level + "] " + as_string(message) ]);
+    command_success_from_args([ "logger", "-t", "trafira", "[" + level + "] " + safe_list_log_text(message) ]);
 }
 
 function read_json_file(path) {
@@ -2039,20 +2043,32 @@ function service_proxy_address(settings, purpose) {
         SB_SERVICE_MIXED_INBOUND_ADDRESS + ":" + service_proxy_port_for_purpose(purpose) : "";
 }
 
-function download_to_file(url, filepath, proxy_address) {
+function list_reference_label(section, kind, reference) {
+    let references = kind == "ruleset_subnets" ? connections.rule_sets_with_subnets(section) : list_option_values(section, kind);
+    let label = "section=" + section_name(section) + " list=" + kind;
+    for (let i = 0; i < length(references); i++)
+        if (references[i] == reference) return label + "[" + (i + 1) + "]";
+    return label;
+}
+
+function download_to_file(url, filepath, proxy_address, identity) {
     let attempt = 1;
+    let transport = require("singbox.ruleset_cache");
     while (attempt <= 3) {
         // Bound the entire attempt, including a peer that keeps sending tiny chunks.
         let args = [ "curl", "--fail", "--location", "--silent", "--show-error",
             "--connect-timeout", "10", "--max-time", "30", "--output", filepath ];
         if (as_string(proxy_address) != "")
             push(args, "--proxy", "http://" + as_string(proxy_address), "--noproxy", "");
-        push(args, url);
+        push(args, "--write-out", "%{http_code}", url);
 
-        if (command_success_from_args(args))
+        let result = transport.download_status(args);
+        if (result.code == 0)
             return true;
 
-        log_message("Attempt " + attempt + "/3 to download " + as_string(url) + " failed", "warn");
+        log_message("List download failed: " + (identity || "remote-list") + " attempt=" + attempt +
+            "/3 stage=download reason=" + transport.download_reason(result.code) + " exit=" + result.code +
+            (result.http_status == null ? "" : " http=" + result.http_status), "warn");
         command_success_from_args([ "sleep", "2" ]);
         attempt++;
     }
@@ -2199,12 +2215,12 @@ function import_domain_ip_list_reference_into_rulesets(reference, section, setti
         return false;
 
     let ok = true;
-    if (download_to_file(reference, tmpfile, service_proxy_address(settings, "lists")) && file_nonempty(tmpfile)) {
+    if (download_to_file(reference, tmpfile, service_proxy_address(settings, "lists"), list_reference_label(section, "domain_ip_lists", reference)) && file_nonempty(tmpfile)) {
         convert_crlf_to_lf(tmpfile);
         ok = import_domain_ip_list_file_into_rulesets(tmpfile, section, staged_path, subnet_chunks);
     }
     else {
-        log_message("Failed to download remote domain/IP list " + reference + "; skipping it until the next successful update", "error");
+        log_message("Failed to download remote domain/IP list " + list_reference_label(section, "domain_ip_lists", reference) + "; skipping it until the next successful update", "error");
         ok = false;
     }
 
@@ -2310,7 +2326,7 @@ function import_builtin_subnets_from_rule(section, settings) {
                 continue;
             }
 
-            if (!download_to_file(url, tmpfile, service_proxy_address(settings, "lists")) || !file_nonempty(tmpfile)) {
+            if (!download_to_file(url, tmpfile, service_proxy_address(settings, "lists"), "section=" + section_name(section) + " list=" + entry.tag) || !file_nonempty(tmpfile)) {
                 log_message("Failed to download built-in " + as_string(service) + " subnet list; skipping it until the next successful update", "error");
                 ok = false;
                 remove_file(tmpfile);
@@ -2390,8 +2406,8 @@ function import_custom_ruleset_subnets_from_remote(url, format, section, label, 
         return false;
     }
 
-    if (!download_to_file(url, remote_tmpfile, service_proxy_address(settings, "lists")) || !file_nonempty(remote_tmpfile)) {
-        log_message("Failed to download remote rule set " + as_string(url) + "; skipping it until the next successful update", "error");
+    if (!download_to_file(url, remote_tmpfile, service_proxy_address(settings, "lists"), label) || !file_nonempty(remote_tmpfile)) {
+        log_message("Failed to download remote rule set " + label + "; skipping it until the next successful update", "error");
         remove_files([ remote_tmpfile, json_tmpfile ]);
         return false;
     }
@@ -2399,12 +2415,12 @@ function import_custom_ruleset_subnets_from_remote(url, format, section, label, 
     let ok = true;
     if (as_string(format) == "binary") {
         if (!command_success_from_args([ "sing-box", "rule-set", "decompile", remote_tmpfile, "-o", json_tmpfile ])) {
-            log_message("Failed to decompile rule set " + as_string(url), "error");
+            log_message("Failed to decompile rule set " + label, "error");
             ok = false;
         }
     }
     else if (!copy_file(remote_tmpfile, json_tmpfile)) {
-        log_message("Failed to copy downloaded source rule set " + as_string(url), "error");
+        log_message("Failed to copy downloaded source rule set " + label, "error");
         ok = false;
     }
 
@@ -2430,24 +2446,24 @@ function import_rule_sets_with_subnets_from_rule(section, settings) {
 
     for (let reference in references) {
         reference = as_string(reference);
-        log_message("Importing subnets from rule set reference for '" + section_name(section) + "': " + reference, "info");
+        log_message("Importing subnet rule set: " + list_reference_label(section, "ruleset_subnets", reference), "info");
 
         let extension = singbox_rulesets_module().file_extension(reference);
         if (match(reference, /^\/.*\.srs$/) != null) {
-            if (!import_custom_ruleset_subnets_from_local(reference, "binary", section, "Rule set " + reference))
+            if (!import_custom_ruleset_subnets_from_local(reference, "binary", section, "Rule set " + list_reference_label(section, "ruleset_subnets", reference)))
                 ok = false;
         }
         else if (match(reference, /^\/.*\.json$/) != null) {
-            if (!import_custom_ruleset_subnets_from_local(reference, "source", section, "Rule set " + reference))
+            if (!import_custom_ruleset_subnets_from_local(reference, "source", section, "Rule set " + list_reference_label(section, "ruleset_subnets", reference)))
                 ok = false;
         }
         else if (match(reference, /^https?:\/\//) != null) {
             let format = extension == "json" ? "source" : (extension == "srs" ? "binary" : singbox_rulesets_module().remote_format(reference));
-            if (!import_custom_ruleset_subnets_from_remote(reference, format, section, "Rule set " + reference, settings))
+            if (!import_custom_ruleset_subnets_from_remote(reference, format, section, list_reference_label(section, "ruleset_subnets", reference), settings))
                 ok = false;
         }
         else {
-            log_message("Unsupported rule set reference for subnet import: " + reference, "error");
+            log_message("Unsupported rule set reference for subnet import: " + list_reference_label(section, "ruleset_subnets", reference), "error");
             ok = false;
         }
     }
@@ -2460,8 +2476,8 @@ function import_domains_from_remote_plain_file(url, section, settings) {
     if (tmpfile == "")
         return false;
 
-    if (!download_to_file(url, tmpfile, service_proxy_address(settings, "lists")) || !file_nonempty(tmpfile)) {
-        log_message("Failed to download remote domain list " + as_string(url) + "; skipping it until the next successful update", "error");
+    if (!download_to_file(url, tmpfile, service_proxy_address(settings, "lists"), list_reference_label(section, "remote_domain_lists", url)) || !file_nonempty(tmpfile)) {
+        log_message("Failed to download remote domain list " + list_reference_label(section, "remote_domain_lists", url) + "; skipping it until the next successful update", "error");
         remove_file(tmpfile);
         return false;
     }
@@ -2485,7 +2501,7 @@ function import_domains_from_remote_domain_lists(section, settings) {
     log_message("Importing domains from remote domain lists for '" + section_name(section) + "' section", "info");
     let ok = true;
     for (let url in references) {
-        log_message("Importing domains from URL: " + as_string(url), "info");
+        log_message("Importing remote domains: " + list_reference_label(section, "remote_domain_lists", url), "info");
         let extension = singbox_rulesets_module().file_extension(url);
         log_message("Detected file extension: '" + extension + "'", "debug");
         if (extension == "json" || extension == "srs") {
@@ -2504,15 +2520,15 @@ function import_subnets_from_remote_json_file(url, section, settings) {
     if (json_tmpfile == "")
         return false;
 
-    if (!download_to_file(url, json_tmpfile, service_proxy_address(settings, "lists")) || !file_nonempty(json_tmpfile)) {
-        log_message("Failed to download remote JSON subnet list " + as_string(url) + "; skipping it until the next successful update", "error");
+    if (!download_to_file(url, json_tmpfile, service_proxy_address(settings, "lists"), list_reference_label(section, "remote_subnet_lists", url)) || !file_nonempty(json_tmpfile)) {
+        log_message("Failed to download remote JSON subnet list " + list_reference_label(section, "remote_subnet_lists", url) + "; skipping it until the next successful update", "error");
         remove_file(json_tmpfile);
         return false;
     }
 
-    let ok = add_json_ruleset_subnets_to_nft_for_section(section, json_tmpfile, "Remote JSON rule set " + as_string(url));
+    let ok = add_json_ruleset_subnets_to_nft_for_section(section, json_tmpfile, "Remote JSON rule set " + list_reference_label(section, "remote_subnet_lists", url));
     if (!ok)
-        log_message("Failed to add subnets from remote JSON list " + as_string(url) + " to nftables", "error");
+        log_message("Failed to add subnets from remote JSON list " + list_reference_label(section, "remote_subnet_lists", url) + " to nftables", "error");
     remove_file(json_tmpfile);
     return ok;
 }
@@ -2525,8 +2541,8 @@ function import_subnets_from_remote_srs_file(url, section, settings) {
         return false;
     }
 
-    if (!download_to_file(url, binary_tmpfile, service_proxy_address(settings, "lists")) || !file_nonempty(binary_tmpfile)) {
-        log_message("Failed to download remote SRS subnet list " + as_string(url) + "; skipping it until the next successful update", "error");
+    if (!download_to_file(url, binary_tmpfile, service_proxy_address(settings, "lists"), list_reference_label(section, "remote_subnet_lists", url)) || !file_nonempty(binary_tmpfile)) {
+        log_message("Failed to download remote SRS subnet list " + list_reference_label(section, "remote_subnet_lists", url) + "; skipping it until the next successful update", "error");
         remove_files([ binary_tmpfile, json_tmpfile ]);
         return false;
     }
@@ -2534,8 +2550,8 @@ function import_subnets_from_remote_srs_file(url, section, settings) {
     let ok = command_success_from_args([ "sing-box", "rule-set", "decompile", binary_tmpfile, "-o", json_tmpfile ]);
     if (!ok)
         log_message("Failed to decompile binary rule set file", "error");
-    if (ok && !add_json_ruleset_subnets_to_nft_for_section(section, json_tmpfile, "Remote SRS rule set " + as_string(url))) {
-        log_message("Failed to add subnets from remote SRS list " + as_string(url) + " to nftables", "error");
+    if (ok && !add_json_ruleset_subnets_to_nft_for_section(section, json_tmpfile, "Remote SRS rule set " + list_reference_label(section, "remote_subnet_lists", url))) {
+        log_message("Failed to add subnets from remote SRS list " + list_reference_label(section, "remote_subnet_lists", url) + " to nftables", "error");
         ok = false;
     }
 
@@ -2548,8 +2564,8 @@ function import_subnets_from_remote_plain_file(url, section, settings) {
     if (tmpfile == "")
         return false;
 
-    if (!download_to_file(url, tmpfile, service_proxy_address(settings, "lists")) || !file_nonempty(tmpfile)) {
-        log_message("Failed to download remote plain subnet list " + as_string(url) + "; skipping it until the next successful update", "error");
+    if (!download_to_file(url, tmpfile, service_proxy_address(settings, "lists"), list_reference_label(section, "remote_subnet_lists", url)) || !file_nonempty(tmpfile)) {
+        log_message("Failed to download remote plain subnet list " + list_reference_label(section, "remote_subnet_lists", url) + "; skipping it until the next successful update", "error");
         remove_file(tmpfile);
         return false;
     }
@@ -2575,7 +2591,7 @@ function import_subnets_from_remote_subnet_lists(section, settings) {
     log_message("Importing subnets from remote subnet lists for '" + section_name(section) + "' section", "info");
     let ok = true;
     for (let url in references) {
-        log_message("Importing subnets from URL: " + as_string(url), "info");
+        log_message("Importing remote subnets: " + list_reference_label(section, "remote_subnet_lists", url), "info");
         let extension = singbox_rulesets_module().file_extension(url);
         log_message("Detected file extension: '" + extension + "'", "debug");
         if (extension == "json") {
