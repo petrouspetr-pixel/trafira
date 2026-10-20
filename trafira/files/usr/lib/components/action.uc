@@ -2041,6 +2041,13 @@ function wait_ram_core_stopped() {
     return false;
 }
 
+function ram_extended_flash_reserve() {
+    for (let path in [ "/usr/bin", "/usr/lib", "/etc" ])
+        if (filesystem_available_bytes(path) < 8388608)
+            return false;
+    return true;
+}
+
 function install_sing_box_extended_package(action) {
     init_tmp_dir() || action_fail("sing_box", action, "Failed to create temporary directory");
     let current_version = sing_box_runtime_output("version", []);
@@ -2168,6 +2175,10 @@ function install_sing_box_extended_package(action) {
     remove_file(package_file);
 
     let new_version = validate_sing_box_extended_binary("/usr/bin/sing-box", "/usr/lib");
+    if (ram_backup && !ram_extended_flash_reserve()) {
+        updates_log("Extended installation left less than the 8 MiB flash reserve; restoring previous version", "error");
+        new_version = "";
+    }
     if (new_version == "") {
         if (restore_sing_box_after_failed_extended_package_install(current_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched))
             action_fail("sing_box", action, "Installed sing-box-extended package failed validation; previous sing-box variant was restored", current_version, latest_version);

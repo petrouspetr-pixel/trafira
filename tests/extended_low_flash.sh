@@ -50,7 +50,7 @@ assert(!capContext.stage_capacity('/tmp',64*MiB));
 assert(capContext.stage_capacity('/tmp',16*MiB));
 capContext.fs.readfile=()=>'';assert(!capContext.stage_capacity('/tmp',1));
 
-for(const failure of ['same-version', '', 'preflight', 'ram-copy', 'stop', 'install', 'validate', 'start']) {
+for(const failure of ['same-version', '', 'preflight', 'ram-copy', 'stop', 'install', 'validate', 'start', 'flash']) {
  const events=[], present=new Set(['/usr/bin/sing-box','/usr/lib/libcronet.so']);
  const saved={files:[{path:'/usr/bin/sing-box',backup:'/tmp/private/ram-core/sing-box.gz'},{path:'/usr/lib/libcronet.so',backup:'/tmp/private/ram-core/libcronet.so.gz'}]};
  let ctx={...base,tmp_dir:'/tmp/private',SERVICE_INIT:'/etc/init.d/test',selected_core:null,ram_extended_update:false,
@@ -64,6 +64,7 @@ for(const failure of ['same-version', '', 'preflight', 'ram-copy', 'stop', 'inst
  stage_previous_sing_box_package:()=>{events.push('rollback-package');return true},
  stage_ram_extended_backup:()=>{events.push('ram-copy');return failure!=='ram-copy'},ram_extended_update_unchanged:()=>true,
  updates_log:()=>{},stop_trafira_before_sing_box_change:()=>events.push('stop'),
+ ram_extended_flash_reserve:()=>failure!=='flash',
  wait_ram_core_stopped:()=>failure!=='stop',prepare_sing_box_package_service_install:()=>{},
  file_exists:x=>present.has(x),remove_file:x=>{events.push('remove:'+x);present.delete(x)},
  command_success_from_args:()=>true,owner_pid:()=>123,
