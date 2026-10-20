@@ -2340,8 +2340,11 @@ function import_builtin_subnets_from_rule(section, settings) {
                 NFT_COMMON6_SET_NAME,
                 NFT_IP_PORT6_SET_NAME,
                 NFT_DISCORD6_SET_NAME
-            ]))
+            ])) {
+                log_message("List update failed: section=" + section_name(section) + " list=" + entry.tag +
+                    " stage=nft_apply reason=application_failed; nft changes may be partial", "warn");
                 ok = false;
+            }
 
             remove_file(tmpfile);
         }
@@ -2793,10 +2796,33 @@ function write_list_update_timestamp(timestamp) {
     write_file(LIST_UPDATE_STATE_FILE, as_string(timestamp) + "\n");
 }
 
+function log_list_refresh_failure(event) {
+    log_message("List update failed: list=" + event.tag + " stage=" + event.stage +
+        " reason=" + event.reason + (event.code == null ? "" : " exit=" + event.code) +
+        (event.http_status == null ? "" : " http=" + event.http_status) +
+        (event.previous_snapshot == "kept" ? "; previous snapshot file kept" : "; no previous snapshot exists"), "warn");
+}
+
+function run_list_update_stage(stage, sections, settings, operation) {
+    let ok = true;
+    for (let section in sections) {
+        let reason = "operation_failed", passed = false;
+        try { passed = operation(section, settings); }
+        catch (e) { reason = "internal_error"; }
+        if (!passed) {
+            log_message("Lists update stage failed: section=" + section_name(section) +
+                " stage=" + stage + " reason=" + reason, "warn");
+            ok = false;
+        }
+    }
+    return ok;
+}
+
 function list_update_pass() {
     let settings = uci_settings();
     let proxy_address = service_proxy_address(settings, "lists");
     if (!dns_probe_passed(proxy_address)) {
+        log_message("Lists update failed: stage=dns_probe reason=dns_unavailable; no list changes attempted", "error");
         return false;
     }
     github_probe(proxy_address);
@@ -2807,23 +2833,17 @@ function list_update_pass() {
 
     let startup_cache = require("singbox.ruleset_cache");
     let current_config = read_json_file(option(settings, "config_path", "/etc/sing-box/config.json"));
-    if (type(current_config) == "object" && !startup_cache.refresh(current_config, proxy_address))
+    if (type(current_config) == "object" && !startup_cache.refresh(current_config, proxy_address, log_list_refresh_failure))
         ok = false;
 
-    for (let section in sections)
-        if (!rebuild_domain_ip_lists_from_rule(section, settings))
-            ok = false;
-    for (let section in sections)
-        if (!import_builtin_subnets_from_rule(section, settings))
-            ok = false;
-    for (let section in sections)
-        if (!import_domains_from_remote_domain_lists(section, settings))
-            ok = false;
-    for (let section in sections)
-        if (!import_subnets_from_remote_subnet_lists(section, settings))
-            ok = false;
-    for (let section in sections)
-        if (!import_rule_sets_with_subnets_from_rule(section, settings))
+    for (let stage in [
+        [ "domain_ip", rebuild_domain_ip_lists_from_rule ],
+        [ "builtin_subnets", import_builtin_subnets_from_rule ],
+        [ "remote_domains", import_domains_from_remote_domain_lists ],
+        [ "remote_subnets", import_subnets_from_remote_subnet_lists ],
+        [ "ruleset_subnets", import_rule_sets_with_subnets_from_rule ]
+    ])
+        if (!run_list_update_stage(stage[0], sections, settings, stage[1]))
             ok = false;
 
     if (ok) {
@@ -2831,7 +2851,7 @@ function list_update_pass() {
         log_message("Lists update completed successfully", "info");
     }
     else {
-        log_message("Lists update failed", "info");
+        log_message("Lists update failed; see list and stage warnings above", "error");
     }
 
     return ok;
