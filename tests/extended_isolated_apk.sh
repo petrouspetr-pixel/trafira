@@ -21,7 +21,7 @@ repositories='malformed';assert(!ctx.isolated_apk_update_ready('/tmp/new.apk'));
 repositories='[]';plan='(1/2) Purging ca-bundle (old)\n(2/2) Upgrading sing-box-extended (old -> new)\nOK: 136.6 MiB in 238 packages\n';assert(!ctx.isolated_apk_update_ready('/tmp/new.apk'),'successful solver removing dependency must abort');
 plan='unexpected output';assert(!ctx.isolated_apk_update_ready('/tmp/new.apk'));
 
-for(const operation of ['Upgrading','Downgrading','Reinstalling'])assert(ctx.isolated_apk_plan_is_core_only(`(1/1) ${operation} sing-box-extended (version)\nOK: 136.6 MiB in 239 packages\n`));
+for(const operation of ['Upgrading','Downgrading','Reinstalling','Installing'])assert(ctx.isolated_apk_plan_is_core_only(`(1/1) ${operation} sing-box-extended (version)\nOK: 136.6 MiB in 239 packages\n`));
 for(const bad of ['', 'OK: 1 MiB in 1 packages\n', '(1/1) Installing other-package (1)\nOK: 1 MiB in 1 packages\n', '(1/1) Upgrading sing-box-extended (old -> new)\n(2/2) Purging ca-bundle (old)\nOK: 1 MiB in 1 packages\n'])assert(!ctx.isolated_apk_plan_is_core_only(bad));
 let staged=0;
 Object.assign(ctx,{rollback_package:null,rollback_package_files:[],rollback_packages:[],rollback_apk_world:null,

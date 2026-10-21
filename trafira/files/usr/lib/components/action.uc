@@ -667,7 +667,7 @@ function isolated_apk_plan_is_core_only(output) {
         let line = trim(raw);
         if (line == "")
             continue;
-        if (match(line, /^\(1\/1\) (Upgrading|Downgrading|Reinstalling) sing-box-extended \([^()\r\n]+\)$/))
+        if (match(line, /^\(1\/1\) (Upgrading|Downgrading|Reinstalling|Installing) sing-box-extended \([^()\r\n]+\)$/))
             changed++;
         else if (match(line, /^OK: [0-9]+([.][0-9]+)? (B|KiB|MiB|GiB) in [0-9]+ packages$/))
             complete++;
