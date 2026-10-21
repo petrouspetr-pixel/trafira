@@ -661,6 +661,22 @@ function isolated_apk_core_command(files, simulate) {
     return command_from_args(args) + " </dev/null";
 }
 
+function isolated_apk_plan_is_core_only(output) {
+    let changed = 0, complete = 0;
+    for (let raw in split(output, "\n")) {
+        let line = trim(raw);
+        if (line == "")
+            continue;
+        if (match(line, /^\(1\/1\) (Upgrading|Downgrading|Reinstalling) sing-box-extended \([^()\r\n]+\)$/))
+            changed++;
+        else if (match(line, /^OK: [0-9]+([.][0-9]+)? (B|KiB|MiB|GiB) in [0-9]+ packages$/))
+            complete++;
+        else
+            return false;
+    }
+    return changed == 1 && complete == 1;
+}
+
 function pkg_install_files(files) {
     return command_success(pkg_install_files_command(files));
 }
@@ -1813,8 +1829,11 @@ function pkg_install_rollback_files(files) {
     for (let file in files)
         push(args, file);
     let command = (is_apk() ? "" : "OPKG_CONF_DIR=" + shell_quote(directory + "/empty") + " ") + command_from_args(args);
-    if (isolated_extended_apk_update)
+    if (isolated_extended_apk_update) {
+        if (!isolated_apk_plan_is_core_only(command_output(isolated_apk_core_command(files, true) + " 2>/dev/null")))
+            return false;
         command = isolated_apk_core_command(files, false);
+    }
     let installed = run_logged_install("Restoring staged sing-box packages without network", command + " </dev/null");
     // A failed transaction can also have changed world; do not leave dependency
     // pins behind even when the caller must fall back to the binary backup.
@@ -2001,9 +2020,10 @@ function isolated_apk_update_ready(package_file) {
     } catch (e) { return ram_prepare_failure("dependency_check", "repository_isolation_failed"); }
     if (type(available) != "array" || length(available) != 0)
         return ram_prepare_failure("dependency_check", "repository_isolation_failed");
-    if (!run_logged("Checking isolated Extended upgrade with installed dependencies",
-        isolated_apk_core_command([ package_file ], true)))
-        return ram_prepare_failure("dependency_check", "installed_dependencies_incompatible");
+    let plan = command_output(isolated_apk_core_command([ package_file ], true) + " 2>/dev/null");
+    if (!isolated_apk_plan_is_core_only(plan))
+        return ram_prepare_failure("dependency_check", "unsafe_or_incompatible_transaction");
+    updates_log("Isolated APK plan verified: only sing-box-extended changes");
     return true;
 }
 
@@ -2158,6 +2178,8 @@ function install_sing_box_extended_package(action) {
         ram_extended_update = true;
         updates_log("Updating Extended using temporary RAM rollback; the old payload will not be duplicated in flash");
     }
+    if (isolated_extended_apk_update && !isolated_apk_update_ready(package_file))
+        action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
     stop_trafira_before_sing_box_change();
     if (ram_backup && !wait_ram_core_stopped())
         action_fail("sing_box", action, "Previous sing-box process did not stop; existing package files were not removed", current_version, latest_version);
