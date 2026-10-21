@@ -31,7 +31,7 @@ threading.Thread(target=server.serve_forever, daemon=True).start()
 target_port = server.server_port
 lib = sys.argv[1]
 request = {
-    'section': {'.name': 'DE', 'action': 'connection', 'resolve_real_ip_for_routing': '1'},
+    'section': {'.name': 'DE', 'action': 'outbound', 'resolve_real_ip_for_routing': '1'},
     'rule': {'inbound': ['tproxy-in'], 'source_ip_cidr': ['127.0.0.1/32'],
              'port': [target_port], 'rule_set': ['domain-list', 'ip-list'],
              'action': 'route', 'outbound': 'DE-out'},
@@ -45,15 +45,23 @@ try:
         (root/'request.json').write_text(json.dumps(request))
         result = subprocess.check_output(['ucode', '-L', lib, '-e', ucode, str(root/'request.json')])
         resolved = json.loads(result)['rule']
+        bye_request = {'section': {'.name': 'bye', 'action': 'byedpi'},
+                       'rule': {**request['rule'], 'rule_set': ['domain-list']}}
+        (root/'bye.json').write_text(json.dumps(bye_request))
+        bye_resolved = json.loads(subprocess.check_output(
+            ['ucode', '-L', lib, '-e', ucode, str(root/'bye.json')]))['rule']
         for case, expected in [('old', 'final-out'), ('fixed', 'DE-out'),
                                ('outside', 'final-out'), ('source', 'final-out'),
                                ('port', 'final-out'), ('priority', 'earlier-out'),
-                               ('disabled', 'final-out'), ('fakeip', 'DE-out')]:
+                               ('disabled', 'final-out'), ('fakeip', 'DE-out'),
+                               ('automatic-bye-dns-failure', 'DE-out')]:
             socks, dns_port = port(), port()
             lookup, route = dict(resolved), dict(request['rule'])
             domain = 'outside.example' if case == 'outside' else 'unlisted.example'
             if case == 'old':
                 lookup['rule_set'] = route['rule_set']
+            if case == 'automatic-bye-dns-failure':
+                lookup = dict(bye_resolved)
             if case == 'source':
                 lookup['source_ip_cidr'] = route['source_ip_cidr'] = ['192.0.2.0/24']
             if case == 'port':
@@ -65,6 +73,9 @@ try:
             if case != 'disabled':
                 rules.append(lookup)
             rules.append(route)
+            if case == 'automatic-bye-dns-failure':
+                rules.extend([{'domain': [domain], 'action': 'resolve', 'server': 'later-dns'},
+                              {'domain': [domain], 'action': 'route', 'outbound': 'DE-out'}])
             config = {
                 'log': {'level': 'debug', 'timestamp': False},
                 'dns': {'servers': [
@@ -81,6 +92,12 @@ try:
                               {'type': 'inline', 'tag': 'domain-list', 'rules': [{'domain': ['listed.example']}]},
                               {'type': 'inline', 'tag': 'ip-list', 'rules': [{'ip_cidr': ['127.0.0.2/32']}]}]},
             }
+            if case == 'automatic-bye-dns-failure':
+                # The unrelated ByeDPI section must not force the unavailable
+                # default DNS before the later section's working resolver.
+                config['dns']['servers'][0]['predefined'] = {'listed.example': ['127.0.0.2']}
+                config['dns']['servers'].append({'type': 'hosts', 'tag': 'later-dns',
+                                                 'predefined': {domain: ['127.0.0.2']}})
             file, log = root/'config.json', root/'core.log'
             file.write_text(json.dumps(config))
             with log.open('w') as output:

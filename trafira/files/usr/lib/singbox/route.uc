@@ -82,19 +82,19 @@ function target(section, outbound_tag_name) {
 
 function has_resolve_matchers(rule) {
     return rule.domain != null || rule.domain_suffix != null || rule.domain_keyword != null ||
-        rule.domain_regex != null || rule.rule_set != null || rule.ip_cidr != null;
+        rule.domain_regex != null || rule.rule_set != null;
 }
 
 function resolve_rule_for_section(section, route_rule) {
     let action = option(section, "action", "");
+    let resolve_ip = bool_option(section, "resolve_real_ip_for_routing", false);
     let should_resolve = action == "byedpi" ||
-        (connections.is_connections_action(action) &&
-            bool_option(section, "resolve_real_ip_for_routing", false));
+        (connections.is_connections_action(action) && resolve_ip);
 
     if (!should_resolve)
         return null;
 
-    if (!has_resolve_matchers(route_rule)) {
+    if (!has_resolve_matchers(route_rule) && !(resolve_ip && route_rule.ip_cidr != null)) {
         return {
             warning: "Resolve real IP is enabled for '" + section[".name"] + "', but no domain or rule-set matchers found"
         };
@@ -104,7 +104,9 @@ function resolve_rule_for_section(section, route_rule) {
     // Matching them before resolving a FakeIP-restored domain is circular.
     // Only broaden the preparatory lookup; the following route keeps all
     // destination conditions and section priority unchanged.
-    let needs_destination_ip = route_rule.rule_set != null || route_rule.ip_cidr != null;
+    // Automatic ByeDPI resolution without this opt-in remains destination-scoped.
+    let needs_destination_ip = resolve_ip &&
+        (route_rule.rule_set != null || route_rule.ip_cidr != null);
     let resolve_rule = {};
     for (let key in [ "inbound", "source_ip_cidr", "domain", "domain_suffix", "domain_keyword", "domain_regex", "rule_set", "port", "port_range" ]) {
         if (needs_destination_ip && (key == "domain" || key == "domain_suffix" ||
