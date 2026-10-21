@@ -35,7 +35,7 @@ for (const version of ['1.13.18','1.14.1']) {
         const previous = rules[rules.indexOf(r)-1];
         assert.equal(previous.action,'resolve','each alternative resolves immediately before its route');
         assert.deepEqual(previous.source_ip_cidr,r.source_ip_cidr);
-        assert.deepEqual(previous.rule_set,r.rule_set);
+        assert.equal(previous.rule_set,undefined,'resolve must not require unresolved destination IP lists to match');
         assert.deepEqual(previous.domain_suffix,r.domain_suffix);
       }
       assert(rules.indexOf(list) < rules.findIndex(r => r.action === 'reject' && r.domain_suffix?.includes('blocked.example')), 'section priority remains intact');

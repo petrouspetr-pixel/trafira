@@ -82,7 +82,7 @@ function target(section, outbound_tag_name) {
 
 function has_resolve_matchers(rule) {
     return rule.domain != null || rule.domain_suffix != null || rule.domain_keyword != null ||
-        rule.domain_regex != null || rule.rule_set != null;
+        rule.domain_regex != null || rule.rule_set != null || rule.ip_cidr != null;
 }
 
 function resolve_rule_for_section(section, route_rule) {
@@ -100,8 +100,16 @@ function resolve_rule_for_section(section, route_rule) {
         };
     }
 
+    // Rule-sets may contain destination IPs (including mixed/remote lists).
+    // Matching them before resolving a FakeIP-restored domain is circular.
+    // Only broaden the preparatory lookup; the following route keeps all
+    // destination conditions and section priority unchanged.
+    let needs_destination_ip = route_rule.rule_set != null || route_rule.ip_cidr != null;
     let resolve_rule = {};
     for (let key in [ "inbound", "source_ip_cidr", "domain", "domain_suffix", "domain_keyword", "domain_regex", "rule_set", "port", "port_range" ]) {
+        if (needs_destination_ip && (key == "domain" || key == "domain_suffix" ||
+            key == "domain_keyword" || key == "domain_regex" || key == "rule_set"))
+            continue;
         if (route_rule[key] != null)
             resolve_rule[key] = route_rule[key];
     }
