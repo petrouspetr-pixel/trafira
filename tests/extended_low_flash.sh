@@ -50,10 +50,11 @@ assert(!capContext.stage_capacity('/tmp',64*MiB));
 assert(capContext.stage_capacity('/tmp',16*MiB));
 capContext.fs.readfile=()=>'';assert(!capContext.stage_capacity('/tmp',1));
 
-for(const failure of ['same-version', '', 'preflight', 'ram-copy', 'stop', 'install', 'validate', 'start', 'flash']) {
+for(const failure of ['same-version', '', 'preflight', 'ram-copy', 'stop', 'install', 'validate', 'start', 'flash', 'dependencies']) {
  const events=[], present=new Set(['/usr/bin/sing-box','/usr/lib/libcronet.so']);
  const saved={files:[{path:'/usr/bin/sing-box',backup:'/tmp/private/ram-core/sing-box.gz'},{path:'/usr/lib/libcronet.so',backup:'/tmp/private/ram-core/libcronet.so.gz'}]};
- let ctx={...base,tmp_dir:'/tmp/private',SERVICE_INIT:'/etc/init.d/test',selected_core:null,ram_extended_update:false,
+ let ctx={...base,tmp_dir:'/tmp/private',SERVICE_INIT:'/etc/init.d/test',selected_core:null,ram_extended_update:false,isolated_extended_apk_update:false,
+ is_apk:()=>true,isolated_apk_update_ready:()=>failure!=='dependencies',isolated_apk_core_command:()=>'',
  init_tmp_dir:()=>true,sing_box_runtime_output:k=>k==='variant'?'extended':failure==='same-version'?'2.0-extended':'1.0-extended',
  installed_package_version:()=>failure==='same-version'?'2.0-r1':'1.0-r1',
  rollback_archive_field:()=> '2.0-r1',
@@ -83,7 +84,7 @@ for(const failure of ['same-version', '', 'preflight', 'ram-copy', 'stop', 'inst
  let outcome='';try{ctx.install_sing_box_extended_package('install')}catch(e){outcome=e.message}
  if(failure==='same-version'){assert.equal(outcome,'success');assert(!events.includes('stop'));assert(!events.includes('install'));}
  else if(!failure){assert.equal(outcome,'success');assert(events.indexOf('ram-copy')<events.indexOf('stop'));assert(events.indexOf('stop')<events.indexOf('remove:/usr/bin/sing-box'));assert(events.indexOf('remove:/usr/bin/sing-box')<events.indexOf('install'));}
- else if(['preflight','ram-copy','stop'].includes(failure)) {assert(!events.some(x=>x.startsWith('remove:')));assert(!events.includes('install'));if(failure!=='stop')assert(!events.includes('stop'));}
+ else if(['preflight','ram-copy','stop','dependencies'].includes(failure)) {assert(!events.some(x=>x.startsWith('remove:')));assert(!events.includes('install'));if(failure!=='stop')assert(!events.includes('stop'));}
  else {assert(events.includes('rollback'),failure+' must restore offline');assert.notEqual(outcome,'success');}
 }
 console.log('limited flash Extended policy and transaction failures passed');

@@ -14,6 +14,7 @@ function extract(name) {
 }
 // Exercise the old public rollback entry point, including a repository outage.
 fs.writeFileSync(`${dir}/restore.uc`, `
+let isolated_extended_apk_update = false;
 let network = 0;
 let installed = "";
 let rollback_package = { name: "sing-box-tiny", version: "1.11.9-r1", path: "/stage/old.ipk" };
@@ -43,6 +44,7 @@ assert(!restore_sing_box_package_variant("tiny"));
 assert(network == 0);
 `);
 const common = `
+let isolated_extended_apk_update = false;
 let as_string = v => v == null ? "" : "" + v;
 function assert(ok) { if (!ok) { warn("Rollback preflight assertion failed\\n"); exit(1); } }
 `;

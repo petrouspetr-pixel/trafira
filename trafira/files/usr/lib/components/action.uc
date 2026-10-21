@@ -28,6 +28,7 @@ let rollback_packages = [];
 let rollback_apk_world = null;
 let retain_rollback_files = false;
 let ram_extended_update = false;
+let isolated_extended_apk_update = false;
 let selected_request = null, selected_core = null, selected_hooks = null;
 let selected_error = "", selected_original_config = null, selected_result = {};
 let selected_release = null;
@@ -646,6 +647,34 @@ function pkg_install_files_command(files) {
     for (let file in files)
         push(args, file);
     return command_from_args(args) + " </dev/null";
+}
+
+function isolated_apk_core_command(files, simulate) {
+    // No repository candidates: the solver can use only installed dependencies
+    // and the explicitly supplied, verified local core archive.
+    let args = [ "apk", "--no-network", "--repositories-file", "/dev/null", "add",
+        "--allow-untrusted", "--force-reinstall" ];
+    if (simulate)
+        push(args, "--simulate");
+    for (let file in files)
+        push(args, file);
+    return command_from_args(args) + " </dev/null";
+}
+
+function isolated_apk_plan_is_core_only(output) {
+    let changed = 0, complete = 0;
+    for (let raw in split(output, "\n")) {
+        let line = trim(raw);
+        if (line == "")
+            continue;
+        if (match(line, /^\(1\/1\) (Upgrading|Downgrading|Reinstalling|Installing) sing-box-extended \([^()\r\n]+\)$/))
+            changed++;
+        else if (match(line, /^OK: [0-9]+([.][0-9]+)? (B|KiB|MiB|GiB) in [0-9]+ packages$/))
+            complete++;
+        else
+            return false;
+    }
+    return changed == 1 && complete == 1;
 }
 
 function pkg_install_files(files) {
@@ -1685,6 +1714,13 @@ function stage_rollback_archive(name, version, directory) {
     if (name != "sing-box-extended")
         return null;
     let upstream_version = replace(version, /-r?[0-9]+$/, "");
+    // The executable identifies the release unambiguously; only trust it if
+    // its numeric APK representation exactly matches the installed package.
+    if (is_apk()) {
+        let executable_version = normalize_sing_box_version(sing_box_runtime_output("version", []));
+        if (require("components.core_candidate").extended_apk_version_matches(version, executable_version))
+            upstream_version = executable_version;
+    }
     for (let tag in [ "v" + upstream_version, upstream_version ]) {
         let metadata = http_get("https://api.github.com/repos/shtorm-7/sing-box-extended/releases/tags/" + tag);
         let release = set_sing_box_extended_release_from_json(metadata, false);
@@ -1727,7 +1763,11 @@ function stage_previous_sing_box_package(variant, action) {
         if (rollback_apk_world == null)
             return false;
     }
-    let packages = rollback_installed_packages(name, installed_package_version(name));
+    // The isolated Extended APK transaction cannot replace dependencies. Do
+    // not require obsolete archives for packages that will remain installed.
+    let packages = isolated_extended_apk_update ?
+        [ { name, version: installed_package_version(name) } ] :
+        rollback_installed_packages(name, installed_package_version(name));
     if (packages == null)
         return false;
     let directory = tmp_dir + "/rollback";
@@ -1789,6 +1829,11 @@ function pkg_install_rollback_files(files) {
     for (let file in files)
         push(args, file);
     let command = (is_apk() ? "" : "OPKG_CONF_DIR=" + shell_quote(directory + "/empty") + " ") + command_from_args(args);
+    if (isolated_extended_apk_update) {
+        if (!isolated_apk_plan_is_core_only(command_output(isolated_apk_core_command(files, true) + " 2>/dev/null")))
+            return false;
+        command = isolated_apk_core_command(files, false);
+    }
     let installed = run_logged_install("Restoring staged sing-box packages without network", command + " </dev/null");
     // A failed transaction can also have changed world; do not leave dependency
     // pins behind even when the caller must fall back to the binary backup.
@@ -1841,6 +1886,9 @@ function restore_sing_box_package_variant(previous_variant) {
         if (!rollback_files_valid())
             return false;
         prepare_sing_box_package_service_install();
+        if (isolated_extended_apk_update)
+            return pkg_install_rollback_files(rollback_package_files) &&
+                installed_package_version(name) == rollback_package.version;
         // Removing even the same package ensures apk restores missing payload
         // files after a failure that happened before the old package was removed.
         for (let other in [ "sing-box-tiny", "sing-box", "sing-box-extended" ])
@@ -1901,7 +1949,8 @@ function restore_sing_box_after_failed_extended_install(previous_variant, backup
 function restore_sing_box_after_failed_extended_package_install(previous_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched) {
     if (as_string(package_file) != "")
         remove_file(package_file);
-    pkg_remove_sing_box_conflict("sing-box-extended");
+    if (!isolated_extended_apk_update)
+        pkg_remove_sing_box_conflict("sing-box-extended");
     let restore_status = restore_sing_box_install_backup(previous_variant, backup_binary);
     if (cronet_touched) {
         if (!restore_file_backup("/usr/lib/libcronet.so", backup_cronet))
@@ -1958,19 +2007,39 @@ function fail_package_sing_box_install(action, tiny, reason, current_version, la
     action_fail("sing_box", action, prefix + " " + reason + " and previous sing-box variant could not be restored", current_version, latest_version);
 }
 
+function ram_prepare_failure(stage, error) {
+    install_failure_detail = stage + "/" + error;
+    return null;
+}
+
+function isolated_apk_update_ready(package_file) {
+    let available;
+    try {
+        available = json(command_output_from_args([ "apk", "--no-network", "--repositories-file", "/dev/null",
+            "query", "--from", "repositories", "--format", "json", "--fields", "name", "*" ]));
+    } catch (e) { return ram_prepare_failure("dependency_check", "repository_isolation_failed"); }
+    if (type(available) != "array" || length(available) != 0)
+        return ram_prepare_failure("dependency_check", "repository_isolation_failed");
+    let plan = command_output(isolated_apk_core_command([ package_file ], true) + " 2>/dev/null");
+    if (!isolated_apk_plan_is_core_only(plan))
+        return ram_prepare_failure("dependency_check", "unsafe_or_incompatible_transaction");
+    updates_log("Isolated APK plan verified: only sing-box-extended changes");
+    return true;
+}
+
 function prepare_ram_extended_update(package_file, release) {
     let hash = require("singbox.provenance").hash_file;
     let config_digest = hash(CONFIG_FILE);
     if (!config_digest)
-        return null;
+        return ram_prepare_failure("configuration_digest", "read_failed");
     let directory = tmp_dir + "/ram-core";
     if (!fs.mkdir(directory, 448))
-        return null;
+        return ram_prepare_failure("private_directory", "create_failed");
     // Selected-version actions already validated this exact private archive.
     if (!selected_core) {
         let binary_dir = directory + "/candidate", config_dir = directory + "/config";
         if (!fs.mkdir(binary_dir, 448) || !fs.mkdir(config_dir, 448))
-            return null;
+            return ram_prepare_failure("candidate_directory", "create_failed");
         let candidate = {
             variant: "extended", architecture: read_openwrt_release_value("DISTRIB_ARCH"),
             package_type: is_apk() ? "apk" : "ipk", version: normalize_sing_box_version(release.tag),
@@ -1978,16 +2047,18 @@ function prepare_ram_extended_update(package_file, release) {
         };
         let core = require("components.core_candidate").stage(package_file, candidate, binary_dir);
         if (!core.success)
-            return null;
+            return ram_prepare_failure("candidate", core.error || "unknown_error");
         let profile = require("config.profile_runtime");
         let read = profile.read_document(CONFIG_FILE, config_dir, "Core preflight");
         if (!read.success)
-            return null;
+            return ram_prepare_failure("configuration_read", read.error || "read_failed");
         let prepared = profile.prepare(read.document, config_dir);
-        if (!prepared.success || !profile.hooks(read.document, config_dir, core).validate(prepared.path))
-            return null;
+        if (!prepared.success)
+            return ram_prepare_failure("configuration_prepare", prepared.error || "prepare_failed");
+        if (!profile.hooks(read.document, config_dir, core).validate(prepared.path))
+            return ram_prepare_failure("configuration_check", "check_failed");
         if (!command_success_from_args([ "rm", "-rf", binary_dir, config_dir ]))
-            return null;
+            return ram_prepare_failure("candidate_cleanup", "remove_failed");
     }
     return { files: [], directory, config_digest };
 }
@@ -2092,7 +2163,12 @@ function install_sing_box_extended_package(action) {
     if (ram_extended_update_eligible("sing_box", action)) {
         ram_backup = prepare_ram_extended_update(package_file, release);
         if (!ram_backup)
-            action_fail("sing_box", action, "Cannot prepare verified Extended rollback in RAM; running service was not changed", current_version, latest_version);
+            action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
+    }
+    if (ram_backup && is_apk()) {
+        if (!isolated_apk_update_ready(package_file))
+            action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
+        isolated_extended_apk_update = true;
     }
     if (!stage_previous_sing_box_package(current_variant, action))
         action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
@@ -2102,6 +2178,8 @@ function install_sing_box_extended_package(action) {
         ram_extended_update = true;
         updates_log("Updating Extended using temporary RAM rollback; the old payload will not be duplicated in flash");
     }
+    if (isolated_extended_apk_update && !isolated_apk_update_ready(package_file))
+        action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
     stop_trafira_before_sing_box_change();
     if (ram_backup && !wait_ram_core_stopped())
         action_fail("sing_box", action, "Previous sing-box process did not stop; existing package files were not removed", current_version, latest_version);
@@ -2167,7 +2245,7 @@ function install_sing_box_extended_package(action) {
         }
     }
 
-    if (!run_logged_install("Installing sing-box-extended package " + release.asset_name, pkg_install_files_command([ package_file ]))) {
+    if (!run_logged_install("Installing sing-box-extended package " + release.asset_name, (isolated_extended_apk_update ? isolated_apk_core_command([ package_file ], false) : pkg_install_files_command([ package_file ])))) {
         let install_error = package_failure_message("Failed to install sing-box-extended package");
         restore_sing_box_after_failed_extended_package_install(current_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched);
         action_fail("sing_box", action, install_error, current_version, latest_version);
