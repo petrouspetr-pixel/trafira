@@ -249,6 +249,69 @@ function queue_token_overlaps(token, range_start, range_end) {
     return first <= range_end && last >= range_start;
 }
 
+// Keep quoted nft strings as single tokens, including their quotes/escapes.
+// A comment's contents must never become queue expressions or an opt-in marker.
+function nft_line_fields(line) {
+    let fields = [];
+    let token = "";
+    let quoted = false;
+    let escaped = false;
+    for (let i = 0; i < length(line); i++) {
+        let ch = substr(line, i, 1);
+        if (!quoted && match(ch, /[ \t\r\n]/) != null) {
+            if (token != "")
+                push(fields, token);
+            token = "";
+            continue;
+        }
+        token += ch;
+        if (escaped)
+            escaped = false;
+        else if (quoted && ch == "\\")
+            escaped = true;
+        else if (ch == '"')
+            quoted = !quoted;
+    }
+    if (token != "")
+        push(fields, token);
+    return fields;
+}
+
+function explicitly_owned_queue(fields, range_start, range_end) {
+    let size = length(fields);
+    if (size < 4 || fields[size - 2] != "comment" || fields[size - 1] != '"trafira-ignore"')
+        return false;
+
+    let queues = 0;
+    let target = "";
+    for (let i = 0; i < size - 2; i++) {
+        // nft list ruleset emits one rule per line. Do not allow a marker to
+        // exempt multiple statements if supplied noncanonical input.
+        if (index(fields[i], ";") >= 0)
+            return false;
+        if (fields[i] != "queue")
+            continue;
+        queues++;
+        for (let j = i + 1; j < size - 2; j++) {
+            if ((fields[j] == "num" || fields[j] == "to") && j + 1 < size - 2) {
+                target = fields[j + 1];
+                break;
+            }
+            if (match(fields[j], /^[0-9]+(-[0-9]+)?$/) != null) {
+                target = fields[j];
+                break;
+            }
+        }
+    }
+    if (queues != 1 || match(target, /^[0-9]+(-[0-9]+)?$/) == null)
+        return false;
+
+    let parts = split(target, "-");
+    let first = int(parts[0]);
+    let last = length(parts) == 2 ? int(parts[1]) : first;
+    return first >= range_start && last <= range_end && first <= last && last <= 65535;
+}
+
 function nft_queue_overlap(own_table, range_start, range_end) {
     own_table = as_string(own_table);
     range_start = int(range_start || 0);
@@ -256,7 +319,7 @@ function nft_queue_overlap(own_table, range_start, range_end) {
 
     let in_own_table = false;
     for (let line in split(read_stdin(), "\n")) {
-        let fields = split(trim(as_string(line)), /[ \t\r\n]+/);
+        let fields = nft_line_fields(as_string(line));
         if (length(fields) == 0 || fields[0] == "")
             continue;
 
@@ -266,11 +329,18 @@ function nft_queue_overlap(own_table, range_start, range_end) {
         if (in_own_table)
             continue;
 
+        if (explicitly_owned_queue(fields, range_start, range_end))
+            continue;
+
         for (let i = 0; i < length(fields); i++) {
+            if (fields[i] == "comment")
+                break;
             if (fields[i] != "queue")
                 continue;
 
             for (let j = i + 1; j < length(fields); j++) {
+                if (fields[j] == "comment")
+                    break;
                 if ((fields[j] == "num" || fields[j] == "to") && j + 1 < length(fields)) {
                     if (queue_token_overlaps(fields[j + 1], range_start, range_end))
                         return true;

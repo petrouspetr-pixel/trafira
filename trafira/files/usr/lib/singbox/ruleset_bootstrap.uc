@@ -5,7 +5,24 @@ let cache = require("singbox.ruleset_cache");
 let identity = require("service.operation_lock").identity;
 const LIB = getenv("TRAFIRA_LIB") || "/usr/lib/trafira";
 const MAX_FILE = 4194304;
-const BUDGET = min(90, max(1, int(getenv("TRAFIRA_BOOTSTRAP_TEST_BUDGET") || "90")));
+// Keep the supervisor and its worker on the same validated limits. A test-only
+// override may shorten, but can never extend, the configured startup deadline.
+function timeouts() {
+    let uci = require("core.uci"), limits = {};
+    for (let item in [["ruleset_startup_timeout", 90, 10], ["ruleset_download_timeout", 10, 3]]) {
+        let value = uci.get((getenv("TRAFIRA_CONFIG_NAME") || "trafira") + ".settings." + item[0]);
+        if (value == null || value == "") value = "" + item[1];
+        if (!match("" + value, /^[0-9]+$/) || int(value) < item[2] || int(value) > 1800) {
+            warn("Rule-set startup preparation refused: settings.", item[0],
+                " must be an integer from ", item[2], " to 1800 seconds\n");
+            return null;
+        }
+        limits[item[0]] = int(value);
+    }
+    let test = getenv("TRAFIRA_BOOTSTRAP_TEST_BUDGET");
+    if (test) limits.ruleset_startup_timeout = min(limits.ruleset_startup_timeout, min(90, max(1, int(test))));
+    return limits;
+}
 const MAX_CANDIDATES = min(8, max(1, int(getenv("TRAFIRA_BOOTSTRAP_TEST_MAX_CANDIDATES") || "8")));
 function quote(value) { return "'" + replace("" + value, /'/g, "'\\''") + "'"; }
 function command(args) { return join(" ", map(args, quote)); }
@@ -165,10 +182,12 @@ function fetch(config, rule, candidate, directory, seconds) {
     return run(["sh", script, directory, owner.pid, owner.ticks, seconds,
         rule.url, "bootstrap:" + auth, staged ? "" + port : "-"]);
 }
-function prepare(config, version, workspace, validation) {
+function prepare(config, version, workspace, validation, limits) {
     validation = validation || {};
     let rules = remote_rules(config);
     if (!modern(version) || length(rules) == 0) return true;
+    limits = limits || timeouts();
+    if (!limits) return false;
     let pending = [], seen = {};
     for (let rule in rules) {
         let path = cache.path(rule);
@@ -180,7 +199,7 @@ function prepare(config, version, workspace, validation) {
     let directory = workspace ? workspace + "/fetch" : output(["mktemp", "-d", "/tmp/trafira-ruleset-bootstrap.XXXXXX"]);
     if (workspace && !fs.mkdir(directory, 448)) return false;
     if (!directory || !run(["chmod", "700", directory])) return false;
-    let deadline = int(clock(true)[0]) + BUDGET, ok = true;
+    let deadline = int(clock(true)[0]) + limits.ruleset_startup_timeout, ok = true;
     try {
         let groups = {}, order = [];
         for (let rule in pending) {
@@ -204,7 +223,7 @@ function prepare(config, version, workspace, validation) {
                     if (remaining <= 0) break;
                     // One failed request is enough to try the next member.
                     // A dead default must not consume the budget once per list.
-                    if (!fetch(config, rule, candidate, directory, min(10, remaining))) break;
+                    if (!fetch(config, rule, candidate, directory, min(limits.ruleset_download_timeout, remaining))) break;
                     let info = fs.lstat(directory + "/download");
                     if (!info || info.type != "file" || info.size <= 0 || info.size > MAX_FILE ||
                         !cache.save(rule, directory + "/download", validation)) break;
@@ -221,7 +240,7 @@ function prepare(config, version, workspace, validation) {
     if (!ok) warn("Rule-set startup preparation failed: a validated snapshot is missing and the configured download egress is unavailable\n");
     return ok;
 }
-function prepare_file_inline(path, version, workspace) {
+function prepare_file_inline(path, version, workspace, limits) {
     let config = common.read_json_file(path);
     // Configuration validation remains the runtime owner's responsibility.
     if (type(config) != "object" || !length(remote_rules(config))) return true;
@@ -230,7 +249,7 @@ function prepare_file_inline(path, version, workspace) {
     if (fs.lstat(path + ".provenance.json") && !origins) return false;
     if (fs.lstat(path + ".failure-policy.json") && !base) return false;
     let validation = {};
-    if (!prepare(config, version, workspace, validation)) return false;
+    if (!prepare(config, version, workspace, validation, limits)) return false;
     if (fs.writefile(path, sprintf("%J", config)) == null) return false;
     if (origins && !provenance.save(path, origins)) return false;
     if (base) {
@@ -241,13 +260,13 @@ function prepare_file_inline(path, version, workspace) {
     }
     return true;
 }
-function supervise(path, version, directory, owner_pid, owner_ticks) {
-    let args = ["ucode", "-L", LIB, LIB + "/singbox/ruleset_bootstrap.uc", "bootstrap-worker", path, version, directory];
+function supervise(path, version, directory, owner_pid, owner_ticks, startup_timeout, download_timeout) {
+    let args = ["ucode", "-L", LIB, LIB + "/singbox/ruleset_bootstrap.uc", "bootstrap-worker", path, version, directory, startup_timeout, download_timeout];
     let stream = fs.popen(command(args) + " </dev/null >/dev/null 2>&1 & echo $!", "re");
     let pid = stream ? trim(stream.read(64) || "") : "";
     if (stream) stream.close();
     let worker = match(pid, /^[1-9][0-9]*$/) ? identity(pid) : null;
-    let deadline = int(clock(true)[0]) + BUDGET, result = false;
+    let deadline = int(clock(true)[0]) + int(startup_timeout), result = false;
     if (worker) {
         while (int(clock(true)[0]) < deadline) {
             let owner = identity(owner_pid), child = identity(worker.pid);
@@ -268,19 +287,21 @@ function supervise(path, version, directory, owner_pid, owner_ticks) {
 function prepare_file(path, version) {
     let config = common.read_json_file(path);
     if (type(config) != "object" || !modern(version) || !length(remote_rules(config))) return true;
+    let limits = timeouts();
+    if (!limits) return false;
     let owner = identity(), directory = output(["mktemp", "-d", "/tmp/trafira-ruleset-bootstrap.XXXXXX"]);
     if (!owner || !directory || !run(["chmod", "700", directory])) { cleanup(directory); return false; }
-    let ok = run(["ucode", "-L", LIB, LIB + "/singbox/ruleset_bootstrap.uc", "bootstrap-supervise", path, version, directory, owner.pid, owner.ticks]);
+    let ok = run(["ucode", "-L", LIB, LIB + "/singbox/ruleset_bootstrap.uc", "bootstrap-supervise", path, version, directory, owner.pid, owner.ticks, limits.ruleset_startup_timeout, limits.ruleset_download_timeout]);
     cleanup(directory);
     if (!ok) warn("Rule-set startup preparation failed: required snapshots could not be prepared within the startup budget\n");
     return ok;
 }
 if (ARGV[0] == "bootstrap-worker") {
-    let result = prepare_file_inline(ARGV[1], ARGV[2], ARGV[3]);
+    let result = prepare_file_inline(ARGV[1], ARGV[2], ARGV[3], {ruleset_startup_timeout:int(ARGV[4]), ruleset_download_timeout:int(ARGV[5])});
     fs.writefile(ARGV[3] + "/result", result ? "1" : "0");
     exit(result ? 0 : 1);
 }
 if (ARGV[0] == "bootstrap-supervise")
-    exit(supervise(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5]) ? 0 : 1);
+    exit(supervise(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6], ARGV[7]) ? 0 : 1);
 return {plan, stage, prepare, prepare_file};
 
