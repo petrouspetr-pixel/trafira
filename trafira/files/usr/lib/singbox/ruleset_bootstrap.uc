@@ -12,12 +12,13 @@ function timeouts() {
     for (let item in [["ruleset_startup_timeout", 90, 10], ["ruleset_download_timeout", 10, 3]]) {
         let value = uci.get((getenv("TRAFIRA_CONFIG_NAME") || "trafira") + ".settings." + item[0]);
         if (value == null || value == "") value = "" + item[1];
-        if (!match("" + value, /^[0-9]+$/) || int(value) < item[2] || int(value) > 1800) {
+        let seconds = int(value, 10);
+        if (!match("" + value, /^[0-9]+$/) || !(seconds >= item[2] && seconds <= 1800)) {
             warn("Rule-set startup preparation refused: settings.", item[0],
                 " must be an integer from ", item[2], " to 1800 seconds\n");
             return null;
         }
-        limits[item[0]] = int(value);
+        limits[item[0]] = seconds;
     }
     let test = getenv("TRAFIRA_BOOTSTRAP_TEST_BUDGET");
     if (test) limits.ruleset_startup_timeout = min(limits.ruleset_startup_timeout, min(90, max(1, int(test))));

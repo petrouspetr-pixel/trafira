@@ -13,7 +13,7 @@ function scenario(settings = {}, duration = 1, testBudget) {
   const context = {require:name=>({'fs':{popen:()=>({read:()=>'/tmp/trafira-ruleset-bootstrap.XXXXXX',close:()=>0}),lstat:()=>({type:'file',size:64000}),unlink:()=>true,mkdir:()=>true},'core.common':{array_or_empty:v=>Array.isArray(v)?v:[],object_or_empty:v=>v||{}},'singbox.ruleset_cache':cache,'core.uci':uci,'service.operation_lock':{identity:()=>({pid:1,ticks:1})}}[name]),
     harnessFetch:(config, rule, candidate, directory, seconds)=>{requests.push({candidate,seconds});elapsed+=Math.min(duration,seconds);return duration<=seconds;},
     getenv:key=>key==='TRAFIRA_BOOTSTRAP_TEST_BUDGET'?testBudget:undefined,
-    min:Math.min,max:Math.max,int:v=>parseInt(v,10),match:(v,r)=>String(v).match(r),type:v=>v===null?'null':Array.isArray(v)?'array':typeof v,
+    min:Math.min,max:Math.max,int:v=>{const n=parseInt(v,10);return Number.isSafeInteger(n)?n:NaN;},match:(v,r)=>String(v).match(r),type:v=>v===null?'null':Array.isArray(v)?'array':typeof v,
     filter:(a,f)=>a.filter(f),map:(a,f)=>a.map(f),push:(a,v)=>a.push(v),index:(a,v)=>a.indexOf(v),length:v=>v.length,
     clock:()=>[elapsed],system:()=>0,join:(s,a)=>a.join(s),replace:(s,r,v)=>s.replace(r,v),trim:s=>s.trim(),warn:(...v)=>warnings.push(v.join('')),ARGV:[]};
   const code=source.replace(/for\s*\(\s*let\s+(\w+)\s+in\s+/g,'for (let $1 of ').replace(/return\s*\{\s*plan\s*,\s*stage\s*,\s*prepare\s*,\s*prepare_file\s*\}\s*;/,'fetch = harnessFetch; return {plan, stage, prepare, prepare_file};');
@@ -34,7 +34,7 @@ assert.equal(capped.requests[0].seconds,20);
 let testing=scenario({ruleset_startup_timeout:'600',ruleset_download_timeout:'120'},3,'2');
 assert.equal(testing.ok,false,'test cap remains bounded by production supervision');
 assert.equal(testing.requests[0].seconds,2);
-for(const [key,value] of [['ruleset_startup_timeout','0'],['ruleset_startup_timeout','1801'],['ruleset_download_timeout','2'],['ruleset_download_timeout','120s'],['ruleset_download_timeout','NaN']]) {
+for(const [key,value] of [['ruleset_startup_timeout','999999999999999999999999999999999999'],['ruleset_startup_timeout','0'],['ruleset_startup_timeout','1801'],['ruleset_download_timeout','2'],['ruleset_download_timeout','120s'],['ruleset_download_timeout','NaN']]) {
   let invalid=scenario({[key]:value});
   assert.equal(invalid.ok,false,'invalid '+key+' must fail closed');
   assert.equal(invalid.requests.length,0,'invalid budget must not download');

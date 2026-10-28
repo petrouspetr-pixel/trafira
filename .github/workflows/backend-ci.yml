@@ -31,6 +31,29 @@ on:
       - '.github/workflows/backend-ci.yml'
 
 jobs:
+  apk-core-transactions:
+    name: APK Core Transactions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - name: Prepare official OpenWrt APK tool
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zstd
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 180 \
+            https://downloads.openwrt.org/releases/25.12.3/targets/x86/64/openwrt-sdk-25.12.3-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst \
+            -o "$RUNNER_TEMP/sdk.tar.zst"
+          echo "70fc990b2f9a2705e8bbca610e421a55e789901d4aeba10d9fdd7c89777bf695  $RUNNER_TEMP/sdk.tar.zst" | sha256sum -c -
+          mkdir "$RUNNER_TEMP/apk-sdk"
+          tar --zstd -xf "$RUNNER_TEMP/sdk.tar.zst" -C "$RUNNER_TEMP/apk-sdk"
+          apk_bin=$(find "$RUNNER_TEMP/apk-sdk" -path '*/staging_dir/host/bin/apk' -type f -print -quit)
+          test -n "$apk_bin" && test -x "$apk_bin"
+          echo "APK_BIN=$apk_bin" >> "$GITHUB_ENV"
+      - name: Verify isolated core replacements with real APK solver
+        run: sudo env APK_BIN="$APK_BIN" bash tests/issue96_apk_solver.sh
+
   backend-checks:
     name: Backend Runtime Checks
     runs-on: ubuntu-24.04

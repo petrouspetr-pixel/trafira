@@ -55,4 +55,7 @@ TRAFIRA_BOOTSTRAP_TEST_BUDGET=2 ucode -L "$TRAFIRA_LIB" "$WORK_DIR/check.uc" fai
 printf 'trafira.settings.ruleset_download_timeout=bad\n' >"$TRAFIRA_UCI_STATE_FILE"
 ucode -L "$TRAFIRA_LIB" "$WORK_DIR/check.uc" failure 2>"$WORK_DIR/error"
 grep -Fq 'settings.ruleset_download_timeout' "$WORK_DIR/error"
+printf 'trafira.settings.ruleset_startup_timeout=999999999999999999999999999999999999\n' >"$TRAFIRA_UCI_STATE_FILE"
+ucode -L "$TRAFIRA_LIB" "$WORK_DIR/check.uc" failure 2>"$WORK_DIR/error"
+grep -Fq 'settings.ruleset_startup_timeout' "$WORK_DIR/error"
 printf 'Supervised slow startup deadline checks passed\n'
