@@ -19,7 +19,9 @@ fail() {
 [ -r "$TRAFIRA_INIT" ] || fail "trafira init.d entrypoint is missing"
 [ -r "$LUCI_UCI_DEFAULTS" ] || fail "LuCI uci-defaults entrypoint is missing"
 
-runtime_shell_files="$(find "$TRAFIRA_LIB" -type f -name '*.sh' -print)"
+# procd callbacks must replace a function in rc.common's current shell. This
+# adapter owns only the native bus delete/status contract, not runtime work.
+runtime_shell_files="$(find "$TRAFIRA_LIB" -type f -name '*.sh' ! -path "$TRAFIRA_LIB/service/procd-stop.sh" -print)"
 [ -z "$runtime_shell_files" ] ||
   fail "runtime library must not contain shell owners: $runtime_shell_files"
 
@@ -44,6 +46,7 @@ shell_scripts="$(
 expected_shell_scripts="$(
   printf '%s\n' \
     'luci-app-trafira/root/etc/uci-defaults/50_luci-trafira' \
+    'trafira/files/usr/lib/service/procd-stop.sh' \
     'trafira/files/etc/init.d/trafira' |
     LC_ALL=C sort
 )"

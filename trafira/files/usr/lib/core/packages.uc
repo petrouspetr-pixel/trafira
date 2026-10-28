@@ -81,8 +81,11 @@ function apk_info_version(package_name, output) {
         line = trim(as_string(line));
         if (line == "")
             continue;
-        if (substr(line, 0, length(prefix)) == prefix)
-            return substr(line, length(prefix));
+        if (substr(line, 0, length(prefix)) == prefix) {
+            let version = substr(line, length(prefix));
+            if (match(version, /^[0-9][A-Za-z0-9._+~:-]*$/))
+                return version;
+        }
     }
     return "";
 }
@@ -98,7 +101,7 @@ function apk_list_version(package_name, output) {
                 continue;
 
             let version = substr(field, length(prefix));
-            if (version != "")
+            if (match(version, /^[0-9][A-Za-z0-9._+~:-]*$/))
                 return version;
         }
     }
@@ -132,21 +135,32 @@ function apk_query_version(package_name, output) {
 
 function apk_version(package_name) {
     package_name = as_string(package_name);
+    if (!command_exists("apk"))
+        return "";
+    // A valid installed query is authoritative, including [] or a virtual
+    // provider with a different concrete name. Never reinterpret that result
+    // through legacy prefix-based list/info output.
+    let output = command_output([ "apk", "query", "--from", "installed", "--format", "json", "--fields", "name,version", package_name ]);
+    if (output != "") {
+        let packages;
+        try { packages = json(output); } catch (e) { return ""; }
+        if (type(packages) != "array")
+            return "";
+        return apk_query_version(package_name, output);
+    }
+    // Older apk versions do not implement query. Prefer exact manifest names;
+    // the remaining legacy formats must begin with a numeric version token.
     if (!apk_installed(package_name))
         return "";
-
-    let version = apk_list_version(package_name, command_output([ "apk", "list", "--installed", package_name ]));
+    let version = apk_manifest_version(package_name, command_output([ "apk", "list", "--installed", "--manifest", package_name ]));
     if (version != "")
         return version;
-
-    version = apk_manifest_version(package_name, command_output([ "apk", "list", "--installed", "--manifest", package_name ]));
-    if (version != "")
-        return version;
-
     version = apk_manifest_version(package_name, command_output([ "apk", "list", "--installed", "--manifest" ]));
     if (version != "")
         return version;
-
+    version = apk_list_version(package_name, command_output([ "apk", "list", "--installed", package_name ]));
+    if (version != "")
+        return version;
     return apk_info_version(package_name, command_output([ "apk", "info", "-v", package_name ]));
 }
 

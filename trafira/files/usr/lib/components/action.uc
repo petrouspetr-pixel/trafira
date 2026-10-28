@@ -682,6 +682,8 @@ function pkg_install_files(files) {
 }
 
 function pkg_remove_sing_box_conflict(package_name) {
+    if (rollback_package && rollback_package.apk_transition)
+        return true;
     package_name = as_string(package_name);
     if (!pkg_is_installed(package_name))
         return true;
@@ -691,6 +693,11 @@ function pkg_remove_sing_box_conflict(package_name) {
 }
 
 function run_logged_pkg_remove_sing_box_conflict(package_name, description) {
+    if (rollback_package && rollback_package.apk_transition) {
+        let transition = rollback_package.apk_transition;
+        return transition.target_name != "" || !pkg_is_installed(package_name) ||
+            apply_apk_core_transition(transition, "", "", "");
+    }
     if (!pkg_is_installed(package_name)) {
         updates_log(description);
         return true;
@@ -1746,7 +1753,7 @@ function stage_rollback_archive(name, version, directory) {
     return null;
 }
 
-function stage_previous_sing_box_package(variant, action) {
+function stage_previous_sing_box_package(variant, action, verified_core_only) {
     rollback_package = null;
     rollback_package_files = [];
     rollback_packages = [];
@@ -1763,9 +1770,9 @@ function stage_previous_sing_box_package(variant, action) {
         if (rollback_apk_world == null)
             return false;
     }
-    // The isolated Extended APK transaction cannot replace dependencies. Do
+    // Verified isolated APK transactions cannot replace dependencies. Do
     // not require obsolete archives for packages that will remain installed.
-    let packages = isolated_extended_apk_update ?
+    let packages = (isolated_extended_apk_update || (is_apk() && (variant == "extended" || variant == "stable" || variant == "tiny") && verified_core_only)) ?
         [ { name, version: installed_package_version(name) } ] :
         rollback_installed_packages(name, installed_package_version(name));
     if (packages == null)
@@ -1809,6 +1816,8 @@ function rollback_files_valid() {
 function restore_rollback_apk_world() {
     if (!is_apk() || rollback_apk_world == null)
         return true;
+    if (rollback_package && rollback_package.apk_transition)
+        return write_apk_transition_world(rollback_apk_world, rollback_package.apk_transition);
     // Local apk add installs the exact archives but adds their identity pins to
     // world. Packages have already been restored; restore only original intent,
     // leaving the package manager's installed database untouched.
@@ -1829,6 +1838,9 @@ function pkg_install_rollback_files(files) {
     for (let file in files)
         push(args, file);
     let command = (is_apk() ? "" : "OPKG_CONF_DIR=" + shell_quote(directory + "/empty") + " ") + command_from_args(args);
+    if (rollback_package && rollback_package.apk_transition)
+        return apply_apk_core_transition(rollback_package.apk_transition, rollback_package.name,
+            rollback_package.path, rollback_package.version);
     if (isolated_extended_apk_update) {
         if (!isolated_apk_plan_is_core_only(command_output(isolated_apk_core_command(files, true) + " 2>/dev/null")))
             return false;
@@ -1860,6 +1872,11 @@ function restore_sing_box_variant_state(previous_marker, previous_version_state)
 
 function replace_sing_box_package_variant(target_package, conflict_package, target_version) {
     prepare_sing_box_package_service_install();
+    if (rollback_package && rollback_package.apk_transition) {
+        let transition = rollback_package.apk_transition;
+        return target_package == transition.target_name && target_version == transition.target_version &&
+            apply_apk_core_transition(transition, transition.target_name, transition.target_file, transition.target_version);
+    }
     if ((as_string(conflict_package) == "" || !pkg_is_installed(conflict_package)) &&
         (target_package == "sing-box-extended" || !pkg_is_installed("sing-box-extended")))
         return pkg_install_name_downgrade(target_package, target_version);
@@ -1886,7 +1903,7 @@ function restore_sing_box_package_variant(previous_variant) {
         if (!rollback_files_valid())
             return false;
         prepare_sing_box_package_service_install();
-        if (isolated_extended_apk_update)
+        if (isolated_extended_apk_update || rollback_package.apk_transition)
             return pkg_install_rollback_files(rollback_package_files) &&
                 installed_package_version(name) == rollback_package.version;
         // Removing even the same package ensures apk restores missing payload
@@ -2010,6 +2027,187 @@ function fail_package_sing_box_install(action, tiny, reason, current_version, la
 function ram_prepare_failure(stage, error) {
     install_failure_detail = stage + "/" + error;
     return null;
+}
+
+// Package-core transitions must not expose unchanged dependencies to apk del's
+// orphan cleanup. Exact installed pins and core conflicts go into ONE offline
+// add transaction. Keep the pins until any same-version core reinstall finishes.
+function apk_transition_command(transition, name, file, simulate, reinstall) {
+    let args = [ "apk", "--no-network", "--repositories-file", "/dev/null", "add", "--allow-untrusted" ];
+    if (simulate)
+        push(args, "--simulate");
+    if (reinstall)
+        push(args, "--force-reinstall");
+    else {
+        for (let item in transition.packages)
+            push(args, item.name + "=" + item.version);
+        for (let core in [ "sing-box", "sing-box-tiny", "sing-box-extended" ])
+            // Extended/Tiny may provide virtual sing-box. A world conflict
+            // against that alias would also reject the desired provider.
+            if (core != name && (core != "sing-box" || name == ""))
+                push(args, "!" + core);
+        // Replace a concrete Stable identity pin with the virtual alias when
+        // the selected fork provides sing-box. The solver must purge Stable.
+        if (name != "" && name != "sing-box" && transition.source_name == "sing-box")
+            push(args, "sing-box");
+    }
+    if (file != "")
+        push(args, file);
+    return command_from_args(args) + " </dev/null";
+}
+
+function apk_transition_plan_safe(output, name, allow_unchanged, required_removals) {
+    let changes = 0, installed = 0, complete = 0, total = 0, seen = {}, purged = {};
+    for (let raw in split(output, "\n")) {
+        let line = trim(raw);
+        if (line == "")
+            continue;
+        let operation = match(line, /^\(([1-3])\/([1-3])\) (Installing|Upgrading|Downgrading|Replacing|Reinstalling|Purging) (sing-box|sing-box-tiny|sing-box-extended) \([^()\r\n]+\)$/);
+        if (operation) {
+            if (complete || int(operation[1]) != changes + 1 || (total && total != int(operation[2])) || seen[operation[4]])
+                return false;
+            total = int(operation[2]);
+            seen[operation[4]] = true;
+            if (operation[3] == "Purging") {
+                if (operation[4] == name)
+                    return false;
+                purged[operation[4]] = true;
+            }
+            else {
+                if (name == "" || operation[4] != name)
+                    return false;
+                installed++;
+            }
+            changes++;
+        }
+        else if (match(line, /^OK: [0-9]+([.][0-9]+)? (B|KiB|MiB|GiB) in [0-9]+ packages$/))
+            complete++;
+        else
+            return false;
+    }
+    for (let core in (required_removals || []))
+        if (!purged[core])
+            return false;
+    return complete == 1 && total == changes && (name == "" ? changes > 0 :
+        installed == 1 || (allow_unchanged && installed == 0));
+}
+
+function apk_transition_dependencies_unchanged(transition) {
+    for (let item in transition.packages)
+        if (installed_package_version(item.name) != item.version)
+            return false;
+    return true;
+}
+
+function apk_transition_world(transition, name) {
+    let lines = [];
+    for (let line in split(transition.world, "\n"))
+        if (trim(line) != "" && !match(trim(line), /^!?(sing-box|sing-box-tiny|sing-box-extended)([@<>=~].*)?$/))
+            push(lines, line);
+    if (name != "")
+        push(lines, name);
+    return join("\n", lines) + "\n";
+}
+
+function apk_transition_world_unchanged(transition) {
+    return transition.expected_world != null && fs.readfile("/etc/apk/world") == transition.expected_world;
+}
+
+function write_apk_transition_world(world, transition) {
+    if (!apk_transition_world_unchanged(transition))
+        return false;
+    let staged = "/etc/apk/world.trafira-transition." + owner_pid();
+    if (!write_file(staged, world) || !apk_transition_world_unchanged(transition) || !fs.rename(staged, "/etc/apk/world")) {
+        remove_file(staged);
+        return false;
+    }
+    transition.expected_world = world;
+    return true;
+}
+
+function apk_transition_ready(transition, name, file, allow_unchanged) {
+    if (!apk_transition_world_unchanged(transition))
+        return false;
+    let repositories;
+    try {
+        repositories = json(command_output_from_args([ "apk", "--no-network", "--repositories-file", "/dev/null",
+            "query", "--from", "repositories", "--format", "json", "--fields", "name", "*" ]));
+    } catch (e) { return false; }
+    let required_removals = [];
+    for (let core in [ "sing-box", "sing-box-tiny", "sing-box-extended" ])
+        if (core != name && installed_package_version(core) != "")
+            push(required_removals, core);
+    return type(repositories) == "array" && length(repositories) == 0 &&
+        apk_transition_dependencies_unchanged(transition) &&
+        apk_transition_plan_safe(command_output(apk_transition_command(transition, name, file, true, false) + " 2>/dev/null"), name, allow_unchanged, required_removals) && apk_transition_world_unchanged(transition);
+}
+
+function apply_apk_core_transition(transition, name, file, version) {
+    let restoring = name == rollback_package.name && file == rollback_package.path;
+    if (!rollback_files_valid() || !apk_transition_ready(transition, name, file, name != "") ||
+        (file != "" && rollback_archive_digest(file) != (restoring ? rollback_package.digest : transition.target_digest)))
+        return false;
+    let reinstall = name != "" && installed_package_version(name) == version;
+    if (!apk_transition_world_unchanged(transition))
+        return false;
+    let installed = run_logged_install("Changing only sing-box APK packages without network",
+        apk_transition_command(transition, name, file, false, false));
+    // apk itself rewrites world. Track that committed state separately from
+    // original user intent, so cleanup and rollback can reject later edits.
+    transition.expected_world = fs.readfile("/etc/apk/world");
+    if (transition.expected_world == null)
+        return false;
+    if (installed && reinstall) {
+        // OpenWrt's --force-reinstall applies to every named argument: NEVER
+        // pass the dependency pins here. They are already present in world.
+        installed = apk_transition_plan_safe(command_output(apk_transition_command(transition, name, file, true, true) + " 2>/dev/null"), name, false) && apk_transition_world_unchanged(transition) &&
+            run_logged_install("Reinstalling exact staged sing-box APK", apk_transition_command(transition, name, file, false, true));
+        if (installed)
+            transition.expected_world = fs.readfile("/etc/apk/world");
+    }
+    installed = installed && apk_transition_dependencies_unchanged(transition) &&
+        (name == "" || installed_package_version(name) == version);
+    for (let core in [ "sing-box", "sing-box-tiny", "sing-box-extended" ])
+        if (core != name && installed_package_version(core) != "")
+            installed = false;
+    // On failure the existing rollback path still restores exact core bytes.
+    // Always remove temporary world pins, including after a partial apk failure.
+    let world = restoring || !installed ? transition.world : apk_transition_world(transition, name);
+    return write_apk_transition_world(world, transition) && installed;
+}
+
+function prepare_apk_package_transition(source_name, target_name, target_file, target_version) {
+    let packages;
+    try {
+        packages = json(command_output_from_args([ "apk", "query", "--from", "installed", "--format", "json",
+            "--fields", "name,version", "*" ]));
+    } catch (e) { return null; }
+    if (type(packages) != "array" || length(packages) == 0)
+        return null;
+    let transition = { packages: [], world: fs.readfile("/etc/apk/world"), source_name, target_name, target_file, target_version }, seen = {}, core_found = false;
+    if (transition.world == null)
+        return null;
+    transition.expected_world = transition.world;
+    for (let item in packages) {
+        if (!match(as_string(item.name), /^[A-Za-z0-9_.+][A-Za-z0-9_.+-]*$/) ||
+            !match(as_string(item.version), /^[A-Za-z0-9][A-Za-z0-9._+~:-]*$/) || seen[item.name] ||
+            installed_package_version(item.name) != item.version)
+            return null;
+        seen[item.name] = true;
+        if (item.name == source_name)
+            core_found = true;
+        else if (item.name == "sing-box" || item.name == "sing-box-tiny" || item.name == "sing-box-extended")
+            return null;
+        else
+            push(transition.packages, item);
+    }
+    if (!core_found || !apk_transition_ready(transition, target_name, target_file,
+        target_name == source_name && installed_package_version(source_name) == target_version))
+        return null;
+    transition.target_digest = target_file == "" ? "" : rollback_archive_digest(target_file);
+    if (target_file != "" && transition.target_digest == "")
+        return null;
+    return transition;
 }
 
 function isolated_apk_update_ready(package_file) {
@@ -2170,8 +2368,20 @@ function install_sing_box_extended_package(action) {
             action_fail("sing_box", action, package_failure_message("Cannot prepare verified Extended rollback in RAM; running service was not changed"), current_version, latest_version);
         isolated_extended_apk_update = true;
     }
-    if (!stage_previous_sing_box_package(current_variant, action))
+    let transition = null;
+    if (!isolated_extended_apk_update && is_apk() && sing_box_variant_is_package_managed(current_variant)) {
+        let source_name = current_variant == "stable" ? "sing-box" : current_variant == "tiny" ? "sing-box-tiny" : "sing-box-extended";
+        transition = prepare_apk_package_transition(source_name, "sing-box-extended", package_file, package_version);
+        if (!transition)
+            action_fail("sing_box", action, "Cannot verify a dependency-preserving APK transition; running service was not changed", current_version, latest_version);
+    }
+    if (!stage_previous_sing_box_package(current_variant, action, transition != null))
         action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
+    if (transition) {
+        rollback_package.apk_transition = transition;
+        if (transition.world != rollback_apk_world || !apk_transition_ready(transition, rollback_package.name, rollback_package.path, true))
+            action_fail("sing_box", action, "Cannot verify exact offline core rollback; running service was not changed", current_version, latest_version);
+    }
     if (ram_backup) {
         if (!stage_ram_extended_backup(ram_backup) || !ram_extended_update_unchanged(ram_backup))
             action_fail("sing_box", action, "Cannot preserve verified Extended rollback in RAM; running service was not changed", current_version, latest_version);
@@ -2245,7 +2455,8 @@ function install_sing_box_extended_package(action) {
         }
     }
 
-    if (!run_logged_install("Installing sing-box-extended package " + release.asset_name, (isolated_extended_apk_update ? isolated_apk_core_command([ package_file ], false) : pkg_install_files_command([ package_file ])))) {
+    if (!(transition ? apply_apk_core_transition(transition, "sing-box-extended", package_file, package_version) :
+        run_logged_install("Installing sing-box-extended package " + release.asset_name, (isolated_extended_apk_update ? isolated_apk_core_command([ package_file ], false) : pkg_install_files_command([ package_file ]))))) {
         let install_error = package_failure_message("Failed to install sing-box-extended package");
         restore_sing_box_after_failed_extended_package_install(current_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched);
         action_fail("sing_box", action, install_error, current_version, latest_version);
@@ -2350,8 +2561,20 @@ function install_sing_box_extended(action, compressed) {
 
     remove_file(archive_file);
     ensure_install_storage("sing_box", action, staged_install_bytes(tmp_binary, tmp_cronet));
-    if (!stage_previous_sing_box_package(current_variant, action))
+    let transition = null;
+    if (is_apk() && sing_box_variant_is_package_managed(current_variant)) {
+        let source_name = current_variant == "stable" ? "sing-box" : current_variant == "tiny" ? "sing-box-tiny" : "sing-box-extended";
+        transition = prepare_apk_package_transition(source_name, "", "", "");
+        if (!transition)
+            action_fail("sing_box", action, "Cannot verify a dependency-preserving APK transition; running service was not changed", current_version, latest_version);
+    }
+    if (!stage_previous_sing_box_package(current_variant, action, transition != null))
         action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
+    if (transition) {
+        rollback_package.apk_transition = transition;
+        if (transition.world != rollback_apk_world || !apk_transition_ready(transition, rollback_package.name, rollback_package.path, true))
+            action_fail("sing_box", action, "Cannot verify exact offline core rollback; running service was not changed", current_version, latest_version);
+    }
     stop_trafira_before_sing_box_change();
     let new_version = validate_sing_box_extended_binary(tmp_binary, tmp_dir);
     if (new_version == "") {
@@ -2484,8 +2707,24 @@ function install_package_sing_box(action, tiny) {
     let previous_variant = sing_box_runtime_output("variant", []);
     let previous_marker = sing_box_runtime_output("read-variant-marker", []);
     let previous_version_state = sing_box_runtime_output("read-version-state", []);
-    if (!stage_previous_sing_box_package(previous_variant, action))
+    let transition = null;
+    if (is_apk() && sing_box_variant_is_package_managed(previous_variant)) {
+        if (!init_tmp_dir() || !ensure_dir(tmp_dir + "/target"))
+            action_fail("sing_box", action, "Cannot prepare target APK archive", current_version, latest_version);
+        let target = selected_core ? rollback_archive_info(selected_core.archive, package_name, latest_version) :
+            stage_rollback_archive(package_name, latest_version, tmp_dir + "/target");
+        let source_name = previous_variant == "stable" ? "sing-box" : previous_variant == "tiny" ? "sing-box-tiny" : "sing-box-extended";
+        transition = target ? prepare_apk_package_transition(source_name, package_name, target.path, latest_version) : null;
+        if (!transition)
+            action_fail("sing_box", action, "Cannot verify a dependency-preserving APK transition; running service was not changed", current_version, latest_version);
+    }
+    if (!stage_previous_sing_box_package(previous_variant, action, transition != null))
         action_fail("sing_box", action, "Cannot stage exact previous sing-box packages for offline rollback; running service was not changed", current_version, latest_version);
+    if (transition) {
+        rollback_package.apk_transition = transition;
+        if (transition.world != rollback_apk_world || !apk_transition_ready(transition, rollback_package.name, rollback_package.path, true))
+            action_fail("sing_box", action, "Cannot verify exact offline core rollback; running service was not changed", current_version, latest_version);
+    }
     stop_trafira_before_sing_box_change();
 
     let backup_binary = "";

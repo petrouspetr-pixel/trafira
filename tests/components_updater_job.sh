@@ -144,10 +144,12 @@ awk '
 /^function install_sing_box_extended\(action, compressed\)/ { scoped = 1 }
 scoped && /remove_file\(archive_file\);/ { released = NR }
 scoped && /ensure_install_storage\("sing_box", action, staged_install_bytes/ { space = NR }
-scoped && /stage_previous_sing_box_package\(current_variant, action\)/ { staged = NR }
+scoped && /prepare_apk_package_transition\(source_name,/ { prepared = NR }
+scoped && /stage_previous_sing_box_package\(current_variant, action, transition != null\)/ { staged = NR }
+scoped && /apk_transition_ready\(transition, rollback_package.name,/ { rollback_ready = NR }
 scoped && /stop_trafira_before_sing_box_change\(\);/ { stopped = NR }
 scoped && /let new_version = validate_sing_box_extended_binary/ {
-  safe_validation = released && released < space && space < staged && staged < stopped && stopped < NR
+  safe_validation = released && released < space && space < prepared && prepared < staged && staged < rollback_ready && rollback_ready < stopped && stopped < NR
 }
 scoped && /^}/ { scoped = 0 }
 END { exit safe_validation ? 0 : 1 }

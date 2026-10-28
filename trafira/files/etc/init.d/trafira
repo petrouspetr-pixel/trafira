@@ -41,6 +41,14 @@ service_started() {
 
 stop_service() {
     initd_ucode stop-service "$$"
+    TRAFIRA_LAST_STOP_STATUS="$?"
+    # shellcheck source=/dev/null
+    . "$TRAFIRA_LIB/service/procd-stop.sh"
+    return "$TRAFIRA_LAST_STOP_STATUS"
+}
+
+service_stopped() {
+    trafira_procd_stop_status "${TRAFIRA_LAST_STOP_STATUS:-0}"
 }
 
 reload_service() {

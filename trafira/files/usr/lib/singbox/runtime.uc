@@ -416,6 +416,13 @@ function managed_service_text() {
         "    procd_set_param respawn\n" +
         "    procd_close_instance\n" +
         "}\n\n" +
+        "stop_service() {\n" +
+        "    # shellcheck source=/dev/null\n" +
+        "    . \"${TRAFIRA_LIB:-/usr/lib/trafira}/service/procd-stop.sh\"\n" +
+        "}\n\n" +
+        "service_stopped() {\n" +
+        "    trafira_procd_stop_status 0\n" +
+        "}\n\n" +
         "service_triggers() {\n" +
         "    procd_add_reload_trigger \"sing-box\"\n" +
         "}\n";
