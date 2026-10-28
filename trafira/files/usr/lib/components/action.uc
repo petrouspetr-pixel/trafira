@@ -1816,6 +1816,8 @@ function rollback_files_valid() {
 function restore_rollback_apk_world() {
     if (!is_apk() || rollback_apk_world == null)
         return true;
+    if (rollback_package && rollback_package.apk_transition)
+        return write_apk_transition_world(rollback_apk_world, rollback_package.apk_transition);
     // Local apk add installs the exact archives but adds their identity pins to
     // world. Packages have already been restored; restore only original intent,
     // leaving the package manager's installed database untouched.
@@ -2107,16 +2109,25 @@ function apk_transition_world(transition, name) {
     return join("\n", lines) + "\n";
 }
 
-function write_apk_transition_world(world) {
+function apk_transition_world_unchanged(transition) {
+    return transition.expected_world != null && fs.readfile("/etc/apk/world") == transition.expected_world;
+}
+
+function write_apk_transition_world(world, transition) {
+    if (!apk_transition_world_unchanged(transition))
+        return false;
     let staged = "/etc/apk/world.trafira-transition." + owner_pid();
-    if (!write_file(staged, world) || !fs.rename(staged, "/etc/apk/world")) {
+    if (!write_file(staged, world) || !apk_transition_world_unchanged(transition) || !fs.rename(staged, "/etc/apk/world")) {
         remove_file(staged);
         return false;
     }
+    transition.expected_world = world;
     return true;
 }
 
 function apk_transition_ready(transition, name, file, allow_unchanged) {
+    if (!apk_transition_world_unchanged(transition))
+        return false;
     let repositories;
     try {
         repositories = json(command_output_from_args([ "apk", "--no-network", "--repositories-file", "/dev/null",
@@ -2128,7 +2139,7 @@ function apk_transition_ready(transition, name, file, allow_unchanged) {
             push(required_removals, core);
     return type(repositories) == "array" && length(repositories) == 0 &&
         apk_transition_dependencies_unchanged(transition) &&
-        apk_transition_plan_safe(command_output(apk_transition_command(transition, name, file, true, false) + " 2>/dev/null"), name, allow_unchanged, required_removals);
+        apk_transition_plan_safe(command_output(apk_transition_command(transition, name, file, true, false) + " 2>/dev/null"), name, allow_unchanged, required_removals) && apk_transition_world_unchanged(transition);
 }
 
 function apply_apk_core_transition(transition, name, file, version) {
@@ -2137,13 +2148,22 @@ function apply_apk_core_transition(transition, name, file, version) {
         (file != "" && rollback_archive_digest(file) != (restoring ? rollback_package.digest : transition.target_digest)))
         return false;
     let reinstall = name != "" && installed_package_version(name) == version;
+    if (!apk_transition_world_unchanged(transition))
+        return false;
     let installed = run_logged_install("Changing only sing-box APK packages without network",
         apk_transition_command(transition, name, file, false, false));
+    // apk itself rewrites world. Track that committed state separately from
+    // original user intent, so cleanup and rollback can reject later edits.
+    transition.expected_world = fs.readfile("/etc/apk/world");
+    if (transition.expected_world == null)
+        return false;
     if (installed && reinstall) {
         // OpenWrt's --force-reinstall applies to every named argument: NEVER
         // pass the dependency pins here. They are already present in world.
-        installed = apk_transition_plan_safe(command_output(apk_transition_command(transition, name, file, true, true) + " 2>/dev/null"), name, false) &&
+        installed = apk_transition_plan_safe(command_output(apk_transition_command(transition, name, file, true, true) + " 2>/dev/null"), name, false) && apk_transition_world_unchanged(transition) &&
             run_logged_install("Reinstalling exact staged sing-box APK", apk_transition_command(transition, name, file, false, true));
+        if (installed)
+            transition.expected_world = fs.readfile("/etc/apk/world");
     }
     installed = installed && apk_transition_dependencies_unchanged(transition) &&
         (name == "" || installed_package_version(name) == version);
@@ -2153,7 +2173,7 @@ function apply_apk_core_transition(transition, name, file, version) {
     // On failure the existing rollback path still restores exact core bytes.
     // Always remove temporary world pins, including after a partial apk failure.
     let world = restoring || !installed ? transition.world : apk_transition_world(transition, name);
-    return write_apk_transition_world(world) && installed;
+    return write_apk_transition_world(world, transition) && installed;
 }
 
 function prepare_apk_package_transition(source_name, target_name, target_file, target_version) {
@@ -2167,6 +2187,7 @@ function prepare_apk_package_transition(source_name, target_name, target_file, t
     let transition = { packages: [], world: fs.readfile("/etc/apk/world"), source_name, target_name, target_file, target_version }, seen = {}, core_found = false;
     if (transition.world == null)
         return null;
+    transition.expected_world = transition.world;
     for (let item in packages) {
         if (!match(as_string(item.name), /^[A-Za-z0-9_.+][A-Za-z0-9_.+-]*$/) ||
             !match(as_string(item.version), /^[A-Za-z0-9][A-Za-z0-9._+~:-]*$/) || seen[item.name] ||

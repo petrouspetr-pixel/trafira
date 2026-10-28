@@ -22,9 +22,9 @@ const primitive={as_string:x=>x==null?'':String(x),type:x=>Array.isArray(x)?'arr
  json:JSON.parse,int:x=>Math.trunc(Number(x)),length:x=>x.length,push:(a,x)=>a.push(x),join:(sep,a)=>a.join(sep),
  split:(s,sep)=>s.split(sep),trim:s=>s.trim(),match:(s,r)=>s.match(r)};
 const functions=['apk_transition_command','apk_transition_plan_safe','apk_transition_dependencies_unchanged',
- 'apk_transition_world','write_apk_transition_world','apk_transition_ready','apply_apk_core_transition',
+ 'apk_transition_world','apk_transition_world_unchanged','write_apk_transition_world','apk_transition_ready','apply_apk_core_transition',
  'prepare_apk_package_transition','replace_sing_box_package_variant','pkg_install_rollback_files',
- 'restore_sing_box_package_variant','run_logged_pkg_remove_sing_box_conflict','pkg_remove_sing_box_conflict'];
+ 'restore_sing_box_package_variant','restore_rollback_apk_world','run_logged_pkg_remove_sing_box_conflict','pkg_remove_sing_box_conflict'];
 function fixture(sourceName='sing-box-extended'){
  const sourceVersion=sourceName==='sing-box-extended'?'1.14.3.2.7.3-r0':'1.13.0-r0';
  const packages=[{name:sourceName,version:sourceVersion},
@@ -49,7 +49,7 @@ function fixture(sourceName='sing-box-extended'){
   return ops.map((op,i)=>`(${i+1}/${ops.length}) ${op}\n`).join('')+'OK: 136.6 MiB in 239 packages\n';
  }
  const c={...primitive,rollback_package:{name:sourceName,version:sourceVersion,path:'/tmp/old.apk',digest:'oldhash'},
-  rollback_package_files:['/tmp/old.apk'],rollback_packages:[],isolated_extended_apk_update:false,tmp_dir:'/tmp',
+  rollback_apk_world:originalWorld,rollback_package_files:['/tmp/old.apk'],rollback_packages:[],isolated_extended_apk_update:false,tmp_dir:'/tmp',
   command_from_args:a=>{argv=Array.from(a);return JSON.stringify(argv)},
   command_output_from_args:a=>a.includes('repositories')?state.repositories:JSON.stringify(state.snapshot||state.packages),
   command_output:command=>plan(JSON.parse(command.slice(0,command.indexOf(' </dev/null')))),
@@ -167,3 +167,42 @@ for(const sourceName of ['sing-box','sing-box-tiny','sing-box-extended'])
   assert.equal(state.world,state.originalWorld);
  }
 console.log('issue96 complete known package-source/target matrix passed');
+
+{
+ const {c,state}=fixture();const t=c.prepare_apk_package_transition('sing-box-extended','sing-box','/tmp/stable.apk','1.14.2-r1');
+ c.rollback_package.apk_transition=t;state.world+='ca-bundle=20260601-r1\n';const changedWorld=state.world;
+ assert(!c.apk_transition_ready(t,'sing-box','/tmp/stable.apk',false),'same-version external world edit must abort final pre-stop preflight');
+ assert(!c.replace_sing_box_package_variant('sing-box','sing-box-tiny','1.14.2-r1'));
+ assert.equal(state.commands.length,0,'world drift aborts before any APK mutation');assert.equal(state.world,changedWorld);
+ assert(!c.restore_sing_box_package_variant('extended'),'rollback must not erase a concurrent world edit');
+ assert.equal(state.world,changedWorld);
+ assert(!c.restore_rollback_apk_world(),'binary fallback must obey the same world drift guard');
+ assert.equal(state.world,changedWorld);
+}
+
+{
+ const {c,state}=fixture();const t=c.prepare_apk_package_transition('sing-box-extended','sing-box','/tmp/stable.apk','1.14.2-r1');
+ c.rollback_package.apk_transition=t;let committedReads=0;
+ c.fs.readfile=()=>{if(state.commands.length&&++committedReads===2)state.world+='user-added=1-r0\n';return state.world};
+ assert(!c.apply_apk_core_transition(t,'sing-box','/tmp/stable.apk','1.14.2-r1'),'external edit after own APK commit aborts cleanup');
+ assert(state.world.includes('user-added=1-r0\n'),'cleanup must preserve the concurrent edit');
+ assert(!c.restore_sing_box_package_variant('extended'),'rollback must reject concurrent world edits too');
+ assert(state.world.includes('user-added=1-r0\n'));
+}
+console.log('issue96 external world drift before mutation and after own commit is preserved');
+
+{
+ const {c,state,archive}=fixture();let stopped=0;
+ Object.assign(c,{selected_release:null,selected_core:null,retain_rollback_files:false,
+  available_package_version:()=> '1.14.2-r1',sing_box_runtime_output:key=>key==='variant'?'extended':'1.14.3-extended',
+  sing_box_runtime_success:()=>false,run_logged:()=>true,pkg_list_update_command:()=>'',init_tmp_dir:()=>true,ensure_dir:()=>true,
+  stage_rollback_archive:(name)=>{const file=name==='sing-box'?'/tmp/stable.apk':'/tmp/old.apk';return {...archive[file],path:file,digest:file==='/tmp/old.apk'?'oldhash':'newhash',size:1}},
+  sprintf:(_format,value)=>JSON.stringify(value),ensure_install_storage:()=>{state.world+='ca-bundle=20260601-r1\n'},
+  stop_trafira_before_sing_box_change:()=>stopped++,action_fail:(_component,_action,message)=>{throw Error(message)},updates_log:()=>{}
+ });
+ vm.runInContext(body('stage_previous_sing_box_package')+'\n'+body('install_package_sing_box'),c);
+ assert.throws(()=>c.install_package_sing_box('install_stable',false),/Cannot verify exact offline core rollback/);
+ assert.equal(stopped,0,'real install orchestration must reject world drift before stopping the service');
+ assert.equal(state.commands.length,0);assert(state.world.includes('ca-bundle=20260601-r1\n'));
+}
+console.log('issue96 install orchestration rejects drift before service stop; fallback cannot clobber world');

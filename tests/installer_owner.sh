@@ -257,8 +257,25 @@ RETRY_PID=$!
 printf '%s\n' "$RETRY_PID" > "$WORK_DIR/start-retry.pid"
 printf '%s\n' pending > "$WORK_DIR/start.retry"
 
-hanging_started="$(date +%s)"
+# Record actual deadline-helper outcomes rather than timing all cleanup work.
+# Recursive /proc scans and process-tree grace periods depend on host load;
+# each service command must still use its configured bound and exit status.
+cat >"$WORK_DIR/traced-deadline.sh" <<'SH'
+#!/bin/sh
+"$TRAFIRA_INSTALLER_REAL_DEADLINE_HELPER" "$@"
+status=$?
+if [ "$1" = run ]; then
+  printf '%s\t%s\t%s\n' "$2" "$5" "$status" >> "$TRAFIRA_INSTALLER_DEADLINE_TRACE"
+fi
+exit "$status"
+SH
+chmod 0700 "$WORK_DIR/traced-deadline.sh"
+: > "$WORK_DIR/deadline-trace"
+
 PATH="$WORK_DIR:$PATH" \
+TRAFIRA_INSTALLER_DEADLINE_HELPER="$WORK_DIR/traced-deadline.sh" \
+TRAFIRA_INSTALLER_REAL_DEADLINE_HELPER="$deadline_helper" \
+TRAFIRA_INSTALLER_DEADLINE_TRACE="$WORK_DIR/deadline-trace" \
 TRAFIRA_INSTALLER_OPKG_LOG="$WORK_DIR/opkg.log" \
 TRAFIRA_INSTALLER_INIT="$WORK_DIR/hanging-init" \
 TRAFIRA_INSTALLER_BIN="$WORK_DIR/hanging-bin" \
@@ -280,10 +297,16 @@ TRAFIRA_INSTALLER_SERVICE_ACTION_TIMEOUT=3 \
 TRAFIRA_INSTALLER_INIT_LOG="$WORK_DIR/hanging-init.log" \
 TRAFIRA_INSTALLER_HANG_PID_LOG="$HANG_PID_LOG" \
 TRAFIRA_UCI_STATE_FILE="$WORK_DIR/empty-uci.state" \
-  ucode "$helper" installer-prepare-trafira > "$WORK_DIR/hanging-state.env"
-hanging_elapsed="$(($(date +%s) - hanging_started))"
-[ "$hanging_elapsed" -lt 15 ] ||
-  fail "installer cleanup did not bound hanging init.d probes (${hanging_elapsed}s)"
+  timeout --signal=KILL 60 ucode "$helper" installer-prepare-trafira > "$WORK_DIR/hanging-state.env" ||
+  fail "installer cleanup failed or exceeded the external test hang guard"
+for action in enabled status running; do
+  [ "$(grep -Fxc "$(printf '1\t%s\t124' "$action")" "$WORK_DIR/deadline-trace" || true)" = 1 ] ||
+    fail "installer $action probe must use a one-second deadline and return timeout status 124"
+done
+for action in stop disable; do
+  [ "$(grep -Fxc "$(printf '3\t%s\t0' "$action")" "$WORK_DIR/deadline-trace" || true)" = 1 ] ||
+    fail "installer $action action must use a three-second deadline and preserve success"
+done
 grep -Fxq 'TRAFIRA_WAS_ENABLED=1' "$WORK_DIR/hanging-state.env" ||
   fail "installer cleanup must recover enabled state from rc.d after a probe timeout"
 for action in enabled status running stop disable; do

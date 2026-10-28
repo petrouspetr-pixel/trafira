@@ -81,6 +81,9 @@ for source in stable tiny extended; do
   validate_plan "$transition" "$target" 0 "$required"
   run_transaction "$root" "$transition" "$target" "$file" 0 0
   node "$HELPER" "$ACTION" world "$transition" "$target" >"$root/etc/apk/world"
+  target_version=""; [[ -z "$target" ]] || target_version=1.14.2-r1
+  [[ "$target" != sing-box-extended ]] || target_version=2.0.0.1.0-r0
+  node "$HELPER" "$ACTION" lookup "$transition" "$target" "$root" "$target_version"
   assert_dependencies "$root"
   if [[ -n "$target" && "$target" != "$source_name" ]]; then required="[\"$target\"]"; else required='[]'; fi
   run_transaction "$root" "$transition" "$source_name" "$WORK_DIR/packages/old-$source.apk" 1 0 >"$WORK_DIR/plan"
@@ -98,6 +101,8 @@ for source in stable tiny extended; do
   run_transaction "$root" "$transition" "$source_name" "$WORK_DIR/packages/old-$source.apk" 0 1
   cp "$WORK_DIR/$source-$case.original-world" "$root/etc/apk/world"
   test -s "$root/usr/share/issue96/$source_name"
+  source_version=1.13.0-r0; [[ "$source_name" != sing-box-extended ]] || source_version=1.14.3.2.7.3-r0
+  node "$HELPER" "$ACTION" lookup "$transition" "$source_name" "$root" "$source_version"
   assert_dependencies "$root"
   cmp "$WORK_DIR/$source-$case.original-world" "$root/etc/apk/world"
  done

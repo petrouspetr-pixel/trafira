@@ -20,6 +20,22 @@ cat >"$WORK_DIR/apk" <<'SH'
 set -eu
 
 case "$*" in
+  "query --from installed --format json --fields name,version sing-box")
+    case "${FAKE_INSTALLED_RESULT:-empty}" in
+      empty) printf '%s\n' '[]' ;;
+      provider) printf '%s\n' '[{"name":"sing-box-extended","version":"1.14.3.2.7.3-r0"}]' ;;
+      concrete) printf '%s\n' '[{"name":"sing-box-extended","version":"1"},{"name":"sing-box","version":"1.14.2-r1"}]' ;;
+      malformed) printf '%s\n' 'not-json' ;;
+      unsupported) exit 1 ;;
+    esac
+    ;;
+  "info -e sing-box") exit 0 ;;
+  "list --installed sing-box"|"info -v sing-box")
+    printf '%s\n' 'sing-box-extended-1.14.3.2.7.3-r0 x86_64 [installed]'
+    ;;
+  "list --installed --manifest sing-box")
+    printf 'P:sing-box-extended\nV:1.14.3.2.7.3-r0\n'
+    ;;
   "info -e zapret")
     exit 0
     ;;
@@ -86,4 +102,10 @@ for result in empty malformed wrong-name; do
     fail "APK v3 $result query result was accepted as version '$invalid_available_version'"
 done
 
+for result in empty provider malformed unsupported; do
+  concrete_version="$(FAKE_INSTALLED_RESULT="$result" PATH="$WORK_DIR:$PATH" ucode "$PACKAGES_UC" apk-version sing-box)"
+  [ -z "$concrete_version" ] || fail "$result provider was confused with concrete Stable: $concrete_version"
+done
+concrete_version="$(FAKE_INSTALLED_RESULT=concrete PATH="$WORK_DIR:$PATH" ucode "$PACKAGES_UC" apk-version sing-box)"
+[ "$concrete_version" = "1.14.2-r1" ] || fail "exact installed JSON name was not selected"
 printf 'Package version checks passed\n'
