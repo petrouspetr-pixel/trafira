@@ -1873,6 +1873,7 @@ function clash_unknown_action() {
         error: "unknown action",
         available: [
             "get_proxies",
+            "get_latency_failures",
             "get_connections",
             "get_proxy_latency",
             "get_proxy_latencies",

@@ -21,7 +21,7 @@ const READ_COMMANDS = {
     validate_byedpi_strategy_json: 1
 };
 const READ_CLASH = {
-    get_proxies: 0, get_connections: 0, get_proxy_latency: 2,
+    get_proxies: 0, get_latency_failures: 0, get_connections: 0, get_proxy_latency: 2,
     get_proxy_latencies: 2, get_group_latency: 2
 };
 const READ_CONFIG = {

@@ -21,7 +21,7 @@ function read(path,scope) {
     return {};
 }
 function record(path,scope,tag,failed) {
-    if(!scope || type(tag)!="string" || !length(tag) || length(tag)>256)return false;
+    if(!scope || type(tag)!="string" || !length(tag) || length(tag)>128)return false;
     let info=fs.lstat(path+".lock");
     if(info && info.type!="file")return false;
     let lock=fs.open(path+".lock","ae",384);
@@ -60,4 +60,5 @@ function apply(proxies,path,scope) {
             proxy.trafira_latency_failed=true;
     }
 }
-return {valid,record,apply};
+function failures(path,scope) {return keys(read(path,scope));}
+return {valid,record,apply,failures};

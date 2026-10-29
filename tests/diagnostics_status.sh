@@ -236,6 +236,14 @@ sed -i 's/"proxy-a":{"type":"VLESS"}/"proxy-a":{"type":"VLESS","history":[]}/' "
 FAKE_CURL_LOG="$WORK_DIR/persist-read.log" \
   TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
   ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_proxies >"$WORK_DIR/proxies.json"
+FAKE_CURL_LOG="$WORK_DIR/evidence-only.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_latency_failures >"$WORK_DIR/evidence.json"
+EVIDENCE="$WORK_DIR/evidence.json" node - <<'NODE'
+const evidence = JSON.parse(require('fs').readFileSync(process.env.EVIDENCE));
+if (!evidence.instance_id || evidence.failed.length !== 1 || evidence.failed[0] !== 'proxy-a')
+  throw Error('Small direct-browser evidence response must contain only known failures and core identity');
+NODE
 PROXIES="$WORK_DIR/proxies.json" node - <<'NODE'
 const proxies = JSON.parse(require('fs').readFileSync(process.env.PROXIES)).proxies;
 if (proxies['proxy-a'].trafira_latency_failed !== true || proxies['proxy-b'].trafira_latency_failed)

@@ -26,7 +26,7 @@ function run(args) {
 }
 for (const args of [
   ['get_known_devices'], ['get_status'], ['route_explain', '{}'], ['route_explain_start', '{}'], ['route_explain_status', 'r-one'], ['show_version'], ['global_check', 'masked'],
-  ['clash_api', 'get_proxies'], ['clash_api', 'get_proxy_latencies', '["node"]', '5000'],
+  ['clash_api', 'get_proxies'], ['clash_api', 'get_latency_failures'], ['clash_api', 'get_proxy_latencies', '["node"]', '5000'],
   ['profile_action', '{"action":"list"}'], ['profile_action', '{"action":"preview","id":"one"}'],
   ['core_action', '{"action":"catalog"}'], ['core_action', '{"action":"status"}'],
   ['gaming_preset_action', '{"action":"preview_remove"}'], ['gaming_preset_action', '{"action":"plan","sections":[],"operations":[]}']

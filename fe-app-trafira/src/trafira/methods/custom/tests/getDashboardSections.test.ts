@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getConfigSections: vi.fn(),
   getClashApiProxies: vi.fn(),
+  getClashApiLatencyFailures: vi.fn(),
   canUseDirectClashApi: vi.fn(),
   fsRead: vi.fn(),
 }));
@@ -14,6 +15,7 @@ vi.mock('../getConfigSections', () => ({
 vi.mock('../../shell', () => ({
   TrafiraShellMethods: {
     getClashApiProxies: mocks.getClashApiProxies,
+    getClashApiLatencyFailures: mocks.getClashApiLatencyFailures,
   },
 }));
 
@@ -138,6 +140,11 @@ describe('getDashboardSections', () => {
   beforeEach(() => {
     mocks.getConfigSections.mockReset();
     mocks.getClashApiProxies.mockReset();
+    mocks.getClashApiLatencyFailures.mockReset();
+    mocks.getClashApiLatencyFailures.mockResolvedValue({
+      success: true,
+      data: { failed: [] },
+    });
     mocks.canUseDirectClashApi.mockReset();
     mocks.fsRead.mockReset();
     mocks.fsRead.mockRejectedValue(new Error('cache miss'));
@@ -1259,6 +1266,30 @@ describe('getDashboardSections', () => {
       }),
     );
     expect(mocks.getClashApiProxies).not.toHaveBeenCalled();
+  });
+
+  it('merges explicit first failures with the direct browser API without fetching all proxies through RPC', async () => {
+    mocks.getConfigSections.mockResolvedValue([proxySection()]);
+    mocks.canUseDirectClashApi.mockReturnValue(true);
+    const proxies = structuredClone(clashProxies);
+    proxies['main-1-out'].history = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ proxies }) }),
+    );
+    mocks.getClashApiLatencyFailures.mockResolvedValue({
+      success: true,
+      data: { failed: ['main-1-out'], instance_id: 'explicit-first-failure' },
+    });
+    const result = await getDashboardSections({
+      latencyRuntimeId: 'explicit-first-failure',
+    });
+    expect(
+      result.data[0].outbounds.find((n) => n.code === 'main-1-out')
+        ?.latencyStatus,
+    ).toBe('unavailable');
+    expect(mocks.getClashApiProxies).not.toHaveBeenCalled();
+    expect(mocks.getClashApiLatencyFailures).toHaveBeenCalledTimes(1);
   });
 
   it('uses rpcd fallback when direct Clash API access times out', async () => {

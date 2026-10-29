@@ -145,9 +145,9 @@ function canFetchClashApiDirectly() {
   return canUseDirectClashApi() && typeof fetch === 'function';
 }
 
-async function getClashApiProxies(): Promise<
-  Trafira.MethodResponse<ClashAPI.Proxies>
-> {
+async function getClashApiProxies(
+  runtimeId?: string,
+): Promise<Trafira.MethodResponse<ClashAPI.Proxies>> {
   if (canFetchClashApiDirectly()) {
     const controller = new AbortController();
     const timeoutId = setTimeout(
@@ -161,10 +161,21 @@ async function getClashApiProxies(): Promise<
       });
 
       if (response.ok) {
-        return {
-          success: true,
-          data: (await response.json()) as ClashAPI.Proxies,
-        };
+        const data = (await response.json()) as ClashAPI.Proxies;
+        // Keep large proxy responses outside rpcd, fetching only bounded evidence.
+        if (runtimeId && data.proxies) {
+          const evidence =
+            await TrafiraShellMethods.getClashApiLatencyFailures();
+          if (
+            evidence.success &&
+            evidence.data?.instance_id === runtimeId &&
+            Array.isArray(evidence.data.failed)
+          )
+            for (const tag of evidence.data.failed)
+              if (Object.prototype.hasOwnProperty.call(data.proxies, tag))
+                data.proxies[tag].trafira_latency_failed = true;
+        }
+        return { success: true, data };
       }
     } catch (_error) {
       // Fall back to rpcd below for controllers unavailable from the browser.
@@ -1425,7 +1436,7 @@ export async function getDashboardSections(
   const includeSubscriptionCopyState =
     options.includeSubscriptionCopyState ?? true;
   const configSections = hydrateConfigSections(await getConfigSections());
-  const clashProxies = await getClashApiProxies();
+  const clashProxies = await getClashApiProxies(options.latencyRuntimeId);
 
   if (!clashProxies.success || !clashProxies.data?.proxies) {
     return {

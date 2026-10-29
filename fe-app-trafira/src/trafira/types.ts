@@ -95,6 +95,7 @@ export namespace Trafira {
 
   export enum AvailableClashAPIMethods {
     GET_PROXIES = 'get_proxies',
+    GET_LATENCY_FAILURES = 'get_latency_failures',
     GET_CONNECTIONS = 'get_connections',
     GET_PROXY_LATENCY = 'get_proxy_latency',
     GET_PROXY_LATENCIES = 'get_proxy_latencies',

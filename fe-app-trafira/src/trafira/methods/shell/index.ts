@@ -268,6 +268,13 @@ export const TrafiraShellMethods = {
     callBaseMethod<Trafira.GetByedpiStatus>(
       Trafira.AvailableMethods.GET_BYEDPI_STATUS,
     ),
+  getClashApiLatencyFailures: async () =>
+    callBaseMethod<{ failed: string[]; instance_id: string }>(
+      Trafira.AvailableMethods.CLASH_API,
+      [Trafira.AvailableClashAPIMethods.GET_LATENCY_FAILURES],
+      '/usr/bin/trafira',
+      { timeout: 3000 },
+    ),
   getClashApiProxies: async () =>
     callBaseMethod<ClashAPI.Proxies>(Trafira.AvailableMethods.CLASH_API, [
       Trafira.AvailableClashAPIMethods.GET_PROXIES,

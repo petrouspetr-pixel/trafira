@@ -1652,6 +1652,13 @@ function clash_api(action, arg1, arg2, arg3) {
     let base_url = clash_api_url();
     let test_url = latency_test_url();
 
+    if (action == "get_latency_failures") {
+        let scope=latency_observation_scope();
+        let failed=require("diagnostics.latency").failures(RUNTIME_STATE_DIR+"/latency-failures.json",scope);
+        print(sprintf("%J\n",{failed,instance_id:scope==""?"":substr(scope,0,rindex(scope,":"))}));
+        return 0;
+    }
+
     if (action == "get_proxies") {
         let args = [ "curl", "-s" ];
         push(args, base_url + "/proxies");
