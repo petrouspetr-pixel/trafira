@@ -10,6 +10,7 @@ export namespace ClashAPI {
     name: string;
     udp: boolean;
     history: ProxyHistoryEntry[];
+    trafira_latency_failed?: boolean;
     now?: string;
     all?: string[];
   }
