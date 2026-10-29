@@ -209,6 +209,12 @@ if (state.progress.completed !== 1 || state.progress.failed !== 1)
   throw Error('API timeout must count as a failed probe');
 NODE
 
+# An overlapping automatic URLTest returns {}, not an API error or dead leaf.
+FAKE_LATENCY_RESPONSE='{}' FAKE_CURL_LOG="$WORK_DIR/group-busy.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_group_latency urltest 5000 >/dev/null ||
+  fail "empty concurrent group response must not invent a failed measurement"
+
 # End-to-end persistence: a failed first probe enriches a later /proxies read.
 cat >"$fake_bin/ubus" <<'SH'
 #!/usr/bin/env sh

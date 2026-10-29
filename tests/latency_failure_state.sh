@@ -12,7 +12,7 @@ assert(!probe.valid({delay:0},false),"zero delay means unavailable");
 assert(!probe.valid({delay:-1},false),"negative delay invalid");
 assert(!probe.valid({delay:"12"},false),"string is not a measurement");
 assert(probe.valid({node:12},true),"group results");
-assert(!probe.valid({},true),"empty group is not a successful test");
+assert(probe.valid({},true),"concurrent URLTest has no new measurements, not a failure");
 assert(!probe.valid({message:"Timeout"},true),"group JSON timeout");
 let proxies={node:{type:"Direct",history:[]},other:{type:"Direct",history:[]}};
 probe.apply(proxies,path,"core1/config1");

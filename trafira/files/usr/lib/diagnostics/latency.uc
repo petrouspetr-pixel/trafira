@@ -3,7 +3,8 @@ let fs=require("fs");
 function valid(value,group) {
     if(type(value)!="object")return false;
     if(!group)return type(value.delay)=="int" || type(value.delay)=="double" ? value.delay>0 : false;
-    if(!length(keys(value)))return false;
+    // URLTest returns an empty map when another automatic check is running.
+    // This is no new measurement; do not invent failed nodes.
     for(let _,delay in value)
         if((type(delay)!="int" && type(delay)!="double") || !(delay>0))return false;
     return true;
