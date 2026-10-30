@@ -66,7 +66,8 @@ describe('configuration profiles controller', () => {
     expect(render.mock.lastCall?.[0]).toMatchObject({
       busy: false,
       preview: null,
-      error: 'Could not read profiles. Check the router connection and try again.',
+      error:
+        'Could not read profiles. Check the router connection and try again.',
     });
   });
   it('rechecks instead of using an old manually reviewed digest', async () => {

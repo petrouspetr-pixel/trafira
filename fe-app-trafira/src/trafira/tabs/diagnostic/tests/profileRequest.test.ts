@@ -10,6 +10,39 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('profile request failures', () => {
+  it('stops after one retry when the read keeps timing out', async () => {
+    vi.useFakeTimers();
+    vi.mocked(executeShellCommand).mockResolvedValue({
+      code: 1,
+      stdout: '',
+      stderr: 'private details',
+      failure: 'timeout',
+    });
+    const request = expect(
+      callProfileCommand({ action: 'list' }),
+    ).rejects.toThrow('timeout');
+    await vi.runAllTimersAsync();
+    await request;
+    expect(executeShellCommand).toHaveBeenCalledTimes(2);
+  });
+  it('does not retry a busy write or trust successful JSON from a failed process', async () => {
+    vi.mocked(executeShellCommand).mockResolvedValueOnce({
+      stdout: '{"success":false,"error":"busy"}',
+      stderr: '',
+    });
+    expect(
+      await callProfileCommand({ action: 'remove', id: 'p-test' }),
+    ).toEqual({ success: false, error: 'busy' });
+    expect(executeShellCommand).toHaveBeenCalledTimes(1);
+    vi.mocked(executeShellCommand).mockResolvedValueOnce({
+      code: 1,
+      stdout: '{"success":true}',
+      stderr: 'private details',
+    });
+    await expect(
+      callProfileCommand({ action: 'apply', id: 'p-test' }),
+    ).rejects.toThrow('invalid_response');
+  });
   it('retries a temporary read failure and returns the list', async () => {
     vi.useFakeTimers();
     vi.mocked(executeShellCommand)
@@ -45,14 +78,12 @@ describe('profile request failures', () => {
     const request = callProfileCommand({ action: 'list' });
     await vi.runAllTimersAsync();
     expect((await request).success).toBe(true);
-    vi.mocked(executeShellCommand)
-      .mockClear()
-      .mockResolvedValue({
-        code: 1,
-        stdout: '',
-        stderr: 'private details',
-        failure: 'timeout',
-      });
+    vi.mocked(executeShellCommand).mockClear().mockResolvedValue({
+      code: 1,
+      stdout: '',
+      stderr: 'private details',
+      failure: 'timeout',
+    });
     await expect(
       callProfileCommand({ action: 'apply', id: 'p-test' }),
     ).rejects.toThrow('timeout');
