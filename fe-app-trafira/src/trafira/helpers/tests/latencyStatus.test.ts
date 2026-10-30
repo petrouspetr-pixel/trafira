@@ -11,6 +11,18 @@ const snapshot = (delay?: number) => ({
   },
 });
 describe('latency availability evidence', () => {
+  it('shows the first explicit failed probe even with no successful history', () => {
+    const state = new LatencyObservations();
+    expect(
+      state
+        .update('core', {
+          node: { ...snapshot().node, trafira_latency_failed: true },
+        } as unknown as ClashAPI.Proxies['proxies'])
+        .get('node'),
+    ).toBe('unavailable');
+    expect(state.update('core', snapshot(25)).get('node')).toBe('available');
+  });
+
   it('does not call a never-tested node unavailable', () => {
     expect(
       new LatencyObservations().update('core-1/config', snapshot()).get('node'),

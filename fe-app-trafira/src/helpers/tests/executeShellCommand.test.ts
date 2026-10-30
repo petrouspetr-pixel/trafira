@@ -8,6 +8,11 @@ describe('RPC command access routing', () => {
     ['/usr/bin/trafira', ['get_ui_state'], '/usr/bin/trafira-read'],
     ['/usr/bin/trafira', ['clash_api', 'get_proxies'], '/usr/bin/trafira-read'],
     [
+      '/usr/bin/trafira',
+      ['clash_api', 'get_latency_failures'],
+      '/usr/bin/trafira-read',
+    ],
+    [
       '/usr/bin/trafira-config',
       ['core_action', '{"action":"catalog"}'],
       '/usr/bin/trafira-read',

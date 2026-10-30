@@ -319,7 +319,14 @@ function nft_queue_overlap(own_table, range_start, range_end) {
 
     let in_own_table = false;
     for (let line in split(read_stdin(), "\n")) {
-        let fields = nft_line_fields(as_string(line));
+        let text = as_string(line);
+        // Table headers must update ownership even when they contain no queue.
+        // Skip large sets, unrelated rules and our own queues before tokenizing.
+        let table_header = match(text, /^[ \t\r]*table[ \t\r]/) != null;
+        if (!table_header && (in_own_table || index(text, "queue") < 0))
+            continue;
+
+        let fields = nft_line_fields(text);
         if (length(fields) == 0 || fields[0] == "")
             continue;
 
