@@ -28,6 +28,9 @@ export function componentSuccessMessage(
 // and transient RPC failures. Keep additional package-manager details intact.
 export function componentErrorMessage(message: string) {
   const translations: Record<string, string> = {
+    'Another configuration operation is already running': _(
+      'Another configuration operation is already running.',
+    ),
     'Cannot prepare verified Extended rollback in RAM; running service was not changed':
       _(
         'Cannot prepare verified Extended rollback in RAM; running service was not changed',

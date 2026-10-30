@@ -5305,3 +5305,12 @@ msgstr ""
 
 msgid "Cannot finish already installed core selection"
 msgstr ""
+
+msgid "Could not read profiles. Check the router connection and try again."
+msgstr ""
+
+msgid "You do not have permission to manage profiles."
+msgstr ""
+
+msgid "Profile storage is unavailable. Check free space and access permissions."
+msgstr ""

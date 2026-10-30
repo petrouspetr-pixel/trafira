@@ -42,6 +42,18 @@ const initial = (): ProfileState => ({
 const text = (value: unknown): string =>
   typeof value === 'string' ? value : '';
 const errors: Record<string, string> = {
+  timeout:
+    'Could not read profiles. Check the router connection and try again.',
+  rpc: 'Could not read profiles. Check the router connection and try again.',
+  invalid_response:
+    'Could not read profiles. Check the router connection and try again.',
+  permission_denied: 'You do not have permission to manage profiles.',
+  storage_unavailable:
+    'Profile storage is unavailable. Check free space and access permissions.',
+  storage_error:
+    'Profile storage is unavailable. Check free space and access permissions.',
+  storage_full_or_unavailable:
+    'Profile storage is unavailable. Check free space and access permissions.',
   conflict: 'Configuration changed. Review the differences again.',
   busy: 'Another configuration operation is already running.',
   recovery_required: 'Restore the interrupted operation before continuing.',
@@ -55,6 +67,16 @@ const errors: Record<string, string> = {
 };
 export function profileErrorMessage(error: string): string {
   const messages: Record<string, string> = {
+    'Could not read profiles. Check the router connection and try again.': _(
+      'Could not read profiles. Check the router connection and try again.',
+    ),
+    'You do not have permission to manage profiles.': _(
+      'You do not have permission to manage profiles.',
+    ),
+    'Profile storage is unavailable. Check free space and access permissions.':
+      _(
+        'Profile storage is unavailable. Check free space and access permissions.',
+      ),
     'Configuration changed. Review the differences again.': _(
       'Configuration changed. Review the differences again.',
     ),
@@ -264,11 +286,13 @@ export class ProfilePanelController {
         success: result.success === true && !result.rollback_error,
         id: text(result.id) || request.id || '',
       };
-    } catch {
+    } catch (error) {
       if (!this.active || generation !== this.generation) return;
       this.state = {
         ...this.state,
-        error: 'The profile operation failed.',
+        error:
+          errors[error instanceof Error ? error.message : ''] ||
+          'The profile operation failed.',
         preview: null,
       };
     } finally {

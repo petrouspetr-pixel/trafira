@@ -3036,7 +3036,7 @@ function component_action(component, action) {
 let mode = ARGV[0] || "";
 let operation_lock=null;
 if((mode=="component-action" && ARGV[2]!="check_update") || mode=="component-version-action") {
-    operation_lock=require("service.operation_lock").acquire("component");
+    operation_lock=require("service.operation_lock").acquire_wait("component",true,2);
     if(!operation_lock) {
         write_json({success:false,message:"Another configuration operation is already running",error:"busy"});
         exit(1);

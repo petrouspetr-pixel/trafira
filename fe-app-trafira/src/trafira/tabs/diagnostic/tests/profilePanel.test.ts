@@ -66,7 +66,7 @@ describe('configuration profiles controller', () => {
     expect(render.mock.lastCall?.[0]).toMatchObject({
       busy: false,
       preview: null,
-      error: 'The profile operation failed.',
+      error: 'Could not read profiles. Check the router connection and try again.',
     });
   });
   it('rechecks instead of using an old manually reviewed digest', async () => {
@@ -406,7 +406,7 @@ describe('configuration profiles controller', () => {
     await controller.submit({ action: 'list' });
     await controller.submit({ action: 'status' });
     expect(render.mock.lastCall?.[0].error).toBe(
-      'The profile operation failed.',
+      'Profile storage is unavailable. Check free space and access permissions.',
     );
   });
   it('ignores an unrelated historical worker failure after reviewing a profile', async () => {

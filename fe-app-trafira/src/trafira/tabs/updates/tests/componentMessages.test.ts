@@ -47,6 +47,17 @@ it('keeps unknown diagnostic details with a localized introduction', () => {
   );
 });
 
+it('translates configuration contention without an English diagnostic suffix', () => {
+  vi.stubGlobal('_', (text: string) =>
+    text === 'Another configuration operation is already running.'
+      ? 'Уже выполняется другая операция с конфигурацией.'
+      : text,
+  );
+  expect(
+    componentErrorMessage('Another configuration operation is already running'),
+  ).toBe('Уже выполняется другая операция с конфигурацией.');
+});
+
 it('uses the shipped Russian catalog for component notifications', () => {
   const translations = Object.fromEntries(
     [...catalog.matchAll(/msgid "([^"\n]+)"\nmsgstr "([^"\n]+)"/g)].map(
