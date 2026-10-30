@@ -474,7 +474,8 @@ function get_wan_ip_addresses() {
         for (let ip in network_status_ip_addresses(data, "ipv4-address"))
             push_unique(result, seen, ip);
         for (let ip in network_status_ip_addresses(data, "ipv6-address"))
-            push_unique(result, seen, ip);
+            if (!core_ip.ip_in_cidr(ip, "fe80::/10"))
+                push_unique(result, seen, ip);
     }
 
     let route = command_output_from_args([ "ip", "-4", "route", "show", "default" ]);
@@ -575,6 +576,7 @@ function server_required_ports_listening(listen, port, required_proto) {
     );
 }
 
+let public_host_dns_cache = {};
 function resolve_public_host_ips(host) {
     host = as_string(host);
     if (substr(host, 0, 1) == "[" && substr(host, length(host) - 1, 1) == "]")
@@ -586,23 +588,15 @@ function resolve_public_host_ips(host) {
     if (core_ip.valid_ipv6(host))
         return host;
 
-    let seen = {};
-    for (let line in split(command_output_from_args([
-        "dig", "+short", "A", host, "+timeout=2", "+tries=1"
-    ]), "\n")) {
-        line = trim(as_string(line));
-        if (valid_ipv4(line))
-            seen[line] = true;
-    }
-    for (let line in split(command_output_from_args([
-        "dig", "+short", "AAAA", host, "+timeout=2", "+tries=1"
-    ]), "\n")) {
-        line = trim(as_string(line));
-        if (core_ip.valid_ipv6(line))
-            seen[line] = true;
-    }
-
-    return join(" ", sort(keys(seen)));
+    if (public_host_dns_cache[host] == null)
+        public_host_dns_cache[host] = require("diagnostics.public_host").resolve(
+            host, list_option(settings(), "bootstrap_dns_server"), function(name, kind, server) {
+                let args = [ "dig", "+short", "+comments", "-q", name, "-t", kind, "+timeout=2", "+tries=1" ];
+                if (server != "") push(args, "@" + server);
+                return command_capture(command_from_args(args) + " 2>/dev/null");
+            }
+        );
+    return public_host_dns_cache[host];
 }
 
 function public_host_flags(public_host, public_host_ips, wan_ip, wan_public) {

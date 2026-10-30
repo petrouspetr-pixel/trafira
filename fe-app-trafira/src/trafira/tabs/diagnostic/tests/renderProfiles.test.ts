@@ -596,10 +596,14 @@ it('keeps a failed list visible and allows an explicit retry', async () => {
   };
   profilesPanel.mount();
   await drain();
-  expect(text(host)).toContain('The profile operation failed.');
+  expect(text(host)).toContain(
+    'Profile storage is unavailable. Check free space and access permissions.',
+  );
   expect(button('Refresh profiles').disabled).toBe(false);
   await click('Refresh profiles');
-  expect(text(host)).not.toContain('The profile operation failed.');
+  expect(text(host)).not.toContain(
+    'Profile storage is unavailable. Check free space and access permissions.',
+  );
   expect(text(host)).toContain('Home');
 });
 

@@ -89,4 +89,12 @@ function release(handle) {
     handle.file.close();
     handle.file=null;
 }
-return {acquire,acquire_read,release,identity,is_live_ancestor};
+function acquire_wait(operation,allow_borrow,seconds) {
+    let deadline=clock()[0]+min(max(int(seconds||0),0),5);
+    while(true) {
+        let failure={},handle=acquire(operation,allow_borrow,failure);
+        if(handle || !failure.busy || clock()[0]>=deadline)return handle;
+        system("sleep 0.1");
+    }
+}
+return {acquire,acquire_read,acquire_wait,release,identity,is_live_ancestor};

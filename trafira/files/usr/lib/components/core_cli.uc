@@ -19,11 +19,28 @@ function status(request) {
     return {success:result.success!==false,running:result.running===true,job_id:result.job_id||request.job_id||"",
         error:result.error||(!result.success?"version_action_failed":""),restored:result.restored===true,rollback_error:result.rollback_error||""};
 }
+function catalog_snapshot() {
+    let lock=locks.acquire_read();
+    if(!lock)return null;
+    let result;
+    try {result={environment:sources.environment(),current_version:sources.current_version(),pin:pin.read()};}
+    catch(e){result=null;}
+    locks.release(lock);
+    return result;
+}
+function load_catalog(request) {
+    let before=catalog_snapshot();
+    if(!before)return failure("busy");
+    // Network and package metadata downloads must not block configuration writes.
+    let result=catalog.load(before.environment,request.refresh,sources.fetch);
+    let after=catalog_snapshot();
+    if(!after)return failure("busy");
+    if(before.current_version!=after.current_version || sprintf("%J",before.environment)!=sprintf("%J",after.environment))
+        return failure("conflict");
+    return {...result,current_version:after.current_version,current_variant:after.environment.variant,pin:after.pin};
+}
 function dispatch(request) {
-    if(request.action=="catalog") {
-        let env=sources.environment();
-        return {...catalog.load(env,request.refresh,sources.fetch),current_version:sources.current_version(),current_variant:env.variant,pin:pin.read()};
-    }
+    if(request.action=="catalog")return load_catalog(request);
     if(request.action=="status")return status(request);
     if(request.expected_current_version!=sources.current_version())return failure("conflict");
     if(request.action=="pin")return pin.pin_installed(request,{current:sources.current_version,environment:sources.environment,installed_version:sources.installed_version,write:pin.write});
@@ -40,7 +57,10 @@ function action(text) {
     try {request=json(text);}catch(e){return failure("invalid_request");}
     if(!pin.request_valid(request))return failure("invalid_request");
     if(request.action=="status")return status(request);
-    let lock=request.action=="catalog"?locks.acquire_read():locks.acquire("core-version-action");if(!lock)return failure("busy");
+    if(request.action=="catalog") {
+        try {return load_catalog(request);}catch(e){return failure("version_action_failed");}
+    }
+    let lock=locks.acquire("core-version-action");if(!lock)return failure("busy");
     let result;
     try {result=dispatch(request);}catch(e){result=failure("version_action_failed");}
     locks.release(lock);return result;

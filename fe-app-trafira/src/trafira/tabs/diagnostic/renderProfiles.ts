@@ -1,5 +1,5 @@
 import { profileOptionLabels } from './profileOptionLabels';
-import { executeShellCommand } from '../../../helpers/executeShellCommand';
+import { callProfileCommand as command } from './profileRequest';
 import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
 import {
   ProfilePanelController,
@@ -14,15 +14,6 @@ import {
 } from '../../helpers/configurationSync';
 
 const MAX_FILE = 1048576;
-async function command(request: object): Promise<Record<string, unknown>> {
-  const result = await executeShellCommand({
-    command: '/usr/bin/trafira-config',
-    args: ['profile_action', JSON.stringify(request)],
-    timeout: 30000,
-  });
-  if (result.code) throw new Error('Profile command failed');
-  return JSON.parse(result.stdout) as Record<string, unknown>;
-}
 function encode(bytes: Uint8Array) {
   return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''));
 }
