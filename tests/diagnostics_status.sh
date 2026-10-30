@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIAGNOSTICS="$ROOT_DIR/trafira/files/usr/lib/diagnostics/status.uc"
 DIAGNOSTICS_RUNTIME="$ROOT_DIR/trafira/files/usr/lib/diagnostics/runtime.uc"
 TRAFIRA_BIN="$ROOT_DIR/trafira/files/usr/bin/trafira"
-TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
+export TRAFIRA_LIB="$ROOT_DIR/trafira/files/usr/lib"
 CLI_UC="$TRAFIRA_BIN"
 WORK_DIR="$(mktemp -d)"
 
@@ -143,7 +143,17 @@ cat >"$fake_bin/curl" <<'SH'
 printf '%s\n' "$*" >>"$FAKE_CURL_LOG"
 case "$*" in
   *'127.0.0.1:9090/proxies') printf '%s\n' '{"proxies":{"urltest":{"type":"URLTest"},"provider-urltest":{"type":"urltest"},"proxy-a":{"type":"VLESS"},"proxy-b":{"type":"Trojan"}}}' ;;
-  *) printf '%s\n' '{"delay":1}' ;;
+  *'/group/'*'/delay'*)
+     if [ -n "${FAKE_LATENCY_RESPONSE:-}" ]; then
+       printf '%s\n' "$FAKE_LATENCY_RESPONSE"
+     else
+       printf '%s\n' '{"proxy-a":1,"proxy-b":2}'
+     fi ;;
+  *) if [ -n "${FAKE_LATENCY_RESPONSE:-}" ]; then
+       printf '%s\n' "$FAKE_LATENCY_RESPONSE"
+     else
+       printf '%s\n' '{"delay":1}'
+     fi ;;
 esac
 SH
 chmod +x "$fake_bin/curl"
@@ -180,6 +190,76 @@ if (!value.progress || value.progress.completed !== 4 || value.progress.total !=
   process.exit(1);
 }
 NODE
+# A valid JSON API error is a failed measurement, not a successful curl.
+if FAKE_LATENCY_RESPONSE='{"message":"Timeout"}' \
+  FAKE_CURL_LOG="$WORK_DIR/fake-timeout.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_proxy_latency proxy-out 5000 >/dev/null; then
+  fail "a JSON timeout must fail the single-node measurement"
+fi
+if FAKE_LATENCY_RESPONSE='{"message":"Timeout"}' \
+  FAKE_CURL_LOG="$WORK_DIR/fake-bulk-timeout.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" TRAFIRA_UI_LATENCY_ACTION_DIR="$latency_action_dir" \
+  PATH="$fake_bin:$PATH" ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_proxy_latencies '["proxy-a"]' 5000 "$latency_state" >/dev/null; then
+  fail "a JSON timeout must fail the bulk measurement"
+fi
+JOB_STATE="$latency_state" node - <<'NODE'
+const state = JSON.parse(require('fs').readFileSync(process.env.JOB_STATE));
+if (state.progress.completed !== 1 || state.progress.failed !== 1)
+  throw Error('API timeout must count as a failed probe');
+NODE
+
+# An overlapping automatic URLTest returns {}, not an API error or dead leaf.
+FAKE_LATENCY_RESPONSE='{}' FAKE_CURL_LOG="$WORK_DIR/group-busy.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_group_latency urltest 5000 >/dev/null ||
+  fail "empty concurrent group response must not invent a failed measurement"
+
+# End-to-end persistence: a failed first probe enriches a later /proxies read.
+cat >"$fake_bin/ubus" <<'SH'
+#!/usr/bin/env sh
+printf '{"sing-box":{"instances":{"main":{"running":true,"pid":%s}}}}\n' "$FAKE_CORE_PID"
+SH
+chmod +x "$fake_bin/ubus"
+printf '{}\n' >"$WORK_DIR/live-config.json"
+printf 'trafira.settings.config_path=%s\n' "$WORK_DIR/live-config.json" >>"$uci_state"
+mkdir -p "$WORK_DIR/runtime"
+export FAKE_CORE_PID=$$ TRAFIRA_RUNTIME_STATE_DIR="$WORK_DIR/runtime"
+if FAKE_LATENCY_RESPONSE='{"message":"Timeout"}' \
+  FAKE_CURL_LOG="$WORK_DIR/persist-timeout.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_proxy_latency proxy-a 5000 >/dev/null; then
+  fail "first persisted timeout must fail"
+fi
+# Add the empty history that sing-box returns after a failed check.
+sed -i 's/"proxy-a":{"type":"VLESS"}/"proxy-a":{"type":"VLESS","history":[]}/' "$fake_bin/curl"
+FAKE_CURL_LOG="$WORK_DIR/persist-read.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_proxies >"$WORK_DIR/proxies.json"
+FAKE_CURL_LOG="$WORK_DIR/evidence-only.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_latency_failures >"$WORK_DIR/evidence.json"
+EVIDENCE="$WORK_DIR/evidence.json" node - <<'NODE'
+const evidence = JSON.parse(require('fs').readFileSync(process.env.EVIDENCE));
+if (!evidence.instance_id || evidence.failed.length !== 1 || evidence.failed[0] !== 'proxy-a')
+  throw Error('Small direct-browser evidence response must contain only known failures and core identity');
+NODE
+PROXIES="$WORK_DIR/proxies.json" node - <<'NODE'
+const proxies = JSON.parse(require('fs').readFileSync(process.env.PROXIES)).proxies;
+if (proxies['proxy-a'].trafira_latency_failed !== true || proxies['proxy-b'].trafira_latency_failed)
+  throw Error('Failed first probe must survive fresh API reads without affecting other nodes');
+NODE
+FAKE_CURL_LOG="$WORK_DIR/persist-success.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_proxy_latency proxy-a 5000 >/dev/null
+FAKE_CURL_LOG="$WORK_DIR/recovered-read.log" \
+  TRAFIRA_UCI_STATE_FILE="$uci_state" PATH="$fake_bin:$PATH" \
+  ucode -L "$TRAFIRA_LIB" "$DIAGNOSTICS_RUNTIME" clash-api get_proxies >"$WORK_DIR/recovered.json"
+PROXIES="$WORK_DIR/recovered.json" node - <<'NODE'
+if (JSON.parse(require('fs').readFileSync(process.env.PROXIES)).proxies['proxy-a'].trafira_latency_failed)
+  throw Error('Successful retry must clear persisted failure');
+NODE
+
 expected_latency_paths=(
   '/proxies/proxy-a/delay'
   '/proxies/proxy-b/delay'

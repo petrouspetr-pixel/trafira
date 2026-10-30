@@ -1619,14 +1619,57 @@ function latency_test_url() {
     return value == "" ? DEFAULT_LATENCY_TEST_URL : value;
 }
 
+function latency_observation_scope() {
+    let path=option(settings(),"config_path","/etc/sing-box/config.json");
+    if(!file_exists(path))return "";
+    let instance=trim(module_output(SERVICE_UI_UC,[ "sing-box-instance-id" ]));
+    if(instance=="")return "";
+    let digest=command_capture(command_from_args([ "sha256sum", path ]));
+    if(instance=="" || digest.status!=0)return "";
+    return instance+":"+split(trim(digest.output),/[ \t]/)[0];
+}
+
+function clash_latency_probe(args,tag,group) {
+    let scope=latency_observation_scope();
+    let response=command_capture(command_from_args(args));
+    let value;
+    try {value=json(response.output);}catch(e){value=null;}
+    let observations=require("diagnostics.latency");
+    let success=response.status==0 && observations.valid(value,group);
+    // Do not publish evidence produced across a core/configuration change.
+    if(scope!="" && scope==latency_observation_scope()) {
+        if(group && type(value)=="object") {
+            for(let member,delay in value)
+                if(type(delay)=="int" || type(delay)=="double")
+                    observations.record(RUNTIME_STATE_DIR+"/latency-failures.json",scope,member,!(delay>0));
+        }else if(!group)
+            observations.record(RUNTIME_STATE_DIR+"/latency-failures.json",scope,tag,!success);
+    }
+    return {status:success?0:1,output:value==null?sprintf("%J",{error:"latency_api_failed"}):sprintf("%J",value)};
+}
+
 function clash_api(action, arg1, arg2, arg3) {
     let base_url = clash_api_url();
     let test_url = latency_test_url();
 
+    if (action == "get_latency_failures") {
+        let scope=latency_observation_scope();
+        let failed=require("diagnostics.latency").failures(RUNTIME_STATE_DIR+"/latency-failures.json",scope);
+        print(sprintf("%J\n",{failed,instance_id:scope==""?"":substr(scope,0,rindex(scope,":"))}));
+        return 0;
+    }
+
     if (action == "get_proxies") {
         let args = [ "curl", "-s" ];
         push(args, base_url + "/proxies");
-        return clash_json_output(args);
+        let response=command_capture(command_from_args(args));
+        let value;
+        try {value=json(response.output);}catch(e){value=null;}
+        if(response.status!=0 || type(value?.proxies)!="object")
+            return clash_json_error("proxies_api_failed");
+        require("diagnostics.latency").apply(value.proxies,RUNTIME_STATE_DIR+"/latency-failures.json",latency_observation_scope());
+        print(sprintf("%J\n",value));
+        return 0;
     }
 
     if (action == "get_connections") {
@@ -1646,7 +1689,9 @@ function clash_api(action, arg1, arg2, arg3) {
         push(args, "url=" + url);
         push(args, "--data-urlencode");
         push(args, "timeout=" + as_string(arg2 || "2000"));
-        return clash_json_output(args);
+        let response=clash_latency_probe(args,arg1,false);
+        print(response.output,"\n");
+        return response.status;
     }
 
     if (action == "get_proxy_latencies") {
@@ -1684,7 +1729,7 @@ function clash_api(action, arg1, arg2, arg3) {
             push(args, "url=" + test_url);
             push(args, "--data-urlencode");
             push(args, "timeout=" + as_string(arg2 || "5000"));
-            if (status_capture([ "stdin-json" ], command_output(command_from_args(args))).status != 0)
+            if (clash_latency_probe(args,proxy_tag,lc(as_string(proxy_types[proxy_tag]))=="urltest").status != 0)
                 failed++;
             count++;
             if (progress_path != "")
@@ -1704,7 +1749,9 @@ function clash_api(action, arg1, arg2, arg3) {
         push(args, "url=" + test_url);
         push(args, "--data-urlencode");
         push(args, "timeout=" + as_string(arg2 || "5000"));
-        return clash_json_output(args);
+        let response=clash_latency_probe(args,arg1,true);
+        print(response.output,"\n");
+        return response.status;
     }
 
     if (action == "set_group_proxy") {

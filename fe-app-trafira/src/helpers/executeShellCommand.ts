@@ -63,6 +63,7 @@ const readCommands: Record<string, number> = {
 };
 const readClash: Record<string, number> = {
   get_proxies: 0,
+  get_latency_failures: 0,
   get_connections: 0,
   get_proxy_latency: 2,
   get_proxy_latencies: 2,

@@ -33,6 +33,8 @@ export class LatencyObservations {
       let status: LatencyStatus = 'unmeasured';
       if (typeof delay === 'number' && Number.isFinite(delay) && delay >= 0) {
         status = delay > 0 ? 'available' : 'unavailable';
+      } else if (proxy.trafira_latency_failed === true) {
+        status = 'unavailable';
       } else if (
         Array.isArray(history) &&
         !history.length &&
