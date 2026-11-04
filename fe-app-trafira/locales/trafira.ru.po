@@ -3886,3 +3886,90 @@ msgstr "Недостаточно прав для управления профи
 
 msgid "Profile storage is unavailable. Check free space and access permissions."
 msgstr "Хранилище профилей недоступно. Проверьте свободное место и права доступа."
+
+msgid "Check dependencies"
+msgstr "Проверить зависимости"
+
+msgid "Checking profile dependencies..."
+msgstr "Проверяем зависимости профиля..."
+
+msgid "Profile dependencies"
+msgstr "Зависимости профиля"
+
+msgid "Found"
+msgstr "Найдено"
+
+msgid "Not found"
+msgstr "Не найдено"
+
+msgid "Not a regular file"
+msgstr "Не является обычным файлом"
+
+msgid "Incompatible"
+msgstr "Несовместимо"
+
+msgid "Not checked"
+msgstr "Не проверено"
+
+msgid "Certificate file"
+msgstr "Файл сертификата"
+
+msgid "Private key file"
+msgstr "Файл закрытого ключа"
+
+msgid "Rule set file"
+msgstr "Файл набора правил"
+
+msgid "Domain and IP list file"
+msgstr "Файл списка доменов и IP"
+
+msgid "Custom JSON may contain additional dependencies. Review it before transferring."
+msgstr "Пользовательский JSON может содержать другие зависимости. Проверьте его перед переносом."
+
+msgid "Some custom JSON is invalid and could not be inspected."
+msgstr "Часть пользовательского JSON содержит ошибки и не проверена."
+
+msgid "Check external files referenced by custom component strategies separately."
+msgstr "Отдельно проверьте внешние файлы, указанные в пользовательских стратегиях компонентов."
+
+msgid "The inspection limit was reached. Some dependencies are not listed."
+msgstr "Достигнут предел проверки. Часть зависимостей не попала в отчёт."
+
+msgid "Some file paths are invalid and were omitted from this report."
+msgstr "Некоторые пути к файлам некорректны и не включены в отчёт."
+
+msgid "Checked against this router. File contents and live connections are not checked."
+msgstr "Проверено на текущем роутере. Содержимое файлов и реальные соединения не проверяются."
+
+msgid "Missing or incompatible required dependencies:"
+msgstr "Отсутствуют или несовместимы обязательные зависимости:"
+
+msgid "Extended required"
+msgstr "Требуется Extended"
+
+msgid "Inactive settings"
+msgstr "Для неактивных настроек"
+
+msgid "External file"
+msgstr "Внешний файл"
+
+msgid "No known external files are referenced."
+msgstr "Ссылок на известные внешние файлы не найдено."
+
+msgid "The JSON profile includes settings, not packages or external files. Transfer those separately."
+msgstr "JSON-профиль содержит настройки, но не пакеты и внешние файлы. Их нужно перенести отдельно."
+
+msgid "Component"
+msgstr "Компонент"
+
+msgid "Required"
+msgstr "Обязательно"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Version"
+msgstr "Версия"
+
+msgid "Subscriptions"
+msgstr "Подписки"

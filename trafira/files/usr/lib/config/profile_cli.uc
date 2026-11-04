@@ -28,6 +28,7 @@ function dispatch(request){
     if(request.action=="list")return {...profiles.list(),digest:hash(transaction.TARGET),can_restore:!!fs.stat(transaction.previous_path()) || !!transaction.status().recovery_pending};
     if(request.action=="create" || request.action=="preview")return current_action(request);
     if(request.action=="status")return jobs.status();
+    if(request.action=="dependencies")return require("config.profile_dependencies").report(request.id);
     if(request.action=="apply")return jobs.start(request,false);
     if(request.action=="restore")return jobs.start(request,true);
     if(request.action=="rename")return profiles.rename(request.id,request.name);
@@ -46,7 +47,9 @@ function action(text){
     try {request=json(text);}catch(e){return fail("invalid_request");}
     if(type(request)!="object" || type(request.action)!="string")return fail("invalid_request");
     for(let key in request)if(index(["action","id","name","digest","offset","data"],key)<0)return fail("invalid_request");
-    if(request.action=="status" || request.action=="list")return dispatch(request);
+    // The private inventory reads the saved profile, but never applies it or
+    // holds the global configuration mutation lock. It stays writer-only in RPC.
+    if(index(["status","list","dependencies"],request.action)>=0)return dispatch(request);
     let lock=locks.acquire("profile-action");if(!lock)return fail("busy");
     let result;
     try {result=dispatch(request);}catch(e){result=fail("profile_operation_failed");}
