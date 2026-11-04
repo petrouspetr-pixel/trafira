@@ -73,6 +73,19 @@ assert.equal(JSON.parse(fs.readFileSync(`${dir}/router.json`)).decision.outbound
 assert.equal(JSON.parse(fs.readFileSync(`${dir}/bootstrap.json`)).decision.status,'direct','bootstrap exclusion explained');
 JS
 
+# An old ULA prefix is not FakeIP after upgrading the running configuration.
+node - "$WORK_DIR/config.json" <<'JS'
+const fs=require('fs'),p=process.argv[2],c=JSON.parse(fs.readFileSync(p));
+c.dns.servers=[{type:'fakeip',tag:'fakeip-server',inet6_range:'2001:2::/112'}];
+fs.writeFileSync(p,JSON.stringify(c));
+JS
+stamp
+run '{"domain":"local.example","destination_ip":"fc00::1","source":{"kind":"router"},"port":443,"network":"tcp"}' >"$WORK_DIR/local-ula.json"
+node - "$WORK_DIR/local-ula.json" <<'JS'
+const assert=require('assert/strict'),c=JSON.parse(require('fs').readFileSync(process.argv[2]));
+assert(c.decision.missing.includes('local_destination_check_nft_exclusions'),'ULA is local, not a stale FakeIP exception');
+JS
+
 # FakeIP is not an observed real destination and cannot disprove an earlier CIDR.
 printf 'trafira.settings=settings\ntrafira.settings.config_path=%s/config.json\n' "$WORK_DIR" >"$TRAFIRA_UCI_STATE_FILE"
 cat >"$WORK_DIR/config.json" <<'JSON'

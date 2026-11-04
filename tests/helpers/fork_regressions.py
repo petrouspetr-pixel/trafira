@@ -113,8 +113,10 @@ class ForkRegressions(unittest.TestCase):
         self.assertFalse(network.overlaps(ipaddress.ip_network("fc00::/7")),
                          "Chromium classifies ULA FakeIP as local-network access")
         self.assertEqual(str(network), "2001:2::/112")
-        result = self.run_ucode(["-e", 'let t=require("singbox.constants"),c=require("core.constants"),'
-            'd=require("diagnostics.route_dns");assert(t.FAKEIP_INET6_RANGE==c.SB_FAKEIP_INET6_RANGE,"same range");'
+        result = self.run_ucode([str(LIB / "core/constants.uc"), "get", "SB_FAKEIP_INET6_RANGE"])
+        self.assertEqual(result.stdout.strip(), str(network))
+        result = self.run_ucode(["-e", 'let t=require("singbox.constants"),d=require("diagnostics.route_dns");'
+            'assert(t.FAKEIP_INET6_RANGE=="2001:2::/112","same range");'
             'assert(d.fake({dns:{servers:[{type:"fakeip"}]}},"2001:2::1"),"new default recognized");'
             'assert(d.fake({dns:{servers:[{type:"fakeip",inet6_range:"fc00::/18"}]}},"fc00::1"),"explicit old running config still recognized");'])
         self.assertEqual(result.returncode, 0, result.stderr)

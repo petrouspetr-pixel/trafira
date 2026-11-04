@@ -3144,6 +3144,39 @@ function add_server_routes(config, servers, sections) {
     }
 }
 
+function allow_dynamic_ech_queries(config) {
+    let names = [];
+    for (let outbound in config.outbounds) {
+        let tls = object_or_empty(outbound.tls), ech = object_or_empty(tls.ech);
+        if (!bool_option(tls, "enabled", false) || !bool_option(ech, "enabled", false) ||
+            trim(option(ech, "config", "")) != "" || trim(option(ech, "config_path", "")) != "")
+            continue;
+        let name = lc(trim(option(ech, "query_server_name", "") || option(tls, "server_name", "") || as_string(outbound.server)));
+        if (substr(name, length(name) - 1) == ".")
+            name = substr(name, 0, length(name) - 1);
+        if (name == "" || length(name) > 253 || !match(name, /^[a-z0-9_.-]+$/) || index(name, "..") >= 0)
+            continue;
+        if (index(names, name) < 0)
+            push(names, name);
+    }
+    if (length(names) == 0)
+        return;
+    // The core fetches dynamic ECH with its DNS router, so the general HTTPS
+    // rejection must not intercept that exact name. Bootstrap avoids a cycle
+    // when the main DNS itself uses this TLS connection. Other names and types
+    // retain their original DNS policy; static ECH needs no exception.
+    for (let n = 0; n < length(config.dns.rules); n++) {
+        let rule = config.dns.rules[n];
+        if (rule.action == "reject" && rule.query_type == "HTTPS") {
+            splice(config.dns.rules, n, 0, {
+                query_type: "HTTPS", domain: names, action: "route",
+                server: runtime_constants.BOOTSTRAP_DNS_SERVER_TAG
+            });
+            break;
+        }
+    }
+}
+
 function generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version, validation_only) {
     runtime_subscription_tags = {};
     runtime_section_states = {};
@@ -3203,6 +3236,7 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
         require("singbox.ruleset_cache").apply(config, runtime_sing_box_version, true);
     assert_unique_outbound_tags(config);
     let removed = runtime_prune.prune_config(config, runtime_subscription_tags);
+    allow_dynamic_ech_queries(config);
     require("singbox.selector_state").apply(config);
     for (let section_name, state in runtime_section_states) {
         runtime_prune.prune_state(state, removed);
