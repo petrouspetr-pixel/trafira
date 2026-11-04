@@ -26,6 +26,10 @@ with open(os.environ["CURL_CALLS"],"a") as f:f.write(json.dumps(a)+"\\n")
 url=next(v for v in a if ":9090/" in v)
 mode=os.environ.get("CURL_MODE","")
 if mode=="map-failure" and url.endswith("/proxies"):sys.exit(28)
+if mode=="size-header":sys.exit(63)
+if mode=="http-error":
+ print('{"delay":12,"connections":[],"proxies":{}}')
+ sys.exit(22)
 if mode=="deadline":
  assert "--max-time" in a, "missing actual HTTP deadline"
  assert 0<float(a[a.index("--max-time")+1])<=65
@@ -83,6 +87,26 @@ else:print('{"delay":12}')
                 result = self.call("get_connections")
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(json.loads(result.stdout)["connections"], [])
+
+    def test_advertised_oversize_and_http_error_are_not_successful_data(self):
+        self.env["CURL_MODE"] = "size-header"
+        result = self.call("get_connections")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("too_large", json.loads(result.stdout)["error"])
+        self.env["CURL_MODE"] = "http-error"
+        for action, args in [("get_connections", []), ("get_proxies", []),
+                             ("get_proxy_latency", ["node", "5000"])]:
+            with self.subTest(action=action):
+                result = self.call(action, *args)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("error", json.loads(result.stdout))
+
+    def test_probe_http_deadline_respects_measurement_budget(self):
+        result = self.call("get_proxy_latency", "node", "10000")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [json.loads(v) for v in (self.work / "calls").read_text().splitlines()]
+        probe = calls[-1]
+        self.assertEqual(probe[probe.index("--max-time") + 1], "12")
 
 
 if __name__ == "__main__":

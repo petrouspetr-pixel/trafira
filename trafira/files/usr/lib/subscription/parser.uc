@@ -1,6 +1,7 @@
 #!/usr/bin/env ucode
 
 let fs = require("fs");
+let ech_links = loadfile(replace(sourcepath(), /\/[^\/]+$/, "/ech.uc"))();
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -1052,6 +1053,13 @@ function process_vmess_json(raw, decoded) {
             outbound.transport.host = split_csv(string_value(vmess.host));
     }
 
+    if ("ech" in vmess) {
+        let error = ech_links.apply(outbound, vmess.ech);
+        if (error != "") {
+            warn(error, "\n");
+            return null;
+        }
+    }
     return outbound;
 }
 
@@ -1077,22 +1085,43 @@ function process_vmess(raw) {
 function parse_share_link(line) {
     if (starts_with(line, "vmess://"))
         return process_vmess(line);
+    let ech = ech_links.query(line);
+    if (ech.present && ech.error) {
+        warn(ech.error, "\n");
+        return null;
+    }
     if (starts_with(line, "ss://"))
-        return process_shadowsocks(line);
+        return ech.present ? null : process_shadowsocks(line);
 
-    let url = parse_url(line);
+    let url = parse_url(ech.present ? ech.link : line);
     if (!url)
         return null;
-
+    if (ech.present) {
+        let security = url.query.security || "";
+        if (security != "" && security != "tls" && security != "xtls") {
+            warn("ECH requires TLS without REALITY\n");
+            return null;
+        }
+        if (security == "")
+            url.query.security = "tls";
+    }
+    let outbound = null;
     if (url.scheme == "vless")
-        return process_vless(line, url);
-    if (url.scheme == "trojan")
-        return process_trojan(line, url);
-    if (url.scheme == "hysteria2" || url.scheme == "hy2")
-        return process_hysteria2(line, url);
-    if (match(url.scheme, /^socks/))
-        return process_socks(line, url);
-    return null;
+        outbound = process_vless(line, url);
+    else if (url.scheme == "trojan")
+        outbound = process_trojan(line, url);
+    else if (url.scheme == "hysteria2" || url.scheme == "hy2")
+        outbound = process_hysteria2(line, url);
+    else if (match(url.scheme, /^socks/) && !ech.present)
+        outbound = process_socks(line, url);
+    if (outbound != null && ech.present) {
+        let error = ech_links.apply(outbound, ech.value);
+        if (error != "") {
+            warn(error, "\n");
+            return null;
+        }
+    }
+    return outbound;
 }
 
 function share_link_outbound(raw, tag) {

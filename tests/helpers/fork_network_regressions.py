@@ -188,9 +188,20 @@ class NetworkRegressions(unittest.TestCase):
             self.assertEqual(json.load(response)["now"], "B", "no deletion of unrelated selector state")
 
     def test_stalled_local_api_returns_a_bounded_structured_error(self):
+        self.check_stalled_api("get_connections", [])
+
+    def test_bulk_metadata_timeout_stops_before_measuring_any_nodes(self):
+        self.check_stalled_api("get_proxy_latencies", ['["group","node"]', "5000"])
+
+    def test_probe_has_http_deadline_independent_of_core_timeout(self):
+        self.check_stalled_api("get_proxy_latency", ["node", "100"])
+
+    def check_stalled_api(self, action, arguments):
         release = threading.Event()
+        paths = []
         class Handler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
+                paths.append(self.path)
                 release.wait(8)
             def log_message(self, *_):
                 pass
@@ -206,10 +217,44 @@ class NetworkRegressions(unittest.TestCase):
                "SB_CLASH_API_CONTROLLER_PORT": str(api.server_address[1])}
         started = time.monotonic()
         result = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "diagnostics/runtime.uc"),
-                                 "clash-api", "get_connections"], env=env, capture_output=True, text=True, timeout=7)
+                                 "clash-api", action, *arguments], env=env, capture_output=True, text=True, timeout=7)
         self.assertLess(time.monotonic() - started, 7)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("error", json.loads(result.stdout))
+        if action == "get_proxy_latency":
+            self.assertEqual(len(paths), 1)
+            self.assertTrue(paths[0].startswith("/proxies/node/delay?"))
+        else:
+            self.assertEqual(paths, ["/connections" if action == "get_connections" else "/proxies"])
+
+    def test_large_api_reply_without_content_length_is_bounded(self):
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()  # Deliberately no Content-Length.
+                try:
+                    self.wfile.write(b'{"connections":[],"padding":"')
+                    for _ in range(768):
+                        self.wfile.write(b'x' * 4096)
+                    self.wfile.write(b'"}')
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+            def log_message(self, *_):
+                pass
+        api = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        api.daemon_threads = True
+        self.addCleanup(api.server_close)
+        threading.Thread(target=api.serve_forever, daemon=True).start()
+        self.addCleanup(api.shutdown)
+        state = self.work / "uci"
+        state.write_text("trafira.settings=settings\ntrafira.settings.service_listen_address=127.0.0.1\n")
+        env = {**self.env, "TRAFIRA_UCI_STATE_FILE": str(state),
+               "SB_CLASH_API_CONTROLLER_PORT": str(api.server_address[1])}
+        result = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "diagnostics/runtime.uc"),
+                                 "clash-api", "get_connections"], env=env, capture_output=True, text=True, timeout=7)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertLess(len(result.stdout), 1024)
+        self.assertIn("too_large", json.loads(result.stdout)["error"])
 
 
 if __name__ == "__main__":

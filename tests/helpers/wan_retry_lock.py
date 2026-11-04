@@ -34,17 +34,18 @@ class WanRetryLock(unittest.TestCase):
                 "#!" + sys.executable + "\n"
                 "import json, os, sys\n"
                 "with open(os.environ['WAN_RETRY_CALLS'], 'a') as output:\n"
-                "    output.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+                "    output.write(json.dumps({'args': sys.argv[1:], "
+                "'other_fd': os.read(1001, 100).decode()}) + '\\n')\n"
             )
             service.chmod(0o755)
             env = dict(os.environ, TRAFIRA_LIB=str(LIB),
                        TRAFIRA_RUNTIME_STATE_DIR=str(work),
                        TRAFIRA_SERVICE_INIT=str(service), WAN_RETRY_CALLS=str(calls))
 
-            def schedule(pass_fds=()):
+            def schedule(pass_fds=(), delay="5"):
                 process = subprocess.Popen(
                     ["ucode", "-L", str(LIB), str(INITD),
-                     "schedule-start-retry", str(pid_file), "5"],
+                     "schedule-start-retry", str(pid_file), delay],
                     env=env, pass_fds=pass_fds, start_new_session=True,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                 )
@@ -58,13 +59,19 @@ class WanRetryLock(unittest.TestCase):
             if descriptor != 1000:
                 os.close(descriptor)
             fcntl.flock(1000, fcntl.LOCK_EX)
+            other_path = work / "other-descriptor"
+            other_path.write_text("unrelated descriptor preserved")
+            descriptor = os.open(other_path, os.O_RDONLY)
+            os.dup2(descriptor, 1001, inheritable=True)
+            if descriptor != 1001:
+                os.close(descriptor)
             try:
                 # Establish that a separate open description cannot take this lock.
                 with lock_path.open("r+") as probe:
                     with self.assertRaises(BlockingIOError):
                         fcntl.flock(probe, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 try:
-                    schedule(pass_fds=(1000,))
+                    schedule(pass_fds=(1000, 1001))
                 finally:
                     # Do not LOCK_UN: that would unlock the child's shared open
                     # description too and hide the exact inheritance regression.
@@ -91,8 +98,21 @@ class WanRetryLock(unittest.TestCase):
                 # Allow an accidentally duplicated worker to append its call too.
                 time.sleep(0.3)
                 self.assertEqual([json.loads(line) for line in calls.read_text().splitlines()],
-                                 [["retry_start_on_wan_up"]])
+                                 [{"args": ["retry_start_on_wan_up"],
+                                   "other_fd": "unrelated descriptor preserved"}])
                 self.assertFalse(pid_file.exists(), "completed retry left a stale pid file")
+                calls.unlink()
+                # Closing the inherited procd descriptor must leave cancellation
+                # effective as well as preserving the unrelated inherited FD.
+                schedule(pass_fds=(1001,), delay="2")
+                subprocess.run(
+                    ["ucode", "-L", str(LIB), str(INITD),
+                     "cancel-scheduled-start-retry", str(pid_file)],
+                    env=env, check=True, timeout=3,
+                )
+                self.assertFalse(pid_file.exists(), "cancelled retry left a pid file")
+                time.sleep(2.3)
+                self.assertFalse(calls.exists(), "cancelled retry invoked SERVICE_INIT")
                 # Report the lock assertion after verifying that releasing it did
                 # not merely suppress the promised deferred service invocation.
                 self.assertFalse(lock_retained,
@@ -103,6 +123,7 @@ class WanRetryLock(unittest.TestCase):
                     os.close(1000)
                 except OSError:
                     pass
+                os.close(1001)
                 for group in groups:
                     try:
                         os.killpg(group, signal.SIGKILL)

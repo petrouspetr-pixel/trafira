@@ -272,6 +272,11 @@ function schedule_start_retry(path, delay_seconds) {
     if (!ensure_parent_dir(path))
         return false;
 
+    // rc.common's procd lock must not outlive this action in the sleeping retry.
+    let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
+    if (inherited_lock)
+        inherited_lock.close();
+
     let worker = command_from_args([ "sleep", delay_seconds ]) +
         "; " + command_from_args([ "rm", "-f", path ]) +
         "; exec " + command_from_args([ SERVICE_INIT, "retry_start_on_wan_up" ]);

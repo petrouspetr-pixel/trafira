@@ -1564,11 +1564,6 @@ function check_fakeip() {
     return 0;
 }
 
-function clash_json_output(args) {
-    print(status_output([ "stdin-json" ], command_output(command_from_args(args))));
-    return 0;
-}
-
 function clash_api_url() {
     let address = replace(module_output(SINGBOX_RUNTIME_UC, [ "service-listen-address" ]), /[\r\n]+$/g, "");
     if (address == "")
@@ -1587,22 +1582,36 @@ function clash_json_error(message) {
     return 1;
 }
 
+function clash_capture(args) {
+    // Bound the read before parsing JSON, also for chunked replies or older
+    // curl versions which enforce --max-filesize only with Content-Length.
+    const limit = 2097152;
+    let pipe = fs.popen(command_from_args([...args, "--max-filesize", "" + limit]) + " 2>/dev/null", "r");
+    if (!pipe)
+        return { status: 1, output: "", error: "api_failed" };
+    let data = pipe.read(limit + 1) || "";
+    let oversized = length(data) > limit;
+    // Closing the read end stops a streaming producer; the transport deadline
+    // also bounds pclose if the peer stops sending instead of closing.
+    let status = normalize_status(pipe.close());
+    if (oversized || status == 63)
+        return { status: 1, output: "", error: "response_too_large" };
+    return { status, output: status == 0 ? data : "", error: status == 0 ? "" : "api_failed" };
+}
+
 function clash_proxy_type_map(base_url) {
-    let args = [ "curl", "-s" ];
+    let args = [ "curl", "--max-time", "5", "--fail", "-s" ];
     push(args, base_url + "/proxies");
 
-    let value = {};
-    try {
-        value = json(command_output(command_from_args(args)));
-    }
-    catch (e) {
-        return {};
-    }
+    let response = clash_capture(args), value;
+    try { value = json(response.output); } catch (e) { value = null; }
+    if (response.status != 0 || type(value?.proxies) != "object")
+        return { error: "proxies_" + (response.error || "api_failed") };
 
     let result = {};
     for (let tag, proxy in object_or_empty(value.proxies))
         result[tag] = as_string(object_or_empty(proxy).type || "");
-    return result;
+    return { types: result };
 }
 
 function clash_latency_endpoint(base_url, proxy_tag, proxy_type) {
@@ -1629,7 +1638,15 @@ function latency_observation_scope() {
 
 function clash_latency_probe(args,tag,group) {
     let scope=latency_observation_scope();
-    let response=command_capture(command_from_args(args));
+    let milliseconds = 5000;
+    for (let value in args) {
+        let requested = match(value, /^timeout=([0-9]+)$/);
+        if (requested)
+            milliseconds = min(60000, max(1, int(requested[1], 10)));
+    }
+    // The API query's timeout is a measurement budget, not an HTTP deadline.
+    let seconds = int((milliseconds + 999) / 1000) + 2;
+    let response=clash_capture([...args, "--max-time", "" + seconds, "--fail"]);
     let value;
     try {value=json(response.output);}catch(e){value=null;}
     let observations=require("diagnostics.latency");
@@ -1643,7 +1660,7 @@ function clash_latency_probe(args,tag,group) {
         }else if(!group)
             observations.record(RUNTIME_STATE_DIR+"/latency-failures.json",scope,tag,!success);
     }
-    return {status:success?0:1,output:value==null?sprintf("%J",{error:"latency_api_failed"}):sprintf("%J",value)};
+    return {status:success?0:1,output:value==null?sprintf("%J",{error:"latency_"+(response.error||"api_failed")}):sprintf("%J",value)};
 }
 
 function clash_api(action, arg1, arg2, arg3) {
@@ -1660,11 +1677,11 @@ function clash_api(action, arg1, arg2, arg3) {
     if (action == "get_proxies") {
         let args = [ "curl", "--max-time", "5", "--fail", "-s" ];
         push(args, base_url + "/proxies");
-        let response=command_capture(command_from_args(args));
+        let response=clash_capture(args);
         let value;
         try {value=json(response.output);}catch(e){value=null;}
         if(response.status!=0 || type(value?.proxies)!="object")
-            return clash_json_error("proxies_api_failed");
+            return clash_json_error("proxies_" + (response.error || "api_failed"));
         require("diagnostics.latency").apply(value.proxies,RUNTIME_STATE_DIR+"/latency-failures.json",latency_observation_scope());
         print(sprintf("%J\n",value));
         return 0;
@@ -1673,11 +1690,11 @@ function clash_api(action, arg1, arg2, arg3) {
     if (action == "get_connections") {
         let args = [ "curl", "--max-time", "5", "--fail", "-s" ];
         push(args, base_url + "/connections");
-        let response = command_capture(command_from_args(args));
+        let response = clash_capture(args);
         let value;
         try { value = json(response.output); } catch (e) { value = null; }
         if (response.status != 0 || type(value?.connections) != "array")
-            return clash_json_error("connections_api_failed");
+            return clash_json_error("connections_" + (response.error || "api_failed"));
         print(sprintf("%J\n", value));
         return 0;
     }
@@ -1718,7 +1735,10 @@ function clash_api(action, arg1, arg2, arg3) {
         if (progress_path != "")
             module_success(SERVICE_UI_UC, [ "latency-progress-state", progress_path, count, total, failed ]);
 
-        let proxy_types = clash_proxy_type_map(base_url);
+        let snapshot = clash_proxy_type_map(base_url);
+        if (snapshot.error)
+            return clash_json_error(snapshot.error);
+        let proxy_types = snapshot.types;
         let ordered_proxy_tags = [];
         for (let proxy_tag in proxy_tags)
             if (lc(as_string(proxy_types[proxy_tag])) != "urltest")

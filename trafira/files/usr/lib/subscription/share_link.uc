@@ -2,6 +2,7 @@
 
 let fs = require("fs");
 let common = require("core.common");
+let ech_links = require("subscription.ech");
 
 let as_string = common.as_string;
 let array_or_empty = common.array_or_empty;
@@ -137,6 +138,7 @@ function add_tls_query(params, outbound, trojan_default_tls) {
         add_query(params, "fp", tls.utls.fingerprint);
     if (type(tls.alpn) == "array" && length(tls.alpn) > 0)
         add_query(params, "alpn", join(",", tls.alpn));
+    add_query(params, "ech", ech_links.value(outbound));
 }
 
 function add_transport_query(params, outbound) {
@@ -247,6 +249,7 @@ function serialize_hysteria2(outbound) {
             add_query(params, "insecure", "1");
         if (type(tls.alpn) == "array" && length(tls.alpn) > 0)
             add_query(params, "alpn", join(",", tls.alpn));
+        add_query(params, "ech", ech_links.value(outbound));
     }
     if (type(outbound.obfs) == "object") {
         add_query(params, "obfs", outbound.obfs.type);
@@ -282,6 +285,11 @@ function serialize_vmess(outbound) {
         vmess.sni = as_string(outbound.tls.server_name);
         if (type(outbound.tls.utls) == "object")
             vmess.fp = as_string(outbound.tls.utls.fingerprint);
+        if (type(outbound.tls.alpn) == "array" && length(outbound.tls.alpn) > 0)
+            vmess.alpn = join(",", outbound.tls.alpn);
+        let ech = ech_links.value(outbound);
+        if (ech != "")
+            vmess.ech = ech;
     }
 
     if (type(outbound.transport) == "object") {
@@ -309,6 +317,9 @@ function serialize_vmess(outbound) {
 
 function serialize_outbound_link(outbound) {
     if (type(outbound) != "object")
+        return "";
+    let tls = type(outbound.tls) == "object" ? outbound.tls : {};
+    if (type(tls.ech) == "object" && tls.ech.enabled === true && ech_links.value(outbound) == "")
         return "";
 
     let outbound_type = as_string(outbound.type);

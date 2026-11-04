@@ -42,11 +42,11 @@ class ECHLinks(unittest.TestCase):
     def link(self, ech, scheme="vless", security="tls", encoded=True):
         if scheme == "vmess":
             node = {"v": "2", "add": "node.example", "port": "443", "id": UUID,
-                    "net": "tcp", "tls": "tls", "sni": "target.example", "ech": ech}
+                    "net": "tcp", "tls": "tls", "sni": "target.example", "alpn": "h2,http/1.1", "ech": ech}
             return "vmess://" + base64.b64encode(json.dumps(node).encode()).decode()
         auth = UUID if scheme == "vless" else "password"
         value = quote(ech, safe="") if encoded else ech
-        return f"{scheme}://{auth}@node.example:443?security={security}&sni=target.example&ech={value}#node"
+        return f"{scheme}://{auth}@node.example:443?security={security}&sni=target.example&alpn=h2%2Chttp%2F1.1&ech={value}#node"
 
     def parse(self, link):
         result = self.uc(str(LIB / "subscription/parser.uc"), "share-link-outbound", link, "node")
@@ -95,6 +95,8 @@ class ECHLinks(unittest.TestCase):
 
     def assert_static(self, node):
         self.assertTrue(node.get("tls", {}).get("enabled"), "TLS must remain enabled")
+        self.assertEqual(node["tls"].get("server_name"), "target.example", "ECH must not replace the target SNI")
+        self.assertEqual(node["tls"].get("alpn"), ["h2", "http/1.1"], "ECH roundtrip must preserve ALPN")
         ech = node["tls"].get("ech", {})
         self.assertTrue(ech.get("enabled"), "ECH must not disappear during import/export")
         pem = "\n".join(ech.get("config", []))
@@ -144,6 +146,21 @@ class ECHLinks(unittest.TestCase):
         config = self.generate(links=[self.link("ech.example")])
         self.assertEqual(config["dns"]["rules"][0], {"query_type": "HTTPS", "domain": ["ech.example"],
                          "action": "route", "server": "bootstrap-dns-server"})
+
+    def test_resolver_percent_path_and_ip_literals_are_preserved(self):
+        for uri, host, port, path in [
+                ("https://resolver.example/dns%2Fquery", "resolver.example", 443, "/dns%2Fquery"),
+                ("https://192.0.2.53", "192.0.2.53", 443, "/dns-query"),
+                ("https://[2001:db8::53]:8443/dns-query", "2001:db8::53", 8443, "/dns-query")]:
+            with self.subTest(uri=uri):
+                node = self.parse(self.link("ech.example+" + uri))
+                self.assertEqual(parse_qs(urlsplit(self.serialize(node)).query).get("ech"), ["ech.example+" + uri])
+                config = self.generate(links=[self.link("ech.example+" + uri)])
+                server = next(s for s in config["dns"]["servers"] if s["tag"] == config["dns"]["rules"][0]["server"])
+                self.assertEqual((server["server"], server["server_port"], server["path"]), (host, port, path))
+                self.assertEqual(server.get("detour"), "direct-out")
+                if host != "resolver.example":
+                    self.assertNotIn("domain_resolver", server, "literal resolver address must not need bootstrap")
 
     def test_invalid_ech_rejects_connection_instead_of_downgrading_tls(self):
         malformed = ["", "not base64!", "AA==", "AAAA", B64[:-5],
