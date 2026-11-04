@@ -66,6 +66,25 @@ class NetworkRegressions(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(output.read_text())
 
+    @unittest.skipUnless(os.environ.get("EXTENDED_BIN"), "Pinned Extended check runs separately")
+    def test_extended_base62_validation_matches_core(self):
+        for length, accepted in [("4", False), ("5", False), ("4-5", False),
+                                 ("4-8", True), ("6", True), ("6-8", True)]:
+            with self.subTest(length=length):
+                node = {"type": "vless", "server": "127.0.0.1", "server_port": 443,
+                        "uuid": "00000000-0000-4000-8000-000000000001",
+                        "transport": {"type": "xhttp", "path": "/", "mode": "auto",
+                                      "x_padding_bytes": "100-1000", "no_grpc_header": False,
+                                      "sc_max_each_post_bytes": 1000000, "sc_min_posts_interval_ms": 30,
+                                      "session_id_table": "Base62", "session_id_length": length}}
+                source = self.work / "extended.json"
+                source.write_text(json.dumps({"outbounds": [node]}))
+                result = subprocess.run([os.environ["EXTENDED_BIN"], "check", "-c", str(source)],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode == 0, accepted, result.stderr)
+                if not accepted:
+                    self.assertIn("too small", result.stderr)
+
     def test_ech_query_reaches_dns_instead_of_being_refused(self):
         queries = []
         class DNS(socketserver.BaseRequestHandler):

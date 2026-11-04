@@ -573,14 +573,18 @@ function subscription_xhttp_session_compatible(outbound) {
     if (!outbound_uses_xhttp(outbound))
         return true;
     let transport = outbound.transport;
-    if (lc(trim(as_string(transport.session_id_table))) != "base62")
+    // Predefined table names are case-sensitive in Extended. "base62" is a
+    // different, custom six-character alphabet and must not be guessed here.
+    if (as_string(transport.session_id_table) != "Base62")
         return true;
     let value = trim(as_string(transport.session_id_length));
     // Unknown syntax belongs to the core validator. Reject only a known,
-    // impossible provider value: Base62^5 < 2^31, Base62^6 > 2^31.
+    // impossible provider value. The core sums the space over the whole range:
+    // all lengths through 5 together are < 2^31, while length 6 alone is > 2^31.
     if (!match(value, /^[0-9]+(-[0-9]+)?$/))
         return true;
-    return int(split(value, "-")[0], 10) >= 6;
+    let lengths = split(value, "-");
+    return int(lengths[0], 10) > 0 && int(lengths[length(lengths) - 1], 10) >= 6;
 }
 
 function ensure_explicit_outbound_supported(outbound, source, name) {

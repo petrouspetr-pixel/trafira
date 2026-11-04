@@ -78,3 +78,15 @@ jobs:
           env RUN_TRAFIRA_NETWORK_TESTS=1 python3 tests/helpers/selector_interrupt_network.py
       - name: Verify fork regressions with real core and stalled local API
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/fork_network_regressions.sh
+      - name: Verify provider Base62 ranges against pinned Extended core
+        shell: bash
+        run: |
+          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 120 \
+            https://github.com/shtorm-7/sing-box-extended/releases/download/v1.14.3-extended-2.7.3/sing-box-1.14.3-extended-2.7.3-linux-amd64-purego.tar.gz \
+            -o /tmp/trafira-test-extended.tar.gz
+          echo '3b96bb0fe6142149fd9480a693e16f83758b505bbac0b03c26c0063503a132f4  /tmp/trafira-test-extended.tar.gz' | sha256sum -c -
+          mkdir /tmp/trafira-test-extended
+          tar -xzf /tmp/trafira-test-extended.tar.gz -C /tmp/trafira-test-extended
+          extended_bin=$(find /tmp/trafira-test-extended -name sing-box -type f -print -quit)
+          test -n "$extended_bin" && test -x "$extended_bin"
+          EXTENDED_BIN="$extended_bin" python3 tests/helpers/fork_network_regressions.py NetworkRegressions.test_extended_base62_validation_matches_core

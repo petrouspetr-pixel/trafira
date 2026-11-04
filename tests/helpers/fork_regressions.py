@@ -44,9 +44,10 @@ class ForkRegressions(unittest.TestCase):
         node = {"type": "vless", "server": "node.example", "server_port": 443,
                 "uuid": "00000000-0000-4000-8000-000000000001"}
         nodes = []
-        for tag, length, table in [("bad-four", "4-8", "Base62"), ("bad-five", "5", "base62"),
+        for tag, length, table in [("bad-four", "4-5", "Base62"), ("bad-five", "5", "Base62"),
                                     ("good-six", "6-8", "Base62"), ("unknown-format", "auto", "Base62"),
-                                    ("other-table", "4", "Other")]:
+                                    ("other-table", "4", "Other"), ("good-range", "4-8", "Base62"),
+                                    ("custom-alphabet", "13", "base62")]:
             nodes.append({**node, "tag": tag, "transport": {"type": "xhttp",
                           "session_id_table": table, "session_id_length": length}})
         nodes.append({**node, "tag": "normal"})
@@ -60,7 +61,7 @@ class ForkRegressions(unittest.TestCase):
         tags = {o["tag"] for o in config["outbounds"]}
         self.assertNotIn("bad-four", tags, "invalid provider node must not break all other connections")
         self.assertNotIn("bad-five", tags)
-        self.assertTrue({"normal", "good-six", "unknown-format", "other-table"} <= tags)
+        self.assertTrue({"normal", "good-six", "good-range", "custom-alphabet", "unknown-format", "other-table"} <= tags)
         self.assertEqual((folder / "proxy-subscription-1.json").read_text(), original)
 
     def test_blank_community_entries_do_not_reject_a_valid_section(self):

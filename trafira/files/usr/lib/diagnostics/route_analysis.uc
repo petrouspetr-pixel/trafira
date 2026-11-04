@@ -48,7 +48,7 @@ function gate(settings,r,config) {
         let snapshot=read_json((getenv("TRAFIRA_RUNTIME_STATE_DIR")||"/var/run/trafira")+"/router-origin.json",65536);
         if(!snapshot || snapshot.section!=settings.router_origin_section)return decision("indeterminate","router_bootstrap_snapshot_unavailable");
         for(let cidr in ["127.0.0.0/8","10.0.0.0/8","172.16.0.0/12","192.168.0.0/16","169.254.0.0/16","::1/128","fc00::/7","fe80::/10"])
-            if(ip.ip_in_cidr(r.destination_ip,cidr) && !ip.ip_in_cidr(r.destination_ip,"fc00::/18"))return decision("indeterminate","local_destination_check_nft_exclusions");
+            if(ip.ip_in_cidr(r.destination_ip,cidr) && !require("diagnostics.route_dns").fake(config,r.destination_ip))return decision("indeterminate","local_destination_check_nft_exclusions");
         if(r.port==53 && index(arr(snapshot.dns),r.destination_ip)>=0)return decision("direct","router_bootstrap_dns");
         if(r.network=="udp" && r.port==123 && index(arr(snapshot.ntp),r.destination_ip)>=0)return decision("direct","router_bootstrap_ntp");
         for(let endpoint in arr(snapshot.vpn))if(r.network=="udp" && endpoint.ip==r.destination_ip && endpoint.port==r.port)
