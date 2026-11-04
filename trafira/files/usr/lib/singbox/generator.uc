@@ -3165,20 +3165,14 @@ function allow_dynamic_ech_queries(config) {
     }
     if (length(names) == 0)
         return;
-    // The core fetches dynamic ECH with its DNS router, so the general HTTPS
-    // rejection must not intercept that exact name. Bootstrap avoids a cycle
-    // when the main DNS itself uses this TLS connection. Other names and types
-    // retain their original DNS policy; static ECH needs no exception.
-    for (let n = 0; n < length(config.dns.rules); n++) {
-        let rule = config.dns.rules[n];
-        if (rule.action == "reject" && rule.query_type == "HTTPS") {
-            splice(config.dns.rules, n, 0, {
-                query_type: "HTTPS", domain: names, action: "route",
-                server: runtime_constants.BOOTSTRAP_DNS_SERVER_TAG
-            });
-            break;
-        }
-    }
+    // ECH inherits its caller's inbound context. Its exact-name exception must
+    // precede router/DNS-health catch-alls too, not just the HTTPS rejection.
+    // Bootstrap avoids a cycle when the main DNS uses this same TLS tunnel.
+    // Other names and types retain their policy; static ECH needs no exception.
+    unshift(config.dns.rules, {
+        query_type: "HTTPS", domain: names, action: "route",
+        server: runtime_constants.BOOTSTRAP_DNS_SERVER_TAG
+    });
 }
 
 function generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version, validation_only) {

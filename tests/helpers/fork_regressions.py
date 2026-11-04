@@ -140,6 +140,8 @@ class ForkRegressions(unittest.TestCase):
                               if r.get("query_type") == "HTTPS" and r.get("action") == "reject")
                 if matches:
                     self.assertLess(config["dns"]["rules"].index(matches[0]), reject)
+                    self.assertEqual(config["dns"]["rules"].index(matches[0]), 0,
+                                     "inherited router and health DNS catch-alls must not capture ECH")
                     self.assertNotIn("domain_suffix", matches[0], "no broad client DNS exception")
                     self.assertEqual(matches[0]["server"], "bootstrap-dns-server",
                                      "ECH setup must not depend on the same TLS tunnel")
