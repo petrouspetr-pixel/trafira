@@ -70,9 +70,11 @@ class ECHLinks(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return result.stdout.strip()
 
-    def generate_result(self, links=None, subscription=None):
+    def generate_result(self, links=None, subscription=None, raw=None):
         section = {".name": "proxy", "action": "connection", "domain_suffix": ["example.org"]}
-        if subscription is not None:
+        if raw is not None:
+            section["outbound_jsons"] = [json.dumps(node) for node in raw]
+        elif subscription is not None:
             folder = self.work / "subscriptions"
             folder.mkdir(exist_ok=True)
             (folder / "proxy-subscription-1.json").write_text(json.dumps({"outbounds": subscription}))
@@ -180,6 +182,15 @@ class ECHLinks(unittest.TestCase):
         config = self.generate(links=[self.link("ech.example")])
         self.assertEqual(config["dns"]["rules"][0], {"query_type": "HTTPS", "domain": ["ech.example"],
                          "action": "route", "server": "bootstrap-dns-server"})
+
+    def test_raw_ech_service_owner_keeps_its_exact_bootstrap_exception(self):
+        node = {"type": "vless", "server": "node.example", "server_port": 443, "uuid": UUID,
+                "tls": {"enabled": True, "server_name": "target.example",
+                        "ech": {"enabled": True, "query_server_name": "_8443._https.ech.example"}}}
+        config = self.generate(raw=[node])
+        self.assertEqual(config["dns"]["rules"][0],
+                         {"query_type": "HTTPS", "domain": ["_8443._https.ech.example"],
+                          "action": "route", "server": "bootstrap-dns-server"})
 
     def test_resolver_percent_path_and_ip_literals_are_preserved(self):
         for uri, host, port, path in [
