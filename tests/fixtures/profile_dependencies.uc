@@ -63,4 +63,8 @@ let disabled=json(before);
 disabled.config[3].outbound_jsons=["{\"type\":\"vless\",\"tls\":{\"enabled\":false,\"client_key_path\":\"/etc/disabled-tls.pem\"}}"];
 result=inspector.inspect(disabled,hooks);
 assert(!filter(result.report.files,item=>item.path=="/etc/disabled-tls.pem")[0].required,"disabled JSON TLS is optional");
+let scalar_links=json(before);
+scalar_links.config[3].selector_proxy_links="socks5://first.example:1080 vless://SECRET_UUID@second.example:443?security=tls&type=xhttp";
+result=inspector.inspect(scalar_links,hooks);
+assert(filter(result.report.components,item=>item.id=="sing_box")[0].requirement=="extended","scalar connection links use runtime normalization");
 print("profile dependency inspector checks passed\n");

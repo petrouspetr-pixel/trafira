@@ -78,7 +78,7 @@ function inspect(document,hooks){
                     try{scan(json(raw),needed,0);}catch(e){warning("invalid_custom_json");}
                 }
             }
-            if(key=="selector_proxy_links" && connection)for(let link in type(value)=="array"?value:[value])
+            if(key=="selector_proxy_links" && connection)for(let link in common.list_option(section,key))
                 if(type(link)=="string" && match(link,/[?&]type=xhttp([&#]|$)/))component("sing_box",required,"extended");
             if(value && (key=="nfqws_opt" || key=="nfqws2_opt" || key=="byedpi_cmd_opts"))warning("strategy_files_review");
         }
