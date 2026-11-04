@@ -10,6 +10,10 @@ on:
       - 'tests/native_wireguard_bootstrap*'
       - 'tests/nft*'
       - 'tests/route_dns*'
+      - 'tests/fork_*'
+      - 'tests/fakeip_*'
+      - 'tests/helpers/fork_*'
+      - 'tests/helpers/fakeip_chromium.cjs'
       - 'tests/helpers/failure_policy_servers.py'
       - 'tests/helpers/selector_interrupt_network.py'
       - '.github/workflows/failure-policy-network.yml'
@@ -23,6 +27,10 @@ on:
       - 'tests/native_wireguard_bootstrap*'
       - 'tests/nft*'
       - 'tests/route_dns*'
+      - 'tests/fork_*'
+      - 'tests/fakeip_*'
+      - 'tests/helpers/fork_*'
+      - 'tests/helpers/fakeip_chromium.cjs'
       - 'tests/helpers/failure_policy_servers.py'
       - 'tests/helpers/selector_interrupt_network.py'
       - '.github/workflows/failure-policy-network.yml'
@@ -90,3 +98,8 @@ jobs:
           extended_bin=$(find /tmp/trafira-test-extended -name sing-box -type f -print -quit)
           test -n "$extended_bin" && test -x "$extended_bin"
           EXTENDED_BIN="$extended_bin" python3 tests/helpers/fork_network_regressions.py NetworkRegressions.test_extended_base62_validation_matches_core
+      - uses: actions/setup-node@v5.0.0
+        with:
+          node-version: '22'
+      - name: Verify Chromium FakeIP address-space classification
+        run: sudo env PATH="$PATH" RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/fakeip_chromium_network.sh
