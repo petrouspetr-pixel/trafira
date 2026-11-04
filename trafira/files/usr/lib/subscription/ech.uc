@@ -207,8 +207,18 @@ function value(outbound) {
     let ech = type(tls.ech) == "object" ? tls.ech : {};
     if (tls.enabled === false || ech.enabled !== true)
         return "";
-    if (type(ech.config) == "array" && length(ech.config) > 0) {
-        let config = inline_config(join("\n", ech.config));
+    // sing-box Listable[string] accepts both a PEM string and an array.
+    // Once static material is present, invalid content must never fall back
+    // to a DNS query using SNI: that would change the requested ECH mode.
+    let config_type = type(ech.config);
+    if (ech.config != null && config_type != "string" && config_type != "array")
+        return "";
+    if ((config_type == "string" || config_type == "array") && length(ech.config) > 0) {
+        if (config_type == "array")
+            for (let line in ech.config)
+                if (type(line) != "string")
+                    return "";
+        let config = inline_config(config_type == "array" ? join("\n", ech.config) : ech.config);
         return config == null ? "" : config[1];
     }
     if (text(ech.config_path) != "")

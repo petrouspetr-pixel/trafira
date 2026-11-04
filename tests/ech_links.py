@@ -123,6 +123,14 @@ class ECHLinks(unittest.TestCase):
                     self.assert_static(node)
                     self.assert_static(self.parse(self.serialize(node)))
 
+    def test_standalone_parser_loads_ech_without_library_flags(self):
+        env = {key: value for key, value in self.env.items() if key != "TRAFIRA_LIB"}
+        result = subprocess.run(["ucode", str(LIB / "subscription/parser.uc"), "share-link-outbound",
+                                 self.link(B64), "node"], env=env, text=True,
+                                capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assert_static(json.loads(result.stdout))
+
     def test_manual_and_subscription_inline_generation(self):
         for scheme in ["vless", "trojan", "hysteria2", "vmess"]:
             with self.subTest(scheme=scheme):
