@@ -4,6 +4,7 @@ import { validateUrl } from '../validateUrl';
 const validUrls = [
   ['Simple HTTP', 'http://example.com'],
   ['Simple HTTPS', 'https://example.com'],
+  ['Server with underscore', 'https://sub_one.example.com/subscription'],
   ['With path', 'https://example.com/path/to/page'],
   ['With query', 'https://example.com/?q=test'],
   ['With port', 'http://example.com:8080'],

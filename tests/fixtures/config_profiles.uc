@@ -1,7 +1,7 @@
 let format=require("config.profile_format");
 let profiles=require("config.profiles");
 let fs=require("fs");
-let config=[{".name":"settings",".type":"settings",dns_server:["1.1.1.1"]},{".name":"proxy",".type":"section",enabled:"1",password:"secret",proxy_string:"vless://private@example.com"}];
+let config=[{".name":"settings",".type":"settings",dns_server:["1.1.1.1"]},{".name":"proxy",".type":"section",enabled:"1",selector_interrupt_exist_connections:"0",password:"secret",proxy_string:"vless://private@example.com"}];
 let doc={schema:1,name:"Home",created_at:1,config};
 assert(format.validate(doc).valid,"valid profile");
 assert(!format.validate({schema:99,name:"A",config}).valid,"unknown schema");
@@ -16,6 +16,7 @@ assert(!format.name_valid(russian+"я"),"65 Cyrillic characters exceed the name 
 assert(!format.validate({schema:1,name:"A",config:[{".name":"network",".type":"network"}]}).valid,"foreign UCI package");
 let exported=format.to_uci(config);
 assert(index(exported,"config settings 'settings'")>=0,"serialized section");
+assert(index(exported,"option selector_interrupt_exist_connections '0'")>=0,"section selector policy persists in UCI export");
 assert(index(exported,"list dns_server '1.1.1.1'")>=0,"serialized list");
 let created=profiles.create(doc);
 assert(created.success && created.id,"create");
@@ -23,6 +24,7 @@ assert(profiles.list().entries[0].name=="Home","list metadata");
 assert(index(sprintf("%J",profiles.list()),"secret")<0,"list privacy");
 let original=profiles.export_profile(created.id);
 assert(original.success && original.document.config[1].password=="secret","explicit export preserves secret");
+assert(original.document.config[1].selector_interrupt_exist_connections=="0","profile export retains explicit selector policy");
 let preview=profiles.preview(created.id,[]);
 assert(preview.success && index(sprintf("%J",preview),"secret")<0 && index(sprintf("%J",preview),"vless://")<0,"diff privacy");
 assert(!profiles.export_profile("../config").success,"path traversal");

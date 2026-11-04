@@ -1,3 +1,4 @@
+import { renderProfileDependencies } from './profileDependencies';
 import { profileOptionLabels } from './profileOptionLabels';
 import { callProfileCommand as command } from './profileRequest';
 import { renderConfigurationRow as row } from '../../helpers/renderConfigurationRow';
@@ -37,6 +38,8 @@ export const profilesPanel = {
     const generation = mountId;
     let last: ProfileState;
     let transferring = false;
+    let checkingDependencies = false;
+    let dependencyId = '';
     let preferredSelection = '';
     const createName = E('input', {
       id: 'trafira-profile-create-name',
@@ -59,6 +62,9 @@ export const profilesPanel = {
     const output = E('div', { role: 'status' });
     const message = E('p', { role: 'status' });
     const restoreHint = E('p', { class: 'cbi-value-description' });
+    const dependencyOutput = E('div', { role: 'status' });
+    const dependencyRow = row('', '', [dependencyOutput]);
+    dependencyRow.className = 'cbi-value hidden';
     const outputRow = row('', '', [output]);
     const restoreHintRow = row('', '', [restoreHint]);
     const buttons: HTMLButtonElement[] = [];
@@ -88,7 +94,12 @@ export const profilesPanel = {
       return last?.entries.find((entry) => entry.id === select.value);
     }
     function updateButtons() {
-      const disabled = !!(transferring || last?.busy || last?.running);
+      const disabled = !!(
+        transferring ||
+        checkingDependencies ||
+        last?.busy ||
+        last?.running
+      );
       for (const b of buttons) b.disabled = disabled;
       const selected = selectedEntry();
       const usable = !!selected && !selected.invalid;
@@ -101,6 +112,7 @@ export const profilesPanel = {
         renameName.value.trim() === selected?.name;
       remove.disabled ||= !canWrite || !selected;
       review.disabled ||= !usable;
+      dependencies.disabled ||= !canWrite || !usable;
       apply.disabled ||= !canWrite || !usable;
       restore.disabled ||= !canWrite || !last?.canRestore || !last.digest;
       exportButton.disabled ||= !canWrite || !usable;
@@ -158,6 +170,45 @@ export const profilesPanel = {
     const review = button(_('Show differences'), () => {
       void submit({ action: 'preview', id: select.value });
     });
+    const dependencies = button(
+      _('Check dependencies'),
+      async () => {
+        if (checkingDependencies || transferring || last.busy || last.running)
+          return;
+        const id = select.value;
+        checkingDependencies = true;
+        notify('');
+        dependencyOutput.replaceChildren(
+          E('p', { class: 'spinning' }, _('Checking profile dependencies...')),
+        );
+        dependencyRow.className = 'cbi-value';
+        updateButtons();
+        try {
+          const result = await command({ action: 'dependencies', id });
+          if (generation !== mountId || select.value !== id) return;
+          requireSuccess(result);
+          dependencyOutput.replaceChildren(
+            renderProfileDependencies(result.report),
+          );
+          dependencyId = id;
+        } catch (error) {
+          if (generation === mountId && select.value === id) {
+            dependencyOutput.replaceChildren();
+            dependencyRow.className = 'cbi-value hidden';
+            notify(
+              profileErrorMessage(
+                error instanceof Error ? error.message : 'invalid_response',
+              ),
+              true,
+            );
+          }
+        } finally {
+          checkingDependencies = false;
+          if (generation === mountId) updateButtons();
+        }
+      },
+      true,
+    );
     const apply = button(
       _('Apply profile'),
       async () => {
@@ -230,7 +281,14 @@ export const profilesPanel = {
     );
 
     async function transfer(kind: 'import' | 'export') {
-      if (!canWrite || transferring || last.busy || last.running) return;
+      if (
+        !canWrite ||
+        transferring ||
+        checkingDependencies ||
+        last.busy ||
+        last.running
+      )
+        return;
       const chosenId = select.value;
       transferring = true;
       notify(_('Transferring profile'));
@@ -360,6 +418,9 @@ export const profilesPanel = {
       preferredSelection = select.value;
       renameName.value = selectedEntry()?.name || '';
       notify('');
+      dependencyOutput.replaceChildren();
+      dependencyRow.className = 'cbi-value hidden';
+      dependencyId = '';
       controller.invalidatePreview();
       updateButtons();
     });
@@ -401,8 +462,9 @@ export const profilesPanel = {
       row(_('Profile name'), createName.id, [createName, create]),
       E('h4', {}, _('Selected profile')),
       row(_('Saved profiles'), select.id, [select, refresh]),
-      row('', '', [review, apply]),
+      row('', '', [review, dependencies, apply]),
       outputRow,
+      dependencyRow,
       row(_('New name for selected profile'), renameName.id, [
         renameName,
         rename,
@@ -455,6 +517,11 @@ export const profilesPanel = {
         renameName.value =
           state.entries.find((entry) => entry.id === select.value)?.name || '';
         preferredSelection = '';
+      }
+      if (dependencyId && dependencyId !== select.value) {
+        dependencyOutput.replaceChildren();
+        dependencyRow.className = 'cbi-value hidden';
+        dependencyId = '';
       }
       last = state;
       if (state.committed) reloadAfterConfigurationCommit();

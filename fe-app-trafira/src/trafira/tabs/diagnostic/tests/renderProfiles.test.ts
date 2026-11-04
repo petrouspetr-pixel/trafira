@@ -71,6 +71,30 @@ let running: boolean;
 let jobId: string;
 let failure: { action: string; result: Record<string, unknown> } | undefined;
 let previewResult: Record<string, unknown> | undefined;
+let reportOverride: Record<string, unknown> | undefined;
+const dependencyReport = {
+  schema: 1,
+  counts: { settings: 1, section: 2 },
+  missing: 1,
+  components: [
+    { id: 'sing_box', version: '1.14.3', status: 'present', required: true },
+  ],
+  files: [
+    {
+      path: '/etc/missing-key.pem',
+      kind: 'private_key',
+      status: 'missing',
+      required: true,
+      included: false,
+    },
+  ],
+  warnings: [
+    'profile_not_full_backup',
+    'runtime_not_validated',
+    'custom_json_review',
+  ],
+};
+
 let transferBytes: Uint8Array;
 const digest = 'a'.repeat(64);
 const requests: Record<string, unknown>[] = [];
@@ -111,6 +135,7 @@ beforeEach(async () => {
   jobId = '';
   failure = undefined;
   previewResult = undefined;
+  reportOverride = undefined;
   transferBytes = new Uint8Array();
   confirm.mockReturnValue(true);
   host = new Node('div');
@@ -170,6 +195,8 @@ beforeEach(async () => {
       };
     } else if (r.action === 'status') {
       result = { success: true, running, ...(jobId ? { job_id: jobId } : {}) };
+    } else if (r.action === 'dependencies') {
+      result = { success: true, report: reportOverride || dependencyReport };
     } else if (r.action === 'create') {
       entries.push({ id: 'p-created', name: String(r.name) });
       result = { success: true, id: 'p-created' };
@@ -661,4 +688,123 @@ it('permits read-only list and review but no creation, restoration, transfer or 
       ['list', 'status', 'preview'].includes(String(r.action)),
     ),
   ).toBe(true);
+});
+
+it('checks dependencies only on explicit request for a selected profile', async () => {
+  profilesPanel.mount();
+  await drain();
+  expect(requests.some((r) => r.action === 'dependencies')).toBe(false);
+  expect(button('Check dependencies')).toBeDefined();
+  expect(button('Check dependencies').disabled).toBe(true);
+  await select('p-first');
+  expect(button('Check dependencies').disabled).toBe(false);
+  await click('Check dependencies');
+  expect(text(host)).toContain('Profile dependencies');
+  expect(text(host)).toContain('/etc/missing-key.pem');
+  expect(text(host)).toContain('Not found');
+  expect(button('Check dependencies').disabled).toBe(false);
+  expect(requests.filter((r) => r.action === 'dependencies')).toEqual([
+    { action: 'dependencies', id: 'p-first' },
+  ]);
+  expect(
+    requests.some((r) =>
+      ['apply', 'create', 'export_begin'].includes(String(r.action)),
+    ),
+  ).toBe(false);
+});
+
+it('requires administrative access for a report with private file paths', async () => {
+  profilesPanel.mount(false);
+  await drain();
+  await select('p-first');
+  expect(button('Check dependencies')).toBeDefined();
+  expect(button('Check dependencies').disabled).toBe(true);
+});
+
+it('clears the dependency report when another profile is selected', async () => {
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  await click('Check dependencies');
+  expect(text(host)).toContain('/etc/missing-key.pem');
+  await select('p-second');
+  expect(text(host)).not.toContain('/etc/missing-key.pem');
+});
+it('releases the profile controls after dependency failure', async () => {
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  failure = {
+    action: 'dependencies',
+    result: { success: false, error: 'storage_error' },
+  };
+  await click('Check dependencies');
+  expect(button('Check dependencies').disabled).toBe(false);
+  expect(button('Apply profile').disabled).toBe(false);
+  expect(text(host)).toContain('Profile storage is unavailable');
+});
+it('disables actions during dependency inspection and ignores a reply after unmount', async () => {
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  const original = vi.mocked(executeShellCommand).getMockImplementation()!;
+  let resolve!: (
+    value: Awaited<ReturnType<typeof executeShellCommand>>,
+  ) => void;
+  vi.mocked(executeShellCommand).mockImplementation((request) =>
+    JSON.parse(request.args[1]).action === 'dependencies'
+      ? new Promise((done) => {
+          resolve = done;
+        })
+      : original(request),
+  );
+  await click('Check dependencies');
+  expect(button('Apply profile').disabled).toBe(true);
+  expect(button('Check dependencies').disabled).toBe(true);
+  profilesPanel.unmount();
+  profilesPanel.mount();
+  await drain();
+  resolve({
+    code: 0,
+    stdout: JSON.stringify({ success: true, report: dependencyReport }),
+    stderr: '',
+  });
+  await drain();
+  expect(text(host)).not.toContain('/etc/missing-key.pem');
+});
+
+it('renders only the dependency schema and treats report strings as text', async () => {
+  reportOverride = {
+    ...dependencyReport,
+    password: 'SECRET_VALUE',
+    files: [
+      {
+        path: '/etc/<img>.pem',
+        kind: 'toString',
+        status: 'toString',
+        required: true,
+        key_contents: 'SECRET_VALUE',
+      },
+    ],
+    warnings: ['SECRET_VALUE'],
+  };
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  await click('Check dependencies');
+  expect(text(host)).not.toContain('SECRET_VALUE');
+  expect(text(host)).not.toContain('function toString');
+  expect(text(host)).toContain('Not checked');
+  expect(all(host).some((n) => n.tag === 'img')).toBe(false);
+});
+
+it('drops a dependency report if a refreshed catalog no longer contains its profile', async () => {
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  await click('Check dependencies');
+  expect(text(host)).toContain('/etc/missing-key.pem');
+  entries = entries.filter((e) => e.id !== 'p-first');
+  await click('Refresh profiles');
+  expect(text(host)).not.toContain('/etc/missing-key.pem');
 });

@@ -167,6 +167,9 @@ export function profileOptionLabels(): Record<string, Record<string, string>> {
       rule_set: _('Rule sets'),
       securities: _('Security'),
       security: _('Security'),
+      selector_interrupt_exist_connections: _(
+        'Interrupt connections when switching this section',
+      ),
       selector_proxy_links: _('Connection URL'),
       server: _('Server'),
       server_name: _('Include servers'),

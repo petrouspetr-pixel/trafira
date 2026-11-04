@@ -8498,5 +8498,229 @@
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
+  },
+  {
+    "call": "Check dependencies",
+    "key": "Check dependencies",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Checking profile dependencies...",
+    "key": "Checking profile dependencies...",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Profile dependencies",
+    "key": "Profile dependencies",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Found",
+    "key": "Found",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Not found",
+    "key": "Not found",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Not a regular file",
+    "key": "Not a regular file",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Incompatible",
+    "key": "Incompatible",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Not checked",
+    "key": "Not checked",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Certificate file",
+    "key": "Certificate file",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Private key file",
+    "key": "Private key file",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Rule set file",
+    "key": "Rule set file",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Domain and IP list file",
+    "key": "Domain and IP list file",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Custom JSON may contain additional dependencies. Review it before transferring.",
+    "key": "Custom JSON may contain additional dependencies. Review it before transferring.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Some custom JSON is invalid and could not be inspected.",
+    "key": "Some custom JSON is invalid and could not be inspected.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Check external files referenced by custom component strategies separately.",
+    "key": "Check external files referenced by custom component strategies separately.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "The inspection limit was reached. Some dependencies are not listed.",
+    "key": "The inspection limit was reached. Some dependencies are not listed.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Some file paths are invalid and were omitted from this report.",
+    "key": "Some file paths are invalid and were omitted from this report.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Checked against this router. File contents and live connections are not checked.",
+    "key": "Checked against this router. File contents and live connections are not checked.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Missing or incompatible required dependencies:",
+    "key": "Missing or incompatible required dependencies:",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Extended required",
+    "key": "Extended required",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Inactive settings",
+    "key": "Inactive settings",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "External file",
+    "key": "External file",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "No known external files are referenced.",
+    "key": "No known external files are referenced.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "The JSON profile includes settings, not packages or external files. Transfer those separately.",
+    "key": "The JSON profile includes settings, not packages or external files. Transfer those separately.",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Component",
+    "key": "Component",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Purpose",
+    "key": "Purpose",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Required",
+    "key": "Required",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "File",
+    "key": "File",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Version",
+    "key": "Version",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Subscriptions",
+    "key": "Subscriptions",
+    "places": [
+      "src/trafira/tabs/diagnostic/profileDependencies.ts:1"
+    ]
+  },
+  {
+    "call": "Interrupt connections when switching this section",
+    "key": "Interrupt connections when switching this section",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7739"
+    ]
+  },
+  {
+    "call": "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections.",
+    "key": "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7741"
+    ]
   }
 ]

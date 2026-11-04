@@ -5314,3 +5314,97 @@ msgstr ""
 
 msgid "Profile storage is unavailable. Check free space and access permissions."
 msgstr ""
+
+msgid "Check dependencies"
+msgstr ""
+
+msgid "Checking profile dependencies..."
+msgstr ""
+
+msgid "Profile dependencies"
+msgstr ""
+
+msgid "Found"
+msgstr ""
+
+msgid "Not found"
+msgstr ""
+
+msgid "Not a regular file"
+msgstr ""
+
+msgid "Incompatible"
+msgstr ""
+
+msgid "Not checked"
+msgstr ""
+
+msgid "Certificate file"
+msgstr ""
+
+msgid "Private key file"
+msgstr ""
+
+msgid "Rule set file"
+msgstr ""
+
+msgid "Domain and IP list file"
+msgstr ""
+
+msgid "Custom JSON may contain additional dependencies. Review it before transferring."
+msgstr ""
+
+msgid "Some custom JSON is invalid and could not be inspected."
+msgstr ""
+
+msgid "Check external files referenced by custom component strategies separately."
+msgstr ""
+
+msgid "The inspection limit was reached. Some dependencies are not listed."
+msgstr ""
+
+msgid "Some file paths are invalid and were omitted from this report."
+msgstr ""
+
+msgid "Checked against this router. File contents and live connections are not checked."
+msgstr ""
+
+msgid "Missing or incompatible required dependencies:"
+msgstr ""
+
+msgid "Extended required"
+msgstr ""
+
+msgid "Inactive settings"
+msgstr ""
+
+msgid "External file"
+msgstr ""
+
+msgid "No known external files are referenced."
+msgstr ""
+
+msgid "The JSON profile includes settings, not packages or external files. Transfer those separately."
+msgstr ""
+
+msgid "Component"
+msgstr ""
+
+msgid "Required"
+msgstr ""
+
+msgid "File"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "Subscriptions"
+msgstr ""
+
+
+msgid "Interrupt connections when switching this section"
+msgstr ""
+
+msgid "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections."
+msgstr ""
