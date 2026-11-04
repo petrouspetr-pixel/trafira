@@ -52,8 +52,8 @@ for (let source in [parsed, config]) {
         if (!outbound.server) continue;
         hosts[outbound.server] = true;
         if (outbound.server_port != 443) die("connection port changed\n");
-        if (outbound.tls && outbound.tls.server_name && outbound.tls.server_name != "tls.example.com")
-            die("TLS SNI was rewritten\n");
+        if (outbound.type == "vless" && (!outbound.tls || outbound.tls.server_name != "tls.example.com"))
+            die("explicit TLS SNI was removed or rewritten\n");
         if (source == config) push(exported, links.serialize_outbound_link(outbound));
     }
     if (length(keys(hosts)) != 9) die("expected all nine connection addresses\n");
@@ -69,7 +69,9 @@ python3 - "$WORK_DIR/parsed.json" "$WORK_DIR/reimported.json" <<'PYCHECK'
 import json
 import sys
 def addresses(path):
-    return sorted((item["server"], item["server_port"], item["type"]) for item in json.load(open(path))["outbounds"])
+    return sorted((item["server"], item["server_port"], item["type"],
+                   item.get("tls", {}).get("server_name") if item["type"] == "vless" else None)
+                  for item in json.load(open(path))["outbounds"])
 assert addresses(sys.argv[1]) == addresses(sys.argv[2]), "export/import changed connection addresses"
 PYCHECK
 printf 'connection host parsing, generation and export/import checks passed\n'
