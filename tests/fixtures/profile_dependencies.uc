@@ -45,4 +45,22 @@ assert(index(sprintf("%J",result),"secret-token")<0,"scalar list URL is private"
 let empty={schema:1,name:"Empty",config:[{".name":"settings",".type":"settings"},{".name":"demo",".type":"section",action:"connection",outbound_json:""}]};
 result=inspector.inspect(empty,hooks);
 assert(index(result.report.warnings,"invalid_custom_json")<0,"empty optional JSON is not an error");
+let shadow=json(before);
+shadow.config[3].outbound_json="{\"type\":\"vless\",\"tls\":{\"client_key_path\":\"/etc/old-json.pem\"}}";
+shadow.config[3].outbound_jsons=["{\"type\":\"direct\"}"];
+result=inspector.inspect(shadow,hooks);
+assert(!filter(result.report.files,item=>item.path=="/etc/old-json.pem")[0].required,"shadowed legacy JSON is optional");
+delete shadow.config[3].outbound_jsons;
+result=inspector.inspect(shadow,hooks);
+assert(filter(result.report.files,item=>item.path=="/etc/old-json.pem")[0].required,"legacy JSON is required when effective");
+for(let test in [["vless","reality",false],["socks","tls",false],["trojan","",true],["hysteria2","none",true],["vmess","none",false]]) {
+    let server=json(before);
+    push(server.config,{".name":"servercase",".type":"server",enabled:"1",protocol:test[0],security:test[1],tls_key_path:"/etc/server-key.pem"});
+    result=inspector.inspect(server,hooks);
+    assert(filter(result.report.files,item=>item.path=="/etc/server-key.pem")[0].required===test[2],"native TLS policy mirrors server generator: "+test[0]);
+}
+let disabled=json(before);
+disabled.config[3].outbound_jsons=["{\"type\":\"vless\",\"tls\":{\"enabled\":false,\"client_key_path\":\"/etc/disabled-tls.pem\"}}"];
+result=inspector.inspect(disabled,hooks);
+assert(!filter(result.report.files,item=>item.path=="/etc/disabled-tls.pem")[0].required,"disabled JSON TLS is optional");
 print("profile dependency inspector checks passed\n");

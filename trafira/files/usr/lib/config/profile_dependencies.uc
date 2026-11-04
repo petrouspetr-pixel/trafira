@@ -36,6 +36,7 @@ function inspect(document,hooks){
         if(type(value)=="array") {
             for(let child in value){if(nodes>=MAX_NODES){limit();break;}scan(child,required,depth+1);}
         } else if(type(value)=="object") {
+            required=required && value.enabled!==false;
             if(value.type=="local" && value.path)file(value.path,"rule_set",required);
             if(value.type=="mtproto" || value.type=="fallback" || value.type=="xhttp")component("sing_box",required,"extended");
             for(let key,child in value){
@@ -56,11 +57,14 @@ function inspect(document,hooks){
         if(index(["zapret","zapret2","byedpi"],section.action)>=0)component(section.action,required,"any");
         if((kind=="priority_group" && section.implementation=="native_fallback") || (kind=="server" && section.protocol=="mtproto"))component("sing_box",required,"extended");
         let connection=kind=="section" && index(["connection","proxy","outbound","vpn"],section.action)>=0;
+        let plural=section.outbound_jsons;
+        let has_plural=type(plural)=="array"?length(plural)>0:plural!=null && common.as_string(plural)!="";
         for(let key,value in section) {
             if(++nodes>MAX_NODES){limit();break;}
             if(PATH_KEYS[key] && value) {
                 let needed=required;
                 if(key=="dns_mtls_client_certificate" || key=="dns_mtls_client_key")needed=common.bool_option(section,"dns_mtls_enabled",false);
+                if(key=="tls_certificate_path" || key=="tls_key_path")needed=required && kind=="server" && require("singbox.servers").effective_security(section,common.option(section,"protocol","vless"))=="tls";
                 file(value,PATH_KEYS[key],needed);
             }
             if(index(LIST_KEYS,key)>=0)for(let reference in common.list_option(section,key))
@@ -70,7 +74,8 @@ function inspect(document,hooks){
                     if(type(raw)=="string" && !length(trim(raw)))continue;
                     warning("custom_json_review");
                     if(type(raw)!="string" || length(raw)>MAX_JSON){limit();continue;}
-                    try{scan(json(raw),required && (key=="inbound_json"?kind=="server" && section.protocol=="json_inbound":connection),0);}catch(e){warning("invalid_custom_json");}
+                    let needed=required && (key=="inbound_json"?kind=="server" && section.protocol=="json_inbound":connection && !(key=="outbound_json" && has_plural));
+                    try{scan(json(raw),needed,0);}catch(e){warning("invalid_custom_json");}
                 }
             }
             if(key=="selector_proxy_links" && connection)for(let link in type(value)=="array"?value:[value])

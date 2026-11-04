@@ -384,6 +384,7 @@ function clone_rules_for_inbound(config, source_inbound, target_inbound, skip_do
 }
 
 return {
+    effective_security,
     add_server,
     add_sniff_rule,
     clone_rules_for_inbound
