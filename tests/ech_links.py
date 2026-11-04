@@ -170,7 +170,7 @@ class ECHLinks(unittest.TestCase):
                 server = next(s for s in config["dns"]["servers"] if s["tag"] == rule["server"])
                 self.assertEqual((server["type"], server["server"], server["server_port"], server["path"]),
                                  ("https", "resolver.example", 8443, "/custom-dns"))
-                self.assertEqual(server.get("detour"), "direct-out")
+                self.assertNotIn("detour", server, "default direct dialer must not use an empty outbound detour")
                 self.assertEqual(server.get("domain_resolver"), "bootstrap-dns-server")
 
     def test_domain_only_uses_existing_exact_bootstrap_rule(self):
@@ -192,7 +192,7 @@ class ECHLinks(unittest.TestCase):
                 config = self.generate(links=[self.link("ech.example+" + uri)])
                 server = next(s for s in config["dns"]["servers"] if s["tag"] == config["dns"]["rules"][0]["server"])
                 self.assertEqual((server["server"], server["server_port"], server["path"]), (host, port, path))
-                self.assertEqual(server.get("detour"), "direct-out")
+                self.assertNotIn("detour", server, "default dialer connects directly")
                 if host != "resolver.example":
                     self.assertNotIn("domain_resolver", server, "literal resolver address must not need bootstrap")
 
@@ -218,6 +218,61 @@ class ECHLinks(unittest.TestCase):
                 result, config = self.generate_result(links=[link])
                 self.assertNotEqual(result.returncode, 0, "manual invalid ECH must produce an actionable error")
                 self.assertIn("ECH", result.stdout + result.stderr)
+
+    def cached_node(self, scheme="vless", tag="old-cache"):
+        node = {"type": scheme, "tag": tag, "server": "node.example", "server_port": 443,
+                "tls": {"enabled": True, "server_name": "target.example", "alpn": ["h2", "http/1.1"]}}
+        if scheme in ["vless", "vmess"]:
+            node["uuid"] = UUID
+        else:
+            node["password"] = "password"
+        return node
+
+    def test_legacy_cache_restores_uri_and_vmess_ech_without_rewriting_source(self):
+        for scheme in ["vless", "vmess"]:
+            for value in [B64, "ech.example+" + DOH]:
+                with self.subTest(scheme=scheme, value=value[:20]):
+                    node = self.cached_node(scheme)
+                    node["share_link"] = self.link(value, scheme)
+                    original = json.dumps({"outbounds": [node]})
+                    config = self.generate(subscription=[node])
+                    restored = next(o for o in config["outbounds"] if o["type"] == scheme)
+                    if value == B64:
+                        self.assert_static(restored)
+                    else:
+                        self.assertEqual(restored["tls"].get("ech"),
+                                         {"enabled": True, "query_server_name": "ech.example"})
+                        rule = config["dns"]["rules"][0]
+                        resolver = next(s for s in config["dns"]["servers"] if s["tag"] == rule["server"])
+                        self.assertEqual((rule.get("domain"), rule.get("query_type")), (["ech.example"], "HTTPS"))
+                        self.assertEqual((resolver["type"], resolver["server"], resolver["path"]),
+                                         ("https", "resolver.example", "/custom-dns"))
+                        self.assertEqual(restored["tls"]["server_name"], "target.example")
+                        self.assertEqual(restored["tls"]["alpn"], ["h2", "http/1.1"])
+                    self.assertEqual((self.work / "subscriptions/proxy-subscription-1.json").read_text(), original,
+                                     "upgrade must keep the offline source cache unchanged")
+
+    def test_legacy_cache_skips_invalid_ech_but_keeps_other_offline_nodes(self):
+        broken = self.cached_node(tag="broken-ech")
+        broken["share_link"] = self.link("not base64!")
+        working = self.cached_node(tag="working-offline")
+        original = json.dumps({"outbounds": [broken, working]})
+        config = self.generate(subscription=[broken, working])
+        tags = {o["tag"] for o in config["outbounds"]}
+        self.assertNotIn("broken-ech", tags)
+        self.assertIn("working-offline", tags)
+        self.assertEqual((self.work / "subscriptions/proxy-subscription-1.json").read_text(), original)
+
+    def test_legacy_cache_preserves_explicit_ech_and_unextractable_non_ech_links(self):
+        disabled = self.cached_node(tag="explicitly-disabled")
+        disabled["tls"]["ech"] = {"enabled": False}
+        disabled["share_link"] = self.link(B64)
+        opaque = self.cached_node(tag="opaque-old-link")
+        opaque["share_link"] = "vmess://not-a-valid-old-link"
+        config = self.generate(subscription=[disabled, opaque])
+        disabled_out = next(o for o in config["outbounds"] if o["tag"] == "explicitly-disabled")
+        self.assertEqual(disabled_out["tls"]["ech"], {"enabled": False})
+        self.assertTrue(any(o["tag"] == "opaque-old-link" for o in config["outbounds"]))
 
     def test_ech_with_tls_disabled_is_rejected(self):
         link = self.link(B64, security="none")

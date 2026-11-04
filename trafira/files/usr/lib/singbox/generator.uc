@@ -3223,9 +3223,10 @@ function allow_dynamic_ech_queries(config) {
                 tag = "ech-dns-server-" + suffix;
                 let server = {
                     type: "https", tag, server: parsed.server,
-                    server_port: parsed.server_port, path: parsed.path,
-                    detour: runtime_constants.DIRECT_OUTBOUND_TAG
+                    server_port: parsed.server_port, path: parsed.path
                 };
+                // No detour uses the core's direct dialer. An explicit detour
+                // to our empty built-in direct outbound is rejected at startup.
                 if (!parsed.is_ip)
                     server.domain_resolver = runtime_constants.BOOTSTRAP_DNS_SERVER_TAG;
                 push(config.dns.servers, server);
