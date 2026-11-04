@@ -274,6 +274,24 @@ class ECHLinks(unittest.TestCase):
         self.assertEqual(disabled_out["tls"]["ech"], {"enabled": False})
         self.assertTrue(any(o["tag"] == "opaque-old-link" for o in config["outbounds"]))
 
+    def test_legacy_vmess_restoration_is_bounded_before_decoding_large_source(self):
+        oversized = self.cached_node("vmess", tag="oversized-legacy-vmess")
+        # Put ECH after a large unrelated field: a prefix-only inspection must
+        # not silently miss ECH and leave this normalized node unprotected.
+        source = {"add": "node.example", "port": "443", "id": UUID, "tls": "tls",
+                  "padding": "x" * 200000, "ech": B64}
+        oversized["share_link"] = "vmess://" + base64.b64encode(json.dumps(source).encode()).decode()
+        self.assertGreater(len(oversized["share_link"]), 256 * 1024)
+        working = self.cached_node(tag="working-bounded-cache")
+        original = json.dumps({"outbounds": [oversized, working]})
+        result, config = self.generate_result(subscription=[oversized, working])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        tags = {o["tag"] for o in config["outbounds"]}
+        self.assertNotIn("oversized-legacy-vmess", tags)
+        self.assertIn("working-bounded-cache", tags)
+        self.assertIn("ECH cache restoration size exceeds limit", result.stdout + result.stderr)
+        self.assertEqual((self.work / "subscriptions/proxy-subscription-1.json").read_text(), original)
+
     def test_ech_with_tls_disabled_is_rejected(self):
         link = self.link(B64, security="none")
         result = self.uc(str(LIB / "subscription/parser.uc"), "share-link-outbound", link, "node")
