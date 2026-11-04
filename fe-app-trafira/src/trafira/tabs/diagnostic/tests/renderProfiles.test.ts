@@ -797,3 +797,14 @@ it('renders only the dependency schema and treats report strings as text', async
   expect(text(host)).toContain('Not checked');
   expect(all(host).some((n) => n.tag === 'img')).toBe(false);
 });
+
+it('drops a dependency report if a refreshed catalog no longer contains its profile', async () => {
+  profilesPanel.mount();
+  await drain();
+  await select('p-first');
+  await click('Check dependencies');
+  expect(text(host)).toContain('/etc/missing-key.pem');
+  entries = entries.filter((e) => e.id !== 'p-first');
+  await click('Refresh profiles');
+  expect(text(host)).not.toContain('/etc/missing-key.pem');
+});

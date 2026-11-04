@@ -39,6 +39,7 @@ export const profilesPanel = {
     let last: ProfileState;
     let transferring = false;
     let checkingDependencies = false;
+    let dependencyId = '';
     let preferredSelection = '';
     const createName = E('input', {
       id: 'trafira-profile-create-name',
@@ -189,6 +190,7 @@ export const profilesPanel = {
           dependencyOutput.replaceChildren(
             renderProfileDependencies(result.report),
           );
+          dependencyId = id;
         } catch (error) {
           if (generation === mountId && select.value === id) {
             dependencyOutput.replaceChildren();
@@ -418,6 +420,7 @@ export const profilesPanel = {
       notify('');
       dependencyOutput.replaceChildren();
       dependencyRow.className = 'cbi-value hidden';
+      dependencyId = '';
       controller.invalidatePreview();
       updateButtons();
     });
@@ -514,6 +517,11 @@ export const profilesPanel = {
         renameName.value =
           state.entries.find((entry) => entry.id === select.value)?.name || '';
         preferredSelection = '';
+      }
+      if (dependencyId && dependencyId !== select.value) {
+        dependencyOutput.replaceChildren();
+        dependencyRow.className = 'cbi-value hidden';
+        dependencyId = '';
       }
       last = state;
       if (state.committed) reloadAfterConfigurationCommit();
