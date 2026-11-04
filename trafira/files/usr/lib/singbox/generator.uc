@@ -3196,8 +3196,12 @@ function allow_dynamic_ech_queries(config) {
                 runtime_generate_unsupported("ECH resolver metadata requires dynamic TLS ECH");
             continue;
         }
-        let name = ech_links.domain(trim(option(ech, "query_server_name", "") || option(tls, "server_name", "") || as_string(outbound.server)));
-        if (name == "") {
+        let name = lc(trim(option(ech, "query_server_name", "") || option(tls, "server_name", "") || as_string(outbound.server)));
+        if (substr(name, length(name) - 1) == ".")
+            name = substr(name, 0, length(name) - 1);
+        // Raw query_server_name may be a DNS service owner such as
+        // _8443._https.example. Preserve its existing exact-name exception.
+        if (name == "" || length(name) > 253 || !match(name, /^[a-z0-9_.-]+$/) || index(name, "..") >= 0) {
             if (doh != "")
                 runtime_generate_unsupported("ECH query domain is invalid");
             continue;

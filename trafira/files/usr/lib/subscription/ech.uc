@@ -207,6 +207,8 @@ function apply(outbound, value) {
 function cached_link_ech(link) {
     if (substr(link, 0, 8) != "vmess://")
         return query(link);
+    if (length(link) > 256 * 1024)
+        return { present: true, error: "ECH cache restoration size exceeds limit (256 KiB)" };
     let encoded = substr(link, 8), fragment = index(encoded, "#");
     if (fragment >= 0)
         encoded = substr(encoded, 0, fragment);
