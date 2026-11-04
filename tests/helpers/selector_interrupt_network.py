@@ -3,6 +3,7 @@
 import json
 import os
 import pathlib
+import re
 import socket
 import socketserver
 import struct
@@ -63,13 +64,24 @@ def exchange(stream, address):
     assert exact(stream, len(address) + 5) == address.encode() + b":ping", "wrong outbound used"
 
 
+version = subprocess.check_output(["sing-box", "version"], text=True).splitlines()[0]
+match = re.search(r"\b(\d+)\.(\d+)\.", version)
+assert match, "could not identify sing-box version"
+# Before 1.14 Selector.NewConnectionEx delegates directly to the selected
+# outbound, bypassing the selector interrupt group for inbound client streams.
+# Preserve the old engine behavior; test the close control where it is wired.
+tracks_client_streams = tuple(map(int, match.groups())) >= (1, 14)
+values = [None, "0", "1"] if tracks_client_streams else ["0"]
+if not tracks_client_streams:
+    print("NOTE: sing-box before 1.14 bypasses the selector interrupt group for client streams; testing preserve mode only", flush=True)
+
 opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 with socketserver.ThreadingTCPServer(("127.0.0.1", 0), Echo) as echo, tempfile.TemporaryDirectory(prefix="trafira-selector-network-") as temp:
     echo.daemon_threads = True
     thread = threading.Thread(target=echo.serve_forever, daemon=True)
     thread.start()
     try:
-        for value in [None, "0", "1"]:
+        for value in values:
             directory = pathlib.Path(temp) / str(value)
             directory.mkdir()
             section = {".name": "demo", ".type": "section", "enabled": "1", "action": "connection", "outbound_jsons": [
