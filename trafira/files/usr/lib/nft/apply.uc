@@ -796,7 +796,7 @@ function nft_add_section_priority_rules(table, section, interface_set, localv4_s
         return true;
 
     fakeip_range = default_arg(fakeip_range, "198.18.0.0/15");
-    fakeip6_range = default_arg(fakeip6_range, "fc00::/18");
+    fakeip6_range = default_arg(fakeip6_range, "2001:2::/112");
 
     let sets = section_priority_sets(section);
     if (!nft_create_priority_sets(table, sets))
@@ -892,7 +892,7 @@ function nft_create_runtime_base(table, localv4_set, common_set, port_set, ip_po
     localv6_set = default_arg(localv6_set, "localv6");
     common6_set = default_arg(common6_set, "trafira_subnets6");
     ip_port6_set = default_arg(ip_port6_set, "trafira_ip6_ports");
-    fakeip6_range = default_arg(fakeip6_range, "fc00::/18");
+    fakeip6_range = default_arg(fakeip6_range, "2001:2::/112");
     tproxy6_address = default_arg(tproxy6_address, "::1");
     let alice = alice_config.config(settings);
 
@@ -1006,7 +1006,7 @@ function nft_create_runtime_output_rules(table, localv4_set, common_set, port_se
     localv6_set = default_arg(localv6_set, "localv6");
     common6_set = default_arg(common6_set, "trafira_subnets6");
     ip_port6_set = default_arg(ip_port6_set, "trafira_ip6_ports");
-    fakeip6_range = default_arg(fakeip6_range, "fc00::/18");
+    fakeip6_range = default_arg(fakeip6_range, "2001:2::/112");
 
     return (
         nft_add_rule(table, "mangle_output", [ "ip", "daddr", "@" + as_string(common_set), "meta", "l4proto", "tcp", "meta", "mark", "set", fakeip_mark, "counter" ]) &&

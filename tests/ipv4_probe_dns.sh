@@ -40,7 +40,8 @@ assert(bypass>=0&&filterIndex>=0&&bypass<filterIndex,'Alice bypass before probe 
 const router=JSON.parse(fs.readFileSync(dir+'/router.json'));
 assert.deepEqual(router.route.rules.slice(0,4).map(r=>r.action),['sniff','sniff','sniff','hijack-dns'],'all listeners must be sniffed and DNS hijacked before filtering');
 assert.equal(router.route.rules[4].domain?.[0],'v6.xy.fbcdn.net','probe reject must precede router outbound too');
-assert.equal(router.route.rules[5].outbound,'meta-out','router route follows probe rejection');
+assert.equal(router.route.rules[5].outbound,'direct-out','dedicated Direct diagnostic reference precedes router capture');
+assert.equal(router.route.rules[6].outbound,'meta-out','ordinary router traffic follows the selected section');
 const sonars=JSON.parse(fs.readFileSync(process.argv[3]+'/tests/fixtures/ipv6_sonar_probe_domains.json'));
 assert.equal(sonars.length,95);
 const yes=[...sonars,'v6.xy.fbcdn.net','fa4e35f8-5be3-4814-af28-573a3fe281ed-netseer-ipaddr-assoc.xy.fbcdn.net','sonar6.fhrk1-1.fna.fbcdn.net','sonar6.fppk1-1.fna.fbcdn.net','sonar6.frix7-1.fna.fbcdn.net','brunhild.challenges.cloudflare.com'];

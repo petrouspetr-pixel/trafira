@@ -51,9 +51,14 @@ function list_value(section, key) {
 
 function whitespace_list_value(section, key) {
     let value = raw_option(section, key);
-    if (type(value) == "array")
-        return value;
-    return common.list_option(section, key);
+    let values = type(value) == "array" ? value : common.list_option(section, key);
+    let result = [];
+    for (let item in values) {
+        item = trim(as_string(item));
+        if (item != "")
+            push(result, item);
+    }
+    return result;
 }
 
 function section_name(section) {

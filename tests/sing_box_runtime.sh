@@ -1260,7 +1260,7 @@ assert(route_rule(server, r => r.inbound == "server-edge-in" && r.outbound == "d
 
 let matchers = cfg("matchers");
 assert(matchers.dns.strategy == "prefer_ipv6", "configured DNS strategy is generated");
-assert(dns_server(matchers, r => r.tag == "fakeip-server" && r.inet6_range == "fc00::/18") != null, "FakeIP IPv6 range");
+assert(dns_server(matchers, r => r.tag == "fakeip-server" && r.inet6_range == "2001:2::/112") != null, "FakeIP IPv6 range");
 assert(inbound(matchers, "tproxy6-in") != null, "IPv6 TProxy inbound");
 assert(inbound(matchers, "tproxy6-in").listen == "::1", "IPv6 TProxy listen address");
 assert(route_rule(matchers, r => r.action == "reject" && r.ip_version == 6) == null, "IPv6 traffic is not rejected globally");
@@ -1279,7 +1279,7 @@ let bypass_dnsmasq = dns_rule(matchers, r =>
 assert(bypass_dnsmasq != null, "filtered bypass probes dnsmasq before real DNS fallback");
 assert(contains(bypass_dnsmasq.rules[0].inbound, "source-dns-in"), "filtered bypass DNS is limited to source-aware DNS clients");
 assert(contains(bypass_dnsmasq.rules[0].source_ip_cidr, "10.0.0.3/32"), "filtered bypass DNS keeps the client source");
-assert(bypass_dnsmasq.rules[1].invert === true && contains(bypass_dnsmasq.rules[1].ip_cidr, "198.18.0.0/15") && contains(bypass_dnsmasq.rules[1].ip_cidr, "fc00::/18"), "filtered bypass rejects nested FakeIP answers");
+assert(bypass_dnsmasq.rules[1].invert === true && contains(bypass_dnsmasq.rules[1].ip_cidr, "198.18.0.0/15") && contains(bypass_dnsmasq.rules[1].ip_cidr, "2001:2::/112"), "filtered bypass rejects nested FakeIP answers");
 let bypass_real = dns_rule(matchers, r =>
     r.server == "dns-server" && contains(r.domain_suffix, "example.org") &&
     contains(r.source_ip_cidr, "10.0.0.3/32"));

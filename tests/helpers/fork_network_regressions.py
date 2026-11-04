@@ -1,0 +1,171 @@
+"""Loopback-only reproductions using the pinned real core in network CI."""
+import copy
+import http.server
+import ipaddress
+import json
+import os
+from pathlib import Path
+import socket
+import socketserver
+import struct
+import subprocess
+import tempfile
+import threading
+import time
+import unittest
+import urllib.request
+
+ROOT = Path(__file__).resolve().parents[2]
+LIB = ROOT / "trafira/files/usr/lib"
+
+
+def port():
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+class NetworkRegressions(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="trafira-fork-network-")
+        self.addCleanup(self.temp.cleanup)
+        self.work = Path(self.temp.name)
+        self.env = {**os.environ, "TRAFIRA_LIB": str(LIB)}
+
+    def start_core(self, config):
+        source = self.work / "core.json"
+        source.write_text(json.dumps(config))
+        log = (self.work / "core.log").open("w+")
+        proc = subprocess.Popen(["sing-box", "run", "-c", str(source)], stdout=log, stderr=log)
+        def stop():
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+            log.close()
+        self.addCleanup(stop)
+        time.sleep(0.3)
+        log.flush()
+        self.assertIsNone(proc.poll(), (self.work / "core.log").read_text())
+        return proc
+
+    def generate(self, node, dns_port):
+        fixture = {"settings": {"dns_server": [f"127.0.0.1:{dns_port}"],
+                                "bootstrap_dns_server": [f"127.0.0.1:{dns_port}"]},
+                   "section": [{".name": "proxy", "action": "connection",
+                                "outbound_jsons": [json.dumps(node)]}]}
+        source, output = self.work / "input.json", self.work / "generated.json"
+        source.write_text(json.dumps(fixture))
+        r = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "singbox/generator.uc"),
+                            "generate-config-fixture", str(source), str(output), "127.0.0.1",
+                            "0", "1", "", "1.14.2", "check-only"],
+                           env=self.env, capture_output=True, text=True, timeout=15)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return json.loads(output.read_text())
+
+    def test_ech_query_reaches_dns_instead_of_being_refused(self):
+        queries = []
+        class DNS(socketserver.BaseRequestHandler):
+            def handle(self):
+                data, sock = self.request
+                end = 12
+                while data[end]:
+                    end += data[end] + 1
+                end += 5
+                queries.append(struct.unpack("!H", data[end-4:end-2])[0])
+                sock.sendto(data[:2] + struct.pack("!HHHHH", 0x8180, 1, 0, 0, 0) + data[12:end], self.client_address)
+        dns = socketserver.UDPServer(("127.0.0.1", 0), DNS)
+        self.addCleanup(dns.server_close)
+        threading.Thread(target=dns.serve_forever, daemon=True).start()
+        self.addCleanup(dns.shutdown)
+        class Sink(socketserver.BaseRequestHandler):
+            def handle(self):
+                self.request.settimeout(3)
+                try:
+                    self.request.recv(4096)
+                except TimeoutError:
+                    pass
+        sink = socketserver.ThreadingTCPServer(("127.0.0.1", 0), Sink)
+        sink.daemon_threads = True
+        self.addCleanup(sink.server_close)
+        threading.Thread(target=sink.serve_forever, daemon=True).start()
+        self.addCleanup(sink.shutdown)
+        node = {"type": "http", "server": "127.0.0.1", "server_port": sink.server_address[1],
+                "tls": {"enabled": True, "server_name": "target.example",
+                        "ech": {"enabled": True, "query_server_name": "ech.example"}}}
+        config = self.generate(node, dns.server_address[1])
+        inbound_port = port()
+        config["inbounds"] = [{"type": "mixed", "tag": "test", "listen": "127.0.0.1", "listen_port": inbound_port}]
+        config["experimental"] = {}
+        config["route"]["final"] = "proxy-out"
+        config["log"] = {"level": "debug"}
+        self.start_core(config)
+        subprocess.run(["curl", "--max-time", "3", "-s", "--proxy", f"http://127.0.0.1:{inbound_port}",
+                        "https://example.com/"], capture_output=True, timeout=5)
+        self.assertIn(65, queries, "a real TLS ECH handshake must query HTTPS records upstream; " +
+                      (self.work / "core.log").read_text())
+        self.assertNotIn("REFUSED", (self.work / "core.log").read_text())
+
+    def test_fakeip_range_change_resets_only_fakeip_and_preserves_selector(self):
+        dns_port, api_port = port(), port()
+        generated = self.generate({"type": "direct"}, port())
+        new_range = next(s["inet6_range"] for s in generated["dns"]["servers"] if s["type"] == "fakeip")
+        config = {"log": {"disabled": True}, "inbounds": [{"type": "direct", "tag": "dns",
+                  "listen": "127.0.0.1", "listen_port": dns_port}],
+                  "dns": {"servers": [{"type": "fakeip", "tag": "fake", "inet4_range": "198.18.0.0/15",
+                                        "inet6_range": "fc00::/18"}], "final": "fake"},
+                  "route": {"rules": [{"action": "sniff"}, {"action": "hijack-dns", "protocol": "dns"}]},
+                  "outbounds": [{"type": "direct", "tag": "A"}, {"type": "direct", "tag": "B"},
+                                {"type": "selector", "tag": "choice", "outbounds": ["A", "B"]}],
+                  "experimental": {"cache_file": {"enabled": True, "store_fakeip": True,
+                                                   "path": str(self.work / "cache.db")},
+                                   "clash_api": {"external_controller": f"127.0.0.1:{api_port}"}}}
+        def address():
+            r = subprocess.run(["dig", "@127.0.0.1", "-p", str(dns_port), "host.example", "AAAA",
+                                "+short", "+timeout=2", "+tries=1"], capture_output=True, text=True, timeout=4)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            return ipaddress.ip_address(r.stdout.strip())
+        first = self.start_core(config)
+        self.assertIn(address(), ipaddress.ip_network("fc00::/18"))
+        req = urllib.request.Request(f"http://127.0.0.1:{api_port}/proxies/choice", method="PUT",
+                                     data=b'{"name":"B"}', headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=2) as response:
+            self.assertEqual(response.status, 204)
+        first.terminate()
+        first.wait(timeout=5)
+        config["dns"]["servers"][0]["inet6_range"] = new_range
+        self.start_core(config)
+        self.assertIn(address(), ipaddress.ip_network("2001:2::/112"))
+        with urllib.request.urlopen(f"http://127.0.0.1:{api_port}/proxies/choice", timeout=2) as response:
+            self.assertEqual(json.load(response)["now"], "B", "no deletion of unrelated selector state")
+
+    def test_stalled_local_api_returns_a_bounded_structured_error(self):
+        release = threading.Event()
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                release.wait(8)
+            def log_message(self, *_):
+                pass
+        api = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        api.daemon_threads = True
+        self.addCleanup(api.server_close)
+        threading.Thread(target=api.serve_forever, daemon=True).start()
+        self.addCleanup(api.shutdown)
+        self.addCleanup(release.set)
+        state = self.work / "uci"
+        state.write_text("trafira.settings=settings\ntrafira.settings.service_listen_address=127.0.0.1\n")
+        env = {**self.env, "TRAFIRA_UCI_STATE_FILE": str(state),
+               "SB_CLASH_API_CONTROLLER_PORT": str(api.server_address[1])}
+        started = time.monotonic()
+        result = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "diagnostics/runtime.uc"),
+                                 "clash-api", "get_connections"], env=env, capture_output=True, text=True, timeout=7)
+        self.assertLess(time.monotonic() - started, 7)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("error", json.loads(result.stdout))
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

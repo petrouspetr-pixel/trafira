@@ -40,6 +40,17 @@ function attach(value,settings,sections,context) {
     let insert_at=0;
     while(insert_at<length(value.route.rules) &&
         (value.route.rules[insert_at].action=="sniff" || value.route.rules[insert_at].action=="hijack-dns"))insert_at++;
+    // Keep the dedicated Direct diagnostic reference direct even when all
+    // ordinary router applications use the selected Connection section.
+    for(let n=insert_at;n<length(value.route.rules);n++) {
+        let rule=value.route.rules[n];
+        if(rule.action=="route" && rule.domain==tags.FAKEIP_TEST_DOMAIN && rule.outbound==tags.DIRECT_OUTBOUND_TAG) {
+            splice(value.route.rules,n,1);
+            splice(value.route.rules,insert_at,0,rule);
+            insert_at++;
+            break;
+        }
+    }
     splice(value.route.rules,insert_at,0,{action:"route",inbound:INBOUNDS,outbound:tags.outbound_tag(selected.section),__trafira_origin:origin});
     unshift(value.dns.rules,{action:"route",inbound:INBOUNDS,server:tags.DNS_SERVER_TAG,__trafira_origin:origin});
     return value;

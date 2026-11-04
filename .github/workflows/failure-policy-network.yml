@@ -1,5 +1,6 @@
 name: Failure Policy Network
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'trafira/files/**'
@@ -75,3 +76,5 @@ jobs:
           sudo env TRAFIRA_REAL_CODEC=1 bash tests/route_native_domains.sh
           sudo env TRAFIRA_REAL_SOURCE=1 bash tests/route_source_fast.sh
           env RUN_TRAFIRA_NETWORK_TESTS=1 python3 tests/helpers/selector_interrupt_network.py
+      - name: Verify fork regressions with real core and stalled local API
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/fork_network_regressions.sh

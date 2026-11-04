@@ -1552,7 +1552,11 @@ function check_fakeip() {
         }
     }
     write_json({
-        fakeip: match(fakeip_address, /^198\.(18|19)\./) != null || match(fakeip6_address, /^fc[0-3][0-9a-f]:/) != null,
+        fakeip: core_ip.ip_in_cidr(fakeip_address, "198.18.0.0/15") ||
+            core_ip.ip_in_cidr(fakeip6_address, constants.SB_FAKEIP_INET6_RANGE) ||
+            // Read-only diagnostics also support an older core still running
+            // with the previous range during a staged package upgrade.
+            core_ip.ip_in_cidr(fakeip6_address, "fc00::/18"),
         IP: fakeip_address != "" ? fakeip_address : fakeip6_address,
         IPv4: fakeip_address,
         IPv6: fakeip6_address
@@ -1654,7 +1658,7 @@ function clash_api(action, arg1, arg2, arg3) {
     }
 
     if (action == "get_proxies") {
-        let args = [ "curl", "-s" ];
+        let args = [ "curl", "--max-time", "5", "--fail", "-s" ];
         push(args, base_url + "/proxies");
         let response=command_capture(command_from_args(args));
         let value;
@@ -1667,9 +1671,15 @@ function clash_api(action, arg1, arg2, arg3) {
     }
 
     if (action == "get_connections") {
-        let args = [ "curl", "-s" ];
+        let args = [ "curl", "--max-time", "5", "--fail", "-s" ];
         push(args, base_url + "/connections");
-        return clash_json_output(args);
+        let response = command_capture(command_from_args(args));
+        let value;
+        try { value = json(response.output); } catch (e) { value = null; }
+        if (response.status != 0 || type(value?.connections) != "array")
+            return clash_json_error("connections_api_failed");
+        print(sprintf("%J\n", value));
+        return 0;
     }
 
     if (action == "get_proxy_latency") {

@@ -569,6 +569,20 @@ function outbound_uses_xhttp(outbound) {
         lc(as_string(outbound.transport.type || "")) == "xhttp";
 }
 
+function subscription_xhttp_session_compatible(outbound) {
+    if (!outbound_uses_xhttp(outbound))
+        return true;
+    let transport = outbound.transport;
+    if (lc(trim(as_string(transport.session_id_table))) != "base62")
+        return true;
+    let value = trim(as_string(transport.session_id_length));
+    // Unknown syntax belongs to the core validator. Reject only a known,
+    // impossible provider value: Base62^5 < 2^31, Base62^6 > 2^31.
+    if (!match(value, /^[0-9]+(-[0-9]+)?$/))
+        return true;
+    return int(split(value, "-")[0], 10) >= 6;
+}
+
 function ensure_explicit_outbound_supported(outbound, source, name) {
     if (!runtime_supports_xhttp && outbound_uses_xhttp(outbound))
         runtime_generate_unsupported(as_string(source) + " '" + as_string(name) + "' uses XHTTP transport, but sing-box-extended is not installed");
@@ -622,6 +636,10 @@ function compatible_subscription_outbounds(outbounds, section_name) {
             continue;
         if (!runtime_supports_xhttp && outbound_uses_xhttp(outbound)) {
             warn_skipped_subscription_outbound(section_name, outbound, "XHTTP requires sing-box-extended");
+            continue;
+        }
+        if (!subscription_xhttp_session_compatible(outbound)) {
+            warn_skipped_subscription_outbound(section_name, outbound, "XHTTP Base62 session ID length is too small");
             continue;
         }
         push(retained, outbound);
@@ -3031,7 +3049,9 @@ function add_service_route_rules(config, sections) {
         });
     }
     push(config.route.rules, {
-        action: "route-options",
+        // This is the Direct reference, not another user-routed connection.
+        action: "route",
+        outbound: runtime_constants.DIRECT_OUTBOUND_TAG,
         domain: runtime_constants.FAKEIP_TEST_DOMAIN,
         override_port: 8443
     });

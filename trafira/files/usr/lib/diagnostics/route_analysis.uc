@@ -260,9 +260,9 @@ function fake_destination(config,address) {
     if(!address)return false;
     let ranges=[];
     for(let server in arr(obj(config.dns).servers))if(server.type=="fakeip")
-        push(ranges,server.inet4_range||"198.18.0.0/15",server.inet6_range||"fc00::/18");
+        push(ranges,server.inet4_range||"198.18.0.0/15",server.inet6_range||"2001:2::/112");
     let legacy=obj(obj(config.dns).fakeip);
-    if(legacy.enabled)push(ranges,legacy.inet4_range||"198.18.0.0/15",legacy.inet6_range||"fc00::/18");
+    if(legacy.enabled)push(ranges,legacy.inet4_range||"198.18.0.0/15",legacy.inet6_range||"2001:2::/112");
     return length(filter(ranges,(range)=>ip.ip_in_cidr(address,range)))>0;
 }
 function connection_info(config,route,selected) {

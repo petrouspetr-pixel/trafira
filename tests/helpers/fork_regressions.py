@@ -73,7 +73,8 @@ class ForkRegressions(unittest.TestCase):
                                 str(source), "{}"])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         result = self.run_ucode(["-e", 'let c=require("config.connections");'
-            'assert(sprintf("%J",c.community_lists({community_lists:[""," youtube "," "]}))=="[\\"youtube\\"]", "normalized community values");'])
+            'let v=c.community_lists({community_lists:[""," youtube "," "]});'
+            'assert(length(v)==1 && v[0]=="youtube", "normalized community values");'])
         self.assertEqual(result.returncode, 0, result.stderr)
         source.write_text(source.read_text().replace(" youtube ", "unknown"))
         result = self.run_ucode([str(LIB / "config/validator.uc"), "validate-runtime-fixture", str(source), "{}"])
@@ -117,6 +118,28 @@ class ForkRegressions(unittest.TestCase):
             'assert(d.fake({dns:{servers:[{type:"fakeip"}]}},"2001:2::1"),"new default recognized");'
             'assert(d.fake({dns:{servers:[{type:"fakeip",inet6_range:"fc00::/18"}]}},"fc00::1"),"explicit old running config still recognized");'])
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_dynamic_ech_has_only_an_exact_dns_exception(self):
+        for static in [False, True]:
+            with self.subTest(static=static):
+                ech = {"enabled": True, "query_server_name": "ech.example"}
+                if static:
+                    ech["config"] = ["-----BEGIN ECH CONFIGS-----\nfixture\n-----END ECH CONFIGS-----"]
+                node = {"type": "http", "server": "127.0.0.1", "server_port": 8443,
+                        "tls": {"enabled": True, "server_name": "target.example", "ech": ech}}
+                config = self.generate({".name": "proxy", "action": "connection",
+                                        "outbound_jsons": [json.dumps(node)]})
+                matches = [r for r in config["dns"]["rules"]
+                           if r.get("query_type") == "HTTPS" and r.get("action") == "route"
+                           and "ech.example" in as_list(r.get("domain", []))]
+                self.assertEqual(len(matches), 0 if static else 1)
+                reject = next(i for i, r in enumerate(config["dns"]["rules"])
+                              if r.get("query_type") == "HTTPS" and r.get("action") == "reject")
+                if matches:
+                    self.assertLess(config["dns"]["rules"].index(matches[0]), reject)
+                    self.assertNotIn("domain_suffix", matches[0], "no broad client DNS exception")
+                    self.assertEqual(matches[0]["server"], "bootstrap-dns-server",
+                                     "ECH setup must not depend on the same TLS tunnel")
 
     def test_monitoring_requests_have_a_bounded_transport_and_report_failure(self):
         state = self.work / "uci"
