@@ -5401,3 +5401,10 @@ msgstr ""
 
 msgid "Subscriptions"
 msgstr ""
+
+
+msgid "Interrupt connections when switching this section"
+msgstr ""
+
+msgid "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections."
+msgstr ""

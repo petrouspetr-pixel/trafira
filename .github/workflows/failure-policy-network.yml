@@ -10,6 +10,7 @@ on:
       - 'tests/nft*'
       - 'tests/route_dns*'
       - 'tests/helpers/failure_policy_servers.py'
+      - 'tests/helpers/selector_interrupt_network.py'
       - '.github/workflows/failure-policy-network.yml'
   push:
     branches: [main]
@@ -22,6 +23,7 @@ on:
       - 'tests/nft*'
       - 'tests/route_dns*'
       - 'tests/helpers/failure_policy_servers.py'
+      - 'tests/helpers/selector_interrupt_network.py'
       - '.github/workflows/failure-policy-network.yml'
 jobs:
   network:
@@ -55,6 +57,9 @@ jobs:
       - name: Verify isolated rule-set bootstrap transport
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_bootstrap_network.sh
 
+      - name: Verify section selector live TCP switching on sing-box 1.12
+        run: env RUN_TRAFIRA_NETWORK_TESTS=1 python3 tests/helpers/selector_interrupt_network.py
+
       - name: Verify real sing-box 1.14 startup snapshots
         shell: bash
         run: |
@@ -69,3 +74,4 @@ jobs:
           sudo env TRAFIRA_REAL_CODEC=1 bash tests/route_social_domains.sh
           sudo env TRAFIRA_REAL_CODEC=1 bash tests/route_native_domains.sh
           sudo env TRAFIRA_REAL_SOURCE=1 bash tests/route_source_fast.sh
+          env RUN_TRAFIRA_NETWORK_TESTS=1 python3 tests/helpers/selector_interrupt_network.py

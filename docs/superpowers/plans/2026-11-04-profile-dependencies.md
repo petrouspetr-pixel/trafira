@@ -13,4 +13,4 @@
 - [x] Add a writer-only dependency action that bypasses the global mutation lock; preserve existing reader ACL/privacy boundaries.
 - [x] Add a native report and Check dependencies button to Profiles. Guard stale results/unmounts; use existing busy state and translate every new message.
 - [x] Document private profile vs external files/packages, automatic HWID considerations, caches, transfer limitations and DNS/firewall handover in docs/profile-transfer.md; link it from README.
-- [ ] Run frontend checks, backend tests against original/compacted sources, permission and locking checks, independent review and CI. Open a PR without a release or router deployment. Use Refs #105 because cross-stack migration/converters are outside this first stage.
+- [x] Run frontend checks, backend tests against original/compacted sources, permission and locking checks, independent review and CI. Open a PR without a release or router deployment. Use Refs #105 because cross-stack migration/converters are outside this first stage.
