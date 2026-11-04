@@ -6,7 +6,10 @@ const PATH_KEYS={dns_mtls_client_certificate:"certificate",dns_mtls_client_key:"
 const LIST_KEYS=["rule_set","rule_set_with_subnets","domain_ip_lists"];
 const JSON_KEYS=["outbound_json","outbound_jsons","inbound_json"];
 function valid_path(path){
-    return type(path)=="string" && length(path)>1 && length(path)<=512 && substr(path,0,1)=="/" && substr(path,0,2)!="//" && !match(path,/[\x00-\x1f\x7f]/);
+    if(type(path)!="string" || length(path)<2 || length(path)>512 || substr(path,0,1)!="/" || substr(path,0,2)=="//")return false;
+    // POSIX regex rejects a NUL range on the pinned OpenWrt ucode runtime.
+    for(let i=0;i<length(path);i++){let code=ord(path,i);if(code<32 || code==127)return false;}
+    return true;
 }
 function inspect(document,hooks){
     if(!format.validate(document).valid)return {success:false,error:"invalid_profile"};

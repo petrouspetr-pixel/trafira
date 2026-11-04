@@ -67,4 +67,7 @@ let scalar_links=json(before);
 scalar_links.config[3].selector_proxy_links="socks5://first.example:1080 vless://SECRET_UUID@second.example:443?security=tls&type=xhttp";
 result=inspector.inspect(scalar_links,hooks);
 assert(filter(result.report.components,item=>item.id=="sing_box")[0].requirement=="extended","scalar connection links use runtime normalization");
+let controls={schema:1,name:"Controls",config:[{".name":"settings",".type":"settings",tls_key_path:"/etc/SECRET_VALUE\n.pem"}]};
+result=inspector.inspect(controls,hooks);
+assert(index(sprintf("%J",result),"SECRET_VALUE")<0 && index(result.report.warnings,"invalid_path")>=0,"control characters in paths are rejected without regex evaluation");
 print("profile dependency inspector checks passed\n");
