@@ -73,3 +73,22 @@ describe('validateProxyUrl', () => {
     expect(validateProxyUrl(`vmess://${config}`).valid).toBe(false);
   });
 });
+
+describe('proxy server names with underscores (issue #106)', () => {
+  for (const host of [
+    'edge_one.example.com',
+    '_edge.example.com',
+    'edge_.example.com',
+    'edge_one.eu_two.example.com',
+  ]) {
+    for (const [protocol, template] of validUrls) {
+      const url =
+        protocol === 'vmess'
+          ? `vmess://${Buffer.from(JSON.stringify({ add: host, port: '443', id: '94792286-7bbe-4f33-8b36-18d1bbf70723' })).toString('base64')}`
+          : template.replace(/example\.com|127\.0\.0\.1/, host);
+      it(`accepts ${protocol} at ${host}`, () => {
+        expect(validateProxyUrl(url).valid).toBe(true);
+      });
+    }
+  }
+});
