@@ -17,11 +17,29 @@ export function unbracketHost(host: string): string {
 export function isValidHost(host: string): boolean {
   const normalizedHost = unbracketHost(host);
 
-  return (
-    isIPv4(normalizedHost) ||
-    isIPv6(normalizedHost) ||
-    validateDomain(normalizedHost).valid
-  );
+  if (isIPv4(normalizedHost) || isIPv6(normalizedHost)) {
+    return true;
+  }
+
+  // A connection address is a host, not a URL or a domain/path expression.
+  if (
+    /[\s\\/?#@:%[\]]/.test(normalizedHost) ||
+    [...normalizedHost].some(
+      (char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127,
+    )
+  ) {
+    return false;
+  }
+
+  // Some providers publish DNS server labels with underscores. Check their
+  // shape without changing the saved address or relaxing TLD/domain rules.
+  const labels = normalizedHost.split('.');
+  const domainForValidation = labels
+    .map((label, index) =>
+      index < labels.length - 1 ? label.replace(/_/g, 'a') : label,
+    )
+    .join('.');
+  return validateDomain(domainForValidation).valid;
 }
 
 export function isValidPort(port: unknown): boolean {
