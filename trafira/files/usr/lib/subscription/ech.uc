@@ -40,6 +40,8 @@ function query(link) {
         let equals = index(pair, "=");
         let key = decode(equals >= 0 ? substr(pair, 0, equals) : pair);
         if (key != "ech") {
+            if (key == "security")
+                result.security = decode(equals >= 0 ? substr(pair, equals + 1) : "");
             push(retained, pair);
             continue;
         }
@@ -202,6 +204,55 @@ function apply(outbound, value) {
     return "";
 }
 
+function cached_link_ech(link) {
+    if (substr(link, 0, 8) != "vmess://")
+        return query(link);
+    let encoded = substr(link, 8), fragment = index(encoded, "#");
+    if (fragment >= 0)
+        encoded = substr(encoded, 0, fragment);
+    encoded = replace(replace(replace(encoded, /[\r\n\t ]/g, ""), /-/g, "+"), /_/g, "/");
+    while (length(encoded) % 4 != 0)
+        encoded += "=";
+    let vmess;
+    try { vmess = json(b64dec(encoded)); }
+    catch (e) { return { present: false }; }
+    // Old cached links can be opaque or malformed independently of ECH.
+    // Do not invalidate a working normalized node unless ECH is explicit.
+    if (type(vmess) != "object" || !("ech" in vmess))
+        return { present: false };
+    return {
+        present: true, value: vmess.ech,
+        security: vmess.tls === true || vmess.tls == "tls" || vmess.tls == "true" ? "tls" : "none"
+    };
+}
+
+function restore_cached(outbound) {
+    if (type(outbound) != "object")
+        return { outbound };
+    let tls = type(outbound.tls) == "object" ? outbound.tls : {};
+    // Preserve explicit ECH settings, including an intentional enabled:false.
+    if (tls.ech != null || type(outbound.share_link) != "string")
+        return { outbound };
+    let link = outbound.share_link, saved = cached_link_ech(link);
+    if (!saved.present)
+        return { outbound };
+    if (saved.error)
+        return { outbound, error: saved.error };
+    let marker = index(link, "://"), scheme = marker > 0 ? lc(substr(link, 0, marker)) : "";
+    let security = text(saved.security);
+    if (index(["vless", "trojan", "hysteria2", "hy2", "vmess"], scheme) < 0 ||
+        (security != "" && security != "tls" && security != "xtls"))
+        return { outbound, error: "cached ECH requires a supported TLS proxy link without REALITY" };
+    // Repair only the generated copy. Keep the provider's offline source,
+    // protocol fields, SNI, ALPN and all nested TLS options untouched.
+    let copy = { ...outbound, tls: { ...tls } };
+    if (copy.tls.enabled == null)
+        copy.tls.enabled = true;
+    delete copy.__trafira_ech_doh;
+    let error = apply(copy, saved.value);
+    return { outbound: copy, error };
+}
+
 function value(outbound) {
     let tls = type(outbound.tls) == "object" ? outbound.tls : {};
     let ech = type(tls.ech) == "object" ? tls.ech : {};
@@ -230,4 +281,4 @@ function value(outbound) {
     return doh == "" ? name : (doh_url(doh) == null ? "" : name + "+" + doh);
 }
 
-return { query, parse, apply, value, domain, doh_url };
+return { query, parse, apply, value, domain, doh_url, restore_cached };

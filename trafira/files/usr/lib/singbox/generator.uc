@@ -639,6 +639,12 @@ function compatible_subscription_outbounds(outbounds, section_name) {
     for (let outbound in array_or_empty(outbounds)) {
         if (!supported_subscription_outbound(outbound))
             continue;
+        let restored = ech_links.restore_cached(outbound);
+        if (restored.error) {
+            warn_skipped_subscription_outbound(section_name, outbound, restored.error);
+            continue;
+        }
+        outbound = restored.outbound;
         if (!runtime_supports_xhttp && outbound_uses_xhttp(outbound)) {
             warn_skipped_subscription_outbound(section_name, outbound, "XHTTP requires sing-box-extended");
             continue;
