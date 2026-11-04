@@ -62,6 +62,14 @@ class ECHLinks(unittest.TestCase):
         self.assertTrue(result.stdout.strip(), "export must retain a usable ECH connection")
         return result.stdout.strip()
 
+    def serialize_result(self, node):
+        source = self.work / "raw-node.json"
+        source.write_text(json.dumps(node))
+        result = self.uc("-e", 'let fs=require("fs"),s=require("subscription.share_link");'
+                         'print(s.serialize_outbound_link(json(fs.readfile(ARGV[0]))));', str(source))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.strip()
+
     def generate_result(self, links=None, subscription=None):
         section = {".name": "proxy", "action": "connection", "domain_suffix": ["example.org"]}
         if subscription is not None:
@@ -86,6 +94,10 @@ class ECHLinks(unittest.TestCase):
     def generate(self, **kwargs):
         result, config = self.generate_result(**kwargs)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        if os.environ.get("TRAFIRA_REAL_ECH_CORE") == "1":
+            checked = subprocess.run(["sing-box", "check", "-c", str(self.work / "config.json")],
+                                     text=True, capture_output=True, timeout=15)
+            self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
         for outbound in config["outbounds"]:
             self.assertFalse(any(k.startswith("__trafira_ech") for k in outbound), "internal ECH fields leaked")
             if "ech" in outbound.get("tls", {}):
@@ -118,6 +130,20 @@ class ECHLinks(unittest.TestCase):
                 for args in [{"links": [link]}, {"subscription": [self.parse(link)]}]:
                     config = self.generate(**args)
                     self.assert_static(next(o for o in config["outbounds"] if o["type"] == scheme))
+
+    def test_raw_static_pem_string_does_not_become_dynamic_during_export(self):
+        node = {"type": "vless", "server": "node.example", "server_port": 443, "uuid": UUID,
+                "tls": {"enabled": True, "server_name": "target.example", "alpn": ["h2", "http/1.1"],
+                        "ech": {"enabled": True, "config": PEM}}}
+        self.assert_static(self.parse(self.serialize(node)))
+
+    def test_invalid_raw_static_config_is_not_exported_as_dynamic_ech(self):
+        for config in ["invalid PEM", ["invalid PEM"], {"bad": "shape"}]:
+            with self.subTest(config=config):
+                node = {"type": "vless", "server": "node.example", "server_port": 443, "uuid": UUID,
+                        "tls": {"enabled": True, "server_name": "target.example",
+                                "ech": {"enabled": True, "config": config}}}
+                self.assertEqual(self.serialize_result(node), "", "invalid inline ECH must not become dynamic")
 
     def test_explicit_doh_survives_roundtrip_and_both_generators(self):
         for encoded in [False, True]:

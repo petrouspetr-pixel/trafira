@@ -86,6 +86,8 @@ jobs:
           env RUN_TRAFIRA_NETWORK_TESTS=1 python3 tests/helpers/selector_interrupt_network.py
       - name: Verify fork regressions with real core and stalled local API
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/fork_network_regressions.sh
+      - name: Verify ECH link generation against real core
+        run: env TRAFIRA_REAL_ECH_CORE=1 python3 tests/ech_links.py
       - name: Verify provider Base62 ranges against pinned Extended core
         shell: bash
         run: |

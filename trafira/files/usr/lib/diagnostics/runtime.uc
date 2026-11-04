@@ -1586,7 +1586,9 @@ function clash_capture(args) {
     // Bound the read before parsing JSON, also for chunked replies or older
     // curl versions which enforce --max-filesize only with Content-Length.
     const limit = 2097152;
-    let pipe = fs.popen(command_from_args([...args, "--max-filesize", "" + limit]) + " 2>/dev/null", "r");
+    let bounded = [...args];
+    splice(bounded, 1, 0, "--max-filesize", "" + limit);
+    let pipe = fs.popen(command_from_args(bounded) + " 2>/dev/null", "r");
     if (!pipe)
         return { status: 1, output: "", error: "api_failed" };
     let data = pipe.read(limit + 1) || "";
