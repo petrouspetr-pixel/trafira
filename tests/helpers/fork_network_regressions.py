@@ -116,8 +116,9 @@ class NetworkRegressions(unittest.TestCase):
                 "tls": {"enabled": True, "server_name": "target.example",
                         "ech": {"enabled": True, "query_server_name": "ech.example"}}}
         config = self.generate(node, dns.server_address[1])
-        inbound_port = port()
-        config["inbounds"] = [{"type": "mixed", "tag": "test", "listen": "127.0.0.1", "listen_port": inbound_port}]
+        inbound_port, dns_inbound = port(), port()
+        config["inbounds"] = [{"type": "mixed", "tag": "test", "listen": "127.0.0.1", "listen_port": inbound_port},
+                              {"type": "direct", "tag": "dns-in", "listen": "127.0.0.1", "listen_port": dns_inbound}]
         config["experimental"] = {}
         config["route"]["final"] = "proxy-out"
         config["log"] = {"level": "debug"}
@@ -127,6 +128,16 @@ class NetworkRegressions(unittest.TestCase):
         self.assertIn(65, queries, "a real TLS ECH handshake must query HTTPS records upstream; " +
                       (self.work / "core.log").read_text())
         self.assertNotIn("REFUSED", (self.work / "core.log").read_text())
+        # The exception must not turn off the normal HTTPS-record restriction.
+        question = b"\x05other\x07example\x00" + struct.pack("!HH", 65, 1)
+        packet = struct.pack("!HHHHHH", 123, 0x0100, 1, 0, 0, 0) + question
+        count = len(queries)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.settimeout(2)
+            sock.sendto(packet, ("127.0.0.1", dns_inbound))
+            response, _ = sock.recvfrom(4096)
+        self.assertEqual(response[3] & 15, 5, "unrelated HTTPS queries remain REFUSED")
+        self.assertEqual(len(queries), count, "unrelated HTTPS query never reaches upstream")
 
     def test_fakeip_range_change_resets_only_fakeip_and_preserves_selector(self):
         dns_port, api_port = port(), port()
@@ -138,7 +149,8 @@ class NetworkRegressions(unittest.TestCase):
                                         "inet6_range": "fc00::/18"},
                                        {"type": "udp", "tag": "real", "server": "127.0.0.1", "server_port": 9}],
                           "rules": [{"query_type": "AAAA", "action": "route", "server": "fake"}], "final": "real"},
-                  "route": {"rules": [{"action": "sniff"}, {"action": "hijack-dns", "protocol": "dns"}]},
+                  "route": {"default_domain_resolver": "real",
+                            "rules": [{"action": "sniff"}, {"action": "hijack-dns", "protocol": "dns"}]},
                   "outbounds": [{"type": "direct", "tag": "A"}, {"type": "direct", "tag": "B"},
                                 {"type": "selector", "tag": "choice", "outbounds": ["A", "B"]}],
                   "experimental": {"cache_file": {"enabled": True, "store_fakeip": True,
