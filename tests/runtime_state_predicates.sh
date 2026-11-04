@@ -619,6 +619,8 @@ proxy
 [ ]
 [rule.proxy1.dashboard_filter]
 { "filter_mode": "mixed", "detect_server_country": "country_is", "include_countries": [ "NL" ], "include_outbounds": [ "node-a" ], "include_regex": [ "^A" ], "include_proxy_parameters": "1", "include_protocols": [ "vless" ], "include_transports": [ "ws" ], "include_securities": [ "reality" ], "include_groups": [ "urltest" ], "exclude_countries": [ "RU" ], "exclude_outbounds": [ "node-b" ], "exclude_regex": [ "backup" ], "exclude_proxy_parameters": "1", "exclude_protocols": [ "http" ], "exclude_transports": [ "tcp" ], "exclude_securities": [ "none" ], "exclude_groups": [ "urltest" ] }
+[rule.proxy1.selector_interrupt_exist_connections]
+1
 [rule.proxy1.urltest_enabled]
 1
 [rule.proxy1.detect_server_country]
@@ -705,6 +707,8 @@ outbound
 [ ]
 [rule.out1.dashboard_filter]
 { "filter_mode": "disabled", "detect_server_country": "flag_emoji", "include_countries": [ ], "include_outbounds": [ ], "include_regex": [ ], "include_proxy_parameters": "0", "include_protocols": [ ], "include_transports": [ ], "include_securities": [ ], "include_groups": [ ], "exclude_countries": [ ], "exclude_outbounds": [ ], "exclude_regex": [ ], "exclude_proxy_parameters": "0", "exclude_protocols": [ ], "exclude_transports": [ ], "exclude_securities": [ ], "exclude_groups": [ ] }
+[rule.out1.selector_interrupt_exist_connections]
+1
 [rule.out1.urltest_enabled]
 0
 [rule.out1.detect_server_country]
@@ -813,6 +817,8 @@ wg0
 [ ]
 [rule.vpn1.dashboard_filter]
 { "filter_mode": "disabled", "detect_server_country": "flag_emoji", "include_countries": [ ], "include_outbounds": [ ], "include_regex": [ ], "include_proxy_parameters": "0", "include_protocols": [ ], "include_transports": [ ], "include_securities": [ ], "include_groups": [ ], "exclude_countries": [ ], "exclude_outbounds": [ ], "exclude_regex": [ ], "exclude_proxy_parameters": "0", "exclude_protocols": [ ], "exclude_transports": [ ], "exclude_securities": [ ], "exclude_groups": [ ] }
+[rule.vpn1.selector_interrupt_exist_connections]
+1
 [rule.vpn1.urltest_enabled]
 0
 [rule.vpn1.detect_server_country]

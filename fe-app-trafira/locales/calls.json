@@ -8498,5 +8498,19 @@
     "places": [
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts"
     ]
+  },
+  {
+    "call": "Interrupt connections when switching this section",
+    "key": "Interrupt connections when switching this section",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7739"
+    ]
+  },
+  {
+    "call": "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections.",
+    "key": "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections.",
+    "places": [
+      "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:7741"
+    ]
   }
 ]

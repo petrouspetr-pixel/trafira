@@ -7734,6 +7734,20 @@ function createSectionContent(section) {
 
   o = section.taboption(
     "settings",
+    form.Flag,
+    "selector_interrupt_exist_connections",
+    _("Interrupt connections when switching this section"),
+    _(
+      "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections.",
+    ),
+  );
+  o.default = "1";
+  o.rmempty = false;
+  o.depends("action", "connection");
+  o.modalonly = true;
+
+  o = section.taboption(
+    "settings",
     form.ListValue,
     "failure_policy",
     _("VPN failure policy"),
