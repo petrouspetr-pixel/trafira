@@ -7,3 +7,5 @@ fe-app-trafira/.env
 sandbox/
 .build/
 dist/
+__pycache__/
+*.pyc

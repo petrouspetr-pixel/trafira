@@ -569,6 +569,24 @@ function outbound_uses_xhttp(outbound) {
         lc(as_string(outbound.transport.type || "")) == "xhttp";
 }
 
+function subscription_xhttp_session_compatible(outbound) {
+    if (!outbound_uses_xhttp(outbound))
+        return true;
+    let transport = outbound.transport;
+    // Predefined table names are case-sensitive in Extended. "base62" is a
+    // different, custom six-character alphabet and must not be guessed here.
+    if (as_string(transport.session_id_table) != "Base62")
+        return true;
+    let value = trim(as_string(transport.session_id_length));
+    // Unknown syntax belongs to the core validator. Reject only a known,
+    // impossible provider value. The core sums the space over the whole range:
+    // all lengths through 5 together are < 2^31, while length 6 alone is > 2^31.
+    if (!match(value, /^[0-9]+(-[0-9]+)?$/))
+        return true;
+    let lengths = split(value, "-");
+    return int(lengths[0], 10) > 0 && int(lengths[length(lengths) - 1], 10) >= 6;
+}
+
 function ensure_explicit_outbound_supported(outbound, source, name) {
     if (!runtime_supports_xhttp && outbound_uses_xhttp(outbound))
         runtime_generate_unsupported(as_string(source) + " '" + as_string(name) + "' uses XHTTP transport, but sing-box-extended is not installed");
@@ -622,6 +640,10 @@ function compatible_subscription_outbounds(outbounds, section_name) {
             continue;
         if (!runtime_supports_xhttp && outbound_uses_xhttp(outbound)) {
             warn_skipped_subscription_outbound(section_name, outbound, "XHTTP requires sing-box-extended");
+            continue;
+        }
+        if (!subscription_xhttp_session_compatible(outbound)) {
+            warn_skipped_subscription_outbound(section_name, outbound, "XHTTP Base62 session ID length is too small");
             continue;
         }
         push(retained, outbound);
@@ -3031,7 +3053,9 @@ function add_service_route_rules(config, sections) {
         });
     }
     push(config.route.rules, {
-        action: "route-options",
+        // This is the Direct reference, not another user-routed connection.
+        action: "route",
+        outbound: runtime_constants.DIRECT_OUTBOUND_TAG,
         domain: runtime_constants.FAKEIP_TEST_DOMAIN,
         override_port: 8443
     });
@@ -3124,6 +3148,33 @@ function add_server_routes(config, servers, sections) {
     }
 }
 
+function allow_dynamic_ech_queries(config) {
+    let names = [];
+    for (let outbound in config.outbounds) {
+        let tls = object_or_empty(outbound.tls), ech = object_or_empty(tls.ech);
+        if (!bool_option(tls, "enabled", false) || !bool_option(ech, "enabled", false) ||
+            trim(option(ech, "config", "")) != "" || trim(option(ech, "config_path", "")) != "")
+            continue;
+        let name = lc(trim(option(ech, "query_server_name", "") || option(tls, "server_name", "") || as_string(outbound.server)));
+        if (substr(name, length(name) - 1) == ".")
+            name = substr(name, 0, length(name) - 1);
+        if (name == "" || length(name) > 253 || !match(name, /^[a-z0-9_.-]+$/) || index(name, "..") >= 0)
+            continue;
+        if (index(names, name) < 0)
+            push(names, name);
+    }
+    if (length(names) == 0)
+        return;
+    // ECH inherits its caller's inbound context. Its exact-name exception must
+    // precede router/DNS-health catch-alls too, not just the HTTPS rejection.
+    // Bootstrap avoids a cycle when the main DNS uses this same TLS tunnel.
+    // Other names and types retain their policy; static ECH needs no exception.
+    unshift(config.dns.rules, {
+        query_type: "HTTPS", domain: names, action: "route",
+        server: runtime_constants.BOOTSTRAP_DNS_SERVER_TAG
+    });
+}
+
 function generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version, validation_only) {
     runtime_subscription_tags = {};
     runtime_section_states = {};
@@ -3183,6 +3234,7 @@ function generate_config(output_path, service_address, mwan3_active, supports_xh
         require("singbox.ruleset_cache").apply(config, runtime_sing_box_version, true);
     assert_unique_outbound_tags(config);
     let removed = runtime_prune.prune_config(config, runtime_subscription_tags);
+    allow_dynamic_ech_queries(config);
     require("singbox.selector_state").apply(config);
     for (let section_name, state in runtime_section_states) {
         runtime_prune.prune_state(state, removed);

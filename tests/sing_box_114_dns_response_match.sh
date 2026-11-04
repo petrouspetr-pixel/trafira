@@ -125,7 +125,7 @@ function assert_response_match(name) {
         let respond = find_index(rules, r => r.type == "logical" && r.action == "respond" &&
             r.server == null && has_source(r.rules[0], source) &&
             r.rules[1].match_response === true && r.rules[1].invert === true &&
-            contains(r.rules[1].ip_cidr, "198.18.0.0/15") && contains(r.rules[1].ip_cidr, "fc00::/18"));
+            contains(r.rules[1].ip_cidr, "198.18.0.0/15") && contains(r.rules[1].ip_cidr, "2001:2::/112"));
         let fallback = find_index(rules, r => r.server == "dns-server" && has_source(r, source) &&
             contains(r.query_type, "A"));
         assert(evaluate >= 0, name + ": dnsmasq evaluate rule for " + source);

@@ -21,7 +21,7 @@ function guard_script(settings,previous,snapshot){
         let prefix="add rule inet TrafiraReloadGuard output ";
         text+=prefix+"meta mark != 0 return\n"+prefix+"ct direction reply return\n"+prefix+"oifname \"lo\" return\n";
         text+=prefix+"ip daddr { 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16 } return\n";
-        text+=prefix+"ip6 daddr fc00::/18 counter drop\n"+prefix+"ip6 daddr { ::1/128, fc00::/7, fe80::/10 } return\n";
+        text+=prefix+"ip6 daddr 2001:2::/112 counter drop\n"+prefix+"ip6 daddr { ::1/128, fc00::/7, fe80::/10 } return\n";
         text+=prefix+"ip daddr 255.255.255.255 udp sport 68 udp dport 67 return\n"+prefix+"ip6 daddr ff02::1:2 udp sport 546 udp dport 547 return\n";
         for(let kind in ["dns","ntp"])for(let address in snapshot[kind]||[]) {
             if(!ip.valid_ip(address))return null;

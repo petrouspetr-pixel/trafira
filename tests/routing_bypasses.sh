@@ -70,7 +70,7 @@ for (const variant of ['wifi','both']) {
   const lines = read(variant,'nft').trim().split('\n').map(s => s.trim().split('\t'));
   const exceptions = lines.filter(a => a.includes('{ 500, 4500 }'));
   assert.equal(exceptions.length, 2, 'one UDP exception for each IP family');
-  for (const [family, fake] of [['ip','198.18.0.0/15'],['ip6','fc00::/18']]) {
+  for (const [family, fake] of [['ip','198.18.0.0/15'],['ip6','2001:2::/112']]) {
     const rule = exceptions.find(a => a.includes(family));
     assert(rule, `missing ${family} exception`);
     assert.deepEqual(rule.slice(0,5), ['add','rule','inet','TrafiraTable','mangle']);

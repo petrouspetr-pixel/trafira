@@ -69,7 +69,7 @@ for (const version of ['1.13.18','1.14.1','1.16.0']) {
   assert.equal(bypassRespond.mode,'and');
   assert(bypassRespond.rules.some(r => usesMixed(r) && r.match_response && array(r.source_ip_cidr).includes('192.0.2.2/32')),
     'dnsmasq response must match the mixed list and requested source');
-  assert(bypassRespond.rules.some(r => r.match_response && r.invert && array(r.ip_cidr).includes('198.18.0.0/15') && array(r.ip_cidr).includes('fc00::/18')),
+  assert(bypassRespond.rules.some(r => r.match_response && r.invert && array(r.ip_cidr).includes('198.18.0.0/15') && array(r.ip_cidr).includes('2001:2::/112')),
     'never return a cached FakeIP answer for a bypass source');
   const bypassFallback = c.dns.rules.findIndex(r => usesMixed(r) && r.match_response && r.server === 'dns-server' && array(r.source_ip_cidr).includes('192.0.2.2/32'));
   assert(bypassFallback > bypassProbe+1,'real DNS fallback follows dnsmasq response matching');

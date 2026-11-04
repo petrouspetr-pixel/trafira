@@ -248,7 +248,7 @@ assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tdns_redirect\ti
 if grep -Fq $'trafira_dns_sources\tudp\tdport\t53\tmeta\tmark' "$NFT_LOG"; then
   fail "source-aware DNS must not use TPROXY marks"
 fi
-assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle\tiifname\t@trafira_interfaces\tip6\tdaddr\t@localv6\tip6\tdaddr\t!=\tfc00::/18\treturn' "runtime local6 return preserves FakeIP6 capture"
+assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle\tiifname\t@trafira_interfaces\tip6\tdaddr\t@localv6\tip6\tdaddr\t!=\t2001:2::/112\treturn' "runtime local6 return preserves FakeIP6 capture"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle\tjump\tpriority_rules' "runtime priority jump"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle\tiifname\t@trafira_interfaces\tip\tdaddr\t@trafira_subnets\tmeta\tl4proto\ttcp\tmeta\tmark\tset\t0x00100000\tcounter' "runtime common tcp rule"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle\tiifname\t@trafira_interfaces\tip6\tdaddr\t@trafira_subnets6\tmeta\tl4proto\ttcp\tmeta\tmark\tset\t0x00100000\tcounter' "runtime common6 tcp rule"
@@ -256,7 +256,7 @@ assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tproxy\tmeta\tma
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tproxy\tmeta\tmark\t&\t0x00100000\t==\t0x00100000\tmeta\tl4proto\ttcp\ttproxy\tip6\tto\t[::1]:1602\tcounter' "runtime proxy6 tcp rule"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle_output\tmeta\tskuid\t65533\tmeta\tmark\tset\t0x00200000\tcounter\treturn' "runtime ByeDPI owner bypass"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle_output\tmeta\tmark\t0x00200000\tcounter\treturn' "runtime outbound return"
-assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle_output\tip6\tdaddr\t@localv6\tip6\tdaddr\t!=\tfc00::/18\treturn' "runtime output local6 return preserves FakeIP6 capture"
+assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle_output\tip6\tdaddr\t@localv6\tip6\tdaddr\t!=\t2001:2::/112\treturn' "runtime output local6 return preserves FakeIP6 capture"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tmangle_output\tjump\tpriority_output_rules' "runtime priority output jump"
 assert_line_before "$NFT_LOG" \
   $'nft\tadd\trule\tinet\tTrafiraTable\tmangle_output\tmeta\tskuid\t65533\tmeta\tmark\tset\t0x00200000\tcounter\treturn' \
@@ -417,7 +417,7 @@ assert_contains "$NFT_LOG" $'nft\tadd\tset\tinet\tTrafiraTable\ttrafira_rule_byp
 assert_contains "$NFT_LOG" $'nft\tadd\tset\tinet\tTrafiraTable\ttrafira_rule_wide_proxy_subnets\t{ type ipv4_addr; flags interval; auto-merge; }' "proxy priority subnet set"
 assert_contains "$NFT_LOG" $'nft\tadd\tset\tinet\tTrafiraTable\ttrafira_rule_bypass_first_fully_sources\t{ type ipv4_addr; flags interval; auto-merge; }' "bypass fully routed source set"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tpriority_rules\tiifname\t@trafira_interfaces\tip\tsaddr\t@trafira_rule_bypass_first_fully_sources\tip\tdaddr\t!=\t@localv4\tip\tdaddr\t!=\t198.18.0.0/15\tcounter\taccept' "bypass fully routed real IP fast path"
-assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tpriority_rules\tiifname\t@trafira_interfaces\tip6\tsaddr\t@trafira_rule_bypass_first_fully_sources6\tip6\tdaddr\t!=\t@localv6\tip6\tdaddr\t!=\tfc00::/18\tcounter\taccept' "bypass fully routed6 real IP fast path"
+assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tpriority_rules\tiifname\t@trafira_interfaces\tip6\tsaddr\t@trafira_rule_bypass_first_fully_sources6\tip6\tdaddr\t!=\t@localv6\tip6\tdaddr\t!=\t2001:2::/112\tcounter\taccept' "bypass fully routed6 real IP fast path"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tpriority_rules\tiifname\t@trafira_interfaces\tip\tsaddr\t@trafira_rule_wide_proxy_fully_sources\tip\tdaddr\t!=\t@localv4\tmeta\tl4proto\ttcp\tmeta\tmark\tset\t0x00100000\tcounter\taccept' "proxy fully routed capture path"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tpriority_rules\tiifname\t@trafira_interfaces\tip\tdaddr\t!=\t@localv4\tip\tdaddr\t@trafira_rule_bypass_first_subnets\tcounter\taccept' "bypass priority accept rule"
 assert_contains "$NFT_LOG" $'nft\tadd\trule\tinet\tTrafiraTable\tpriority_rules\tiifname\t@trafira_interfaces\tip\tdaddr\t!=\t@localv4\tip\tdaddr\t@trafira_rule_wide_proxy_subnets\tmeta\tmark\tset\t0x00100000\tcounter\taccept' "proxy priority capture rule"
