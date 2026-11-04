@@ -18,7 +18,7 @@ async function main() {
     '--no-first-run', '--no-default-browser-check', '--disable-background-networking',
     '--no-proxy-server', '--remote-debugging-port=0', '--user-data-dir=' + profile,
     'about:blank',
-  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+  ], { stdio: ['ignore', 'ignore', 'pipe'], detached: true });
   let socket;
   try {
     const endpoint = await new Promise((resolve, reject) => {
@@ -76,8 +76,13 @@ async function main() {
     socket?.close();
     chrome.kill('SIGTERM');
     await new Promise(resolve => chrome.exitCode !== null ? resolve() : chrome.once('exit', resolve));
+    // Renderer/utility children may briefly outlive the browser and still write
+    // their profile. This process group belongs only to this isolated test.
+    try { process.kill(-chrome.pid, 'SIGTERM'); } catch (error) {
+      if (error.code !== 'ESRCH') throw error;
+    }
     await new Promise(resolve => server.close(resolve));
-    fs.rmSync(profile, { recursive: true, force: true });
+    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

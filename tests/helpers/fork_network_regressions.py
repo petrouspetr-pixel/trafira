@@ -52,9 +52,9 @@ class NetworkRegressions(unittest.TestCase):
         self.assertIsNone(proc.poll(), (self.work / "core.log").read_text())
         return proc
 
-    def generate(self, node, dns_port):
+    def generate(self, node, dns_port, settings=None):
         fixture = {"settings": {"dns_server": [f"127.0.0.1:{dns_port}"],
-                                "bootstrap_dns_server": [f"127.0.0.1:{dns_port}"]},
+                                "bootstrap_dns_server": [f"127.0.0.1:{dns_port}"], **(settings or {})},
                    "section": [{".name": "proxy", "action": "connection",
                                 "outbound_jsons": [json.dumps(node)]}]}
         source, output = self.work / "input.json", self.work / "generated.json"
@@ -86,6 +86,12 @@ class NetworkRegressions(unittest.TestCase):
                     self.assertIn("too small", result.stderr)
 
     def test_ech_query_reaches_dns_instead_of_being_refused(self):
+        self.check_ech_query(False)
+
+    def test_router_origin_ech_query_uses_bootstrap_before_router_dns(self):
+        self.check_ech_query(True)
+
+    def check_ech_query(self, router):
         queries = []
         class DNS(socketserver.BaseRequestHandler):
             def handle(self):
@@ -115,9 +121,15 @@ class NetworkRegressions(unittest.TestCase):
         node = {"type": "http", "server": "127.0.0.1", "server_port": sink.server_address[1],
                 "tls": {"enabled": True, "server_name": "target.example",
                         "ech": {"enabled": True, "query_server_name": "ech.example"}}}
-        config = self.generate(node, dns.server_address[1])
+        config = self.generate(node, dns.server_address[1],
+                               {"router_origin_enabled": "1", "router_origin_section": "proxy"} if router else {})
+        if router:
+            # No listener on port 9: an inherited router DNS catch-all must not
+            # redirect ECH there instead of the working bootstrap. This also
+            # detects the dependency that becomes a cycle with a TLS DNS detour.
+            next(s for s in config["dns"]["servers"] if s["tag"] == "dns-server")["server_port"] = 9
         inbound_port, dns_inbound = port(), port()
-        config["inbounds"] = [{"type": "mixed", "tag": "test", "listen": "127.0.0.1", "listen_port": inbound_port},
+        config["inbounds"] = [{"type": "mixed", "tag": "router-tproxy-in" if router else "test", "listen": "127.0.0.1", "listen_port": inbound_port},
                               {"type": "direct", "tag": "dns-in", "listen": "127.0.0.1", "listen_port": dns_inbound}]
         config["experimental"] = {}
         config["route"]["final"] = "proxy-out"
