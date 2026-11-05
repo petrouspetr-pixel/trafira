@@ -18,21 +18,23 @@ function read_file(path, limit) {
         warn("Subscription file exceeds size limit\n");
         return null;
     }
-    let input = fs.open(path, "r");
-    if (!input)
-        return null;
-    fs.error();
-    let data = input.read(limit + 1), error = fs.error();
-    input.close();
-    if (error)
-        return null;
+    // read(n) allocates n bytes up front; readfile(path,n) grows only with
+    // actual content. Keep the hard bound without reserving 32 MiB for a URL.
+    let data = fs.readfile(path, limit + 1);
     if (data == null)
-        data = "";
+        return null;
     if (length(data) > limit) {
         warn("Subscription file exceeds size limit\n");
         return null;
     }
     return data;
+}
+
+function complete_file(path, bytes) {
+    let stat = fs.stat(path);
+    // Older ucode ignores fclose errors. Verify the bytes after closing,
+    // before a truncated temporary file can replace a working cache.
+    return stat != null && stat.size == bytes;
 }
 
 function copy_stream(input, output, limit) {
@@ -68,7 +70,7 @@ function copy_file(source, target) {
         result = copy_stream(input, output, null);
     input.close();
     let closed = output.close();
-    if (result.ok && closed && fs.rename(tmp, target))
+    if (result.ok && closed && complete_file(tmp, result.bytes) && fs.rename(tmp, target))
         return true;
     fs.unlink(tmp);
     return false;
@@ -98,4 +100,4 @@ function files_equal(left, right) {
 }
 
 return { SOURCE_LIMIT, CACHE_LIMIT, LINK_LIMIT, HEADER_LIMIT,
-         exceeds_limit, read_file, copy_stream, copy_file, files_equal };
+         exceeds_limit, read_file, complete_file, copy_stream, copy_file, files_equal };

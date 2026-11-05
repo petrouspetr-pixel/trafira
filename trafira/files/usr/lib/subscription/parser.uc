@@ -319,7 +319,12 @@ function write_json_file(path, value) {
         warn("Normalized subscription exceeds size limit\n");
         return false;
     }
-    return fs.writefile(path, data);
+    let written = fs.writefile(path, data);
+    if (written == null || !subscription_io.complete_file(path, length(data))) {
+        fs.unlink(path);
+        return false;
+    }
+    return written;
 }
 
 function write_json(value) {
@@ -1567,7 +1572,8 @@ function normalize_uri_list_data(data, output_file) {
 
     let added = 0;
     let skipped = 0;
-    output.write("{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[");
+    let prefix = "{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[";
+    let bytes = length(prefix), ok = output.write(prefix) == bytes;
 
     for (let line in split(data, "\n")) {
         if (index(line, "\r") >= 0)
@@ -1576,9 +1582,11 @@ function normalize_uri_list_data(data, output_file) {
         if (line != "" && !starts_with(line, "#")) {
             let outbound = parse_share_link(line);
             if (outbound) {
-                if (added > 0)
-                    output.write(",");
-                output.write(sprintf("%J", outbound));
+                let piece = (added > 0 ? "," : "") + sprintf("%J", outbound);
+                bytes += length(piece);
+                ok = ok && bytes + 128 <= subscription_io.CACHE_LIMIT && output.write(piece) == length(piece);
+                if (!ok)
+                    break;
                 added++;
             }
             else {
@@ -1587,10 +1595,12 @@ function normalize_uri_list_data(data, output_file) {
         }
     }
 
-    output.write("],\"skipped\":" + skipped + "}\n");
+    let final = "],\"skipped\":" + skipped + "}\n";
+    bytes += length(final);
+    ok = ok && output.write(final) == length(final);
     output.close();
 
-    if (added == 0) {
+    if (added == 0 || !ok || !subscription_io.complete_file(output_file, bytes)) {
         fs.unlink(output_file);
         return false;
     }
@@ -1940,8 +1950,8 @@ function normalize_uri_list_stream(input, output_file, strip_metadata) {
     let added = 0;
     let skipped = 0;
     let line_no = 0;
-    let bytes = 0;
-    output.write("{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[");
+    let prefix = "{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[";
+    let bytes = length(prefix), ok = output.write(prefix) == bytes;
 
     while (true) {
         let line = input.read("line");
@@ -1954,17 +1964,11 @@ function normalize_uri_list_stream(input, output_file, strip_metadata) {
         if (line != "" && !starts_with(line, "#")) {
             let outbound = parse_share_link(line);
             if (outbound) {
-                let data = sprintf("%J", outbound);
-                bytes += length(data) + 1;
-                if (bytes + 128 > subscription_io.CACHE_LIMIT) {
-                    output.close();
-                    fs.unlink(output_file);
-                    warn("Normalized subscription exceeds size limit\n");
-                    return false;
-                }
-                if (added > 0)
-                    output.write(",");
-                output.write(data);
+                let piece = (added > 0 ? "," : "") + sprintf("%J", outbound);
+                bytes += length(piece);
+                ok = ok && bytes + 128 <= subscription_io.CACHE_LIMIT && output.write(piece) == length(piece);
+                if (!ok)
+                    break;
                 added++;
             }
             else {
@@ -1973,10 +1977,12 @@ function normalize_uri_list_stream(input, output_file, strip_metadata) {
         }
     }
 
-    output.write("],\"skipped\":" + skipped + "}\n");
+    let final = "],\"skipped\":" + skipped + "}\n";
+    bytes += length(final);
+    ok = ok && output.write(final) == length(final);
     output.close();
 
-    if (added == 0) {
+    if (added == 0 || !ok || !subscription_io.complete_file(output_file, bytes)) {
         fs.unlink(output_file);
         return false;
     }
@@ -2808,7 +2814,8 @@ function gzip_decode_file(input_file, output_file) {
         let result = output ? subscription_io.copy_stream(pipe, output, subscription_io.SOURCE_LIMIT) : { ok: false };
         let closed = output ? output.close() : false;
         let status = pipe.close();
-        if (status == 0 && result.ok && result.bytes > 0 && closed)
+        if (status == 0 && result.ok && result.bytes > 0 && closed &&
+            subscription_io.complete_file(output_file, result.bytes))
             return true;
         fs.unlink(output_file);
         if (result.too_large) {
@@ -2826,7 +2833,7 @@ function content_is_gzip(path) {
         return false;
     let magic = input.read(2);
     input.close();
-    return magic == "\x1f\x8b";
+    return length(magic) == 2 && ord(substr(magic, 0, 1)) == 31 && ord(substr(magic, 1, 1)) == 139;
 }
 
 function try_decode_gzip_content_file(input_file) {

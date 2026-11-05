@@ -396,8 +396,13 @@ function populate_subscription_file(path) {
 
     let stamp = clock();
     let tmp_path = sprintf("%s.%d.%d.tmp", path, stamp[0], stamp[1]);
-    if (fs.writefile(tmp_path, sprintf("%J\n", subscription)) == null)
+    let serialized = sprintf("%J\n", subscription);
+    if (length(serialized) > subscription_io.CACHE_LIMIT ||
+        fs.writefile(tmp_path, serialized) == null ||
+        !subscription_io.complete_file(tmp_path, length(serialized))) {
+        fs.unlink(tmp_path);
         return false;
+    }
 
     system("chmod 600 " + shell_quote(tmp_path) + " >/dev/null 2>&1");
     if (!fs.rename(tmp_path, path)) {

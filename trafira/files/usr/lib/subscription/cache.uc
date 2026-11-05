@@ -1557,7 +1557,8 @@ function download_subscription(url, filepath, http_proxy_address, headers_filepa
             status = int(status / 256);
         let oversized = copied.too_large || status == 63 ||
             (headers_tmpfile != "" && subscription_io.exceeds_limit(headers_tmpfile, subscription_io.HEADER_LIMIT));
-        if (status == 0 && copied.ok && closed && !oversized && file_nonempty(tmpfile) && move_file(tmpfile, filepath)) {
+        if (status == 0 && copied.ok && closed && !oversized && copied.bytes > 0 &&
+            subscription_io.complete_file(tmpfile, copied.bytes) && move_file(tmpfile, filepath)) {
             if (headers_filepath != "") {
                 if (file_nonempty(headers_tmpfile))
                     move_file(headers_tmpfile, headers_filepath);
