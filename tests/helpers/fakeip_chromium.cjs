@@ -5,6 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const http = require('node:http');
 const { spawn } = require('node:child_process');
+const { waitForDevTools, fetchJSON, openCDP, stopChrome } = require('./chromium_lifecycle.cjs');
 
 async function main() {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'trafira-chromium-'));
@@ -21,37 +22,11 @@ async function main() {
   ], { stdio: ['ignore', 'ignore', 'pipe'], detached: true });
   let socket;
   try {
-    const endpoint = await new Promise((resolve, reject) => {
-      let logs = '';
-      const deadline = setTimeout(() => reject(Error('Chrome startup timeout: ' + logs)), 15000);
-      chrome.on('error', reject);
-      chrome.on('exit', code => reject(Error('Chrome exited: ' + code + ' ' + logs)));
-      chrome.stderr.on('data', chunk => {
-        logs += chunk;
-        const match = logs.match(/DevTools listening on (ws:\/\/[^\s]+)/);
-        if (match) { clearTimeout(deadline); resolve(match[1]); }
-      });
-    });
+    const endpoint = await waitForDevTools(chrome, profile);
     const base = new URL(endpoint);
-    const target = await fetch(`http://${base.host}/json/new?about:blank`, { method: 'PUT' }).then(r => r.json());
-    socket = new WebSocket(target.webSocketDebuggerUrl);
-    await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
-    let nextId = 0;
-    const pending = new Map(), events = [];
-    socket.onmessage = event => {
-      const value = JSON.parse(event.data);
-      if (value.id) {
-        const callback = pending.get(value.id);
-        pending.delete(value.id);
-        if (value.error) callback?.reject(Error(JSON.stringify(value.error)));
-        else callback?.resolve(value.result);
-      } else events.push(value);
-    };
-    const call = (method, params = {}) => new Promise((resolve, reject) => {
-      const id = ++nextId;
-      pending.set(id, { resolve, reject });
-      socket.send(JSON.stringify({ id, method, params }));
-    });
+    const target = await fetchJSON(`http://${base.host}/json/new?about:blank`, { method: 'PUT' });
+    socket = await openCDP(target.webSocketDebuggerUrl);
+    const { call, events } = socket;
     await call('Network.enable');
     await call('Page.enable');
     const results = {};
@@ -74,15 +49,12 @@ async function main() {
     console.log('Chromium actual address-space classification:', JSON.stringify(results));
   } finally {
     socket?.close();
-    chrome.kill('SIGTERM');
-    await new Promise(resolve => chrome.exitCode !== null ? resolve() : chrome.once('exit', resolve));
-    // Renderer/utility children may briefly outlive the browser and still write
-    // their profile. This process group belongs only to this isolated test.
-    try { process.kill(-chrome.pid, 'SIGTERM'); } catch (error) {
-      if (error.code !== 'ESRCH') throw error;
+    try { await stopChrome(chrome); }
+    finally {
+      server.closeAllConnections();
+      await new Promise(resolve => server.close(resolve));
+      fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
-    await new Promise(resolve => server.close(resolve));
-    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

@@ -103,5 +103,7 @@ jobs:
       - uses: actions/setup-node@v5.0.0
         with:
           node-version: '22'
+      - name: Verify bounded Chromium lifecycle
+        run: node --test tests/helpers/chromium_lifecycle.test.cjs
       - name: Verify Chromium FakeIP address-space classification
         run: sudo env PATH="$PATH" RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/fakeip_chromium_network.sh
