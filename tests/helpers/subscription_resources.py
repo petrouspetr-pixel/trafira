@@ -166,7 +166,9 @@ class SubscriptionResources(unittest.TestCase):
     def test_gzip_header_detection_uses_binary_bytes(self):
         path = self.work / "binary-gzip"
         path.write_bytes(gzip.compress(VALID))
-        result = self.uc("-e", 'exit(require("subscription.parser").content_is_gzip(ARGV[0])?0:1);', str(path))
+        script = self.work / "gzip-header.uc"
+        script.write_text('exit(require("subscription.parser").content_is_gzip(ARGV[0])?0:1);')
+        result = self.uc(str(script), str(path))
         self.assertEqual(result.returncode, 0, "gzip magic was not recognized: " + result.stderr)
 
     def test_cache_io_binary_identity_and_bounded_memory(self):
