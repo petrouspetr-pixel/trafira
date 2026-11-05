@@ -61,7 +61,7 @@ class SubscriptionResources(unittest.TestCase):
                 owner.paths.append(self.path)
                 self.send_response(200)
                 if behavior == "declared-large":
-                    self.send_header("Content-Length", str(SOURCE_LIMIT + 1))
+                    self.send_header("Content-Length", str(len(VALID[:-1]) + 12 + SOURCE_LIMIT + 1 + 2))
                 elif behavior == "valid":
                     self.send_header("Content-Length", str(len(payload)))
                 self.send_header("profile-title", "Guard fixture")
@@ -72,8 +72,10 @@ class SubscriptionResources(unittest.TestCase):
                             self.wfile.write(b"x")
                             self.wfile.flush()
                     elif behavior in ("large", "declared-large"):
-                        for _ in range(SOURCE_LIMIT // 65536 + 2):
+                        self.wfile.write(VALID[:-1] + b',"padding":"')
+                        for _ in range(SOURCE_LIMIT // 65536):
                             self.wfile.write(b"x" * 65536)
+                        self.wfile.write(b'x"}')
                     else:
                         self.wfile.write(payload)
                 except (BrokenPipeError, ConnectionResetError):
