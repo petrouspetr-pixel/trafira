@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '../..');
@@ -28,9 +29,22 @@ for (const extension of ['apk', 'ipk']) {
         length: value => value.length,
         helper_output_input: (input, mode, args) => {
           if (native) {
-            const result = spawnSync('ucode', [updater, mode, ...args], { input, encoding: 'utf8' });
-            if (result.error) throw result.error;
-            return result.status === 0 ? result.stdout : '';
+            // Node's socket-backed stdin cannot be reopened as /dev/stdin by
+            // ucode fs.open on Linux. Supply a real descriptor instead.
+            const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'trafira-release-plan-'));
+            const file = path.join(dir, 'release.json');
+            fs.writeFileSync(file, input);
+            const descriptor = fs.openSync(file, 'r');
+            try {
+              const result = spawnSync('ucode', [updater, mode, ...args], {
+                stdio: [descriptor, 'pipe', 'pipe'], encoding: 'utf8',
+              });
+              if (result.error) throw result.error;
+              return result.status === 0 ? result.stdout : '';
+            } finally {
+              fs.closeSync(descriptor);
+              fs.rmSync(dir, { recursive: true });
+            }
           }
           // Local Windows check only: native CI always executes the real helper.
           if (translated && !includeTranslation) return '';
