@@ -71,7 +71,11 @@ test('also verifies a live endpoint announced only on stderr', async t => {
 test('times out when a discovered DevTools endpoint never responds', async t => {
   const { chrome, profile } = await fixture(t, 'http-hang');
   const started = Date.now();
-  await assert.rejects(waitForDevTools(chrome, profile, { timeoutMs: 400 }), /startup timeout.*probing/);
+  await assert.rejects(waitForDevTools(chrome, profile, { timeoutMs: 400 }), error => {
+    assert.match(error.message, /startup timeout/);
+    assert.match(error.message, /127\.0\.0\.1:\d+\/json\/version/);
+    return true;
+  });
   assert(Date.now() - started < 1500);
 });
 
