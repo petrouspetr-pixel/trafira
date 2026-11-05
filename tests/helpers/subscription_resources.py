@@ -247,6 +247,65 @@ class SubscriptionResources(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "truncated link-populated cache was accepted: " + result.stderr)
         self.assertEqual(source.read_bytes(), original)
 
+    def test_persistent_identity_files_survive_buffered_write_failure(self):
+        source = self.work / "working.json"
+        source.write_bytes(VALID)
+        folder = self.work / "persistent"
+        folder.mkdir()
+        prefix = folder / "proxy-subscription-1"
+        (folder / "proxy-subscription-1.json").write_bytes(VALID)
+        original = {"url": "https://example.test/sub", "user_agent": "Old/1", "hwid": "old-hwid", "device_headers": ""}
+        for field in ["url", "user_agent", "hwid"]:
+            with self.subTest(field=field):
+                for key, value in original.items():
+                    Path(str(prefix) + "." + key).write_text(value)
+                wanted = {**original, field: "https://new.example.test/sub" if field == "url" else "new-profile-value"}
+                result = self.uc(str(LIB / "subscription/cache.uc"), "persist-source-cache", "proxy-subscription-1",
+                                 str(source), wanted["url"], wanted["user_agent"], wanted["hwid"], "", "", file_size=8)
+                self.assertNotEqual(result.returncode, 0, "incomplete identity file was reported as saved")
+                for key, value in original.items():
+                    self.assertEqual(Path(str(prefix) + "." + key).read_text(), value)
+                self.assertEqual((folder / "proxy-subscription-1.json").read_bytes(), VALID)
+                self.assertFalse(list(folder.glob("*.tmp")))
+
+    def test_restoring_runtime_identity_reports_failed_write_and_keeps_previous_file(self):
+        folder, runtime = self.work / "persistent", self.work / "subscriptions"
+        folder.mkdir()
+        runtime.mkdir()
+        url = "https://example.test/" + "x" * 512
+        for suffix, value in {"json": VALID, "url": url.encode(), "user_agent": b"GuardTest",
+                              "hwid": b"", "device_headers": b""}.items():
+            (folder / ("proxy-subscription-1." + suffix)).write_bytes(value)
+        path = runtime / "proxy-subscription-1.url"
+        path.write_bytes(b"previous-url")
+        result = self.uc(str(LIB / "subscription/cache.uc"), "restore-persistent-source", "proxy-subscription-1",
+                         str(runtime), str(folder), url, "GuardTest", "", "GuardTest", "", file_size=256)
+        self.assertNotEqual(result.returncode, 0, "runtime identity restoration silently accepted a short write")
+        self.assertEqual(path.read_bytes(), b"previous-url")
+        self.assertFalse(list(runtime.glob("*.tmp")))
+
+    def test_atomic_text_writes_preserve_noop_identity_empty_values_and_rename_failure(self):
+        target = self.work / "identity"
+        target.write_text("same")
+        before = target.stat()
+        script = ('let io=require("subscription.io");'
+                  'if(!io.write_file(ARGV[0],"same"))exit(1);')
+        result = self.uc("-e", script, str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((target.stat().st_ino, target.stat().st_mtime_ns), (before.st_ino, before.st_mtime_ns))
+        result = self.uc("-e", 'exit(require("subscription.io").write_file(ARGV[0],"")?0:1);', str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(target.read_bytes(), b"")
+        self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+        directory = self.work / "directory"
+        directory.mkdir()
+        sentinel = directory / "retained"
+        sentinel.write_text("retained")
+        result = self.uc("-e", 'exit(require("subscription.io").write_file(ARGV[0],"new")?1:0);', str(directory))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(sentinel.read_text(), "retained")
+        self.assertFalse(list(self.work.glob("directory.*.tmp")))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
