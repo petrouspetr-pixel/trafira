@@ -35,14 +35,17 @@ class SubscriptionResources(unittest.TestCase):
                         TRAFIRA_UCI_STATE_FILE=str(self.work / "uci"),
                         TRAFIRA_SUBSCRIPTION_DOWNLOAD_BUDGET="2")
 
-    def uc(self, *args, timeout=12, memory=None):
+    def uc(self, *args, timeout=12, memory=None, file_size=None):
         def bound():
             if memory:
                 resource.setrlimit(resource.RLIMIT_AS, (memory, memory))
+            if file_size:
+                signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
+                resource.setrlimit(resource.RLIMIT_FSIZE, (file_size, file_size))
         command = ["ucode", "-L", str(LIB), *args]
         process = subprocess.Popen(command, env=self.env, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, start_new_session=True,
-                                   preexec_fn=bound if memory else None)
+                                   preexec_fn=bound if memory or file_size else None)
         try:
             stdout, stderr = process.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -188,6 +191,16 @@ class SubscriptionResources(unittest.TestCase):
                   'if(fs.readfile(ARGV[1])!="retained")exit(3);')
         result = self.uc("-e", script, str(source), str(target))
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_buffered_write_failure_keeps_last_complete_copy(self):
+        source, target = self.work / "short-source", self.work / "last-complete"
+        source.write_bytes(b"x" * 512)
+        target.write_bytes(b"retained")
+        result = self.uc("-e", 'exit(require("subscription.io").copy_file(ARGV[0],ARGV[1])?1:0);',
+                         str(source), str(target), file_size=256)
+        self.assertEqual(result.returncode, 0, "buffered flush failure was reported as a complete copy: " + result.stderr)
+        self.assertEqual(target.read_bytes(), b"retained")
+        self.assertFalse(list(self.work.glob("last-complete.*.tmp")))
 
 
 if __name__ == "__main__":
