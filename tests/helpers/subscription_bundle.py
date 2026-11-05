@@ -226,7 +226,7 @@ int rename(const char *old,const char *dest) {
             expected = a if phase == "before" else b
             self.assertEqual(document[KEY], expected)
             self.assertEqual(document["outbounds"][0]["server"], "127.0.0.1" if phase == "before" else "127.0.0.2")
-            self.assertLessEqual(len(list(folder.glob("*.bundle.tmp"))) + len(list(folder.glob(".bundle.tmp"))), 1)
+            self.assertLessEqual(len(set(folder.glob("*.bundle.tmp")) | set(folder.glob(".bundle.tmp"))), 1)
         self.assertEqual(self.persist(b, {**NODE, "server": "127.0.0.2"}).returncode, 0)
         self.assertFalse(list(folder.glob("*.bundle.tmp")) + list(folder.glob(".bundle.tmp")))
 
