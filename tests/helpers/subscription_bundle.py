@@ -155,6 +155,25 @@ class BundleTransactions(SubscriptionResources):
         result = self.uc(str(script), str(path))
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_truncated_bundle_never_falls_back_to_persistent_metadata_views(self):
+        runtime, persistent = self.work / "subscriptions", self.work / "persistent"
+        runtime.mkdir()
+        persistent.mkdir()
+        state = record()
+        (runtime / "proxy-subscription-1.json").write_bytes(VALID)
+        (persistent / "proxy-subscription-1.json").write_bytes(encoded(state)[:-12])
+        for folder in [runtime, persistent]:
+            for suffix in ["url", "user_agent", "hwid", "device_headers"]:
+                (folder / ("proxy-subscription-1." + suffix)).write_text(state[suffix])
+        (persistent / "proxy-subscription-1.metadata.json").write_text(json.dumps(state["metadata"]))
+        script = self.work / "truncated.uc"
+        script.write_text('let s=require("singbox.subscription"),state={subscriptionMetadata:[]};'
+                          's.merge_source_metadata(state,"proxy","proxy-subscription-1",1,"https://source-a.example/sub");'
+                          'print(sprintf("%J",state.subscriptionMetadata));')
+        result = self.uc(str(script))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), [])
+
     def test_sigkill_before_and_after_commit_keeps_one_complete_source(self):
         source_c, library = self.work / "rename.c", self.work / "rename.so"
         source_c.write_text(r'''

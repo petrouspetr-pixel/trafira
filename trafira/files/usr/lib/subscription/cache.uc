@@ -693,23 +693,7 @@ function move_file(source, target) {
     return fs.rename(as_string(source), as_string(target));
 }
 
-function write_text_if_changed(path, value) {
-    return write_file(path, value);
-}
 
-function copy_file_if_changed(source, target) {
-    if (!file_nonempty(source))
-        return false;
-    if (files_equal(source, target)) {
-        chmod_path(target, "600");
-        return true;
-    }
-    if (!copy_file(source, target))
-        return false;
-
-    chmod_path(target, "600");
-    return true;
-}
 
 function get_device_model() {
     let model = fs.readfile("/tmp/sysinfo/model");

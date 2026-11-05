@@ -27,11 +27,11 @@ function header(text) {
 }
 
 function snapshot(path) {
-    let text = io.read_file(path, io.CACHE_LIMIT), document;
-    try { document = json(text); } catch (e) { return { valid: false }; }
+    let text = io.read_file(path, io.CACHE_LIMIT), document, prologue = header(text);
+    try { document = json(text); } catch (e) { return { valid: false, present: prologue.present }; }
     if (type(document) != "object")
         return { valid: false };
-    let own = KEY in document, prologue = header(text);
+    let own = KEY in document;
     if (own || prologue.present) {
         if (!own || !prologue.valid || !valid_record(document[KEY]) ||
             sprintf("%J", prologue.value) != sprintf("%J", document[KEY]))
