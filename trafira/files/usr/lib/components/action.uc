@@ -2808,7 +2808,9 @@ function resolve_trafira_release(latest_version) {
         return null;
     let asset_ext = is_apk() ? "apk" : "ipk";
     let i18n_required = pkg_is_installed("luci-i18n-trafira-ru") ? "1" : "0";
-    let plan = trim(helper_output_input(release_json, "trafira-release-plan", [ latest_version, asset_ext, i18n_required ]));
+    // The final two TSV columns are deliberately empty without the optional
+    // translation. Strip the line ending, preserving their tab separators.
+    let plan = replace(helper_output_input(release_json, "trafira-release-plan", [ latest_version, asset_ext, i18n_required ]), /[\r\n]+$/, "");
     let fields = split(plan, "\t");
     if (length(fields) < 7 || as_string(fields[1]) == "" || as_string(fields[2]) == "" || as_string(fields[3]) == "" || as_string(fields[4]) == "")
         return null;
