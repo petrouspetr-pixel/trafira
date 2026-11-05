@@ -60,7 +60,7 @@ function read_json(path) {
 }
 
 function write_file(path, value) {
-    return fs.writefile(path, value) != null;
+    return subscription_io.write_file(as_string(path), as_string(value));
 }
 
 function write_json(path, value) {
@@ -502,7 +502,7 @@ function read_text(path) {
 }
 
 function write_text(path, value) {
-    return fs.writefile(as_string(path), as_string(value)) != null;
+    return write_file(path, value);
 }
 
 function copy_file(source, target) {
@@ -654,26 +654,7 @@ function move_file(source, target) {
 }
 
 function write_text_if_changed(path, value) {
-    path = as_string(path);
-    value = as_string(value);
-
-    if (fs.readfile(path) == value) {
-        chmod_path(path, "600");
-        return true;
-    }
-
-    let tmp_path = sprintf("%s.%d.%d.tmp", path, clock()[0], clock()[1]);
-    if (!write_file(tmp_path, value)) {
-        unlink_path(tmp_path);
-        return false;
-    }
-    if (!fs.rename(tmp_path, path)) {
-        unlink_path(tmp_path);
-        return false;
-    }
-
-    chmod_path(path, "600");
-    return true;
+    return write_file(path, value);
 }
 
 function copy_file_if_changed(source, target) {

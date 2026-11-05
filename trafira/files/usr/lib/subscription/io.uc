@@ -37,6 +37,44 @@ function complete_file(path, bytes) {
     return stat != null && stat.size == bytes;
 }
 
+function file_matches_text(path, text) {
+    if (!complete_file(path, length(text)))
+        return false;
+    let input = fs.open(path, "r");
+    if (!input)
+        return false;
+    let offset = 0, same = true;
+    while (offset < length(text)) {
+        let size = min(CHUNK, length(text) - offset);
+        fs.error();
+        let chunk = input.read(size), error = fs.error();
+        if (error || chunk != substr(text, offset, size)) {
+            same = false;
+            break;
+        }
+        offset += size;
+    }
+    input.close();
+    return same;
+}
+
+function write_file(path, text) {
+    if (type(path) != "string" || path == "" || type(text) != "string" || length(text) > CACHE_LIMIT)
+        return false;
+    // Preserve inode/mtime and avoid flash writes for an unchanged identity.
+    if (file_matches_text(path, text))
+        return fs.chmod(path, 384);
+    let stamp = clock(), tmp = sprintf("%s.%d.%d.tmp", path, stamp[0], stamp[1]);
+    let output = fs.open(tmp, "wex", 384);
+    if (!output)
+        return false;
+    let written = output.write(text), closed = output.close();
+    if (written == length(text) && closed && complete_file(tmp, length(text)) && fs.rename(tmp, path))
+        return true;
+    fs.unlink(tmp);
+    return false;
+}
+
 function copy_stream(input, output, limit) {
     let bytes = 0;
     while (true) {
@@ -100,4 +138,4 @@ function files_equal(left, right) {
 }
 
 return { SOURCE_LIMIT, CACHE_LIMIT, LINK_LIMIT, HEADER_LIMIT,
-         exceeds_limit, read_file, complete_file, copy_stream, copy_file, files_equal };
+         exceeds_limit, read_file, complete_file, write_file, copy_stream, copy_file, files_equal };
