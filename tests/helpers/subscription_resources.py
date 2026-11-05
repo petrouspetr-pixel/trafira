@@ -74,6 +74,9 @@ class SubscriptionResources(unittest.TestCase):
                         while not owner.release.wait(0.05):
                             self.wfile.write(b"x")
                             self.wfile.flush()
+                    elif behavior == "invalid-slow":
+                        owner.release.wait(1)
+                        self.wfile.write(b"not a subscription")
                     elif behavior in ("large", "declared-large"):
                         self.wfile.write(VALID[:-1] + b',"padding":"')
                         for _ in range(SOURCE_LIMIT // 65536):
@@ -138,6 +141,22 @@ class SubscriptionResources(unittest.TestCase):
                 self.assertEqual(self.cached.read_bytes(), VALID)
                 self.assertEqual(len(self.paths), 1, "oversize must not retry compatibility profiles")
                 self.assertFalse(list((self.work / "subscriptions").glob("*.part.*")))
+
+    def test_automatic_profile_fallbacks_share_the_same_time_budget(self):
+        self.serve("invalid-slow")
+        path = self.work / "uci"
+        path.write_text(path.read_text().replace("auto_user_agent=0", "auto_user_agent=1"))
+        self.seed_cache()
+        (self.work / "subscriptions/proxy-subscription-1.user_agent").write_text("Happ")
+        started = time.monotonic()
+        try:
+            result = self.update(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.fail("automatic request profiles each received a fresh download budget")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertLess(time.monotonic() - started, 5)
+        self.assertLessEqual(len(self.paths), 3)
+        self.assertEqual(self.cached.read_bytes(), VALID)
 
     def test_supported_formats_update_normally(self):
         uri = b"socks5://127.0.0.1:1080#working\n"

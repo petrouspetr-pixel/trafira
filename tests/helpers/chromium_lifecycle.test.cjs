@@ -23,8 +23,10 @@ async function fixture(t, mode) {
     else if (mode === 'hang') { process.stderr.write('x'.repeat(20000) + ' diagnostic-tail'); setInterval(() => {}, 1000); }
     else {
       let hits = 0;
+      const started = Date.now();
       const server = http.createServer((req, res) => {
         if (mode === 'http-hang') return;
+        if (mode === 'cold' && Date.now() - started < 16000) { res.writeHead(503); return res.end('starting'); }
         if (mode === 'delayed' && ++hits < 3) { res.writeHead(503); return res.end('starting'); }
         res.setHeader('content-type', 'application/json');
         res.end(JSON.stringify({ webSocketDebuggerUrl: 'ws://127.0.0.1:' + server.address().port + '/devtools/browser/fixture' }));
@@ -61,6 +63,11 @@ test('discovers a live DevTools endpoint from its profile without stderr', async
 test('waits for endpoint readiness after the discovery file appears', async t => {
   const { chrome, profile } = await fixture(t, 'delayed');
   assert.match(await waitForDevTools(chrome, profile, { timeoutMs: 1500 }), /\/devtools\/browser\/fixture$/);
+});
+
+test('allows a cold browser to become ready after the former 15 second limit', { timeout: 35000 }, async t => {
+  const { chrome, profile } = await fixture(t, 'cold');
+  assert.match(await waitForDevTools(chrome, profile), /\/devtools\/browser\/fixture$/);
 });
 
 test('also verifies a live endpoint announced only on stderr', async t => {

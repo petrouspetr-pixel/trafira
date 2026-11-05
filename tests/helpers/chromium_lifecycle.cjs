@@ -14,7 +14,9 @@ async function fetchJSON(url, { timeoutMs = 5000, ...options } = {}) {
   } finally { clearTimeout(timer); }
 }
 
-function waitForDevTools(chrome, profile, { timeoutMs = 15000 } = {}) {
+// Cold CI starts have announced DevTools near the previous 15s deadline while
+// /json/version was still unavailable. Continue probing within one 30s budget.
+function waitForDevTools(chrome, profile, { timeoutMs = 30000 } = {}) {
   return new Promise((resolve, reject) => {
     let logs = '', advertised, lastProbe = 'endpoint not discovered', settled = false, poll;
     const expires = Date.now() + timeoutMs;
