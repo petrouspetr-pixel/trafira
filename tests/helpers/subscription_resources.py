@@ -287,15 +287,12 @@ class SubscriptionResources(unittest.TestCase):
     def test_update_does_not_replace_working_cache_when_identity_cannot_be_saved(self):
         self.serve("valid", json.dumps({"outbounds": [{**NODE, "server": "127.0.0.2"}]}).encode())
         self.seed_cache()
-        blocked = self.work / "subscriptions/proxy-subscription-1.hwid"
-        blocked.unlink()
-        blocked.mkdir()
-        sentinel = blocked / "retained"
-        sentinel.write_text("retained")
-        result = self.update()
-        self.assertNotEqual(result.returncode, 0, "identity write failure was ignored during subscription update")
+        # Individual normalized files fit, but the complete authoritative
+        # source (body + identity) must fail rather than publish a partial set.
+        result = self.uc(str(LIB / "subscription/cache.uc"), "update-source", "proxy", "1",
+                         self.url, "runtime", "", file_size=300)
+        self.assertNotEqual(result.returncode, 0, "incomplete source publication was reported as successful")
         self.assertEqual(self.cached.read_bytes(), VALID)
-        self.assertEqual(sentinel.read_text(), "retained")
         self.assertFalse(list((self.work / "subscriptions").glob("*.tmp")))
 
     def test_atomic_text_writes_preserve_noop_identity_empty_values_and_rename_failure(self):

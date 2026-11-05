@@ -3,6 +3,7 @@
 let fs = require("fs");
 let common = require("core.common");
 let subscription_share_link = require("subscription.share_link");
+let subscription_bundle = require("subscription.bundle");
 
 let as_string = common.as_string;
 let read_json_file = common.read_json_file;
@@ -127,13 +128,16 @@ function metadata_matches_source(item, source_index, source_section, has_source_
     return item_index == source_index;
 }
 
-function persistent_source_matches_entry(source_section, source_entry) {
+function persistent_source_matches_entry(source_section, source_entry, snapshot) {
     if (source_entry == null || source_entry == "")
         return true;
 
     let parsed = parse_source_entry(source_entry);
-    let cached_url = file_first_line(persistent_source_path(source_section, ".url"));
-    let cached_user_agent = file_first_line(persistent_source_path(source_section, ".user_agent"));
+    snapshot = snapshot || subscription_bundle.snapshot(persistent_source_path(source_section, ".json"));
+    if (snapshot.present && !snapshot.valid)
+        return false;
+    let cached_url = snapshot.present ? snapshot.record.url : file_first_line(persistent_source_path(source_section, ".url"));
+    let cached_user_agent = snapshot.present ? snapshot.record.user_agent : file_first_line(persistent_source_path(source_section, ".user_agent"));
 
     if (cached_url != parsed.url)
         return false;
@@ -142,9 +146,15 @@ function persistent_source_matches_entry(source_section, source_entry) {
     return cached_user_agent != "";
 }
 
-function read_persistent_source_metadata(source_section, source_entry) {
-    if (!persistent_source_matches_entry(source_section, source_entry))
+function read_persistent_source_metadata(source_section, source_entry, expected_identity) {
+    let snapshot = subscription_bundle.snapshot(persistent_source_path(source_section, ".json"));
+    if (!persistent_source_matches_entry(source_section, source_entry, snapshot))
         return [];
+    if (snapshot.present) {
+        if (!snapshot.valid || (expected_identity && !subscription_bundle.identity_matches(expected_identity, snapshot.record)))
+            return [];
+        return metadata_items_from_value(snapshot.record.metadata);
+    }
     return metadata_items_from_value(read_json_file(persistent_metadata_path(source_section)));
 }
 
@@ -175,10 +185,10 @@ function read_section_metadata(section_name, source_section, source_index) {
     return selected;
 }
 
-function read_source_metadata(section_name, source_section, source_index, source_entry) {
+function read_legacy_source_metadata(section_name, source_section, source_index, source_entry, expected_identity) {
     let metadata = read_section_metadata(section_name, source_section, source_index);
     if (length(metadata) == 0)
-        metadata = read_persistent_source_metadata(source_section, source_entry);
+        metadata = read_persistent_source_metadata(source_section, source_entry, expected_identity);
 
     let result = [];
     for (let item in metadata) {
@@ -189,11 +199,38 @@ function read_source_metadata(section_name, source_section, source_index, source
     return result;
 }
 
-function merge_source_metadata(state, section_name, source_section, source_index, source_entry) {
+function read_source_snapshot(source_section) {
+    let path = source_json_path(source_section);
+    for (let attempt = 0; attempt < 3; attempt++) {
+        let before = fs.stat(path), snap = subscription_bundle.snapshot(path);
+        if (!snap.valid || snap.present)
+            return snap;
+        snap.record = {
+            url: file_first_line(TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".url"),
+            user_agent: file_first_line(TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".user_agent"),
+            hwid: file_first_line(source_hwid_path(source_section)),
+            device_headers: file_first_line(source_device_headers_path(source_section))
+        };
+        let parts = match(source_section, /^(.*)-subscription-([0-9]+)$/);
+        snap.legacy_metadata = parts ? read_legacy_source_metadata(parts[1], source_section, int(parts[2]), snap.record.url, snap.record) : [];
+        let after = fs.stat(path);
+        if (before && after && before.inode == after.inode && sprintf("%J", before.dev) == sprintf("%J", after.dev))
+            return snap;
+    }
+    return { valid: false };
+}
+
+function merge_source_metadata(state, section_name, source_section, source_index, source_entry, snapshot) {
     if (type(state) != "object")
         return;
-    for (let item in read_source_metadata(section_name, source_section, source_index, source_entry))
-        push(state.subscriptionMetadata, item);
+    snapshot = snapshot || read_source_snapshot(source_section);
+    if (!snapshot.valid)
+        return;
+    let metadata = snapshot.present ? metadata_items_from_value(snapshot.record.metadata) : snapshot.legacy_metadata;
+    for (let item in metadata) {
+        let copy = { ...item, sourceIndex: source_index, sourceSection: source_section };
+        push(state.subscriptionMetadata, copy);
+    }
 }
 
 function remember_outbound_metadata(state, tag_name, display_name, outbound) {
@@ -294,12 +331,13 @@ function hwid_matches_config(configured_hwid, cached_hwid) {
     return true;
 }
 
-function source_cache_is_current(source_section, source_entry, expected_user_agent, expected_hwid, expected_device_headers_signature) {
+function source_cache_is_current(source_section, source_entry, expected_user_agent, expected_hwid, expected_device_headers_signature, snapshot) {
+    snapshot = snapshot || read_source_snapshot(source_section);
+    if (!snapshot.valid)
+        return false;
     let parsed = parse_source_entry(source_entry);
-    let cached_url = file_first_line(TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".url");
-    let cached_user_agent = file_first_line(TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".user_agent");
-    let cached_hwid = file_first_line(source_hwid_path(source_section));
-    let cached_device_headers = file_first_line(source_device_headers_path(source_section));
+    let cached_url = snapshot.record.url, cached_user_agent = snapshot.record.user_agent;
+    let cached_hwid = snapshot.record.hwid, cached_device_headers = snapshot.record.device_headers;
     let configured_user_agent = as_string(expected_user_agent || "");
     if (configured_user_agent != "")
         parsed.user_agent = configured_user_agent;
@@ -323,8 +361,9 @@ function source_json_path(source_section) {
     return TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".json";
 }
 
-function read_source_outbounds(source_section) {
-    let subscription = object_or_empty(read_json_file(source_json_path(source_section)));
+function read_source_outbounds(source_section, snapshot) {
+    snapshot = snapshot || read_source_snapshot(source_section);
+    let subscription = snapshot.valid ? snapshot.document : {};
     return array_or_empty(subscription.outbounds);
 }
 
@@ -366,6 +405,7 @@ function remember_filter_preview(state, tags) {
 }
 
 return {
+    read_source_snapshot,
     set_section_cache_dir,
     source_id,
     section_cache_path,

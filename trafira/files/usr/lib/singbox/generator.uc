@@ -815,16 +815,18 @@ function assert_unique_outbound_tags(config) {
 function add_subscription_source_with_state(config, section, source_index, source_entry, taken, selector_tags, urltest_candidate_tags, state, show_metadata, include_urltest_groups, hide_urltest_group_outbounds, hide_detour_outbounds, node_prefix) {
     let section_name = section[".name"];
     let source_section = runtime_subscription.source_id(section_name, source_index);
+    let source_snapshot = runtime_subscription.read_source_snapshot(source_section);
     if (!runtime_subscription.source_cache_is_current(
         source_section,
         source_entry,
         connections.subscription_user_agent(section, source_entry),
         connections.subscription_hwid(section, source_entry),
-        connections.subscription_device_headers_signature(section, source_entry)
+        connections.subscription_device_headers_signature(section, source_entry),
+        source_snapshot
     ))
         return 0;
 
-    let source_outbounds = runtime_subscription.read_source_outbounds(source_section);
+    let source_outbounds = runtime_subscription.read_source_outbounds(source_section, source_snapshot);
     if (length(source_outbounds) == 0)
         return 0;
 
@@ -839,7 +841,7 @@ function add_subscription_source_with_state(config, section, source_index, sourc
     let outbounds = compatible_subscription_outbounds(source_outbounds, section_name);
 
     if (show_metadata !== false)
-        runtime_subscription.merge_source_metadata(state, section_name, source_section, source_index, source_entry);
+        runtime_subscription.merge_source_metadata(state, section_name, source_section, source_index, source_entry, source_snapshot);
     let visibility_refs = subscription_visibility_refs(outbounds);
     if (include_urltest_groups === false)
         hide_urltest_group_outbounds = false;

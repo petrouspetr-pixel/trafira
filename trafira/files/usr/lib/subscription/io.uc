@@ -58,13 +58,13 @@ function file_matches_text(path, text) {
     return same;
 }
 
-function write_file(path, text) {
+function write_file(path, text, staging_path) {
     if (type(path) != "string" || path == "" || type(text) != "string" || length(text) > CACHE_LIMIT)
         return false;
     // Preserve inode/mtime and avoid flash writes for an unchanged identity.
     if (file_matches_text(path, text))
         return fs.chmod(path, 384);
-    let stamp = clock(), tmp = sprintf("%s.%d.%d.tmp", path, stamp[0], stamp[1]);
+    let stamp = clock(), tmp = staging_path || sprintf("%s.%d.%d.tmp", path, stamp[0], stamp[1]);
     let output = fs.open(tmp, "wex", 384);
     if (!output)
         return false;

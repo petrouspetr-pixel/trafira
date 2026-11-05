@@ -5,6 +5,7 @@ let uci_core = require("core.uci");
 let connections = require("config.connections");
 let subscription_share_link = require("subscription.share_link");
 let subscription_io = require("subscription.io");
+let subscription_bundle = require("subscription.bundle");
 
 const CONFIG_NAME = getenv("TRAFIRA_CONFIG_NAME") || "trafira";
 const LIB_DIR = getenv("TRAFIRA_LIB") || "/usr/lib/trafira";
@@ -496,6 +497,41 @@ function source_device_headers_path(dir, source_section) {
     return as_string(dir) + "/" + as_string(source_section) + ".device_headers";
 }
 
+function source_identity(dir, source_section) {
+    let own = subscription_bundle.inspect(source_json_path(dir, source_section));
+    if (own.present)
+        return own.valid ? own.value : null;
+    return {
+        version: 1,
+        url: read_text(source_url_path(dir, source_section)),
+        user_agent: read_text(source_user_agent_path(dir, source_section)),
+        hwid: read_text(source_hwid_path(dir, source_section)),
+        device_headers: read_text(source_device_headers_path(dir, source_section)),
+        metadata: read_json(dir + "/" + source_section + ".metadata.json")
+    };
+}
+
+function compatibility_identity(dir, source_section, record, staging_path) {
+    // These are legacy views. The single committed JSON is authoritative.
+    let ok = true;
+    for (let field in ["url", "user_agent", "hwid", "device_headers"])
+        if (!subscription_io.write_file(dir + "/" + source_section + "." + field, record[field], staging_path))
+            ok = false;
+    let metadata = dir + "/" + source_section + ".metadata.json";
+    if (valid_metadata_object(record.metadata))
+        ok = subscription_io.write_file(metadata, sprintf("%J\n", record.metadata), staging_path) && ok;
+    else
+        unlink_path(metadata);
+    if (!ok)
+        log_message("Subscription source was committed; some legacy cache views could not be refreshed", "warn");
+}
+
+function publish_source(dir, source_section, source, record) {
+    let target = source_json_path(dir, source_section);
+    return subscription_bundle.publish(source, target, record, subscription_parser().validate_subscription,
+        function(tmp) { compatibility_identity(dir, source_section, record, tmp); });
+}
+
 function read_text(path) {
     let data = subscription_io.read_file(as_string(path), subscription_io.HEADER_LIMIT);
     return data == null ? "" : as_string(data);
@@ -607,6 +643,8 @@ function ensure_runtime_dirs() {
     ensure_dir(TMP_RULESET_FOLDER);
     ensure_dir(TMP_SUBSCRIPTION_FOLDER);
     ensure_dir(TRAFIRA_RUNTIME_STATE_DIR);
+    subscription_bundle.cleanup(TMP_SUBSCRIPTION_FOLDER);
+    subscription_bundle.cleanup(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR);
     ensure_dir(TRAFIRA_SUBSCRIPTION_UPDATE_STATE_DIR);
     ensure_dir(TRAFIRA_SUBSCRIPTION_METADATA_DIR);
     ensure_dir(TRAFIRA_OUTBOUND_METADATA_DIR);
@@ -741,10 +779,11 @@ function restore_persistent_subscription_cache(source_section, tmp_dir, persiste
     if (!subscription_cache_is_usable(persistent_json))
         return false;
 
-    let cached_url = read_text(source_url_path(persistent_dir, source_section));
-    let cached_user_agent = read_text(source_user_agent_path(persistent_dir, source_section));
-    let cached_hwid = read_text(source_hwid_path(persistent_dir, source_section));
-    let cached_device_headers = read_text(source_device_headers_path(persistent_dir, source_section));
+    let identity = source_identity(persistent_dir, source_section);
+    if (!identity)
+        return false;
+    let cached_url = identity.url, cached_user_agent = identity.user_agent;
+    let cached_hwid = identity.hwid, cached_device_headers = identity.device_headers;
     if (cached_url != as_string(expected_url))
         return false;
     if (!user_agent_matches_config(expected_user_agent, cached_user_agent, default_user_agent))
@@ -754,11 +793,7 @@ function restore_persistent_subscription_cache(source_section, tmp_dir, persiste
     if (cached_device_headers != as_string(expected_device_headers_signature))
         return false;
 
-    return copy_file(persistent_json, runtime_json) &&
-        write_text(source_url_path(tmp_dir, source_section), cached_url) &&
-        write_text(source_user_agent_path(tmp_dir, source_section), cached_user_agent) &&
-        write_text(source_hwid_path(tmp_dir, source_section), cached_hwid) &&
-        write_text(source_device_headers_path(tmp_dir, source_section), cached_device_headers);
+    return publish_source(tmp_dir, source_section, persistent_json, identity);
 }
 
 function subscription_source_profile(section, entry) {
@@ -816,10 +851,11 @@ function section_current_usable_cache(section, tmp_dir, persistent_dir, default_
         if (!subscription_cache_is_usable(source_json_path(tmp_dir, source_section)))
             continue;
 
-        let cached_url = read_text(source_url_path(tmp_dir, source_section));
-        let cached_user_agent = read_text(source_user_agent_path(tmp_dir, source_section));
-        let cached_hwid = read_text(source_hwid_path(tmp_dir, source_section));
-        let cached_device_headers = read_text(source_device_headers_path(tmp_dir, source_section));
+        let identity = source_identity(tmp_dir, source_section);
+        if (!identity)
+            continue;
+        let cached_url = identity.url, cached_user_agent = identity.user_agent;
+        let cached_hwid = identity.hwid, cached_device_headers = identity.device_headers;
         if (source_cache_profile_matches(parsed, cached_url, cached_user_agent, cached_hwid, default_user_agent, cached_device_headers))
             return true;
     }
@@ -1369,42 +1405,38 @@ function persist_subscription_cache(source_section, subscription_json_path, subs
     ensure_dir(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR);
     chmod_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, "700");
 
-    let persistent_json = source_json_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section);
-    let persistent_url = source_url_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section);
-    let persistent_user_agent = source_user_agent_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section);
-    let persistent_hwid = source_hwid_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section);
-    let persistent_device_headers = source_device_headers_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section);
-    let persistent_metadata = persistent_metadata_path(source_section);
-    let previous_url = read_text(persistent_url);
-    let previous_user_agent = read_text(persistent_user_agent);
-    let previous_hwid = read_text(persistent_hwid);
-    let previous_device_headers = read_text(persistent_device_headers);
-    let can_keep_previous_metadata = previous_url == as_string(subscription_url) &&
-        previous_user_agent == as_string(effective_user_agent) &&
-        previous_hwid == as_string(effective_hwid) &&
-        previous_device_headers == as_string(effective_device_headers_signature) &&
-        file_nonempty(persistent_metadata) &&
-        object_has_extra_keys(persistent_metadata);
+    let record = make_source_record(subscription_url, effective_user_agent, effective_hwid,
+                                    effective_device_headers_signature, metadata_path,
+                                    source_identity(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section));
+    let runtime = subscription_bundle.inspect(subscription_json_path);
+    if (!valid_metadata_object(read_json(metadata_path)) && runtime.valid &&
+        subscription_bundle.identity_matches(runtime.value, record))
+        record.metadata = runtime.value.metadata;
+    return publish_source(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section, subscription_json_path, record);
+}
 
-    if (!copy_file_if_changed(subscription_json_path, persistent_json) ||
-        !write_text_if_changed(persistent_url, subscription_url) ||
-        !write_text_if_changed(persistent_user_agent, effective_user_agent) ||
-        !write_text_if_changed(persistent_hwid, effective_hwid) ||
-        !write_text_if_changed(persistent_device_headers, effective_device_headers_signature))
-        return false;
-
-    if (metadata_path != null && metadata_path != "" && file_nonempty(metadata_path) && object_has_extra_keys(metadata_path)) {
-        if (!copy_file_if_changed(metadata_path, persistent_metadata))
-            return false;
-    }
-    else if (!can_keep_previous_metadata) {
-        unlink_path(persistent_metadata);
-    }
-
-    return true;
+function make_source_record(url, agent, hwid, headers, metadata_path, previous) {
+    let record = {version: 1, url: as_string(url), user_agent: as_string(agent),
+                  hwid: as_string(hwid), device_headers: as_string(headers), metadata: null};
+    let fresh = read_json(metadata_path);
+    if (valid_metadata_object(fresh))
+        record.metadata = fresh;
+    else if (subscription_bundle.identity_matches(previous, record) && valid_metadata_object(previous.metadata))
+        record.metadata = previous.metadata;
+    return record;
 }
 
 function append_persistent_source_metadata(array_path, source_index, source_section) {
+    let identity = source_identity(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section);
+    let own = subscription_bundle.inspect(source_json_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section));
+    if (own.present) {
+        if (identity && valid_metadata_object(identity.metadata)) {
+            let array = array_or_empty(read_json(array_path));
+            push(array, attach_source_metadata(identity.metadata, int(source_index), source_section));
+            write_json(array_path, array);
+        }
+        return true;
+    }
     let metadata_path = persistent_metadata_path(source_section);
     if (!file_nonempty(metadata_path))
         return false;
@@ -1418,6 +1450,15 @@ function append_available_cached_metadata(array_path, section, source_index, sou
         return false;
 
     let before = length(array_or_empty(read_json(array_path)));
+    let own = subscription_bundle.inspect(source_json_path(TMP_SUBSCRIPTION_FOLDER, source_section));
+    if (own.present) {
+        if (own.valid && valid_metadata_object(own.value.metadata)) {
+            let array = array_or_empty(read_json(array_path));
+            push(array, attach_source_metadata(own.value.metadata, int(source_index), source_section));
+            write_json(array_path, array);
+        }
+        return length(array_or_empty(read_json(array_path))) > before;
+    }
     append_persistent_source_metadata(array_path, source_index, source_section) ||
         append_cached_metadata(array_path, TRAFIRA_SECTION_CACHE_DIR, section, TRAFIRA_SUBSCRIPTION_METADATA_DIR + "/" + section + ".json", source_index, source_section);
     return length(array_or_empty(read_json(array_path))) > before;
@@ -1588,6 +1629,16 @@ function copy_persistent_metadata_output(source_section, metadata_output_path) {
     if (metadata_output_path == null || metadata_output_path == "")
         return;
 
+    let own = subscription_bundle.inspect(source_json_path(TMP_SUBSCRIPTION_FOLDER, source_section));
+    if (!own.present)
+        own = subscription_bundle.inspect(source_json_path(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section));
+    if (own.present) {
+        if (own.valid && valid_metadata_object(own.value.metadata))
+            write_json(metadata_output_path, own.value.metadata) || unlink_path(metadata_output_path);
+        else
+            unlink_path(metadata_output_path);
+        return;
+    }
     let metadata_path = persistent_metadata_path(source_section);
     if (file_nonempty(metadata_path) && object_has_extra_keys(metadata_path))
         copy_file(metadata_path, metadata_output_path) || unlink_path(metadata_output_path);
@@ -1720,59 +1771,24 @@ function download_subscription_into_cache(section_name_value, subscription_url, 
             return 4;
         }
 
-        if (!write_text(subscription_url_cache_path, subscription_url) ||
-            !write_text(subscription_user_agent_cache_path, effective_user_agent) ||
-            !write_text(subscription_hwid_cache_path, effective_hwid) ||
-            !write_text(subscription_device_headers_cache_path, subscription_device_headers_signature)) {
-            log_message("Failed to save subscription source identity for rule '" + section_name_value + "'; keeping the working cache", "error");
+        let previous = source_identity(TMP_SUBSCRIPTION_FOLDER, cache_section);
+        let record = make_source_record(subscription_url, effective_user_agent, effective_hwid,
+                                        subscription_device_headers_signature, metadata_tmpfile, previous);
+        if (!valid_metadata_object(record.metadata)) {
+            let persistent = source_identity(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, cache_section);
+            if (!subscription_bundle.inspect(subscription_json_path).present &&
+                subscription_bundle.identity_matches(persistent, record) && valid_metadata_object(persistent.metadata))
+                record.metadata = persistent.metadata;
+        }
+        let unchanged = file_nonempty(subscription_json_path) &&
+            parser.runtime_outbounds_equal(normalized_tmpfile, subscription_json_path);
+        if (!publish_source(TMP_SUBSCRIPTION_FOLDER, cache_section, normalized_tmpfile, record)) {
+            log_message("Failed to commit subscription source for rule '" + section_name_value + "'; keeping the working cache", "error");
             if (metadata_output_path != "")
                 unlink_path(metadata_output_path);
             unlink_path(raw_tmpfile);
             unlink_path(headers_tmpfile);
             unlink_path(normalized_tmpfile);
-            unlink_path(metadata_tmpfile);
-            return 1;
-        }
-
-        if (files_equal(normalized_tmpfile, subscription_json_path)) {
-            persist_subscription_cache(cache_section, subscription_json_path, subscription_url, effective_user_agent, effective_hwid, metadata_tmpfile, subscription_device_headers_signature) ||
-                log_message("Failed to persist last working subscription cache for source '" + cache_section + "'", "warn");
-            if (!file_nonempty(metadata_output_path))
-                copy_persistent_metadata_output(cache_section, metadata_output_path);
-            unlink_path(raw_tmpfile);
-            unlink_path(headers_tmpfile);
-            unlink_path(normalized_tmpfile);
-            unlink_path(metadata_tmpfile);
-            log_subscription_source_summary(section_name_value, source_index, subscription_json_path, "unchanged");
-            return 2;
-        }
-
-        if (file_nonempty(subscription_json_path) && parser.runtime_outbounds_equal(normalized_tmpfile, subscription_json_path)) {
-            if (!move_file(normalized_tmpfile, subscription_json_path)) {
-                if (metadata_output_path != "")
-                    unlink_path(metadata_output_path);
-                unlink_path(raw_tmpfile);
-                unlink_path(headers_tmpfile);
-                unlink_path(metadata_tmpfile);
-                return 1;
-            }
-
-            persist_subscription_cache(cache_section, subscription_json_path, subscription_url, effective_user_agent, effective_hwid, metadata_tmpfile, subscription_device_headers_signature) ||
-                log_message("Failed to persist last working subscription cache for source '" + cache_section + "'", "warn");
-            if (!file_nonempty(metadata_output_path))
-                copy_persistent_metadata_output(cache_section, metadata_output_path);
-            unlink_path(raw_tmpfile);
-            unlink_path(headers_tmpfile);
-            unlink_path(metadata_tmpfile);
-            log_subscription_source_summary(section_name_value, source_index, subscription_json_path, "runtime-unchanged");
-            return 2;
-        }
-
-        if (!move_file(normalized_tmpfile, subscription_json_path)) {
-            if (metadata_output_path != "")
-                unlink_path(metadata_output_path);
-            unlink_path(raw_tmpfile);
-            unlink_path(headers_tmpfile);
             unlink_path(metadata_tmpfile);
             return 1;
         }
@@ -1783,9 +1799,10 @@ function download_subscription_into_cache(section_name_value, subscription_url, 
             copy_persistent_metadata_output(cache_section, metadata_output_path);
         unlink_path(raw_tmpfile);
         unlink_path(headers_tmpfile);
+        unlink_path(normalized_tmpfile);
         unlink_path(metadata_tmpfile);
-        log_subscription_source_summary(section_name_value, source_index, subscription_json_path, "imported");
-        return 0;
+        log_subscription_source_summary(section_name_value, source_index, subscription_json_path, unchanged ? "runtime-unchanged" : "imported");
+        return unchanged ? 2 : 0;
     }
 
     if (metadata_output_path != "")
@@ -1822,10 +1839,9 @@ function cached_source_status(source_section, parsed) {
     if (!had_usable_cache && !subscription_io.exceeds_limit(json_path, subscription_io.CACHE_LIMIT))
         unlink_path(json_path);
 
-    let cached_url = read_text(url_path);
-    let cached_user_agent = read_text(user_agent_path);
-    let cached_hwid = read_text(hwid_path);
-    let cached_device_headers = read_text(device_headers_path);
+    let identity = source_identity(TMP_SUBSCRIPTION_FOLDER, source_section) || {};
+    let cached_url = identity.url || "", cached_user_agent = identity.user_agent || "";
+    let cached_hwid = identity.hwid || "", cached_device_headers = identity.device_headers || "";
     if (had_usable_cache &&
         !source_cache_profile_matches(parsed, cached_url, cached_user_agent, cached_hwid, get_subscription_user_agent(""), cached_device_headers)) {
         remove_subscription_source_runtime_cache(source_section);
@@ -2394,6 +2410,7 @@ function worker_env() {
         TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_FORMAT_FILE,
         TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_FORMAT,
         TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE,
+        TRAFIRA_SUBSCRIPTION_WORKER_LAUNCHER_PID: fs.readlink("/proc/self"),
         TRAFIRA_SUBSCRIPTION_UPDATE_LOCK_DIR,
         TRAFIRA_PENDING_RELOAD_FILE,
         TRAFIRA_SERVICE_INIT,
@@ -2408,6 +2425,11 @@ function worker_env() {
 }
 
 function launch_self_worker(args) {
+    // Shells may relocate an inherited high descriptor before redirections.
+    // Close the procd lock in this process before any worker shell can fork.
+    let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
+    if (inherited_lock)
+        inherited_lock.close();
     let command_args = command_args_with([ "ucode", "-L", LIB_DIR, LIB_DIR + "/subscription/cache.uc" ], args);
     let command = command_env(worker_env()) + " " + command_from_args(command_args) + " >/dev/null 2>&1 1000>&- & echo $!";
     return trim(command_output("sh -c " + shell_quote(command)));
@@ -2416,19 +2438,24 @@ function launch_self_worker(args) {
 function start_deferred_subscription_bootstrap_retry_worker(deferred_sections) {
     deferred_sections = trim(as_string(deferred_sections));
     if (deferred_sections == "")
-        return;
+        return 0;
 
     ensure_runtime_dirs();
     let existing_pid = trim(file_first_line_value(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE));
     if (pid_running(existing_pid)) {
         log_message("Subscription bootstrap retry worker is already running with PID " + existing_pid, "debug");
-        return;
+        return 0;
     }
 
     let pid = launch_self_worker([ "deferred-bootstrap-worker", deferred_sections ]);
-    if (pid != "")
-        write_file(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE, pid + "\n");
+    if (!pid_running(pid) || !write_file(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE, pid + "\n")) {
+        if (pid_running(pid))
+            command_success_from_args([ "kill", pid ]);
+        log_message("Failed to publish subscription bootstrap retry worker PID; cancelling worker", "error");
+        return 1;
+    }
     log_message("Started subscription bootstrap retry worker for rule(s): " + deferred_sections, "info");
+    return 0;
 }
 
 function stop_deferred_subscription_bootstrap_retry_worker() {
@@ -2475,9 +2502,20 @@ function run_deferred_subscription_bootstrap(deferred_sections) {
 
 function deferred_subscription_bootstrap_retry_worker(remaining_sections) {
     remaining_sections = trim(as_string(remaining_sections));
+    let worker_pid = fs.readlink("/proc/self");
+    let launcher_pid = getenv("TRAFIRA_SUBSCRIPTION_WORKER_LAUNCHER_PID");
+    // No subprocess may start until the launcher has published this PID.
+    // If it crashes first, leave without touching another worker's PID file.
+    if (launcher_pid) {
+        while (trim(file_first_line_value(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE)) != worker_pid) {
+            if (!fs.access("/proc/" + launcher_pid))
+                return;
+            sleep(10);
+        }
+    }
 
     while (remaining_sections != "") {
-        system("sleep 30");
+        sleep(30000);
         if (!sing_box_service_running()) {
             log_message("Stopping subscription bootstrap retry worker because sing-box is not running", "warn");
             break;
@@ -2626,7 +2664,7 @@ else if (mode == "run-deferred-bootstrap") {
     run_deferred_subscription_bootstrap(ARGV[1] || "");
 }
 else if (mode == "start-deferred-bootstrap-worker") {
-    start_deferred_subscription_bootstrap_retry_worker(ARGV[1] || "");
+    exit(start_deferred_subscription_bootstrap_retry_worker(ARGV[1] || ""));
 }
 else if (mode == "stop-deferred-bootstrap-worker") {
     stop_deferred_subscription_bootstrap_retry_worker();

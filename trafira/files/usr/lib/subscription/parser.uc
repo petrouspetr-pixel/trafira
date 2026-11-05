@@ -3,6 +3,7 @@
 let fs = require("fs");
 let ech_links = loadfile(replace(sourcepath(), /\/[^\/]+$/, "/ech.uc"))();
 let subscription_io = loadfile(replace(sourcepath(), /\/[^\/]+$/, "/io.uc"))();
+let subscription_bundle = loadfile(replace(sourcepath(), /\/[^\/]+$/, "/bundle.uc"))();
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -299,7 +300,8 @@ function reality_public_key_valid(value) {
 }
 
 function validate_subscription(path) {
-    let value = read_json_file(path);
+    let snapshot = subscription_bundle.snapshot(path);
+    let value = snapshot.valid ? snapshot.document : null;
     if (type(value) != "object" || type(value.outbounds) != "array" || length(value.outbounds) == 0)
         return false;
 
