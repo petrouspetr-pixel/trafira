@@ -197,6 +197,9 @@ class SubscriptionResources(unittest.TestCase):
                   'if(fs.readfile(ARGV[1])!="retained")exit(3);')
         result = self.uc("-e", script, str(source), str(target))
         self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.uc("-e", 'exit(require("subscription.io").read_file(ARGV[0],33554432)=="abcd"?0:1);',
+                         str(source), memory=24 * 1024 * 1024)
+        self.assertEqual(result.returncode, 0, "small reads must not allocate the entire size ceiling: " + result.stderr)
 
     def test_buffered_write_failure_keeps_last_complete_copy(self):
         source, target = self.work / "short-source", self.work / "last-complete"
