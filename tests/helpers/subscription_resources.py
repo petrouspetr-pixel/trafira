@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import resource
+import signal
 import subprocess
 import tempfile
 import threading
@@ -38,9 +39,18 @@ class SubscriptionResources(unittest.TestCase):
         def bound():
             if memory:
                 resource.setrlimit(resource.RLIMIT_AS, (memory, memory))
-        return subprocess.run(["ucode", "-L", str(LIB), *args], env=self.env,
-                              capture_output=True, text=True, timeout=timeout,
-                              preexec_fn=bound if memory else None)
+        command = ["ucode", "-L", str(LIB), *args]
+        process = subprocess.Popen(command, env=self.env, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, start_new_session=True,
+                                   preexec_fn=bound if memory else None)
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            # The old downloader can leave curl holding our capture pipes.
+            os.killpg(process.pid, signal.SIGKILL)
+            process.communicate(timeout=3)
+            raise
+        return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
 
     def serve(self, behavior, payload=VALID):
         owner = self
