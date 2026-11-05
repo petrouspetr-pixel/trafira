@@ -3,6 +3,7 @@
 let fs = require("fs");
 let common = require("core.common");
 let ech_links = require("subscription.ech");
+let subscription_io = require("subscription.io");
 
 let as_string = common.as_string;
 let array_or_empty = common.array_or_empty;
@@ -378,7 +379,7 @@ function shell_quote(value) {
 
 function populate_subscription_file(path) {
     path = as_string(path);
-    let data = fs.readfile(path);
+    let data = subscription_io.read_file(path, subscription_io.CACHE_LIMIT);
     if (data == null)
         return false;
 

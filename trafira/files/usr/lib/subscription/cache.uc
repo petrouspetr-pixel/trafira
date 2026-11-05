@@ -4,6 +4,7 @@ let fs = require("fs");
 let uci_core = require("core.uci");
 let connections = require("config.connections");
 let subscription_share_link = require("subscription.share_link");
+let subscription_io = require("subscription.io");
 
 const CONFIG_NAME = getenv("TRAFIRA_CONFIG_NAME") || "trafira";
 const LIB_DIR = getenv("TRAFIRA_LIB") || "/usr/lib/trafira";
@@ -46,7 +47,7 @@ function read_json(path) {
     if (path == null || path == "" || path == "-")
         return null;
 
-    let data = fs.readfile(path);
+    let data = subscription_io.read_file(path, subscription_io.CACHE_LIMIT);
     if (data == null)
         return null;
 
@@ -496,7 +497,7 @@ function source_device_headers_path(dir, source_section) {
 }
 
 function read_text(path) {
-    let data = fs.readfile(as_string(path));
+    let data = subscription_io.read_file(as_string(path), subscription_io.HEADER_LIMIT);
     return data == null ? "" : as_string(data);
 }
 
@@ -505,19 +506,7 @@ function write_text(path, value) {
 }
 
 function copy_file(source, target) {
-    let data = fs.readfile(as_string(source));
-    if (data == null)
-        return false;
-
-    let stamp = clock();
-    let tmp_path = sprintf("%s.%d.%d.tmp", as_string(target), stamp[0], stamp[1]);
-    if (!write_file(tmp_path, data))
-        return false;
-    if (!fs.rename(tmp_path, as_string(target))) {
-        fs.unlink(tmp_path);
-        return false;
-    }
-    return true;
+    return subscription_io.copy_file(as_string(source), as_string(target));
 }
 
 function unlink_path(path) {
@@ -534,9 +523,7 @@ function file_nonempty(path) {
 }
 
 function files_equal(left, right) {
-    let left_data = fs.readfile(as_string(left));
-    let right_data = fs.readfile(as_string(right));
-    return left_data != null && right_data != null && left_data == right_data;
+    return subscription_io.files_equal(as_string(left), as_string(right));
 }
 
 function shell_quote(value) {
@@ -1510,7 +1497,7 @@ function get_subscription_hwid(custom_hwid) {
     return custom_hwid != "" ? custom_hwid : generate_hwid();
 }
 
-function download_subscription(url, filepath, http_proxy_address, headers_filepath, effective_user_agent, effective_hwid, device_headers) {
+function download_subscription(url, filepath, http_proxy_address, headers_filepath, effective_user_agent, effective_hwid, device_headers, deadline) {
     let retries = 3;
     let wait_seconds = 2;
     let timeout = 15;
@@ -1519,14 +1506,21 @@ function download_subscription(url, filepath, http_proxy_address, headers_filepa
     let tmpfile = filepath + suffix;
     let headers_tmpfile = headers_filepath != "" ? headers_filepath + suffix : "";
     let resolution_failed = false;
+    let timed_out = false;
 
     unlink_path(tmpfile);
     if (headers_tmpfile != "")
         unlink_path(headers_tmpfile);
 
     for (let attempt = 1; attempt <= retries; attempt++) {
+        let remaining = deadline - int(clock(true)[0]);
+        if (remaining <= 0)
+            return 28;
         let args = [
             "curl", "-fL", "-sS",
+            "--max-time", min(30, remaining),
+            "--max-filesize", subscription_io.SOURCE_LIMIT,
+            "--max-redirs", "5",
             "--connect-timeout", timeout,
             "--speed-time", timeout,
             "--speed-limit", "1"
@@ -1541,8 +1535,6 @@ function download_subscription(url, filepath, http_proxy_address, headers_filepa
             push(args, headers_tmpfile);
         }
 
-        push(args, "-o");
-        push(args, tmpfile);
         let request_headers = [
             "User-Agent: " + get_subscription_user_agent(effective_user_agent),
             "X-HWID: " + get_subscription_hwid(effective_hwid)
@@ -1555,9 +1547,17 @@ function download_subscription(url, filepath, http_proxy_address, headers_filepa
         }
         push(args, url);
 
-        let status = command_status_from_args(args);
-        if (status == 0 && file_nonempty(tmpfile)) {
-            move_file(tmpfile, filepath);
+        let pipe = fs.popen(command_from_args(args), "r"), output = fs.open(tmpfile, "w");
+        let copied = { ok: false };
+        if (pipe && output && fs.chmod(tmpfile, 384))
+            copied = subscription_io.copy_stream(pipe, output, subscription_io.SOURCE_LIMIT);
+        let closed = output ? output.close() : false;
+        let status = pipe ? int(pipe.close()) : 1;
+        if (status > 255)
+            status = int(status / 256);
+        let oversized = copied.too_large || status == 63 ||
+            (headers_tmpfile != "" && subscription_io.exceeds_limit(headers_tmpfile, subscription_io.HEADER_LIMIT));
+        if (status == 0 && copied.ok && closed && !oversized && file_nonempty(tmpfile) && move_file(tmpfile, filepath)) {
             if (headers_filepath != "") {
                 if (file_nonempty(headers_tmpfile))
                     move_file(headers_tmpfile, headers_filepath);
@@ -1572,18 +1572,24 @@ function download_subscription(url, filepath, http_proxy_address, headers_filepa
         unlink_path(tmpfile);
         unlink_path(headers_tmpfile);
 
+        if (oversized)
+            return 63;
+        timed_out = status == 28;
+        if (int(clock(true)[0]) >= deadline)
+            return 28;
+
         if (status == 5 || status == 6) {
             resolution_failed = true;
             break;
         }
 
         if (attempt < retries)
-            system("sleep " + int(wait_seconds));
+            system("sleep " + min(wait_seconds, max(0, deadline - int(clock(true)[0]))));
     }
 
     unlink_path(tmpfile);
     unlink_path(headers_tmpfile);
-    return resolution_failed ? 6 : 1;
+    return resolution_failed ? 6 : (timed_out ? 28 : 1);
 }
 
 function copy_valid_metadata_output(metadata_tmpfile, metadata_output_path) {
@@ -1655,6 +1661,11 @@ function download_subscription_into_cache(section_name_value, subscription_url, 
     let default_user_agent = get_subscription_user_agent("");
     let subscription_device_headers_signature = connections.device_headers_signature(subscription_device_headers);
     let parser = subscription_parser();
+    // One budget spans every retry and automatic request-profile fallback.
+    let budget = int(getenv("TRAFIRA_SUBSCRIPTION_DOWNLOAD_BUDGET") || "90");
+    if (budget < 1 || budget > 90)
+        budget = 90;
+    let deadline = int(clock(true)[0]) + budget;
 
     let attempt_index = 0;
     for (let effective_user_agent in user_agent_candidates(subscription_user_agent, cached_user_agent, default_user_agent)) {
@@ -1665,10 +1676,18 @@ function download_subscription_into_cache(section_name_value, subscription_url, 
         unlink_path(metadata_tmpfile);
 
         let effective_hwid = get_subscription_hwid(subscription_hwid);
-        let download_status = download_subscription(subscription_url, raw_tmpfile, service_proxy_address_value, headers_tmpfile, effective_user_agent, effective_hwid, subscription_device_headers);
+        let download_status = download_subscription(subscription_url, raw_tmpfile, service_proxy_address_value, headers_tmpfile, effective_user_agent, effective_hwid, subscription_device_headers, deadline);
         if (download_status != 0) {
             if (metadata_output_path != "")
                 unlink_path(metadata_output_path);
+            if (download_status == 63) {
+                log_message("Subscription response exceeds size limit for rule '" + section_name_value + "'; keeping the working cache", "error");
+                break;
+            }
+            if (int(clock(true)[0]) >= deadline) {
+                log_message("Subscription download time budget exhausted for rule '" + section_name_value + "'; keeping the working cache", "error");
+                break;
+            }
             if (download_status == 6) {
                 log_message("Subscription download failed for rule '" + section_name_value + "' because the subscription host could not be resolved; compatibility retries skipped", "warn");
                 break;
@@ -1680,8 +1699,13 @@ function download_subscription_into_cache(section_name_value, subscription_url, 
             continue;
         }
 
-        if (parser.try_decode_gzip_content_file(raw_tmpfile))
+        if (parser.content_is_gzip(raw_tmpfile)) {
+            if (!parser.try_decode_gzip_content_file(raw_tmpfile)) {
+                log_message("Cannot decode subscription within size limit for rule '" + section_name_value + "'; keeping the working cache", "error");
+                break;
+            }
             log_message("Decoded gzip-compressed subscription body for rule '" + section_name_value + "'", "info");
+        }
 
         parser.extract_ui_metadata_file(headers_tmpfile, raw_tmpfile, metadata_tmpfile) || unlink_path(metadata_tmpfile);
         copy_valid_metadata_output(metadata_tmpfile, metadata_output_path);
@@ -1698,6 +1722,10 @@ function download_subscription_into_cache(section_name_value, subscription_url, 
 
         if (!subscription_share_link.populate_subscription_file(normalized_tmpfile))
             log_message("Failed to cache direct proxy links for subscription rule '" + section_name_value + "'", "warn");
+        if (subscription_io.exceeds_limit(normalized_tmpfile, subscription_io.CACHE_LIMIT)) {
+            log_message("Normalized subscription exceeds size limit for rule '" + section_name_value + "'; keeping the working cache", "error");
+            break;
+        }
 
         if (!subscription_config_is_current(section_name_value, subscription_url, subscription_user_agent, subscription_hwid, sections, subscription_device_headers_signature)) {
             log_message("Subscription source settings changed while updating rule '" + section_name_value + "'; discarding superseded download", "warn");
@@ -1807,7 +1835,7 @@ function cached_source_status(source_section, parsed) {
     let hwid_path = source_hwid_path(TMP_SUBSCRIPTION_FOLDER, source_section);
     let device_headers_path = source_device_headers_path(TMP_SUBSCRIPTION_FOLDER, source_section);
     let had_usable_cache = subscription_cache_is_usable(json_path);
-    if (!had_usable_cache)
+    if (!had_usable_cache && !subscription_io.exceeds_limit(json_path, subscription_io.CACHE_LIMIT))
         unlink_path(json_path);
 
     let cached_url = read_text(url_path);
