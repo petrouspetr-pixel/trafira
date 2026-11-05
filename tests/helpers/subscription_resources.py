@@ -163,6 +163,12 @@ class SubscriptionResources(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0, "oversized input was materialized and accepted")
                 self.assertFalse(output.exists(), "rejected parse left successful-looking output")
 
+    def test_gzip_header_detection_uses_binary_bytes(self):
+        path = self.work / "binary-gzip"
+        path.write_bytes(gzip.compress(VALID))
+        result = self.uc("-e", 'exit(require("subscription.parser").content_is_gzip(ARGV[0])?0:1);', str(path))
+        self.assertEqual(result.returncode, 0, "gzip magic was not recognized: " + result.stderr)
+
     def test_cache_io_binary_identity_and_bounded_memory(self):
         source, target = self.work / "binary", self.work / "copy"
         block = bytes(range(256)) * 256
@@ -201,6 +207,21 @@ class SubscriptionResources(unittest.TestCase):
         self.assertEqual(result.returncode, 0, "buffered flush failure was reported as a complete copy: " + result.stderr)
         self.assertEqual(target.read_bytes(), b"retained")
         self.assertFalse(list(self.work.glob("last-complete.*.tmp")))
+
+    def test_gzip_and_link_population_keep_input_after_buffered_write_failure(self):
+        source = self.work / "compressed"
+        compressed = gzip.compress(VALID[:-1] + b',"padding":"' + b"x" * 512 + b'"}')
+        source.write_bytes(compressed)
+        result = self.uc(str(LIB / "subscription/parser.uc"), "try-decode-gzip-content", str(source), file_size=256)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(source.read_bytes(), compressed)
+        source = self.work / "normalized"
+        original = json.dumps({"outbounds": [{**NODE, "tag": "n" * 300}]}).encode()
+        source.write_bytes(original)
+        result = self.uc("-e", 'exit(require("subscription.share_link").populate_subscription_file(ARGV[0])?1:0);',
+                         str(source), file_size=256)
+        self.assertEqual(result.returncode, 0, "truncated link-populated cache was accepted: " + result.stderr)
+        self.assertEqual(source.read_bytes(), original)
 
 
 if __name__ == "__main__":
