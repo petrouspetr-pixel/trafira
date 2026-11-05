@@ -92,6 +92,7 @@ class SubscriptionWorkerPid(unittest.TestCase):
             process, output = self.run_mode("start-deferred-bootstrap-worker", "proxy")
             self.assertTrue(wait_until(lambda: not live_group(process.pid)),
                             f"PID-save failure left live worker/descendants: {live_group(process.pid)}")
+            self.assertNotEqual(process.returncode, 0, "failed PID publication reported CLI success")
             self.assertNotIn("Started subscription bootstrap retry worker", self.logs.read_text(), output)
             self.assertTrue(self.pidfile.is_dir(), "failed publication changed its target")
             self.assertFalse(list(self.pidfile.parent.glob("worker.pid.*.tmp")))
@@ -124,7 +125,7 @@ class SubscriptionWorkerPid(unittest.TestCase):
         self.assertFalse(live_group(second.pid), "duplicate event launched another worker")
         stopped, output = self.run_mode("stop-deferred-bootstrap-worker")
         self.assertEqual(stopped.returncode, 0, output)
-        self.assertTrue(wait_until(lambda: worker not in live_group(process.pid)), "stop left worker running")
+        self.assertTrue(wait_until(lambda: not live_group(process.pid)), "stop left worker or descendants running")
         self.assertFalse(self.pidfile.exists(), "stop left the published PID behind")
 
 
