@@ -199,6 +199,18 @@ function read_legacy_source_metadata(section_name, source_section, source_index,
     return result;
 }
 
+function source_hwid_path(source_section) {
+    return TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".hwid";
+}
+
+function source_device_headers_path(source_section) {
+    return TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".device_headers";
+}
+
+function source_json_path(source_section) {
+    return TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".json";
+}
+
 function read_source_snapshot(source_section) {
     let path = source_json_path(source_section);
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -314,13 +326,7 @@ function remember_priority_group(state, tag_name, group) {
     state.priorityGroups[tag_name] = object_or_empty(group);
 }
 
-function source_hwid_path(source_section) {
-    return TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".hwid";
-}
 
-function source_device_headers_path(source_section) {
-    return TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".device_headers";
-}
 
 function hwid_matches_config(configured_hwid, cached_hwid) {
     configured_hwid = as_string(configured_hwid);
@@ -357,9 +363,6 @@ function source_cache_is_current(source_section, source_entry, expected_user_age
     return true;
 }
 
-function source_json_path(source_section) {
-    return TMP_SUBSCRIPTION_FOLDER + "/" + source_section + ".json";
-}
 
 function read_source_outbounds(source_section, snapshot) {
     snapshot = snapshot || read_source_snapshot(source_section);

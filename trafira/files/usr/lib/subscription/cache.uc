@@ -497,44 +497,24 @@ function source_device_headers_path(dir, source_section) {
     return as_string(dir) + "/" + as_string(source_section) + ".device_headers";
 }
 
+function read_text(path) {
+    let data = subscription_io.read_file(as_string(path), subscription_io.HEADER_LIMIT);
+    return data == null ? "" : as_string(data);
+}
+
 function source_identity(dir, source_section) {
     let own = subscription_bundle.inspect(source_json_path(dir, source_section));
     if (own.present)
         return own.valid ? own.value : null;
+    let metadata = read_json(dir + "/" + source_section + ".metadata.json");
     return {
         version: 1,
         url: read_text(source_url_path(dir, source_section)),
         user_agent: read_text(source_user_agent_path(dir, source_section)),
         hwid: read_text(source_hwid_path(dir, source_section)),
         device_headers: read_text(source_device_headers_path(dir, source_section)),
-        metadata: read_json(dir + "/" + source_section + ".metadata.json")
+        metadata: type(metadata) == "object" && length(keys(metadata)) > 1 ? metadata : null
     };
-}
-
-function compatibility_identity(dir, source_section, record, staging_path) {
-    // These are legacy views. The single committed JSON is authoritative.
-    let ok = true;
-    for (let field in ["url", "user_agent", "hwid", "device_headers"])
-        if (!subscription_io.write_file(dir + "/" + source_section + "." + field, record[field], staging_path))
-            ok = false;
-    let metadata = dir + "/" + source_section + ".metadata.json";
-    if (valid_metadata_object(record.metadata))
-        ok = subscription_io.write_file(metadata, sprintf("%J\n", record.metadata), staging_path) && ok;
-    else
-        unlink_path(metadata);
-    if (!ok)
-        log_message("Subscription source was committed; some legacy cache views could not be refreshed", "warn");
-}
-
-function publish_source(dir, source_section, source, record) {
-    let target = source_json_path(dir, source_section);
-    return subscription_bundle.publish(source, target, record, subscription_parser().validate_subscription,
-        function(tmp) { compatibility_identity(dir, source_section, record, tmp); });
-}
-
-function read_text(path) {
-    let data = subscription_io.read_file(as_string(path), subscription_io.HEADER_LIMIT);
-    return data == null ? "" : as_string(data);
 }
 
 function write_text(path, value) {
@@ -629,6 +609,28 @@ function log_message(message, level) {
     level = as_string(level || "info");
     command_success_from_args([ "logger", "-t", "trafira", "[" + level + "] " + as_string(message) ]);
 }
+
+function compatibility_identity(dir, source_section, record, staging_path) {
+    // These are legacy views. The single committed JSON is authoritative.
+    let ok = true;
+    for (let field in ["url", "user_agent", "hwid", "device_headers"])
+        if (!subscription_io.write_file(dir + "/" + source_section + "." + field, record[field], staging_path))
+            ok = false;
+    let metadata = dir + "/" + source_section + ".metadata.json";
+    if (type(record.metadata) == "object" && length(keys(record.metadata)) > 1)
+        ok = subscription_io.write_file(metadata, sprintf("%J\n", record.metadata), staging_path) && ok;
+    else
+        unlink_path(metadata);
+    if (!ok)
+        log_message("Subscription source was committed; some legacy cache views could not be refreshed", "warn");
+}
+
+function publish_source(dir, source_section, source, record) {
+    let target = source_json_path(dir, source_section);
+    return subscription_bundle.publish(source, target, record, subscription_parser().validate_subscription,
+        function(tmp) { compatibility_identity(dir, source_section, record, tmp); });
+}
+
 
 function ensure_dir(path) {
     run_silent("mkdir -p " + shell_quote(path));
@@ -1398,6 +1400,17 @@ function remove_subscription_source_runtime_cache(source_section) {
     unlink_path(source_device_headers_path(TMP_SUBSCRIPTION_FOLDER, source_section));
 }
 
+function make_source_record(url, agent, hwid, headers, metadata_path, previous) {
+    let record = {version: 1, url: as_string(url), user_agent: as_string(agent),
+                  hwid: as_string(hwid), device_headers: as_string(headers), metadata: null};
+    let fresh = read_json(metadata_path);
+    if (valid_metadata_object(fresh))
+        record.metadata = fresh;
+    else if (subscription_bundle.identity_matches(previous, record) && valid_metadata_object(previous.metadata))
+        record.metadata = previous.metadata;
+    return record;
+}
+
 function persist_subscription_cache(source_section, subscription_json_path, subscription_url, effective_user_agent, effective_hwid, metadata_path, effective_device_headers_signature) {
     if (!cache_section_is_safe(source_section) || !subscription_cache_is_usable(subscription_json_path))
         return false;
@@ -1415,16 +1428,6 @@ function persist_subscription_cache(source_section, subscription_json_path, subs
     return publish_source(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section, subscription_json_path, record);
 }
 
-function make_source_record(url, agent, hwid, headers, metadata_path, previous) {
-    let record = {version: 1, url: as_string(url), user_agent: as_string(agent),
-                  hwid: as_string(hwid), device_headers: as_string(headers), metadata: null};
-    let fresh = read_json(metadata_path);
-    if (valid_metadata_object(fresh))
-        record.metadata = fresh;
-    else if (subscription_bundle.identity_matches(previous, record) && valid_metadata_object(previous.metadata))
-        record.metadata = previous.metadata;
-    return record;
-}
 
 function append_persistent_source_metadata(array_path, source_index, source_section) {
     let identity = source_identity(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR, source_section);

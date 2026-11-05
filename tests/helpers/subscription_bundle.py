@@ -115,6 +115,46 @@ class BundleTransactions(SubscriptionResources):
         result = self.uc(str(script))
         self.assertEqual(result.returncode, 0, "broken authoritative identity fell back to sidecars: " + result.stderr)
 
+    def test_same_identity_metadata_race_cannot_mix_source_generations(self):
+        source, replacement, target = (self.work / name for name in ["source.json", "next.json", "target.json"])
+        a, b = record(), record(title="B")
+        source.write_bytes(encoded(a))
+        replacement.write_bytes(encoded(b, {**NODE, "server": "127.0.0.2"}))
+        target.write_bytes(encoded(a))
+        script = self.work / "publish-race.uc"
+        script.write_text('let fs=require("fs"),b=require("subscription.bundle"),p=require("subscription.parser");'
+                          'let old=b.inspect(ARGV[0]).value;fs.rename(ARGV[1],ARGV[0]);'
+                          'exit(b.publish(ARGV[0],ARGV[2],old,p.validate_subscription)?1:0);')
+        result = self.uc(str(script), str(source), str(replacement), str(target))
+        self.assertEqual(result.returncode, 0, "new body was published with stale metadata: " + result.stderr)
+        self.assertEqual(target.read_bytes(), encoded(a))
+        self.assertEqual(json.loads(source.read_text())[KEY], b)
+
+    def test_invalid_optional_legacy_metadata_does_not_prevent_offline_restore(self):
+        folder, runtime = self.work / "persistent", self.work / "subscriptions"
+        folder.mkdir()
+        runtime.mkdir()
+        state = record()
+        (folder / "proxy-subscription-1.json").write_bytes(VALID)
+        for suffix in ["url", "user_agent", "hwid", "device_headers"]:
+            (folder / ("proxy-subscription-1." + suffix)).write_text(state[suffix])
+        (folder / "proxy-subscription-1.metadata.json").write_text('["invalid optional metadata"]')
+        result = self.uc(str(LIB / "subscription/cache.uc"), "restore-persistent-source", "proxy-subscription-1",
+                         str(runtime), str(folder), state["url"], state["user_agent"], state["hwid"], "default", "")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        document = json.loads((runtime / "proxy-subscription-1.json").read_text())
+        self.assertEqual(document["outbounds"], [NODE])
+        self.assertIsNone(document[KEY]["metadata"])
+
+    def test_inspect_rejects_reserved_marker_outside_canonical_prologue(self):
+        path = self.work / "noncanonical.json"
+        path.write_text(json.dumps({"outbounds": [NODE], KEY: record()}))
+        script = self.work / "inspect.uc"
+        script.write_text('let b=require("subscription.bundle"),s=b.inspect(ARGV[0]);'
+                          'exit(s.present && !s.valid ? 0 : 1);')
+        result = self.uc(str(script), str(path))
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_sigkill_before_and_after_commit_keeps_one_complete_source(self):
         source_c, library = self.work / "rename.c", self.work / "rename.so"
         source_c.write_text(r'''

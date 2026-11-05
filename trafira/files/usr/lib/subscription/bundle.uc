@@ -56,7 +56,13 @@ function inspect(path) {
         return { present: false };
     let text = input.read(io.HEADER_LIMIT + 1) || "";
     input.close();
-    return header(text);
+    let parsed = header(text);
+    if (parsed.present)
+        return parsed;
+    // A reserved record outside the canonical prologue is corruption, not a
+    // legacy source. Only old files need the full bounded format check.
+    let snap = snapshot(path);
+    return snap.valid && !snap.present ? { present: false } : { present: true, valid: false };
 }
 
 function input_header(input) {
@@ -91,7 +97,7 @@ function stage(source, target, tmp, record, validate) {
     let valid = false;
     try { valid = validate("/proc/self/fd/" + input.fileno()); } catch (e) {}
     let old = input_header(input);
-    if (!valid || !old.valid || (old.present && !identity_matches(old.value, record))) {
+    if (!valid || !old.valid || (old.present && sprintf("%J", old.value) != sprintf("%J", record))) {
         input.close(); return false;
     }
     let current = fs.open(target, "re");
