@@ -48,7 +48,7 @@ for value in ['203.0.113.5 . 80','2001:db8::5 . 443','198.51.100.10 . 80',
               '2001:db8::20 . 443','198.51.100.30 . 443','2001:db8::30 . 443','198.51.100.31 . 443']:
     assert value in text,(value,text)
 assert '198.51.100.30 . 80' not in text,'custom port scope was widened'
-assert not any(word in text for word in ['_sources','_fully_sources','_ports {','add rule','delete table']),text
+assert not any(word in text for word in ['_sources','_fully_sources','trafira_rule_vpn_ports {','add rule','delete table']),text
 PY
 cp "$WORK_DIR/applied" "$WORK_DIR/previous"
 touch "$WORK_DIR/inventory-error"

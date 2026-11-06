@@ -113,7 +113,6 @@ function write_list_update_timestamp(timestamp){writes++;}
 function now_seconds(){return 123;}
 function operation(name){return function(section,settings){let key=name+":"+section_name(section);push(order,key);if(key==throw_at)die("internal secret");return key!=fail;};}
 let rebuild_domain_ip_lists_from_rule=operation("domain_ip"),import_builtin_subnets_from_rule=operation("builtin_subnets"),import_domains_from_remote_domain_lists=operation("remote_domains"),import_subnets_from_remote_subnet_lists=operation("remote_subnets"),import_rule_sets_with_subnets_from_rule=operation("ruleset_subnets");
-function update_section_subnet_lists(section,settings){let ok=true;for(let stage in [["domain_ip",rebuild_domain_ip_lists_from_rule],["builtin_subnets",import_builtin_subnets_from_rule],["ruleset_subnets",import_rule_sets_with_subnets_from_rule]])if(!run_list_update_stage(stage[0],[section],settings,stage[1]))ok=false;return ok;}
 let startup_cache_stub={refresh:function(config,proxy,report){if(cache_fail)report({tag:"failed-list",stage:"download",reason:"download_timeout",code:28,previous_snapshot:"kept"});return !cache_fail;}};
 `;
 const suffix=`
@@ -139,6 +138,7 @@ check(index(sprintf("%J",messages),"list=failed-list stage=download reason=downl
 reset();dns_ok=false;check(!list_update_pass() && length(order)==0 && messages[length(messages)-1].level=="error","DNS failure logs stage without modifying lists");
 print("List update stage order, error severity and timestamp tests passed\\n");
 `;
-fs.writeFileSync(`${dir}/stages.uc`,extract('as_string')+extract('shell_quote')+extract('command_from_args')+prefix+extract('safe_list_log_text')+extract('log_message')+extract('list_reference_label')+extract('download_to_file')+extract('log_list_refresh_failure')+extract('run_list_update_stage')+extract('list_update_pass').replace('require("singbox.ruleset_cache")','startup_cache_stub')+suffix);
+const collector=`function update_section_subnet_lists(section,settings){let ok=true;for(let stage in [["domain_ip",rebuild_domain_ip_lists_from_rule],["builtin_subnets",import_builtin_subnets_from_rule],["ruleset_subnets",import_rule_sets_with_subnets_from_rule]])if(!run_list_update_stage(stage[0],[section],settings,stage[1]))ok=false;return ok;}\n`;
+fs.writeFileSync(`${dir}/stages.uc`,extract('as_string')+extract('shell_quote')+extract('command_from_args')+prefix+extract('safe_list_log_text')+extract('log_message')+extract('list_reference_label')+extract('download_to_file')+extract('log_list_refresh_failure')+extract('run_list_update_stage')+collector+extract('list_update_pass').replace('require("singbox.ruleset_cache")','startup_cache_stub')+suffix);
 JS
 ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$WORK_DIR/stages.uc"
