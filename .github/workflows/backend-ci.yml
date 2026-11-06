@@ -11,6 +11,7 @@ on:
       - 'install.sh'
       - 'uninstall.sh'
       - 'tools/benchmark-ucode.py'
+      - 'tools/download-verified-range.py'
       - 'tests/**'
       - '.github/workflows/build.yml'
       - '.github/workflows/backend-ci.yml'
@@ -26,6 +27,7 @@ on:
       - 'install.sh'
       - 'uninstall.sh'
       - 'tools/benchmark-ucode.py'
+      - 'tools/download-verified-range.py'
       - 'tests/**'
       - '.github/workflows/build.yml'
       - '.github/workflows/backend-ci.yml'
@@ -34,7 +36,7 @@ jobs:
   apk-core-transactions:
     name: APK Core Transactions
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5.0.0
       - name: Prepare official OpenWrt APK tool
@@ -42,11 +44,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y zstd
-          # The pinned SDK is 284 MB; slow mirrors need more than three minutes.
-          curl --proto '=https' --proto-redir '=https' -fsSL --connect-timeout 15 --max-time 900 \
+          # Large uninterrupted responses can stall at the mirror; verify both
+          # individual byte ranges and the complete pinned artifact.
+          sdk_sha256=70fc990b2f9a2705e8bbca610e421a55e789901d4aeba10d9fdd7c89777bf695
+          python3 tools/download-verified-range.py \
             https://downloads.openwrt.org/releases/25.12.3/targets/x86/64/openwrt-sdk-25.12.3-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst \
-            -o "$RUNNER_TEMP/sdk.tar.zst"
-          echo "70fc990b2f9a2705e8bbca610e421a55e789901d4aeba10d9fdd7c89777bf695  $RUNNER_TEMP/sdk.tar.zst" | sha256sum -c -
+            "$RUNNER_TEMP/sdk.tar.zst" --size 284199892 --sha256 "$sdk_sha256"
+          echo "$sdk_sha256  $RUNNER_TEMP/sdk.tar.zst" | sha256sum -c -
           mkdir "$RUNNER_TEMP/apk-sdk"
           tar --zstd -xf "$RUNNER_TEMP/sdk.tar.zst" -C "$RUNNER_TEMP/apk-sdk"
           apk_bin=$(find "$RUNNER_TEMP/apk-sdk" -path '*/staging_dir/host/bin/apk' -type f -print -quit)
