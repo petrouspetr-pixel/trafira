@@ -113,6 +113,7 @@ function write_list_update_timestamp(timestamp){writes++;}
 function now_seconds(){return 123;}
 function operation(name){return function(section,settings){let key=name+":"+section_name(section);push(order,key);if(key==throw_at)die("internal secret");return key!=fail;};}
 let rebuild_domain_ip_lists_from_rule=operation("domain_ip"),import_builtin_subnets_from_rule=operation("builtin_subnets"),import_domains_from_remote_domain_lists=operation("remote_domains"),import_subnets_from_remote_subnet_lists=operation("remote_subnets"),import_rule_sets_with_subnets_from_rule=operation("ruleset_subnets");
+function update_section_subnet_lists(section,settings){let ok=true;for(let stage in [["domain_ip",rebuild_domain_ip_lists_from_rule],["builtin_subnets",import_builtin_subnets_from_rule],["ruleset_subnets",import_rule_sets_with_subnets_from_rule]])if(!run_list_update_stage(stage[0],[section],settings,stage[1]))ok=false;return ok;}
 let startup_cache_stub={refresh:function(config,proxy,report){if(cache_fail)report({tag:"failed-list",stage:"download",reason:"download_timeout",code:28,previous_snapshot:"kept"});return !cache_fail;}};
 `;
 const suffix=`
@@ -125,12 +126,12 @@ check(length(messages)==3 && index(messages[0].text,"http=429")>=0 && index(mess
 reset();
 
 check(list_update_pass(),"successful pass");check(writes==1 && messages[length(messages)-1].level=="info","success updates timestamp once");
-check(join("|",order)=="domain_ip:one|domain_ip:two|builtin_subnets:one|builtin_subnets:two|remote_domains:one|remote_domains:two|remote_subnets:one|remote_subnets:two|ruleset_subnets:one|ruleset_subnets:two","preserve stage and section order");
+check(join("|",order)=="domain_ip:one|builtin_subnets:one|ruleset_subnets:one|domain_ip:two|builtin_subnets:two|ruleset_subnets:two","collect all contributions once per section");
 reset();fail="builtin_subnets:two";
-check(!list_update_pass() && writes==0 && length(order)==10,"failure still runs later stages without success timestamp");
+check(!list_update_pass() && writes==0 && length(order)==6,"failure still runs later stages without success timestamp");
 check(index(sprintf("%J",messages),"section=two stage=builtin_subnets reason=operation_failed")>=0 && messages[length(messages)-1].level=="error","failed section and stage reach error summary");
-reset();throw_at="remote_subnets:one";
-check(!list_update_pass() && length(order)==10 && writes==0,"stage exception does not hide later results");
+reset();throw_at="ruleset_subnets:one";
+check(!list_update_pass() && length(order)==6 && writes==0,"stage exception does not hide later results");
 check(index(sprintf("%J",messages),"reason=internal_error")>=0 && index(sprintf("%J",messages),"internal secret")<0,"exception text is not logged");
 reset();cache_fail=true;
 check(!list_update_pass() && writes==0,"cache failure prevents successful timestamp");

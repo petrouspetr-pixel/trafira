@@ -60,6 +60,9 @@ jobs:
       - name: Verify atomic nft transactions and packet priority
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/nft_transaction_network.sh
 
+      - name: Verify complete section list replacement in the kernel
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/nft_section_replace_network.sh
+
       - name: Verify router-origin packet paths
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/router_origin_network.sh
 

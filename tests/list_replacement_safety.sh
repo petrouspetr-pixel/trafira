@@ -13,6 +13,7 @@ const names = ['list_reference_label','domain_ip_list_ruleset_path','reset_domai
 const bodies = names.map(name => {const start=source.indexOf(`function ${name}(`);if(start<0)throw Error(name);return {start,code:source.slice(start,source.indexOf('\n}',start)+2)};}).sort((a,b)=>a.start-b.start);
 fs.writeFileSync(target, `
 let fs = require("fs");
+let section_nft_collection = null;
 const TMP_RULESET_FOLDER = ARGV[0];
 const NFT_TABLE_NAME="test", NFT_COMMON_SET_NAME="test", NFT_IP_PORT_SET_NAME="test", NFT_COMMON6_SET_NAME="test", NFT_IP_PORT6_SET_NAME="test";
 let as_string = v => v == null ? "" : "" + v;

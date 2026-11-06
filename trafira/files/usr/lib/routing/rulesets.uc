@@ -383,19 +383,25 @@ function nft_port_value(interval) {
     return interval.start == interval.end ? "" + interval.start : interval.start + "-" + interval.end;
 }
 
-function add_line(lines, value) {
-    if (value != "")
+function add_line(lines, value, budget) {
+    if (value != "" && !lines[value]) {
+        if (budget != null) {
+            budget.remaining -= length(value) + 1;
+            if (budget.remaining < 0)
+                die("Section subnet expansion exceeds its transaction budget\n");
+        }
         lines[value] = true;
+    }
 }
 
-function add_ip_cidr_values_to_nft_outputs(rule, port_filter, unscoped_lines, scoped_lines) {
+function add_ip_cidr_values_to_nft_outputs(rule, port_filter, unscoped_lines, scoped_lines, budget) {
     for (let ip in array_from_value(rule.ip_cidr)) {
         ip = trim_string(ip);
         if (ip == "")
             continue;
 
         if (port_filter == null) {
-            add_line(unscoped_lines, ip);
+            add_line(unscoped_lines, ip, budget);
             continue;
         }
 
@@ -403,11 +409,11 @@ function add_ip_cidr_values_to_nft_outputs(rule, port_filter, unscoped_lines, sc
             continue;
 
         for (let interval in port_filter)
-            add_line(scoped_lines, ip + " . " + nft_port_value(interval));
+            add_line(scoped_lines, ip + " . " + nft_port_value(interval), budget);
     }
 }
 
-function collect_ip_cidr_nft_outputs(rule, inherited_filter, unscoped_lines, scoped_lines) {
+function collect_ip_cidr_nft_outputs(rule, inherited_filter, unscoped_lines, scoped_lines, budget) {
     if (type(rule) != "object")
         return;
 
@@ -426,15 +432,15 @@ function collect_ip_cidr_nft_outputs(rule, inherited_filter, unscoped_lines, sco
             }
         }
 
-        add_ip_cidr_values_to_nft_outputs(rule, filter, unscoped_lines, scoped_lines);
+        add_ip_cidr_values_to_nft_outputs(rule, filter, unscoped_lines, scoped_lines, budget);
 
         for (let child in rule.rules)
-            collect_ip_cidr_nft_outputs(child, filter, unscoped_lines, scoped_lines);
+            collect_ip_cidr_nft_outputs(child, filter, unscoped_lines, scoped_lines, budget);
 
         return;
     }
 
-    add_ip_cidr_values_to_nft_outputs(rule, filter, unscoped_lines, scoped_lines);
+    add_ip_cidr_values_to_nft_outputs(rule, filter, unscoped_lines, scoped_lines, budget);
 }
 
 function write_lines(path, lines_object) {
@@ -447,7 +453,7 @@ function write_lines(path, lines_object) {
         exit(1);
 }
 
-function extract_ip_cidr_nft_elements(json_path, unscoped_output_path, scoped_output_path, ports_text, port_ranges_text) {
+function extract_ip_cidr_nft_elements(json_path, unscoped_output_path, scoped_output_path, ports_text, port_ranges_text, budget) {
     let ruleset = object_or_empty(read_json_file(json_path));
     let unscoped_lines = {};
     let scoped_lines = {};
@@ -457,7 +463,7 @@ function extract_ip_cidr_nft_elements(json_path, unscoped_output_path, scoped_ou
     });
 
     for (let rule in array_or_empty(ruleset.rules))
-        collect_ip_cidr_nft_outputs(rule, outer_filter, unscoped_lines, scoped_lines);
+        collect_ip_cidr_nft_outputs(rule, outer_filter, unscoped_lines, scoped_lines, budget);
 
     write_lines(unscoped_output_path, unscoped_lines);
     write_lines(scoped_output_path, scoped_lines);

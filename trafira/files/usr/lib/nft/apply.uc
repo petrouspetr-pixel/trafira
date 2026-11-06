@@ -27,6 +27,7 @@ let list_option = common.list_option;
 let bool_option = common.bool_option;
 let nft_transaction = null;
 let retained_destination_sets = null;
+let section_transaction_budget = null;
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -1102,6 +1103,13 @@ function nft_write_chunk(chunks, chunk) {
 }
 
 function nft_push_chunk_value(chunks, chunk, value, chunk_size) {
+    if (section_transaction_budget != null) {
+        // Bound expansion before building IP x ports chunks, not only when
+        // appending the already-expanded script to the nft transaction.
+        section_transaction_budget -= length(value) + 1 + (length(chunk) == 0 ? 512 : 0);
+        if (section_transaction_budget < 0)
+            die("Section subnet transaction exceeds the 1 MiB budget\n");
+    }
     push(chunk, value);
     if (length(chunk) < chunk_size)
         return chunk;
@@ -1888,7 +1896,8 @@ function nft_add_json_ruleset_subnets_for_section(section, json_path, label, tab
         unscoped_path,
         scoped_path,
         sprintf("%J", rule_port_values(ports)),
-        sprintf("%J", rule_port_ranges(ports))
+        sprintf("%J", rule_port_ranges(ports)),
+        section_transaction_budget == null ? null : {remaining: section_transaction_budget}
     );
 
     return nft_add_extracted_ruleset_subnets(unscoped_path, scoped_path, label, table, sets.subnets, sets.ip_ports, chunk_size_text, sets.subnets6, sets.ip6_ports);
@@ -1920,6 +1929,130 @@ function nft_add_json_ruleset_subnets_for_fixture_section(fixture_path, section_
 
 function nft_add_community_subnet_file_for_fixture_section(fixture_path, section_name, service, filepath, table, common_set, ip_port_set, interface_set, discord_set, mark, chunk_size_text, common6_set, ip_port6_set, discord6_set) {
     return nft_add_community_subnet_file_for_section(fixture_section(fixture_path, section_name), service, filepath, table, common_set, ip_port_set, interface_set, discord_set, mark, chunk_size_text, common6_set, ip_port6_set, discord6_set);
+}
+
+function nft_section_source_rule_is_valid(rule, depth) {
+    if (type(rule) != "object" || depth > 64)
+        return false;
+    if (rule.ip_cidr != null) {
+        if (type(rule.ip_cidr) != "array" && type(rule.ip_cidr) != "string")
+            return false;
+        for (let value in (type(rule.ip_cidr) == "array" ? rule.ip_cidr : [rule.ip_cidr]))
+            if (type(value) != "string" || !nft_ip_or_cidr(value))
+                return false;
+    }
+    if (rule.rules != null) {
+        if (type(rule.rules) != "array")
+            return false;
+        for (let child in rule.rules)
+            if (!nft_section_source_rule_is_valid(child, depth + 1))
+                return false;
+    }
+    return true;
+}
+
+function nft_section_input_is_valid(input) {
+    if (type(input) != "object" || type(input.path) != "string" || input.path == "")
+        return false;
+    let info = fs.stat(input.path);
+    if (!info || info.type != "file" || info.size > 8388608)
+        return false;
+    if (input.kind == "source") {
+        let source = common_read_json_file(input.path);
+        if (type(source) != "object" || type(source.rules) != "array")
+            return false;
+        for (let rule in source.rules)
+            if (!nft_section_source_rule_is_valid(rule, 0))
+                return false;
+        return true;
+    }
+    if (input.kind != "plain")
+        return false;
+    for (let value in nft_trimmed_lines(input.path))
+        if (!nft_ip_or_cidr(value))
+            return false;
+    return true;
+}
+
+// The caller supplies every list contribution for this section. Flushing one
+// source's old addresses would also erase overlapping inline or sibling lists.
+function nft_replace_section_subnets(section, manifest_path, table) {
+    if (!bool_option(section, "enabled", true) || section_action(section) == "dns" ||
+        !section_needs_priority_sets(section))
+        return true;
+    let info = fs.stat(manifest_path);
+    if (!info || info.size > 131072 || !match(as_string(table), /^[a-zA-Z_][a-zA-Z0-9_]*$/))
+        return false;
+    let manifest = common_read_json_file(manifest_path);
+    let inputs = type(manifest) == "object" ? manifest.inputs : manifest;
+    if (type(inputs) != "array" || length(inputs) > 512)
+        return false;
+    for (let input in inputs)
+        if (!nft_section_input_is_valid(input))
+            return false;
+
+    let directory = trim(command_output_from_args([ "mktemp", "-d", "/tmp/trafira-section-nft.XXXXXX" ]));
+    if (directory == "")
+        return false;
+    let sets = section_priority_sets(section), ok = false;
+    section_transaction_budget = 1048576;
+    try {
+        ok = nft_with_transaction(function() {
+            for (let name in [sets.subnets, sets.subnets6, sets.ip_ports, sets.ip6_ports])
+                if (!nft_write([ "nft", "flush", "set", "inet", table, name ]))
+                    return false;
+            if (!nft_add_inline_ip_cidr_matchers(section_rule_condition_csv(section, "ip_cidr", "subnets"),
+                section_rule_ports_csv(section), table, sets.subnets, sets.ip_ports, 5000, sets.subnets6, sets.ip6_ports))
+                return false;
+            for (let input in inputs) {
+                if (input.kind == "plain") {
+                    if (!nft_add_subnet_file_for_section(section, input.path, table, sets.subnets, sets.ip_ports, 5000, sets.subnets6, sets.ip6_ports))
+                        return false;
+                }
+                else if (!nft_add_json_ruleset_subnets_for_section(section, input.path, input.label || "section rule set",
+                    table, sets.subnets, sets.ip_ports, directory + "/ips", directory + "/tuples", 5000, sets.subnets6, sets.ip6_ports))
+                    return false;
+            }
+            return true;
+        });
+    } catch (e) {}
+    section_transaction_budget = null;
+    unlink_file(directory + "/ips");
+    unlink_file(directory + "/tuples");
+    fs.rmdir(directory);
+    if (!ok)
+        log_fatal("Section subnet replacement failed or exceeded the 1 MiB transaction limit; previous nft sets were kept");
+    return ok;
+}
+
+function nft_section_config_signature(section) {
+    let result = {name: as_string(section[".name"])}, names = keys(section);
+    sort(names);
+    for (let name in names)
+        if (substr(name, 0, 1) != ".")
+            result[name] = section[name];
+    return sprintf("%J", result);
+}
+
+function nft_replace_section_subnets_status(section, manifest_path, table) {
+    let info = fs.stat(manifest_path);
+    if (!info || info.size > 131072 || !match(as_string(table), /^[a-zA-Z_][a-zA-Z0-9_]*$/))
+        return 1;
+    let manifest = common_read_json_file(manifest_path);
+    if (type(manifest) == "object" && (type(manifest.section) != "object" ||
+        nft_section_config_signature(manifest.section) != nft_section_config_signature(section)))
+        return 1;
+    // Only a successful kernel inventory proves absence. EPERM/CLI failures
+    // must roll the JSON back instead of masquerading as stopped startup.
+    let inventory;
+    try { inventory = json(command_output_from_args([ "nft", "-j", "list", "tables" ])); }
+    catch (e) { return 1; }
+    if (type(inventory) != "object" || type(inventory.nftables) != "array")
+        return 1;
+    for (let entry in inventory.nftables)
+        if (type(entry.table) == "object" && entry.table.family == "inet" && entry.table.name == table)
+            return nft_replace_section_subnets(section, manifest_path, table) ? 0 : 1;
+    return 2;
 }
 
 function nft_populate_alice_sets(alice, table) {
@@ -2039,6 +2172,10 @@ else if (mode == "nft-add-json-ruleset-subnets-for-section-fixture")
     exit(nft_add_json_ruleset_subnets_for_fixture_section(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6], ARGV[7], ARGV[8], ARGV[9], ARGV[10], ARGV[11], ARGV[12]) ? 0 : 1);
 else if (mode == "nft-add-community-subnet-file-for-section-fixture")
     exit(nft_add_community_subnet_file_for_fixture_section(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6], ARGV[7], ARGV[8], ARGV[9], ARGV[10], ARGV[11], ARGV[12], ARGV[13], ARGV[14]) ? 0 : 1);
+else if (mode == "nft-replace-section-subnets-for-uci-section")
+    exit(nft_replace_section_subnets_status(uci_section(ARGV[1]), ARGV[2], ARGV[3]));
+else if (mode == "nft-replace-section-subnets-fixture")
+    exit(nft_replace_section_subnets_status(fixture_section(ARGV[1], ARGV[2]), ARGV[3], ARGV[4]));
 else if (mode == "nft-populate-runtime-sets-from-uci")
     exit(nft_populate_runtime_sets_from_uci(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5], ARGV[6], ARGV[7], ARGV[8], ARGV[9], ARGV[10], ARGV[11], ARGV[12]) ? 0 : 1);
 else if (mode == "nft-populate-runtime-sets-fixture")

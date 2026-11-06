@@ -38,6 +38,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         case, framing, count = self.path.strip("/").split("/")
         count = int(count)
+        payload = bytes(range(256)) * 44 if case == "small-binary" else block
         record = {"case": case, "sent": 0, "done": False}
         requests.append(record)
         self.send_response(200)
@@ -51,7 +52,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         try:
             while record["sent"] < count:
-                data = block[:min(len(block), count - record["sent"])]
+                data = payload[:min(len(payload), count - record["sent"])]
                 if framing == "chunked":
                     self.wfile.write(f"{len(data):x}\r\n".encode() + data + b"\r\n")
                 else:
@@ -119,6 +120,7 @@ let remove_file = path => fs.unlink(path);
     serving.start()
     try:
         cases = [("small-" + framing, framing, 12345, True, False, False) for framing in ["length", "close", "chunked"]]
+        cases += [("small-binary", "chunked", 12345, True, False, False)]
         cases += [("boundary", "chunked", limit, True, False, False)]
         cases += [("oversize-" + framing, framing, oversized, False, False, False) for framing in ["length", "close", "chunked"]]
         cases += [("oversize-prior-target", "chunked", oversized, False, True, False),
@@ -162,7 +164,8 @@ let remove_file = path => fs.unlink(path);
                     process.communicate(timeout=2)
             if accepted:
                 assert process.returncode == 0, (case, stdout, stderr)
-                expected = (block * (count // len(block) + 1))[:count]
+                payload = bytes(range(256)) * 44 if case == "small-binary" else block
+                expected = (payload * (count // len(payload) + 1))[:count]
                 assert output.read_bytes() == expected, f"{case}: successful body was truncated or changed"
                 assert list(destination.iterdir()) == [output], f"{case}: successful download leaked temporary files"
             else:
