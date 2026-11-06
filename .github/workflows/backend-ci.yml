@@ -48,7 +48,7 @@ jobs:
           # individual byte ranges and the complete pinned artifact.
           sdk_sha256=70fc990b2f9a2705e8bbca610e421a55e789901d4aeba10d9fdd7c89777bf695
           python3 tools/download-verified-range.py \
-            https://downloads.openwrt.org/releases/25.12.3/targets/x86/64/openwrt-sdk-25.12.3-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst \
+            https://archive.openwrt.org/releases/25.12.3/targets/x86/64/openwrt-sdk-25.12.3-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst \
             "$RUNNER_TEMP/sdk.tar.zst" --size 284199892 --sha256 "$sdk_sha256"
           echo "$sdk_sha256  $RUNNER_TEMP/sdk.tar.zst" | sha256sum -c -
           mkdir "$RUNNER_TEMP/apk-sdk"

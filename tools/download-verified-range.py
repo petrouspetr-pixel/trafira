@@ -45,7 +45,10 @@ def download(url, destination, size, sha256, chunk_size=16777216, workers=4, tim
             except (subprocess.TimeoutExpired, OSError):
                 raise RuntimeError("Artifact range transport failed or exceeded its deadline") from None
             if result.returncode or result.stdout.strip() != "206":
-                raise RuntimeError("Artifact server did not return a successful partial response")
+                code = result.stdout.strip()
+                code = code if re.fullmatch(r"[0-9]{3}", code) else "unknown"
+                received = body.stat().st_size if body.is_file() else 0
+                raise RuntimeError(f"Artifact range {index}: curl exit={result.returncode}, HTTP={code}, received={received}/{end-start+1}")
             if not body.is_file() or body.stat().st_size != end - start + 1:
                 raise RuntimeError("Artifact range has an unexpected size")
             if not headers.is_file() or headers.stat().st_size > 131072:
