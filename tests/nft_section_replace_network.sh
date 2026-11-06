@@ -33,10 +33,10 @@ add set inet Fixture trafira_rule_vpn_ip6_ports { type ipv6_addr . inet_service;
 add set inet Fixture trafira_rule_vpn_sources { type ipv4_addr; elements = { 192.168.1.5 }; }
 add set inet Fixture trafira_rule_vpn_fully_sources { type ipv4_addr; elements = { 192.168.1.6 }; }
 add set inet Fixture trafira_rule_other_subnets { type ipv4_addr; elements = { 198.51.100.99 }; }
-add chain inet Fixture priority { type filter hook output priority 0; policy accept; }
-add rule inet Fixture priority ip daddr . udp dport @trafira_rule_vpn_ip_ports counter accept comment "vpn"
-add rule inet Fixture priority ip6 daddr . udp dport @trafira_rule_vpn_ip6_ports counter accept comment "vpn6"
-add rule inet Fixture priority ip daddr @trafira_rule_other_subnets counter accept comment "other"
+add chain inet Fixture route_select { type filter hook output priority 0; policy accept; }
+add rule inet Fixture route_select ip daddr . udp dport @trafira_rule_vpn_ip_ports counter accept comment "vpn"
+add rule inet Fixture route_select ip6 daddr . udp dport @trafira_rule_vpn_ip6_ports counter accept comment "vpn6"
+add rule inet Fixture route_select ip daddr @trafira_rule_other_subnets counter accept comment "other"
 NFT
 apply() {
   ip netns exec "$namespace" ucode -L "$ROOT_DIR/trafira/files/usr/lib" \
