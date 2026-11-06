@@ -1257,6 +1257,10 @@ function launch_subscription_worker(args) {
 }
 
 function subscription_update_worker(state_file, output_file, section, source_index) {
+    // Publish from the worker before doing any work. The parent may resume
+    // after this job has finished and must not rewrite its terminal state.
+    if (!set_subscription_running_job_pid(state_file, fs.readlink("/proc/self")))
+        exit(1);
     let status = command_status(command_from_args([
         BIN_PATH,
         "subscription_update",
@@ -1296,10 +1300,8 @@ function subscription_update_async(section, source_index) {
         as_string(source_index)
     ]);
 
-    if (pid == "" || !set_subscription_running_job_pid(state_file, pid)) {
-        if (pid != "")
-            command_success_from_args([ "kill", pid ]);
-        subscription_job_json_response(false, "", "Failed to write subscription update worker pid");
+    if (!job_pid_valid(pid)) {
+        subscription_job_json_response(false, "", "Failed to start subscription update worker");
         exit(1);
     }
 

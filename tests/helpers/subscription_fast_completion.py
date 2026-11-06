@@ -12,6 +12,23 @@ LIB = ROOT / "trafira/files/usr/lib"
 
 
 class FastSubscriptionJobs(unittest.TestCase):
+    def test_worker_does_not_update_when_pid_cannot_be_published(self):
+        with tempfile.TemporaryDirectory(prefix="trafira-sub-pid-") as tmp:
+            work = Path(tmp)
+            state = work / "state.json"
+            state.mkdir()
+            called = work / "called"
+            service = work / "trafira-fixture"
+            service.write_text(f'#!/bin/sh\nprintf called > "{called}"\n')
+            service.chmod(0o755)
+            env = dict(os.environ, TRAFIRA_BIN=str(service), TRAFIRA_LIB=str(LIB))
+            result = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "components/updates.uc"),
+                                     "subscription-update-worker", str(state), str(work / "output"), "proxy", "2"],
+                                    env=env, capture_output=True, text=True, timeout=5)
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertFalse(called.exists(), "unregistered worker executed an update")
+            self.assertTrue(state.is_dir(), "failed registration changed its target")
+
     def test_completed_success_and_failure_keep_their_job_id(self):
         for code in [0, 7]:
             with self.subTest(exit_code=code), tempfile.TemporaryDirectory(prefix="trafira-fast-sub-") as tmp:

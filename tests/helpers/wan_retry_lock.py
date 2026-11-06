@@ -150,6 +150,7 @@ class WanRetryLock(unittest.TestCase):
                 groups.append(process.pid)
                 stdout, stderr = process.communicate(timeout=3)
                 self.assertEqual(process.returncode, 0, stdout + stderr)
+                return process.pid
 
             lock_path = work / "procd.lock"
             descriptor = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
@@ -202,13 +203,17 @@ class WanRetryLock(unittest.TestCase):
                 calls.unlink()
                 # Closing the inherited procd descriptor must leave cancellation
                 # effective as well as preserving the unrelated inherited FD.
-                schedule(pass_fds=(1001,), delay="2")
+                cancelled_group = schedule(pass_fds=(1001,), delay="2")
                 subprocess.run(
                     ["ucode", "-L", str(LIB), str(INITD),
                      "cancel-scheduled-start-retry", str(pid_file)],
                     env=env, check=True, timeout=3,
                 )
                 self.assertFalse(pid_file.exists(), "cancelled retry left a pid file")
+                deadline = time.monotonic() + 0.4
+                while live_group(cancelled_group) and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertFalse(live_group(cancelled_group), "cancelled retry left live descendants")
                 time.sleep(2.3)
                 self.assertFalse(calls.exists(), "cancelled retry invoked SERVICE_INIT")
                 # Report the lock assertion after verifying that releasing it did
