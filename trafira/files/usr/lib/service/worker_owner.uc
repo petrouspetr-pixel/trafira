@@ -107,12 +107,12 @@ function discard(path) {
 function publish(path, pid, role, generation) {
     if (!uuid(generation) || !ROLES[role]) return null;
     let deadline = clock(true)[0] + 2, process;
-    do {
+    while (clock(true)[0] < deadline) {
         process = identity(pid);
         if (process && process.state != "Z" && process.pid == process.group &&
             process.pid == process.session && role_matches(process, role) && marked(process, generation)) break;
         process = null; sleep(10);
-    } while (clock(true)[0] < deadline);
+    }
     if (!process) return null;
     let record = {version:1, role, pid:process.pid, ticks:process.ticks,
         group:process.group, session:process.session, token:generation};
@@ -123,14 +123,14 @@ function publish(path, pid, role, generation) {
 function wait(path, role, launcher_pid, launcher_ticks) {
     let self = identity(), deadline = clock(true)[0] + 5;
     if (!self || !uuid(getenv("TRAFIRA_WORKER_TOKEN"))) return null;
-    do {
+    while (clock(true)[0] < deadline) {
         let record = current(path, role);
         if (record && record.pid == self.pid && record.ticks == self.ticks &&
             record.token == getenv("TRAFIRA_WORKER_TOKEN")) return record;
         let launcher = identity(launcher_pid);
         if (!launcher || launcher.state == "Z" || launcher.ticks != launcher_ticks) return null;
         sleep(10);
-    } while (clock(true)[0] < deadline);
+    }
     return null;
 }
 function owned(path, record) { return same(current(path, record.role), record); }
@@ -163,7 +163,7 @@ function cancel_locked(path, role) {
     let self = identity();
     if (!self || self.group == record.group || record.unverified) return {ok:false, owner:record};
     let deadline = clock(true)[0] + 2, trusted = !record.orphaned;
-    do {
+    while (clock(true)[0] < deadline) {
         let group = members(record, trusted);
         // No freezing: a killed canceler must never leave a stopped group.
         for (let item in group.owned) if (item.pid != record.pid) kill_process(item);
@@ -174,7 +174,7 @@ function cancel_locked(path, role) {
             return {ok:forget_locked(path, record), owner:record};
         }
         sleep(20);
-    } while (clock(true)[0] < deadline);
+    }
     // Keep the generation available for a later cancellation attempt.
     return {ok:false, owner:record};
 }
