@@ -1458,10 +1458,13 @@ function restore_sing_box_backup(backup_binary) {
 function restore_file_backup(target_path, backup_path) {
     if (ram_extended_update && backup_path == tmp_dir + "/ram-core/libcronet.so.gz")
         return restore_ram_backup(target_path, backup_path, "0644");
-    if (as_string(backup_path) != "" && file_nonempty(backup_path))
-        return move_file_portable(backup_path, target_path);
+    if (as_string(backup_path) != "") {
+        // A named backup that was not created (or was lost) does not mean the
+        // original was absent. Never delete the remaining target in that case.
+        return file_nonempty(backup_path) && move_file_portable(backup_path, target_path);
+    }
     remove_file(target_path);
-    return true;
+    return fs.lstat(target_path) == null;
 }
 
 function restore_sing_box_service_from_marker(marker) {
@@ -1951,8 +1954,8 @@ function restore_sing_box_after_failed_extended_install(previous_variant, backup
     if (as_string(archive_file) != "")
         remove_file(archive_file);
     let restore_status = true;
-    if (cronet_touched)
-        restore_file_backup("/usr/lib/libcronet.so", backup_cronet);
+    if (cronet_touched && !restore_file_backup("/usr/lib/libcronet.so", backup_cronet))
+        restore_status = false;
     if (!restore_sing_box_install_backup(previous_variant, backup_binary))
         restore_status = false;
     restore_sing_box_variant_state(previous_marker, previous_version_state);
@@ -2421,12 +2424,12 @@ function install_sing_box_extended_package(action) {
                 action_fail("sing_box", action, "Failed to backup current sing-box binary", current_version, latest_version);
         }
         if (file_exists("/usr/lib/libcronet.so")) {
-            cronet_touched = true;
             backup_cronet = "/usr/lib/libcronet.so.trafira-backup." + owner_pid();
             if (!move_file_to_backup("/usr/lib/libcronet.so", backup_cronet)) {
                 restore_sing_box_after_failed_extended_package_install(current_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched);
                 action_fail("sing_box", action, "Failed to backup current libcronet.so", current_version, latest_version);
             }
+            cronet_touched = true;
         }
     }
 
@@ -2447,14 +2450,16 @@ function install_sing_box_extended_package(action) {
         }
     }
     if (!cronet_touched && file_exists("/usr/lib/libcronet.so")) {
-        cronet_touched = true;
         backup_cronet = "/usr/lib/libcronet.so.trafira-backup." + owner_pid();
         if (!move_file_to_backup("/usr/lib/libcronet.so", backup_cronet)) {
             restore_sing_box_after_failed_extended_package_install(current_variant, backup_binary, backup_cronet, previous_marker, previous_version_state, package_file, cronet_touched);
             action_fail("sing_box", action, "Failed to backup current libcronet.so", current_version, latest_version);
         }
+        cronet_touched = true;
     }
 
+    // The package may create a library even when no original existed.
+    cronet_touched = true;
     if (!(transition ? apply_apk_core_transition(transition, "sing-box-extended", package_file, package_version) :
         run_logged_install("Installing sing-box-extended package " + release.asset_name, (isolated_extended_apk_update ? isolated_apk_core_command([ package_file ], false) : pkg_install_files_command([ package_file ]))))) {
         let install_error = package_failure_message("Failed to install sing-box-extended package");
@@ -2596,7 +2601,6 @@ function install_sing_box_extended(action, compressed) {
         }
     }
     if (cronet_path != "") {
-        cronet_touched = true;
         if (file_exists("/usr/lib/libcronet.so")) {
             backup_cronet = "/usr/lib/libcronet.so.trafira-backup." + owner_pid();
             if (!move_file_to_backup("/usr/lib/libcronet.so", backup_cronet)) {
@@ -2606,6 +2610,9 @@ function install_sing_box_extended(action, compressed) {
                 action_fail("sing_box", action, "Failed to backup current libcronet.so", current_version, latest_version);
             }
         }
+        // move_file_to_backup() leaves the source intact on failure. Only a
+        // successful backup (or a previously absent library) needs rollback.
+        cronet_touched = true;
     }
 
     for (let item in [
