@@ -2,6 +2,7 @@
 
 let fs = require("fs");
 let runtime_dir_lock = require("service.runtime_dir_lock");
+let worker_owner = require("service.worker_owner");
 let constants = require("core.constants");
 let uci_core = require("core.uci");
 
@@ -218,37 +219,16 @@ function start_retry_pending(path) {
 
 function cancel_scheduled_start_retry(path) {
     path = as_string(path || START_RETRY_PID_FILE);
-    let pid = first_line_value(path);
-    if (pid_alive(pid))
-        command_success_from_args([ "kill", pid ]);
-    if (file_exists(path))
-        unlink_file(path);
+    return worker_owner.cancel(path, "wan").ok;
 }
 
-function publish_start_retry_pid(path, pid) {
-    let stamp = clock(), temporary = sprintf("%s.%d.%d.tmp", path, stamp[0], stamp[1]);
-    let text = pid + "\n", output = fs.open(temporary, "wex", 384);
-    if (!output)
-        return false;
-    let written = output.write(text);
-    output.close();
-    // Verify a short write, including delayed close errors, before publication.
-    if (written == length(text) && fs.readfile(temporary) == text && fs.rename(temporary, path))
-        return true;
-    fs.unlink(temporary);
-    return false;
-}
-
-function scheduled_start_retry_worker(path, delay_seconds, launcher_pid, init_script) {
-    let pid = fs.readlink("/proc/self");
-    // No sleep subprocess or service invocation may escape a failed save.
-    while (fs.readfile(path) != pid + "\n") {
-        if (!fs.access("/proc/" + as_string(launcher_pid)))
-            return 1;
-        sleep(10);
-    }
+function scheduled_start_retry_worker(path, delay_seconds, launcher_pid, init_script, launcher_ticks) {
+    let owner = worker_owner.wait(path, "wan", launcher_pid, launcher_ticks);
+    if (!owner)
+        return 1;
     sleep(int(delay_seconds) * 1000);
-    unlink_file(path);
+    if (!worker_owner.owned(path, owner) || !worker_owner.forget(path, owner))
+        return 1;
     return command_status_from_args([ init_script, "retry_start_on_wan_up" ]);
 }
 
@@ -258,13 +238,26 @@ function schedule_start_retry(path, delay_seconds) {
     if (!numeric_text(delay_seconds))
         delay_seconds = "30";
 
-    let scheduled_pid = first_line_value(path);
-    if (pid_alive(scheduled_pid))
-        return true;
-    if (file_exists(path))
-        unlink_file(path);
     if (!ensure_parent_dir(path))
         return false;
+    let guard = worker_owner.lock(path);
+    if (!guard)
+        return false;
+    let existing = worker_owner.current(path, "wan");
+    if (existing && !existing.orphaned) {
+        guard.close();
+        return true;
+    }
+    if (existing && !worker_owner.cancel(path, "wan", guard).ok) {
+        guard.close();
+        return false;
+    }
+    worker_owner.discard(path);
+    let launcher = worker_owner.identity(), token = worker_owner.token();
+    if (!launcher || !token) {
+        guard.close();
+        return false;
+    }
 
     // rc.common's procd lock must not outlive this action in the sleeping retry.
     let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
@@ -273,18 +266,23 @@ function schedule_start_retry(path, delay_seconds) {
 
     let script = sourcepath(), library = getenv("TRAFIRA_LIB") || fs.dirname(fs.dirname(script));
     let worker = command_from_args([
-        "ucode", "-L", library, script, "scheduled-start-retry-worker",
-        path, delay_seconds, fs.readlink("/proc/self"), SERVICE_INIT
+        "setsid", "ucode", "-L", library, script, "scheduled-start-retry-worker",
+        path, delay_seconds, launcher.pid, SERVICE_INIT, launcher.ticks
     ]);
-    let result = command_capture(worker + " </dev/null >/dev/null 2>&1 & echo $!");
+    let result = command_capture("TRAFIRA_WORKER_TOKEN=" + shell_quote(token) + " " + worker + " </dev/null >/dev/null 2>&1 & echo $!");
     let pid = trim(result.output);
-    if (result.status != 0 || !numeric_text(pid))
-        return false;
-
-    if (!publish_start_retry_pid(path, pid)) {
-        command_success_from_args([ "kill", pid ]);
+    if (result.status != 0 || !numeric_text(pid)) {
+        guard.close();
         return false;
     }
+
+    if (!worker_owner.publish(path, pid, "wan", token)) {
+        worker_owner.kill_unpublished(pid, "wan", token);
+        worker_owner.discard(path);
+        guard.close();
+        return false;
+    }
+    guard.close();
     return true;
 }
 
@@ -801,9 +799,9 @@ else if (mode == "start-retry-pending")
 else if (mode == "schedule-start-retry")
     exit(schedule_start_retry(ARGV[1], ARGV[2]) ? 0 : 1);
 else if (mode == "scheduled-start-retry-worker")
-    exit(scheduled_start_retry_worker(ARGV[1], ARGV[2], ARGV[3], ARGV[4]));
+    exit(scheduled_start_retry_worker(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5]));
 else if (mode == "cancel-scheduled-start-retry")
-    cancel_scheduled_start_retry(ARGV[1]);
+    exit(cancel_scheduled_start_retry(ARGV[1]) ? 0 : 1);
 else if (mode == "begin-action") {
     let job_id = begin_external_service_action(ARGV[1], ARGV[2] || "initd", ARGV[3]);
     if (job_id != "")

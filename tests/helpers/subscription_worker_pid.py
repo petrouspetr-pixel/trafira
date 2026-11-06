@@ -211,7 +211,7 @@ while True: time.sleep(1)
                        "trafira.source.user_agent=Harness\n")
         self.env.update(TRAFIRA_UCI_STATE_FILE=str(uci), WORKER_DOWNLOAD_STARTED=str(self.work / "download-started"))
 
-    def test_stop_active_download_terminates_descendants_and_preserves_cache(self):
+    def active_cancel(self, crash):
         self.install_download_fixture(True)
         cache = self.work / "subscriptions/proxy-subscription-1.json"
         cache.parent.mkdir()
@@ -225,6 +225,9 @@ while True: time.sleep(1)
         self.assertTrue(wait_until(started.exists, 42), self.logs.read_text())
         download = json.loads(started.read_text())
         self.groups.append(download["group"])
+        if crash:
+            os.kill(int(self.pidfile.read_text()), signal.SIGKILL)
+            time.sleep(0.05)
         result, output = self.run_mode("stop-deferred-bootstrap-worker")
         self.assertEqual(result.returncode, 0, output)
         self.assertTrue(wait_until(lambda: not live_group(download["group"])),
@@ -232,6 +235,12 @@ while True: time.sleep(1)
         self.assertEqual(cache.read_bytes(), original)
         self.assertFalse(self.pidfile.exists())
         self.assertFalse(list(cache.parent.glob(".worker-*")), "worker scratch directory survived cancellation")
+
+    def test_stop_active_download_terminates_descendants_and_preserves_cache(self):
+        self.active_cancel(False)
+
+    def test_orphaned_download_is_cancelled_after_its_worker_dies(self):
+        self.active_cancel(True)
 
     def test_recovery_reload_survives_worker_cancellation(self):
         self.install_download_fixture(False)

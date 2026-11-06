@@ -6,6 +6,8 @@ let connections = require("config.connections");
 let subscription_share_link = require("subscription.share_link");
 let subscription_io = require("subscription.io");
 let subscription_bundle = require("subscription.bundle");
+let worker_owner = require("service.worker_owner");
+let subscription_worker_scratch = "";
 
 const CONFIG_NAME = getenv("TRAFIRA_CONFIG_NAME") || "trafira";
 const LIB_DIR = getenv("TRAFIRA_LIB") || "/usr/lib/trafira";
@@ -684,6 +686,8 @@ function ensure_runtime_cache_format() {
 }
 
 function temp_path(dir, section, kind) {
+    if (subscription_worker_scratch != "" && dir == TMP_SUBSCRIPTION_FOLDER)
+        dir = subscription_worker_scratch;
     ensure_dir(dir);
     let stamp = clock();
     return sprintf("%s/%s.%s.%d.%d", dir, as_string(section), as_string(kind), stamp[0], stamp[1]);
@@ -2318,14 +2322,7 @@ function prepare_subscription_caches(phase, already_prepared, no_refresh) {
     return 1;
 }
 
-function current_pid() {
-    return trim(command_output("sh -c 'echo $PPID'"));
-}
 
-function pid_running(pid) {
-    pid = as_string(pid);
-    return match(pid, /^[0-9]+$/) != null && command_success_from_args([ "kill", "-0", pid ]);
-}
 
 function state_ucode_status(args) {
     return command_status_from_args(command_args_with([ "ucode", "-L", LIB_DIR, LIB_DIR + "/service/state.uc" ], args)) == 0;
@@ -2337,7 +2334,7 @@ function mark_pending_subscription_recovery_reload() {
 
 function trigger_subscription_recovery_reload(worker) {
     if (worker)
-        command_status_from_args([ TRAFIRA_SERVICE_INIT, "reload", "subscription_deferred_recovery" ]);
+        command_status_from_args([ "setsid", TRAFIRA_SERVICE_INIT, "reload", "subscription_deferred_recovery" ]);
     else
         mark_pending_subscription_recovery_reload();
 }
@@ -2379,6 +2376,7 @@ function subscription_bootstrap_retry_result(deferred_sections) {
 }
 
 function worker_env() {
+    let launcher = worker_owner.identity();
     return {
         TRAFIRA_CONFIG_NAME: CONFIG_NAME,
         TRAFIRA_LIB: LIB_DIR,
@@ -2398,6 +2396,7 @@ function worker_env() {
         TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_FORMAT,
         TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE,
         TRAFIRA_SUBSCRIPTION_WORKER_LAUNCHER_PID: fs.readlink("/proc/self"),
+        TRAFIRA_SUBSCRIPTION_WORKER_LAUNCHER_TICKS: launcher ? launcher.ticks : "",
         TRAFIRA_SUBSCRIPTION_UPDATE_LOCK_DIR,
         TRAFIRA_PENDING_RELOAD_FILE,
         TRAFIRA_SERVICE_INIT,
@@ -2411,33 +2410,35 @@ function worker_env() {
     };
 }
 
-function launch_self_worker(args) {
+function launch_self_worker(args, generation) {
     // Shells may relocate an inherited high descriptor before redirections.
     // Close the procd lock in this process before any worker shell can fork.
     let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
     if (inherited_lock)
         inherited_lock.close();
-    let command_args = command_args_with([ "ucode", "-L", LIB_DIR, LIB_DIR + "/subscription/cache.uc" ], args);
-    let command = command_env(worker_env()) + " " + command_from_args(command_args) + " >/dev/null 2>&1 1000>&- & echo $!";
+    let command_args = command_args_with([ "setsid", "ucode", "-L", LIB_DIR, LIB_DIR + "/subscription/cache.uc" ], args);
+    let environment = worker_env();
+    environment.TRAFIRA_WORKER_TOKEN = generation;
+    let command = command_env(environment) + " " + command_from_args(command_args) + " </dev/null >/dev/null 2>&1 1000>&- & echo $!";
     return trim(command_output("sh -c " + shell_quote(command)));
 }
 
-function start_deferred_subscription_bootstrap_retry_worker(deferred_sections) {
-    deferred_sections = trim(as_string(deferred_sections));
-    if (deferred_sections == "")
-        return 0;
-
-    ensure_runtime_dirs();
-    let existing_pid = trim(file_first_line_value(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE));
-    if (pid_running(existing_pid)) {
-        log_message("Subscription bootstrap retry worker is already running with PID " + existing_pid, "debug");
+function start_deferred_worker_locked(deferred_sections, guard) {
+    let path = TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE;
+    let existing = worker_owner.current(path, "subscription");
+    if (existing && !existing.orphaned) {
+        log_message("Subscription bootstrap retry worker is already running with PID " + existing.pid, "debug");
         return 0;
     }
-
-    let pid = launch_self_worker([ "deferred-bootstrap-worker", deferred_sections ]);
-    if (!pid_running(pid) || !write_file(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE, pid + "\n")) {
-        if (pid_running(pid))
-            command_success_from_args([ "kill", pid ]);
+    if (existing && !worker_owner.cancel(path, "subscription", guard).ok)
+        return 1;
+    worker_owner.discard(path);
+    let generation = worker_owner.token();
+    if (!generation) return 1;
+    let pid = launch_self_worker([ "deferred-bootstrap-worker", deferred_sections ], generation);
+    if (!worker_owner.publish(path, pid, "subscription", generation)) {
+        worker_owner.kill_unpublished(pid, "subscription", generation);
+        worker_owner.discard(path);
         log_message("Failed to publish subscription bootstrap retry worker PID; cancelling worker", "error");
         return 1;
     }
@@ -2445,13 +2446,42 @@ function start_deferred_subscription_bootstrap_retry_worker(deferred_sections) {
     return 0;
 }
 
+function start_deferred_subscription_bootstrap_retry_worker(deferred_sections) {
+    deferred_sections = trim(as_string(deferred_sections));
+    if (deferred_sections == "") return 0;
+    ensure_runtime_dirs();
+    let guard = worker_owner.lock(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE);
+    if (!guard) return 1;
+    let result = 1;
+    try { result = start_deferred_worker_locked(deferred_sections, guard); } catch (e) {}
+    guard.close();
+    return result;
+}
+
+function worker_scratch_path(owner) {
+    return TMP_SUBSCRIPTION_FOLDER + "/.worker-" + owner.pid + "-" + owner.ticks;
+}
+
+function clean_worker_scratch(owner) {
+    if (!owner) return;
+    let directory = worker_scratch_path(owner), info = fs.lstat(directory);
+    if (!info || info.type != "directory") return;
+    for (let name in fs.lsdir(directory) || []) fs.unlink(directory + "/" + name);
+    fs.rmdir(directory);
+}
+
 function stop_deferred_subscription_bootstrap_retry_worker() {
-    let pid = trim(file_first_line_value(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE));
-    if (pid_running(pid)) {
-        command_success_from_args([ "kill", pid ]);
-        log_message("Stopped subscription bootstrap retry worker", "info");
+    let result = worker_owner.cancel(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE, "subscription");
+    if (!result.ok) {
+        log_message("Could not stop all subscription bootstrap retry processes", "error");
+        return 1;
     }
-    unlink_path(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE);
+    clean_worker_scratch(result.owner);
+    subscription_bundle.cleanup(TMP_SUBSCRIPTION_FOLDER);
+    subscription_bundle.cleanup(TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR);
+    if (result.owner)
+        log_message("Stopped subscription bootstrap retry worker", "info");
+    return 0;
 }
 
 function run_deferred_subscription_bootstrap(deferred_sections) {
@@ -2489,27 +2519,27 @@ function run_deferred_subscription_bootstrap(deferred_sections) {
 
 function deferred_subscription_bootstrap_retry_worker(remaining_sections) {
     remaining_sections = trim(as_string(remaining_sections));
-    let worker_pid = fs.readlink("/proc/self");
-    let launcher_pid = getenv("TRAFIRA_SUBSCRIPTION_WORKER_LAUNCHER_PID");
-    // No subprocess may start until the launcher has published this PID.
-    // If it crashes first, leave without touching another worker's PID file.
-    if (launcher_pid) {
-        while (trim(file_first_line_value(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE)) != worker_pid) {
-            if (!fs.access("/proc/" + launcher_pid))
-                return;
-            sleep(10);
-        }
+    let path = TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE;
+    let owner = worker_owner.wait(path, "subscription",
+        getenv("TRAFIRA_SUBSCRIPTION_WORKER_LAUNCHER_PID"), getenv("TRAFIRA_SUBSCRIPTION_WORKER_LAUNCHER_TICKS"));
+    if (!owner) return;
+    subscription_worker_scratch = worker_scratch_path(owner);
+    if (!fs.mkdir(subscription_worker_scratch, 448)) {
+        log_message("Could not prepare subscription retry workspace", "error");
+        worker_owner.forget(path, owner);
+        return;
     }
 
     while (remaining_sections != "") {
         sleep(30000);
+        if (!worker_owner.owned(path, owner)) break;
         if (!sing_box_service_running()) {
             log_message("Stopping subscription bootstrap retry worker because sing-box is not running", "warn");
             break;
         }
 
         ensure_runtime_dirs();
-        if (!state_ucode_status([ "acquire-runtime-dir-lock", TRAFIRA_SUBSCRIPTION_UPDATE_LOCK_DIR, current_pid() ])) {
+        if (!state_ucode_status([ "acquire-runtime-dir-lock", TRAFIRA_SUBSCRIPTION_UPDATE_LOCK_DIR, owner.pid ])) {
             log_message("Subscription bootstrap retry skipped because another subscription update is running", "debug");
             continue;
         }
@@ -2525,7 +2555,8 @@ function deferred_subscription_bootstrap_retry_worker(remaining_sections) {
         remaining_sections = result.remaining;
     }
 
-    unlink_path(TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE);
+    clean_worker_scratch(owner);
+    worker_owner.forget(path, owner);
 }
 
 let mode = ARGV[0] || "";
@@ -2654,7 +2685,7 @@ else if (mode == "start-deferred-bootstrap-worker") {
     exit(start_deferred_subscription_bootstrap_retry_worker(ARGV[1] || ""));
 }
 else if (mode == "stop-deferred-bootstrap-worker") {
-    stop_deferred_subscription_bootstrap_retry_worker();
+    exit(stop_deferred_subscription_bootstrap_retry_worker());
 }
 else if (mode == "deferred-bootstrap-worker") {
     deferred_subscription_bootstrap_retry_worker(ARGV[1] || "");

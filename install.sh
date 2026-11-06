@@ -797,9 +797,11 @@ function installer_args_contain(args, value) {
     return false;
 }
 
-function installer_kill_process_tree(pid) {
+function installer_kill_process_tree(pid, expected_starttime) {
     let starttime = installer_process_starttime(pid);
     if (starttime == "" || INSTALLER_DEADLINE_HELPER == "")
+        return false;
+    if (as_string(expected_starttime) != "" && starttime != expected_starttime)
         return false;
     return normalize_status(system(command_from_args([
         INSTALLER_DEADLINE_HELPER,
@@ -809,14 +811,38 @@ function installer_kill_process_tree(pid) {
     ]) + " >/dev/null 2>&1")) == 0;
 }
 
+function installer_retry_owner_starttime(pid, args, text) {
+    let owner;
+    try { owner = json(text); } catch (e) { return ""; }
+    if (!owner || type(owner) != "object" || owner.version != 1 || owner.role != "wan" ||
+        type(owner.pid) != "string" || owner.pid != pid || type(owner.ticks) != "string" ||
+        !match(owner.ticks, /^[1-9][0-9]*$/) || type(owner.group) != "string" || owner.group != pid ||
+        type(owner.session) != "string" || owner.session != pid || type(owner.token) != "string" ||
+        !match(owner.token, /^[a-f0-9-]{36}$/))
+        return "";
+    let script = index(args, INSTALLER_TRAFIRA_LIB + "/service/initd.uc");
+    if (script < 0 || args[script + 1] != "scheduled-start-retry-worker" ||
+        args[script + 2] != INSTALLER_START_RETRY_PID_FILE || args[script + 5] != INSTALLER_TRAFIRA_INIT ||
+        installer_process_starttime(pid) != owner.ticks)
+        return "";
+    return owner.ticks;
+}
+
 function installer_cancel_stale_start_retry() {
     let pid = trim(read_text_file(INSTALLER_START_RETRY_PID_FILE));
     if (match(pid, /^[0-9]+$/)) {
         let args = installer_process_args(pid);
-        if (installer_args_contain(args, INSTALLER_TRAFIRA_INIT) &&
+        // Standalone recovery must also work when installed modules are gone.
+        // Modern PID files authorize nothing without their saved generation.
+        let owner = read_text_file(INSTALLER_START_RETRY_PID_FILE + ".owner.json");
+        let starttime = owner != "" ? installer_retry_owner_starttime(pid, args, owner) : "";
+        if (starttime != "")
+            installer_kill_process_tree(pid, starttime);
+        else if (owner == "" && installer_args_contain(args, INSTALLER_TRAFIRA_INIT) &&
             installer_args_contain(args, "retry_start_on_wan_up"))
             installer_kill_process_tree(pid);
     }
+    unlink_file(INSTALLER_START_RETRY_PID_FILE + ".owner.json");
     unlink_file(INSTALLER_START_RETRY_PID_FILE);
     unlink_file(INSTALLER_START_RETRY_FILE);
 }
