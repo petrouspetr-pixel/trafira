@@ -70,13 +70,17 @@ printf 'orphan quota recovery and foreign entries checks passed\n'
 # be followed by deleting that input. No managed production caller needs this
 # arrangement, but preserving it prevents a destructive cleanup edge case.
 "$ORPHAN_CACHE_REAL_CP" "$WORK_DIR/old" "$TRAFIRA_RULESET_CACHE_DIR/.stage.SourcE"
+ln "$TRAFIRA_RULESET_CACHE_DIR/.stage.SourcE" "$WORK_DIR/source-hardlink"
 ucode -L "$ROOT_DIR/trafira/files/usr/lib" -e '
 let fs=require("fs"),cache=require("singbox.ruleset_cache"),root=getenv("ORPHAN_CACHE_TEST");
-let source=getenv("TRAFIRA_RULESET_CACHE_DIR")+"/.stage.SourcE",before=fs.readfile(source),diagnostic={};
-cache.save({type:"remote",url:"https://example.invalid/source-guard.srs",format:"binary"},source,null,diagnostic);
-assert(fs.readfile(source)==before,"reserved staging input must not be deleted by orphan cleanup");
+let source=getenv("TRAFIRA_RULESET_CACHE_DIR")+"/.stage.SourcE",before=fs.readfile(source);
+for (let input in [source,getenv("TRAFIRA_RULESET_CACHE_DIR")+"/../cache/.stage.SourcE",root+"/source-hardlink"]) {
+    let diagnostic={};
+    cache.save({type:"remote",url:"https://example.invalid/source-guard.srs",format:"binary"},input,null,diagnostic);
+    assert(fs.readfile(source)==before,"reserved staging input/alias/hardlink must not be deleted by orphan cleanup");
+}
 '
-rm "$TRAFIRA_RULESET_CACHE_DIR/.stage.SourcE"
+rm "$TRAFIRA_RULESET_CACHE_DIR/.stage.SourcE" "$WORK_DIR/source-hardlink"
 
 # Deterministic unlink denial with actual ucode/cache I/O: instrument only the
 # fs.unlink boundary in a copied production module, leaving locks and snapshots

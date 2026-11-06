@@ -125,7 +125,13 @@ function stage(config, candidate, port, credentials) {
     delete bootstrap.detour;
     delete bootstrap.domain_resolver;
     let state = {index:index_outbounds(config), added:{}, visiting:{}, outbounds:[], endpoints:[]};
-    dependency(candidate, state, 0);
+    if (candidate == "") {
+        // Even explicitly direct downloads need private DNS: the system
+        // forwarder can still point at the stopped production core.
+        candidate = "ruleset-bootstrap-direct";
+        push(state.outbounds, {type:"direct", tag:candidate});
+    }
+    else dependency(candidate, state, 0);
     if (state.error) return {error:"unsupported outbound dependency"};
     let route = {rules:[], rule_set:[], final:candidate, default_domain_resolver:"bootstrap-dns-server"};
     for (let key in ["default_mark", "default_interface", "auto_detect_interface"])
@@ -167,21 +173,21 @@ function fetch(config, rule, candidate, directory, seconds) {
     let port = 20000 + (int(owner.pid) % 30000);
     let file = directory + "/config.json";
     let script = directory + "/fetch.sh";
-    let staged = candidate == "" ? null : stage(config, candidate, port, {username:"bootstrap",password:auth});
-    if (staged && staged.error) {
+    let staged = stage(config, candidate, port, {username:"bootstrap",password:auth});
+    if (staged.error) {
         warn("Rule-set startup bootstrap refused: ", staged.error, "\n");
         return false;
     }
-    if (staged && length(staged.endpoints || []) && active_core()) {
+    if (length(staged.endpoints || []) && active_core()) {
         warn("Rule-set startup bootstrap refused: native WireGuard preparation would duplicate an active sing-box peer\n");
         return false;
     }
     fs.unlink(directory + "/download");
     fs.unlink(directory + "/curl.pid");
-    if (staged && fs.writefile(file, sprintf("%J", staged)) == null) return false;
+    if (fs.writefile(file, sprintf("%J", staged)) == null) return false;
     if (fs.writefile(script, worker_script()) == null) return false;
     return run(["sh", script, directory, owner.pid, owner.ticks, seconds,
-        rule.url, "bootstrap:" + auth, staged ? "" + port : "-"]);
+        rule.url, "bootstrap:" + auth, "" + port]);
 }
 function prepare(config, version, workspace, validation, limits) {
     validation = validation || {};

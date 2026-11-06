@@ -22,7 +22,7 @@ def serve_dns():
             labels.append(request[offset + 1:offset + 1 + size].decode("ascii"))
             offset += size + 1
         offset += 1
-        name = ".".join(labels)
+        name = ".".join(labels).lower()
         kind = struct.unpack("!H", request[offset:offset + 2])[0]
         with (root / "dns.log").open("a") as output:
             output.write(name + "\n")

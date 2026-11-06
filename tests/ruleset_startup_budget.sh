@@ -14,14 +14,16 @@ cat >"$WORK_DIR/bin/curl" <<'SH'
 set -eu
 limit=0
 out=''
+proxy=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --max-time) limit="$2"; shift ;;
     --output) out="$2"; shift ;;
-    --proxy) echo 'unexpected direct fallback' >&2; exit 97 ;;
+    --proxy) proxy=1; shift ;;
   esac
   shift
 done
+[ "$proxy" = 1 ] || { echo 'unexpected system DNS fallback' >&2; exit 97; }
 printf '%s\n' "$limit" >>"$STARTUP_BUDGET_TEST/requests"
 if [ "$limit" -lt 11 ]; then sleep "$limit"; exit 28; fi
 sleep 11
@@ -30,6 +32,10 @@ SH
 cat >"$WORK_DIR/bin/sing-box" <<'SH'
 #!/bin/sh
 set -eu
+if [ "$1" = run ]; then
+  trap 'exit 0' TERM INT
+  while :; do sleep 0.1; done
+fi
 [ "$1" = rule-set ] || exit 1
 grep -q valid-rules "$3" || exit 1
 cp "$3" "$5"
@@ -38,7 +44,7 @@ chmod +x "$WORK_DIR/bin/curl" "$WORK_DIR/bin/sing-box"
 export PATH="$WORK_DIR/bin:$PATH"
 cat >"$WORK_DIR/check.uc" <<'UC'
 let fs=require("fs"),b=require("singbox.ruleset_bootstrap"),root=getenv("STARTUP_BUDGET_TEST");
-let path=root+"/config.json",c={route:{rule_set:[{type:"remote",tag:"required",format:"source",url:"https://example.invalid/list",http_client:{}}]}};
+let path=root+"/config.json",c={dns:{servers:[{type:"udp",tag:"bootstrap-dns-server",server:"9.9.9.9"}]},route:{rule_set:[{type:"remote",tag:"required",format:"source",url:"https://example.invalid/list",http_client:{}}]}};
 fs.writefile(path,sprintf("%J",c));
 let ok=b.prepare_file(path,"1.14.3");
 assert(ok==(ARGV[0]=="success"),"supervised slow download result");

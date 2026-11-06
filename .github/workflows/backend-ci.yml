@@ -34,7 +34,7 @@ jobs:
   apk-core-transactions:
     name: APK Core Transactions
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5.0.0
       - name: Prepare official OpenWrt APK tool
@@ -42,7 +42,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y zstd
-          curl --proto '=https' --proto-redir '=https' -fsSL --max-time 180 \
+          # The pinned SDK is 284 MB; slow mirrors need more than three minutes.
+          curl --proto '=https' --proto-redir '=https' -fsSL --connect-timeout 15 --max-time 900 \
             https://downloads.openwrt.org/releases/25.12.3/targets/x86/64/openwrt-sdk-25.12.3-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst \
             -o "$RUNNER_TEMP/sdk.tar.zst"
           echo "70fc990b2f9a2705e8bbca610e421a55e789901d4aeba10d9fdd7c89777bf695  $RUNNER_TEMP/sdk.tar.zst" | sha256sum -c -
