@@ -58,7 +58,11 @@ function marked(process, generation) {
     return text != null && index(split(text, "\x00"), "TRAFIRA_WORKER_TOKEN=" + generation) >= 0;
 }
 function role_matches(process, role) {
-    let text = bounded("/proc/" + process.pid + "/cmdline", 8192), expected = ROLES[role];
+    // Script and mode are the first arguments; a long section list after them
+    // must not make a legitimate worker unrecognizable.
+    let file = fs.open("/proc/" + process.pid + "/cmdline", "re"), expected = ROLES[role];
+    if (!file) return false;
+    let text = file.read(8192); file.close();
     if (text == null || !expected) return false;
     let args = split(text, "\x00");
     return index(args, LIB + "/" + expected[0]) >= 0 && index(args, expected[1]) >= 0;

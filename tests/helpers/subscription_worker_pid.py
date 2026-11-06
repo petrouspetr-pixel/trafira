@@ -182,6 +182,14 @@ class SubscriptionWorkerPid(unittest.TestCase):
         self.run_mode("stop-deferred-bootstrap-worker")
         self.assertIsNone(foreign.poll())
 
+    def test_long_deferred_section_list_does_not_break_worker_registration(self):
+        sections = " ".join("section_%04d" % index for index in range(1000))
+        result, output = self.run_mode("start-deferred-bootstrap-worker", sections)
+        self.assertEqual(result.returncode, 0, output)
+        result, output = self.run_mode("stop-deferred-bootstrap-worker")
+        self.assertEqual(result.returncode, 0, output)
+        self.assertFalse(self.pidfile.exists())
+
     def install_download_fixture(self, blocking):
         binary = self.work / "bin"
         real = shutil.which("ucode")
