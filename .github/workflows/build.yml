@@ -70,6 +70,10 @@ jobs:
     name: Build Trafira release packages
     runs-on: ubuntu-24.04
     needs: preparation
+    env:
+      SDK_CACHE_DIR: ${{ runner.temp }}/trafira-sdk-cache
+      IPK_SDK_URL: https://archive.openwrt.org/releases/24.10.6/targets/x86/64/openwrt-sdk-24.10.6-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
+      APK_SDK_URL: https://archive.openwrt.org/releases/25.12.3/targets/x86/64/openwrt-sdk-25.12.3-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
     steps:
       - uses: actions/checkout@v5.0.0
 
@@ -100,6 +104,15 @@ jobs:
           cmake --build /tmp/ucode/build --parallel
           sudo cmake --install /tmp/ucode/build
           sudo ldconfig
+
+      - name: Prepare verified package toolchains
+        run: |
+          python3 tools/download-verified-range.py "$IPK_SDK_URL" \
+            "$SDK_CACHE_DIR/${IPK_SDK_URL##*/}" \
+            --size 258600841 --sha256 9e398ea7efc098e4a986f97efff595e32d08c615fe356bcb3d885d7ad3a39ac0
+          python3 tools/download-verified-range.py "$APK_SDK_URL" \
+            "$SDK_CACHE_DIR/${APK_SDK_URL##*/}" \
+            --size 284199892 --sha256 70fc990b2f9a2705e8bbca610e421a55e789901d4aeba10d9fdd7c89777bf695
 
       - name: Build release artifacts
         shell: bash
