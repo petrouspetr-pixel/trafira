@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import resource
 import signal
 import subprocess
 import sys
@@ -19,7 +20,104 @@ LIB = ROOT / "trafira/files/usr/lib"
 INITD = LIB / "service/initd.uc"
 
 
+def live_group(group):
+    members = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            fields = (entry / "stat").read_text().rsplit(")", 1)[1].split()
+            if int(fields[2]) == group and fields[0] != "Z":
+                members.append(int(entry.name))
+        except (FileNotFoundError, ProcessLookupError):
+            pass
+    return members
+
+
 class WanRetryLock(unittest.TestCase):
+    def test_failed_service_start_does_not_claim_unpublished_retry_was_scheduled(self):
+        with tempfile.TemporaryDirectory(prefix="trafira-wan-log-") as tmp:
+            work = Path(tmp)
+            binary = work / "bin"
+            binary.mkdir()
+            logger = binary / "logger"
+            logger.write_text("#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$WAN_RETRY_LOG\"\n")
+            logger.chmod(0o755)
+            service = binary / "trafira-fixture"
+            service.write_text("#!/bin/sh\nexit 1\n")
+            service.chmod(0o755)
+            pid_file = work / "retry.pid"
+            pid_file.mkdir()
+            uci = work / "uci"
+            uci.write_text("trafira.settings=settings\ntrafira.settings.shutdown_correctly=1\n")
+            logs = work / "logs"
+            env = dict(os.environ, TRAFIRA_LIB=str(LIB),
+                       TRAFIRA_RUNTIME_STATE_DIR=str(work), TRAFIRA_TRANSACTION_DIR=str(work / "transactions"),
+                       TRAFIRA_UI_ACTION_TRACKED="1", TRAFIRA_UCI_STATE_FILE=str(uci),
+                       TRAFIRA_BIN=str(service), TRAFIRA_SERVICE_INIT=str(service),
+                       TRAFIRA_START_RETRY_PID_FILE=str(pid_file), WAN_RETRY_LOG=str(logs),
+                       PATH=str(binary) + os.pathsep + os.environ["PATH"])
+            process = subprocess.Popen(
+                ["ucode", "-L", str(LIB), str(INITD), "start-service", "manual"],
+                env=env, start_new_session=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                stdout, stderr = process.communicate(timeout=5)
+                self.assertNotEqual(process.returncode, 0, stdout + stderr)
+                self.assertNotIn("scheduled an automatic retry", logs.read_text())
+                self.assertIn("[error]", logs.read_text(), "failed scheduling must be reported")
+            finally:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+
+    def test_failed_pid_publication_cancels_worker_and_all_descendants(self):
+        self.assertIsNotNone(shutil.which("ucode"), "real ucode is required")
+        for failure in ("directory", "short-write"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory(prefix="trafira-wan-pid-") as tmp:
+                work = Path(tmp)
+                pid_file, calls = work / "retry.pid", work / "calls"
+                service = work / "service fixture"
+                service.write_text("#!/bin/sh\nprintf invoked > \"$WAN_RETRY_CALLS\"\n")
+                service.chmod(0o755)
+                if failure == "directory":
+                    pid_file.mkdir()
+                env = dict(os.environ, TRAFIRA_LIB=str(LIB),
+                           TRAFIRA_RUNTIME_STATE_DIR=str(work),
+                           TRAFIRA_SERVICE_INIT=str(service), WAN_RETRY_CALLS=str(calls))
+
+                def bound_file():
+                    signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
+                    resource.setrlimit(resource.RLIMIT_FSIZE, (1, 1))
+
+                process = subprocess.Popen(
+                    ["ucode", "-L", str(LIB), str(INITD),
+                     "schedule-start-retry", str(pid_file), "1"],
+                    env=env, start_new_session=True,
+                    preexec_fn=bound_file if failure == "short-write" else None,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                try:
+                    stdout, stderr = process.communicate(timeout=3)
+                    # Observe both assertions before reporting failure, so this
+                    # catches a parent-only kill as well as a late invocation.
+                    deadline = time.monotonic() + 0.4
+                    while live_group(process.pid) and time.monotonic() < deadline:
+                        time.sleep(0.01)
+                    survivors = live_group(process.pid)
+                    time.sleep(1.2)
+                    self.assertFalse(calls.exists(), "failed PID publication still invoked SERVICE_INIT")
+                    self.assertFalse(survivors, f"failed PID publication left live descendants: {survivors}")
+                    self.assertNotEqual(process.returncode, 0, stdout + stderr)
+                    if failure == "directory":
+                        self.assertTrue(pid_file.is_dir(), "failure changed its directory target")
+                    else:
+                        self.assertFalse(pid_file.exists(), "failure left a partial PID file")
+                finally:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+
     def test_sleeping_retry_releases_procd_lock_and_runs_once(self):
         """A detached retry must release FD1000 without losing or duplicating work."""
         self.assertIsNotNone(shutil.which("ucode"), "real ucode is required")
