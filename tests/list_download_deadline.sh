@@ -8,6 +8,7 @@ export DOWNLOAD_LOG="$WORK_DIR/requests"
 cat >"$WORK_DIR/bin/curl" <<'SH'
 #!/bin/sh
 printf '%s\n' "$*" >> "$DOWNLOAD_LOG"
+printf 200
 exit "${DOWNLOAD_EXIT:-0}"
 SH
 cp "$WORK_DIR/bin/curl" "$WORK_DIR/bin/wget"

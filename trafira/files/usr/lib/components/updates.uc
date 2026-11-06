@@ -61,6 +61,7 @@ let community_subnets = null;
 let rule_config = null;
 let routing_rulesets_module_value = null;
 let singbox_rulesets_module_value = null;
+let section_nft_collection = null;
 
 function community_subnets_module() {
     if (community_subnets == null)
@@ -2056,15 +2057,18 @@ function list_reference_label(section, kind, reference) {
 function download_to_file(url, filepath, proxy_address, identity) {
     let attempt = 1;
     let transport = require("singbox.ruleset_cache");
+    let bounded = require("routing.list_download");
+    // Plain/JSON sources have a larger allowance than compiled startup snapshots.
+    let limit = 8 * 1024 * 1024;
     while (attempt <= 3) {
         // Bound the entire attempt, including a peer that keeps sending tiny chunks.
         let args = [ "curl", "--fail", "--location", "--silent", "--show-error",
-            "--connect-timeout", "10", "--max-time", "30", "--output", filepath ];
+            "--connect-timeout", "10", "--max-time", "30", "--max-filesize", "" + limit ];
         if (as_string(proxy_address) != "")
             push(args, "--proxy", "http://" + as_string(proxy_address), "--noproxy", "");
         push(args, "--write-out", "%{http_code}", url);
 
-        let result = transport.download_status(args);
+        let result = bounded.download(args, filepath, limit);
         if (result.code == 0)
             return true;
 
@@ -2123,9 +2127,24 @@ function cleanup_empty_ruleset(path) {
     return false;
 }
 
+function collect_section_nft_input(kind, source, label) {
+    let path = temp_path();
+    if (path == "")
+        return false;
+    if (!copy_file(source, path) || !command_success_from_args([ "cmp", "-s", source, path ])) {
+        remove_file(path);
+        return false;
+    }
+    push(section_nft_collection.files, path);
+    push(section_nft_collection.inputs, {kind, path, label: as_string(label)});
+    return true;
+}
+
 function add_plain_subnet_file_to_nft_for_section(section, filepath) {
     if (!file_nonempty(filepath))
         return true;
+    if (section_nft_collection != null)
+        return collect_section_nft_input("plain", filepath, "section subnet list");
 
     return nft_module_success([
         "nft-add-subnet-file-for-uci-section",
@@ -2141,6 +2160,8 @@ function add_plain_subnet_file_to_nft_for_section(section, filepath) {
 }
 
 function add_json_ruleset_subnets_to_nft_for_section(section, json_file, label) {
+    if (section_nft_collection != null)
+        return collect_section_nft_input("source", json_file, label);
     let unscoped_tmpfile = temp_path();
     let scoped_tmpfile = temp_path();
     if (unscoped_tmpfile == "" || scoped_tmpfile == "") {
@@ -2258,6 +2279,17 @@ function rebuild_domain_ip_lists_from_rule(section, settings) {
         subnets_path = temp_path();
         ok = subnets_path != "" && write_file(subnets_path, join("\n", subnet_chunks));
     }
+    if (section_nft_collection != null) {
+        if (ok && subnets_path != "")
+            ok = add_plain_subnet_file_to_nft_for_section(section, subnets_path);
+        if (ok)
+            push(section_nft_collection.publications, {path, staged_path});
+        else
+            remove_file(staged_path);
+        if (subnets_path != "")
+            remove_file(subnets_path);
+        return ok;
+    }
     let previous_path = staged_path + ".previous";
     let saved_previous = false;
     let keep_previous = false;
@@ -2343,7 +2375,7 @@ function import_builtin_subnets_from_rule(section, settings) {
                 continue;
             }
 
-            if (!nft_module_success([
+            if (section_nft_collection != null ? !collect_section_nft_input("plain", tmpfile, entry.tag) : !nft_module_success([
                 "nft-add-community-subnet-file-for-uci-section",
                 section_name(section),
                 service,
