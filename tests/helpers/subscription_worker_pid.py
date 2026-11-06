@@ -2,6 +2,7 @@
 """Real deferred workers must not outlive a failed atomic PID publication."""
 
 import fcntl
+import json
 import os
 from pathlib import Path
 import shutil
@@ -69,12 +70,31 @@ class SubscriptionWorkerPid(unittest.TestCase):
                         TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE=str(self.pidfile))
 
     def cleanup(self):
+        for pid in self.owned_workers():
+            try:
+                self.groups.append(os.getpgid(pid))
+            except ProcessLookupError:
+                pass
         for group in self.groups:
             try:
                 os.killpg(group, signal.SIGKILL)
             except ProcessLookupError:
                 pass
         self.temp.cleanup()
+
+    def owned_workers(self):
+        result = []
+        marker = ("TRAFIRA_SUBSCRIPTION_BOOTSTRAP_RETRY_PID_FILE=" + str(self.pidfile)).encode()
+        for entry in Path("/proc").iterdir():
+            if not entry.name.isdigit():
+                continue
+            try:
+                if (b"deferred-bootstrap-worker" in (entry / "cmdline").read_bytes().split(b"\0") and
+                        marker in (entry / "environ").read_bytes().split(b"\0")):
+                    result.append(int(entry.name))
+            except (FileNotFoundError, ProcessLookupError):
+                pass
+        return result
 
     def run_mode(self, mode, *args, pass_fds=()):
         process = subprocess.Popen(
@@ -83,6 +103,11 @@ class SubscriptionWorkerPid(unittest.TestCase):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         self.groups.append(process.pid)
         stdout, stderr = process.communicate(timeout=5)
+        for pid in self.owned_workers():
+            try:
+                self.groups.append(os.getpgid(pid))
+            except ProcessLookupError:
+                pass
         return process, stdout + stderr
 
     def test_failed_atomic_pid_publication_leaves_no_worker_or_descendant(self):
@@ -93,6 +118,7 @@ class SubscriptionWorkerPid(unittest.TestCase):
             self.assertTrue(wait_until(lambda: not live_group(process.pid)),
                             f"PID-save failure left live worker/descendants: {live_group(process.pid)}")
             self.assertNotEqual(process.returncode, 0, "failed PID publication reported CLI success")
+            self.assertTrue(wait_until(lambda: not self.owned_workers()), "failed publication left detached worker")
             self.assertNotIn("Started subscription bootstrap retry worker", self.logs.read_text(), output)
             self.assertTrue(self.pidfile.is_dir(), "failed publication changed its target")
             self.assertFalse(list(self.pidfile.parent.glob("worker.pid.*.tmp")))
@@ -113,7 +139,9 @@ class SubscriptionWorkerPid(unittest.TestCase):
             os.close(1000)
         self.assertTrue(self.pidfile.is_file(), output)
         worker = int(self.pidfile.read_text())
-        self.assertTrue(wait_until(lambda: worker in live_group(process.pid)), "worker did not remain running")
+        worker_group = os.getpgid(worker)
+        self.groups.append(worker_group)
+        self.assertTrue(wait_until(lambda: worker in live_group(worker_group)), "worker did not remain running")
         with lock_path.open("r+") as probe:
             try:
                 fcntl.flock(probe, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -125,8 +153,101 @@ class SubscriptionWorkerPid(unittest.TestCase):
         self.assertFalse(live_group(second.pid), "duplicate event launched another worker")
         stopped, output = self.run_mode("stop-deferred-bootstrap-worker")
         self.assertEqual(stopped.returncode, 0, output)
-        self.assertTrue(wait_until(lambda: not live_group(process.pid)), "stop left worker or descendants running")
+        self.assertTrue(wait_until(lambda: not live_group(worker_group)), "stop left worker or descendants running")
         self.assertFalse(self.pidfile.exists(), "stop left the published PID behind")
+
+    def test_stale_pid_cannot_kill_or_suppress_foreign_process(self):
+        foreign = subprocess.Popen(["sleep", "60"], start_new_session=True)
+        self.groups.append(foreign.pid)
+        self.addCleanup(lambda: (foreign.kill() if foreign.poll() is None else None, foreign.wait()))
+        self.pidfile.parent.mkdir(parents=True)
+        fields = Path(f"/proc/{foreign.pid}/stat").read_text().rsplit(")", 1)[1].split()
+        for record in [None, {"version": 1, "role": "subscription", "pid": str(foreign.pid),
+                              "ticks": fields[19], "group": str(foreign.pid), "session": str(foreign.pid)}]:
+            with self.subTest(record=record):
+                self.pidfile.write_text(str(foreign.pid) + "\n")
+                owner = Path(str(self.pidfile) + ".owner.json")
+                if record:
+                    owner.write_text(json.dumps(record))
+                result, output = self.run_mode("stop-deferred-bootstrap-worker")
+                self.assertEqual(result.returncode, 0, output)
+                time.sleep(0.05)
+                self.assertIsNone(foreign.poll(), "stale PID killed an unrelated process")
+                self.assertFalse(self.pidfile.exists())
+                self.assertFalse(owner.exists())
+        self.pidfile.write_text(str(foreign.pid) + "\n")
+        result, output = self.run_mode("start-deferred-bootstrap-worker", "proxy")
+        self.assertEqual(result.returncode, 0, output)
+        self.assertNotEqual(int(self.pidfile.read_text()), foreign.pid, "foreign PID suppressed recovery")
+        self.run_mode("stop-deferred-bootstrap-worker")
+        self.assertIsNone(foreign.poll())
+
+    def install_download_fixture(self, blocking):
+        binary = self.work / "bin"
+        real = shutil.which("ucode")
+        wrapper = binary / "ucode"
+        wrapper.write_text("#!" + sys.executable + "\n" +
+                           "import os,sys\n"
+                           "if sys.argv[-1]=='sing-box-service-running': sys.exit(0)\n" +
+                           f"os.execv({real!r},[{real!r},*sys.argv[1:]])\n")
+        wrapper.chmod(0o755)
+        curl = binary / "curl"
+        curl.write_text("#!" + sys.executable + "\n" + '''import json,os,signal,subprocess,sys,time
+from pathlib import Path
+args=sys.argv[1:]
+if '-D' in args: Path(args[args.index('-D')+1]).write_text('HTTP/1.1 200 OK\\r\\n\\r\\n')
+''' + ('''signal.signal(signal.SIGTERM,signal.SIG_IGN)
+child=subprocess.Popen([sys.executable,'-c','import signal,time;signal.signal(signal.SIGTERM,signal.SIG_IGN);time.sleep(300)'])
+Path(os.environ['WORKER_DOWNLOAD_STARTED']).write_text(json.dumps({'pid':os.getpid(),'group':os.getpgrp(),'child':child.pid}))
+while True: time.sleep(1)
+''' if blocking else '''print('{"outbounds":[{"type":"socks","tag":"node","server":"127.0.0.1","server_port":1080}]}')
+'''))
+        curl.chmod(0o755)
+        uci = self.work / "uci"
+        uci.write_text("trafira.settings=settings\ntrafira.proxy=section\n"
+                       "trafira.proxy.connection_type=proxy\ntrafira.proxy.action=connection\n"
+                       "trafira.source=subscription_url\ntrafira.source.section=proxy\n"
+                       "trafira.source.url=https://fixture.invalid/sub\ntrafira.source.auto_user_agent=0\n"
+                       "trafira.source.user_agent=Harness\n")
+        self.env.update(TRAFIRA_UCI_STATE_FILE=str(uci), WORKER_DOWNLOAD_STARTED=str(self.work / "download-started"))
+
+    def test_stop_active_download_terminates_descendants_and_preserves_cache(self):
+        self.install_download_fixture(True)
+        cache = self.work / "subscriptions/proxy-subscription-1.json"
+        cache.parent.mkdir()
+        original = b'{"outbounds":[{"type":"socks","tag":"old","server":"127.0.0.1","server_port":1080}]}'
+        cache.write_bytes(original)
+        for suffix, value in {"url": "https://fixture.invalid/sub", "user_agent": "Harness", "hwid": "", "device_headers": ""}.items():
+            (cache.parent / ("proxy-subscription-1." + suffix)).write_text(value)
+        result, output = self.run_mode("start-deferred-bootstrap-worker", "proxy")
+        self.assertEqual(result.returncode, 0, output)
+        started = self.work / "download-started"
+        self.assertTrue(wait_until(started.exists, 42), self.logs.read_text())
+        download = json.loads(started.read_text())
+        self.groups.append(download["group"])
+        result, output = self.run_mode("stop-deferred-bootstrap-worker")
+        self.assertEqual(result.returncode, 0, output)
+        self.assertTrue(wait_until(lambda: not live_group(download["group"])),
+                        "stop left an active curl/parser descendant")
+        self.assertEqual(cache.read_bytes(), original)
+        self.assertFalse(self.pidfile.exists())
+        self.assertFalse(list(cache.parent.glob(".worker-*")), "worker scratch directory survived cancellation")
+
+    def test_recovery_reload_survives_worker_cancellation(self):
+        self.install_download_fixture(False)
+        service = self.work / "reload-fixture"
+        complete = self.work / "reload-completed"
+        real = shutil.which("ucode")
+        service.write_text("#!" + sys.executable + "\nimport os,subprocess\n" +
+                           f"subprocess.run([{real!r},'-L',{str(LIB)!r},{str(CACHE)!r},'stop-deferred-bootstrap-worker'],check=True)\n" +
+                           f"open({str(complete)!r},'w').write('reload survived')\n")
+        service.chmod(0o755)
+        self.env["TRAFIRA_SERVICE_INIT"] = str(service)
+        result, output = self.run_mode("start-deferred-bootstrap-worker", "proxy")
+        self.assertEqual(result.returncode, 0, output)
+        self.assertTrue(wait_until(complete.exists, 45), self.logs.read_text())
+        self.assertEqual(complete.read_text(), "reload survived")
+        self.assertFalse(self.pidfile.exists())
 
 
 if __name__ == "__main__":

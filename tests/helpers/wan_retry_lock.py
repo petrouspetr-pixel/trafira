@@ -34,7 +34,115 @@ def live_group(group):
     return members
 
 
+def retry_workers(path):
+    workers = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            args = (entry / "cmdline").read_bytes().split(b"\0")
+            if b"scheduled-start-retry-worker" in args and os.fsencode(path) in args:
+                workers.append(int(entry.name))
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
+            pass
+    return workers
+
+
 class WanRetryLock(unittest.TestCase):
+    def test_foreign_numeric_pid_is_not_cancelled_or_reused_as_our_retry(self):
+        with tempfile.TemporaryDirectory(prefix="trafira-wan-foreign-") as tmp:
+            work = Path(tmp)
+            pid_file = work / "retry.pid"
+            env = dict(os.environ, TRAFIRA_LIB=str(LIB), TRAFIRA_RUNTIME_STATE_DIR=str(work))
+            foreign = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"],
+                                       start_new_session=True)
+            groups = []
+            try:
+                for action in ("schedule", "cancel"):
+                    with self.subTest(action=action):
+                        Path(str(pid_file) + ".owner.json").unlink(missing_ok=True)
+                        pid_file.write_text(str(foreign.pid) + "\n")
+                        mode = "cancel-scheduled-start-retry" if action == "cancel" else "schedule-start-retry"
+                        command = ["ucode", "-L", str(LIB), str(INITD), mode, str(pid_file)]
+                        if action == "schedule":
+                            command.append("30")
+                        process = subprocess.Popen(command, env=env, start_new_session=True,
+                                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        groups.append(process.pid)
+                        stdout, stderr = process.communicate(timeout=5)
+                        self.assertEqual(process.returncode, 0, stdout + stderr)
+                        self.assertIsNone(foreign.poll(), "legacy PID file caused an unrelated process to be killed")
+                        if action == "cancel":
+                            self.assertFalse(pid_file.exists(), "legacy PID was not cleaned")
+                        else:
+                            worker = int(pid_file.read_text())
+                            groups.append(worker)
+                            self.assertNotEqual(worker, foreign.pid, "foreign PID suppressed a real retry launch")
+                            self.assertTrue(Path(str(pid_file) + ".owner.json").is_file())
+            finally:
+                for pid in retry_workers(pid_file):
+                    try:
+                        os.kill(pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                for group in groups:
+                    try:
+                        os.killpg(group, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                foreign.kill()
+                foreign.wait(timeout=3)
+
+    def test_owner_start_ticks_mismatch_never_kills_the_live_process(self):
+        with tempfile.TemporaryDirectory(prefix="trafira-wan-identity-") as tmp:
+            work = Path(tmp)
+            pid_file = work / "retry.pid"
+            owner_file = Path(str(pid_file) + ".owner.json")
+            env = dict(os.environ, TRAFIRA_LIB=str(LIB), TRAFIRA_RUNTIME_STATE_DIR=str(work))
+            process = subprocess.Popen(
+                ["ucode", "-L", str(LIB), str(INITD), "schedule-start-retry", str(pid_file), "30"],
+                env=env, start_new_session=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            worker = None
+            try:
+                stdout, stderr = process.communicate(timeout=5)
+                self.assertEqual(process.returncode, 0, stdout + stderr)
+                worker = int(pid_file.read_text())
+                # Let the worker enter its delayed retry after publication;
+                # this test targets cancellation identity, not the launch gate.
+                time.sleep(0.2)
+                fields = Path(f"/proc/{worker}/stat").read_text().rsplit(")", 1)[1].split()
+                owner = json.loads(owner_file.read_text()) if owner_file.exists() else {
+                    "pid": str(worker), "ticks": fields[19], "parent": fields[1],
+                    "group": fields[2], "session": fields[3], "role": "wan"}
+                owner["ticks"] = str(int(fields[19]) + 1)
+                owner_file.write_text(json.dumps(owner))
+                result = subprocess.run(
+                    ["ucode", "-L", str(LIB), str(INITD), "cancel-scheduled-start-retry", str(pid_file)],
+                    env=env, capture_output=True, text=True, timeout=5)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                # os.kill(pid, 0) also succeeds for zombies; inspect process state.
+                deadline = time.monotonic() + 0.2
+                while time.monotonic() < deadline:
+                    stat = Path(f"/proc/{worker}/stat")
+                    self.assertTrue(stat.exists(), "mismatched owner record killed its PID")
+                    self.assertNotEqual(stat.read_text().rsplit(")", 1)[1].split()[0], "Z",
+                                        "mismatched start ticks killed a live process")
+                    time.sleep(0.01)
+                self.assertFalse(pid_file.exists())
+                self.assertFalse(owner_file.exists())
+            finally:
+                for pid in retry_workers(pid_file):
+                    try:
+                        os.kill(pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                for group in [process.pid, worker]:
+                    if group:
+                        try:
+                            os.killpg(group, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+
     def test_failed_service_start_does_not_claim_unpublished_retry_was_scheduled(self):
         with tempfile.TemporaryDirectory(prefix="trafira-wan-log-") as tmp:
             work = Path(tmp)
@@ -101,9 +209,9 @@ class WanRetryLock(unittest.TestCase):
                     # Observe both assertions before reporting failure, so this
                     # catches a parent-only kill as well as a late invocation.
                     deadline = time.monotonic() + 0.4
-                    while live_group(process.pid) and time.monotonic() < deadline:
+                    while (live_group(process.pid) or retry_workers(pid_file)) and time.monotonic() < deadline:
                         time.sleep(0.01)
-                    survivors = live_group(process.pid)
+                    survivors = live_group(process.pid) + retry_workers(pid_file)
                     time.sleep(1.2)
                     self.assertFalse(calls.exists(), "failed PID publication still invoked SERVICE_INIT")
                     self.assertFalse(survivors, f"failed PID publication left live descendants: {survivors}")
@@ -113,6 +221,11 @@ class WanRetryLock(unittest.TestCase):
                     else:
                         self.assertFalse(pid_file.exists(), "failure left a partial PID file")
                 finally:
+                    for pid in retry_workers(pid_file):
+                        try:
+                            os.kill(pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
                     try:
                         os.killpg(process.pid, signal.SIGKILL)
                     except ProcessLookupError:
@@ -177,6 +290,7 @@ class WanRetryLock(unittest.TestCase):
                     os.close(1000)
 
                 worker = int(pid_file.read_text().strip())
+                groups.append(worker)
                 os.kill(worker, 0)
                 self.assertFalse(calls.exists(), "retry fired before the delay elapsed")
                 lock_retained = False
@@ -211,9 +325,10 @@ class WanRetryLock(unittest.TestCase):
                 )
                 self.assertFalse(pid_file.exists(), "cancelled retry left a pid file")
                 deadline = time.monotonic() + 0.4
-                while live_group(cancelled_group) and time.monotonic() < deadline:
+                while (live_group(cancelled_group) or retry_workers(pid_file)) and time.monotonic() < deadline:
                     time.sleep(0.01)
                 self.assertFalse(live_group(cancelled_group), "cancelled retry left live descendants")
+                self.assertFalse(retry_workers(pid_file), "cancelled retry left a detached worker")
                 time.sleep(2.3)
                 self.assertFalse(calls.exists(), "cancelled retry invoked SERVICE_INIT")
                 # Report the lock assertion after verifying that releasing it did
@@ -222,6 +337,11 @@ class WanRetryLock(unittest.TestCase):
                                  "sleeping WAN retry inherited FD1000 and retained procd flock "
                                  "after schedule-start-retry returned")
             finally:
+                for pid in retry_workers(pid_file):
+                    try:
+                        os.kill(pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
                 try:
                     os.close(1000)
                 except OSError:
