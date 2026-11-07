@@ -1066,7 +1066,9 @@ function renderComponentCard(card: ComponentCard) {
   });
   const pendingMutation = pendingAction && pendingAction !== 'check_update';
   const version = pendingMutation
-    ? `${pendingAction === 'remove' ? _('Remove') : _('Install')}…`
+    ? pendingAction === 'remove'
+      ? _('Removing…')
+      : _('Installing…')
     : card.version;
 
   // 1. Header (displays Title, Current Version, no badges)

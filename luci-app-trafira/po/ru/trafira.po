@@ -4007,3 +4007,9 @@ msgstr "Ошибка запуска Trafira"
 
 msgid "Test latency for all sections"
 msgstr "Проверить задержку всех секций"
+
+msgid "Installing…"
+msgstr "Установка…"
+
+msgid "Removing…"
+msgstr "Удаление…"

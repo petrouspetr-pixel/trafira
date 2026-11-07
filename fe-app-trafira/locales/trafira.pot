@@ -5435,3 +5435,9 @@ msgstr ""
 
 msgid "Test latency for all sections"
 msgstr ""
+
+msgid "Installing…"
+msgstr ""
+
+msgid "Removing…"
+msgstr ""

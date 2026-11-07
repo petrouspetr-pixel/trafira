@@ -206,7 +206,9 @@ it.each(['install', 'remove'] as const)(
         byedpi_version: 'not installed',
       },
     });
-    expect(view.version()).toBe(action === 'remove' ? 'Remove…' : 'Install…');
+    expect(view.version()).toBe(
+      action === 'remove' ? 'Removing…' : 'Installing…',
+    );
     expect(
       view.button(action === 'remove' ? 'Remove' : 'Install')?.loading,
     ).toBe(true);
@@ -308,7 +310,7 @@ it('applies a terminal runtime result without waiting for the original job poll'
   wait.resolve({ success: true, data: result });
   await flush();
   expect(store.get().updatesActions.byedpiRemove.loading).toBe(true);
-  expect(view.version()).toBe('Remove…');
+  expect(view.version()).toBe('Removing…');
 });
 
 it('restores pending progress after leaving and remounting the component panel', async () => {
@@ -325,7 +327,7 @@ it('restores pending progress after leaving and remounting the component panel',
   mocks.panel!.unmount();
   view.container.replaceChildren();
   await mocks.panel!.mount();
-  expect(view.version()).toBe('Install…');
+  expect(view.version()).toBe('Installing…');
   wait.resolve({
     success: true,
     data: {
@@ -463,7 +465,9 @@ it.each(['install', 'remove'] as const)(
         changed: false,
       },
     ]);
-    expect(view.version()).toBe(action === 'remove' ? 'Install…' : 'Remove…');
+    expect(view.version()).toBe(
+      action === 'remove' ? 'Installing…' : 'Removing…',
+    );
     await emitRuntimeState(action === 'remove' ? 1 : 0, [
       {
         success: true,

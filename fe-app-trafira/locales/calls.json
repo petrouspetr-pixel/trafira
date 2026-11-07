@@ -581,9 +581,9 @@
     "call": "Another configuration operation is already running.",
     "key": "Another configuration operation is already running.",
     "places": [
-      "src/trafira/tabs/updates/componentMessages.ts:31",
       "src/trafira/tabs/diagnostic/profilePanel.ts:83",
-      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:119"
+      "src/trafira/tabs/diagnostic/renderGamingPresets.ts:119",
+      "src/trafira/tabs/updates/componentMessages.ts:31"
     ]
   },
   {
@@ -1167,7 +1167,7 @@
     "call": "Check update",
     "key": "Check update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:783"
+      "src/trafira/tabs/updates/initController.ts:815"
     ]
   },
   {
@@ -1236,17 +1236,17 @@
     "call": "Checks failed",
     "key": "Checks failed",
     "places": [
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26",
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10"
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:10",
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:26"
     ]
   },
   {
     "call": "Checks passed",
     "key": "Checks passed",
     "places": [
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13",
       "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:23",
-      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43"
+      "src/trafira/tabs/diagnostic/checks/runFakeIPCheck.ts:43",
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:13"
     ]
   },
   {
@@ -2052,7 +2052,7 @@
     "key": "Diagnostics",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/trafira.js:512",
-      "src/trafira/services/serviceStatus.service.ts:55"
+      "src/trafira/services/serviceStatus.service.ts:59"
     ]
   },
   {
@@ -3047,10 +3047,10 @@
       "src/trafira/methods/shell/index.ts:170",
       "src/trafira/methods/shell/index.ts:177",
       "src/trafira/tabs/updates/componentMessages.ts:53",
-      "src/trafira/tabs/updates/initController.ts:531",
-      "src/trafira/tabs/updates/initController.ts:532",
-      "src/trafira/tabs/updates/initController.ts:611",
-      "src/trafira/tabs/updates/initController.ts:762"
+      "src/trafira/tabs/updates/initController.ts:536",
+      "src/trafira/tabs/updates/initController.ts:537",
+      "src/trafira/tabs/updates/initController.ts:622",
+      "src/trafira/tabs/updates/initController.ts:794"
     ]
   },
   {
@@ -3099,7 +3099,7 @@
     "call": "Failed to start Trafira",
     "key": "Failed to start Trafira",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:17"
+      "src/trafira/services/serviceStatus.service.ts:20"
     ]
   },
   {
@@ -3697,15 +3697,14 @@
     "call": "Install",
     "key": "Install",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:797",
-      "src/trafira/tabs/updates/initController.ts:1037"
+      "src/trafira/tabs/updates/initController.ts:829"
     ]
   },
   {
     "call": "Install another build:",
     "key": "Install another build:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1229"
+      "src/trafira/tabs/updates/initController.ts:1263"
     ]
   },
   {
@@ -3726,8 +3725,8 @@
     "call": "Installed version is newer than release",
     "key": "Installed version is newer than release",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:309",
-      "src/trafira/tabs/updates/initController.ts:1087"
+      "src/trafira/tabs/updates/initController.ts:314",
+      "src/trafira/tabs/updates/initController.ts:1121"
     ]
   },
   {
@@ -3735,6 +3734,13 @@
     "key": "Installing in the background. You may close this page.",
     "places": [
       "src/trafira/tabs/updates/renderCoreVersions.ts:143"
+    ]
+  },
+  {
+    "call": "Installing…",
+    "key": "Installing…",
+    "places": [
+      "src/trafira/tabs/updates/initController.ts:1071"
     ]
   },
   {
@@ -4276,8 +4282,8 @@
     "call": "Issues detected",
     "key": "Issues detected",
     "places": [
-      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20",
-      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17"
+      "src/trafira/tabs/diagnostic/checks/getCheckItemsMeta.ts:17",
+      "src/trafira/tabs/diagnostic/helpers/getMeta.ts:20"
     ]
   },
   {
@@ -4413,15 +4419,15 @@
     "call": "Latest version is installed",
     "key": "Latest version is installed",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:312",
-      "src/trafira/tabs/updates/initController.ts:1085"
+      "src/trafira/tabs/updates/initController.ts:317",
+      "src/trafira/tabs/updates/initController.ts:1119"
     ]
   },
   {
     "call": "Latest version:",
     "key": "Latest version:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1087"
+      "src/trafira/tabs/updates/initController.ts:1121"
     ]
   },
   {
@@ -4553,7 +4559,7 @@
     "call": "Loading service status…",
     "key": "Loading service status…",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:10"
+      "src/trafira/services/serviceStatus.service.ts:13"
     ]
   },
   {
@@ -4561,13 +4567,13 @@
     "key": "Loading...",
     "places": [
       "src/trafira/tabs/dashboard/initController.ts:1647",
-      "src/trafira/tabs/updates/initController.ts:954",
-      "src/trafira/tabs/updates/initController.ts:965",
-      "src/trafira/tabs/updates/initController.ts:976",
-      "src/trafira/tabs/updates/initController.ts:990",
-      "src/trafira/tabs/updates/initController.ts:1004",
-      "src/trafira/tabs/updates/renderCoreVersions.ts:101",
       "src/trafira/tabs/diagnostic/renderGamingPresets.ts:382",
+      "src/trafira/tabs/updates/initController.ts:986",
+      "src/trafira/tabs/updates/initController.ts:997",
+      "src/trafira/tabs/updates/initController.ts:1008",
+      "src/trafira/tabs/updates/initController.ts:1022",
+      "src/trafira/tabs/updates/initController.ts:1036",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:101",
       "src/trafira/tabs/dashboard/partials/renderWidget.ts:88",
       "src/trafira/tabs/dashboard/partials/renderWidget.ts:100"
     ]
@@ -5136,7 +5142,7 @@
     "places": [
       "src/trafira/helpers/singBoxVariant.ts:29",
       "src/trafira/helpers/singBoxVariant.ts:37",
-      "src/trafira/tabs/updates/initController.ts:107",
+      "src/trafira/tabs/updates/initController.ts:111",
       "src/trafira/tabs/updates/renderCoreVersions.ts:138"
     ]
   },
@@ -5309,8 +5315,8 @@
     "call": "Open",
     "key": "Open",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1078",
-      "src/trafira/tabs/updates/initController.ts:1100"
+      "src/trafira/tabs/updates/initController.ts:1112",
+      "src/trafira/tabs/updates/initController.ts:1134"
     ]
   },
   {
@@ -6015,8 +6021,7 @@
     "call": "Remove",
     "key": "Remove",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:848",
-      "src/trafira/tabs/updates/initController.ts:1037"
+      "src/trafira/tabs/updates/initController.ts:880"
     ]
   },
   {
@@ -6045,6 +6050,13 @@
     "key": "Removed",
     "places": [
       "src/trafira/tabs/diagnostic/renderProfiles.ts:633"
+    ]
+  },
+  {
+    "call": "Removing…",
+    "key": "Removing…",
+    "places": [
+      "src/trafira/tabs/updates/initController.ts:1070"
     ]
   },
   {
@@ -6173,15 +6185,15 @@
     "call": "Restarting…",
     "key": "Restarting…",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:15"
+      "src/trafira/services/serviceStatus.service.ts:18"
     ]
   },
   {
     "call": "Restoration failed. Check the service before continuing.",
     "key": "Restoration failed. Check the service before continuing.",
     "places": [
-      "src/trafira/tabs/updates/renderCoreVersions.ts:66",
-      "src/trafira/tabs/diagnostic/profilePanel.ts:99"
+      "src/trafira/tabs/diagnostic/profilePanel.ts:99",
+      "src/trafira/tabs/updates/renderCoreVersions.ts:66"
     ]
   },
   {
@@ -6472,7 +6484,7 @@
     "call": "Running",
     "key": "Running",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:12"
+      "src/trafira/services/serviceStatus.service.ts:15"
     ]
   },
   {
@@ -6952,7 +6964,7 @@
     "call": "Service status unavailable",
     "key": "Service status unavailable",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:11"
+      "src/trafira/services/serviceStatus.service.ts:14"
     ]
   },
   {
@@ -7379,7 +7391,7 @@
     "call": "Starting…",
     "key": "Starting…",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:14"
+      "src/trafira/services/serviceStatus.service.ts:17"
     ]
   },
   {
@@ -7417,14 +7429,14 @@
     "call": "Stopped",
     "key": "Stopped",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:13"
+      "src/trafira/services/serviceStatus.service.ts:16"
     ]
   },
   {
     "call": "Stopping…",
     "key": "Stopping…",
     "places": [
-      "src/trafira/services/serviceStatus.service.ts:16"
+      "src/trafira/services/serviceStatus.service.ts:19"
     ]
   },
   {
@@ -8593,6 +8605,7 @@
     "call": "unknown",
     "key": "unknown",
     "places": [
+      "src/trafira/helpers/singBoxVariant.ts:28",
       "src/trafira/services/systemInfo.service.ts:10",
       "src/trafira/services/systemInfo.service.ts:11",
       "src/trafira/services/systemInfo.service.ts:12",
@@ -8602,9 +8615,8 @@
       "src/trafira/services/systemInfo.service.ts:22",
       "src/trafira/services/systemInfo.service.ts:25",
       "src/trafira/services/systemInfo.service.ts:26",
-      "src/trafira/helpers/singBoxVariant.ts:28",
-      "src/trafira/tabs/updates/initController.ts:112",
-      "src/trafira/tabs/updates/initController.ts:347",
+      "src/trafira/tabs/updates/initController.ts:116",
+      "src/trafira/tabs/updates/initController.ts:352",
       "src/trafira/tabs/diagnostic/checks/runInboundsCheck.ts:25"
     ]
   },
@@ -8677,7 +8689,7 @@
     "call": "Update",
     "key": "Update",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:797"
+      "src/trafira/tabs/updates/initController.ts:829"
     ]
   },
   {
@@ -8691,14 +8703,14 @@
     "call": "Update is available",
     "key": "Update is available",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:305"
+      "src/trafira/tabs/updates/initController.ts:310"
     ]
   },
   {
     "call": "Update is available:",
     "key": "Update is available:",
     "places": [
-      "src/trafira/tabs/updates/initController.ts:1064"
+      "src/trafira/tabs/updates/initController.ts:1098"
     ]
   },
   {
