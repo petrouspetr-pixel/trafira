@@ -71,7 +71,6 @@ jobs:
     runs-on: ubuntu-24.04
     needs: preparation
     env:
-      SDK_CACHE_DIR: ${{ runner.temp }}/trafira-sdk-cache
       IPK_SDK_URL: https://archive.openwrt.org/releases/24.10.6/targets/x86/64/openwrt-sdk-24.10.6-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
       APK_SDK_URL: https://archive.openwrt.org/releases/25.12.3/targets/x86/64/openwrt-sdk-25.12.3-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
     steps:
@@ -106,7 +105,10 @@ jobs:
           sudo ldconfig
 
       - name: Prepare verified package toolchains
+        env:
+          SDK_CACHE_DIR: ${{ runner.temp }}/trafira-sdk-cache
         run: |
+          echo "SDK_CACHE_DIR=$SDK_CACHE_DIR" >> "$GITHUB_ENV"
           python3 tools/download-verified-range.py "$IPK_SDK_URL" \
             "$SDK_CACHE_DIR/${IPK_SDK_URL##*/}" \
             --size 258600841 --sha256 9e398ea7efc098e4a986f97efff595e32d08c615fe356bcb3d885d7ad3a39ac0

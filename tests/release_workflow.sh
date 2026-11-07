@@ -42,6 +42,12 @@ workflow = Path(sys.argv[1]).read_text()
 
 # Both package formats use preverified archives from build.sh's shared cache.
 assert 'SDK_CACHE_DIR: ${{ runner.temp }}/trafira-sdk-cache' in workflow
+build_job = workflow.split('  build:\n', 1)[1].split('\n  release:\n', 1)[0]
+job_env = build_job.split('    env:\n', 1)[1].split('    steps:\n', 1)[0]
+assert '${{ runner.' not in job_env, 'runner context is unavailable in job-level env'
+toolchain_step = build_job.split('      - name: Prepare verified package toolchains\n', 1)[1].split('\n      - name:', 1)[0]
+assert '        env:\n          SDK_CACHE_DIR: ${{ runner.temp }}/trafira-sdk-cache' in toolchain_step
+assert 'echo "SDK_CACHE_DIR=$SDK_CACHE_DIR" >> "$GITHUB_ENV"' in toolchain_step
 assert workflow.count('python3 tools/download-verified-range.py') == 2
 for size, digest in [
     (258600841, '9e398ea7efc098e4a986f97efff595e32d08c615fe356bcb3d885d7ad3a39ac0'),
