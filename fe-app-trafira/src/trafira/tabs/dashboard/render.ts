@@ -53,8 +53,11 @@ export function render() {
             renderWidget({
               loading: true,
               failed: false,
-              title: '',
-              items: [],
+              title: _('System info'),
+              items: [
+                { key: _('Active Connections'), value: '' },
+                { key: _('Memory Usage'), value: '' },
+              ],
             }),
           ),
           E(
@@ -63,8 +66,11 @@ export function render() {
             renderWidget({
               loading: true,
               failed: false,
-              title: '',
-              items: [],
+              title: _('Services info'),
+              items: [
+                { key: 'Trafira', value: '' },
+                { key: 'Sing-box', value: '' },
+              ],
             }),
           ),
         ]),

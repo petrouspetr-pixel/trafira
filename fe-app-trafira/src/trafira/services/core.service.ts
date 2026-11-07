@@ -12,6 +12,7 @@ import {
   registerRuntimeStateResumeRefresh,
   startRuntimeUiStatePolling,
 } from './runtimeUiState.service';
+import { startServiceStatusBanner } from './serviceStatus.service';
 
 type CoreServiceOptions = {
   waitForLogWatcherStart?: () => Promise<unknown>;
@@ -57,6 +58,7 @@ function showLogNotification(notification: TrafiraLogNotification) {
 }
 
 export function coreService(options: CoreServiceOptions = {}) {
+  startServiceStatusBanner();
   TabServiceInstance.onChange((activeId, tabs) => {
     logger.info('[TAB]', activeId);
     store.set({

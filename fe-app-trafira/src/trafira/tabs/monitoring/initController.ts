@@ -1,4 +1,5 @@
-import { canUseDirectClashApi, getClashWsUrl, onMount } from '../../../helpers';
+import { watchPanel } from '../../helpers/panelLifecycle';
+import { canUseDirectClashApi, getClashWsUrl } from '../../../helpers';
 import { prettyBytes } from '../../../helpers/prettyBytes';
 import { showToast } from '../../../helpers/showToast';
 import {
@@ -9,7 +10,7 @@ import {
 } from '../../../icons';
 import { CustomTrafiraMethods, TrafiraShellMethods } from '../../methods';
 import { getOutboundTagBySection } from '../../runtimeTags';
-import { logger, socket, store, StoreType } from '../../services';
+import { logger, socket } from '../../services';
 import { Trafira } from '../../types';
 import {
   getCachedRuntimeUiState,
@@ -77,7 +78,6 @@ const ALL_FILTER_VALUE = 'all';
 let dependencies: MonitoringControllerDependencies = {};
 let monitoringMounted = false;
 let monitoringMountId = 0;
-let monitoringLifecycleRegistered = false;
 let monitoringControllerInitialized = false;
 let serviceStateUnsubscribe: (() => void) | null = null;
 let renderTimer: ReturnType<typeof setInterval> | null = null;
@@ -1619,52 +1619,14 @@ function onPageUnmount() {
   document.removeEventListener('copy', handleMonitoringValueCopy);
 }
 
-function registerLifecycleListeners() {
-  if (monitoringLifecycleRegistered) {
-    return;
-  }
-
-  monitoringLifecycleRegistered = true;
-
-  store.subscribe(
-    (next: StoreType, prev: StoreType, diff: Partial<StoreType>) => {
-      if (
-        diff.tabService &&
-        next.tabService.current !== prev.tabService.current
-      ) {
-        const isMonitoringVisible = next.tabService.current === 'monitoring';
-
-        if (isMonitoringVisible) {
-          return onPageMount();
-        }
-
-        if (!isMonitoringVisible) {
-          return onPageUnmount();
-        }
-      }
-    },
-  );
-}
-
 export async function initController(
   controllerDependencies: MonitoringControllerDependencies = {},
 ): Promise<void> {
-  dependencies = {
-    ...dependencies,
-    ...controllerDependencies,
-  };
-
-  if (monitoringControllerInitialized) {
-    return;
-  }
-
+  dependencies = { ...dependencies, ...controllerDependencies };
+  if (monitoringControllerInitialized) return;
   monitoringControllerInitialized = true;
-
-  onMount('monitoring-status').then(() => {
-    registerLifecycleListeners();
-
-    if (store.get().tabService.current === 'monitoring') {
-      onPageMount();
-    }
+  watchPanel('monitoring-status', {
+    mount: onPageMount,
+    unmount: onPageUnmount,
   });
 }

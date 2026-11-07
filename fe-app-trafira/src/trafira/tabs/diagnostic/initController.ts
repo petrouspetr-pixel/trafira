@@ -1,4 +1,4 @@
-import { onMount, preserveScrollForPage } from '../../../helpers';
+import { preserveScrollForPage } from '../../../helpers';
 import { runDnsCheck } from './checks/runDnsCheck';
 import { runSingBoxCheck } from './checks/runSingBoxCheck';
 import { runInboundsCheck } from './checks/runInboundsCheck';
@@ -53,7 +53,7 @@ import {
   shouldShowStartAction,
   shouldShowStopAction,
 } from './serviceTransition';
-import { isActiveLuciTab } from '../../helpers/isActiveLuciTab';
+import { watchPanel } from '../../helpers/panelLifecycle';
 import {
   formatSingBoxVersion,
   normalizeSingBoxVariantFields,
@@ -74,7 +74,6 @@ const SERVICE_STATUS_REFRESH_INTERVAL_MS = 2000;
 const SERVICE_ACTION_STATUS_TIMEOUT_MS = 45000;
 
 let latestProviderInfoRequestId = 0;
-let diagnosticLifecycleRegistered = false;
 let diagnosticControllerInitialized = false;
 let diagnosticMounted = false;
 let diagnosticMountId = 0;
@@ -1245,61 +1244,11 @@ function onPageUnmount({
   }
 }
 
-function registerLifecycleListeners() {
-  if (diagnosticLifecycleRegistered) {
-    return;
-  }
-
-  diagnosticLifecycleRegistered = true;
-
-  store.subscribe((next, prev, diff) => {
-    if (
-      diff.tabService &&
-      next.tabService.current !== prev.tabService.current
-    ) {
-      logger.debug(
-        '[DIAGNOSTIC]',
-        'active tab diff event, active tab:',
-        diff.tabService.current,
-      );
-      const isDIAGNOSTICVisible = next.tabService.current === 'diagnostic';
-
-      if (isDIAGNOSTICVisible) {
-        logger.debug(
-          '[DIAGNOSTIC]',
-          'registerLifecycleListeners',
-          'onPageMount',
-        );
-        return onPageMount();
-      }
-
-      if (!isDIAGNOSTICVisible) {
-        logger.debug(
-          '[DIAGNOSTIC]',
-          'registerLifecycleListeners',
-          'onPageUnmount',
-        );
-        return onPageUnmount();
-      }
-    }
-  });
-}
-
 export async function initController(): Promise<void> {
-  if (diagnosticControllerInitialized) {
-    return;
-  }
-
+  if (diagnosticControllerInitialized) return;
   diagnosticControllerInitialized = true;
-
-  onMount('diagnostic-status').then(() => {
-    logger.debug('[DIAGNOSTIC]', 'initController', 'onMount');
-    registerLifecycleListeners();
-    if (
-      store.get().tabService.current === 'diagnostic' ||
-      isActiveLuciTab('diagnostic')
-    ) {
-      onPageMount();
-    }
+  watchPanel('diagnostic-status', {
+    mount: onPageMount,
+    unmount: () => onPageUnmount(),
   });
 }

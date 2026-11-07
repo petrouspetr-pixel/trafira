@@ -81,25 +81,14 @@ export const routeExplanationPanel = {
       maxLength: 253,
       required: true,
     }) as HTMLInputElement;
-    const source = nativeChoice(
-      'trafira-route-source',
-      _('Source'),
-      'device',
-      {
-        device: _('Phone or computer'),
-        router: _('This router'),
-      },
-      false,
-      undefined,
-      true,
-    );
     const ip = nativeChoice(
       'trafira-route-device',
-      _('Device IP address'),
+      _('Device'),
       '',
-      {},
+      { router: _('This router') },
       true,
-      'ipaddr',
+      "or('router',ipaddr)",
+      true,
     );
     const mac = nativeChoice(
       'trafira-route-mac',
@@ -186,11 +175,9 @@ export const routeExplanationPanel = {
     });
     let devices: Array<{ ip: string; mac?: string; interface?: string }> = [];
     const updateSource = () => {
-      const router = source.value === 'router';
-      ip.setDisabled(router);
+      const router = ip.value === 'router';
       mac.setDisabled(router);
       iface.setDisabled(router);
-      deviceField.hidden = router;
       metadataFields.hidden = router;
       destination.required = false;
       destinationLabel.textContent = _('Server IP (optional override)');
@@ -205,19 +192,19 @@ export const routeExplanationPanel = {
         'Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server.',
       );
     };
-    source.onChange(updateSource);
     ip.onChange(() => {
       const device = devices.find((device) => device.ip === ip.value);
       mac.value = device?.mac || '';
       iface.value = device?.interface || '';
+      updateSource();
     });
     const field = (label: string, control: HTMLElement) =>
       row(label, control.id, [control]);
     const deviceField = row(
-      _('Device IP address'),
+      _('Device'),
       ip.node.id,
       [ip.node, refreshDevices],
-      deviceStatus,
+      E('div', {}, [deviceStatus, sourceHelp]),
     );
     deviceField.id = 'trafira-route-device-row';
     const metadataFields = E('details', { class: 'fkp_diagnostic-details' }, [
@@ -240,15 +227,9 @@ export const routeExplanationPanel = {
       E(
         'p',
         { class: 'cbi-section-descr' },
-        _(
-          'Choose a device and enter a website, for example ya.ru. We will find its server addresses and explain how Trafira would route the connection. This does not open the website or change your settings.',
-        ),
+        _('Choose a device, enter a website and click Check routing.'),
       ),
-      E('div', {}, [
-        row(_('Source'), source.node.id, [source.node], sourceHelp),
-        deviceField,
-        field(_('Website'), domain),
-      ]),
+      E('div', {}, [deviceField, field(_('Website'), domain)]),
       advanced,
       E('div', { class: 'fkp_diagnostic-actions' }, [
         E(
@@ -264,7 +245,7 @@ export const routeExplanationPanel = {
     ]);
     form.addEventListener('submit', (event) => {
       event.preventDefault();
-      const kind = source.value === 'router' ? 'router' : 'device';
+      const kind = ip.value === 'router' ? 'router' : 'device';
       const request: ExplainRequest = {
         domain: domain.value.trim(),
         source: { kind },
@@ -308,11 +289,10 @@ export const routeExplanationPanel = {
       loadingDevices = false;
     updateFormBusy = (busy) => {
       routeBusy = busy;
-      const router = source.value === 'router';
+      const router = ip.value === 'router';
       domain.disabled = destination.disabled = port.disabled = busy;
-      source.setDisabled(busy);
       protocol.setDisabled(busy);
-      ip.setDisabled(busy || router || loadingDevices);
+      ip.setDisabled(busy || loadingDevices);
       mac.setDisabled(busy || router || loadingDevices);
       iface.setDisabled(busy || router || loadingDevices);
       refreshDevices.disabled = busy || loadingDevices;
@@ -336,7 +316,9 @@ export const routeExplanationPanel = {
         .then((report) => {
           if (generation !== mountId) return;
           devices = [];
-          const ipChoices: Record<string, string> = {},
+          const ipChoices: Record<string, string> = {
+              router: _('This router'),
+            },
             macChoices: Record<string, string> = {},
             interfaceChoices: Record<string, string> = {};
           for (const name of [
@@ -390,8 +372,8 @@ export const routeExplanationPanel = {
     if (pending) updateFormBusy(true);
     void loadDevices().then(() => {
       if (!pending || generation !== mountId) return;
-      source.value = pending.source.kind;
-      ip.value = pending.source.ip || '';
+      ip.value =
+        pending.source.kind === 'router' ? 'router' : pending.source.ip || '';
       mac.value = pending.source.mac || '';
       iface.value = pending.source.interface || '';
       domain.value = pending.domain;

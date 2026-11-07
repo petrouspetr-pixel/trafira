@@ -136,7 +136,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 it('uses native LuCI choices and no browser datalists', () => {
-  for (const name of ['device', 'mac', 'interface', 'source', 'protocol'])
+  for (const name of ['device', 'mac', 'interface', 'protocol'])
     expect(widget(name)).toBeDefined();
   for (const name of ['device', 'mac', 'interface'])
     expect(widget(name).options.create).toBe(true);
@@ -187,15 +187,20 @@ it.each([443, 8443])(
     await vi.waitFor(() => expect(storage.size).toBe(0));
   },
 );
-it('resolves a domain for the router without requiring a manual destination', () => {
-  widget('source').setValue('router');
+it('resolves a domain for the router without requiring a manual destination', async () => {
+  await vi.waitFor(() =>
+    expect(widget('device').choices['192.168.10.234']).toBeDefined(),
+  );
+  expect(widget('source')).toBeUndefined();
+  expect(widget('device').choices.router).toBe('This router');
+  widget('device').setValue('router');
   expect(node('destination').required).toBe(false);
-  expect(node('device-row').hidden).toBe(true);
+  expect(node('device-row').hidden).toBe(false);
   expect(node('source-help').textContent).toContain('In Settings, enable');
   expect(node('source-help').textContent).toContain('click Apply');
   expect(node('source-help').hidden).toBe(false);
-  expect(widget('device').node.attributes.disabled).toBeDefined();
-  widget('source').setValue('device');
+  expect(widget('device').node.attributes['aria-disabled']).toBe('false');
+  widget('device').setValue('192.168.10.234');
   expect(node('destination').required).toBe(false);
   expect(node('device-row').hidden).toBe(false);
 });
@@ -203,6 +208,21 @@ it('keeps port, protocol and destination override under additional settings', ()
   const advanced = nodes.find((n) => n.id === 'trafira-route-advanced');
   expect(advanced?.tag).toBe('details');
   expect(advanced?.attributes.open).toBeUndefined();
+});
+it('submits This router from the device list without a fake device IP', async () => {
+  await vi.waitFor(() =>
+    expect(widget('device').choices['192.168.10.234']).toBeDefined(),
+  );
+  widget('device').setValue('192.168.10.234');
+  widget('device').setValue('router');
+  node('domain').value = 'ya.ru';
+  nodes
+    .find((n) => n.tag === 'form')!
+    .listeners.submit({ preventDefault() {} });
+  const call = vi
+    .mocked(executeShellCommand)
+    .mock.calls.find(([r]) => r.args[0] === 'route_explain_start')!;
+  expect(JSON.parse(call[0].args[1]).source).toEqual({ kind: 'router' });
 });
 it('clears the old result when the user edits the request', () => {
   node('explanation-result').children = ['Old website route'];

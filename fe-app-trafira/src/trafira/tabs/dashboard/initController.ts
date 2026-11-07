@@ -1,8 +1,12 @@
+import {
+  getSectionLatencyTarget,
+  testAllSectionsLatency,
+} from './helpers/latencyTest';
+import { failurePoliciesPanel } from './renderFailurePolicies';
 import { formatLatency } from '../../helpers/latencyStatus';
 import {
   getClashWsUrl,
   isCopyableProxyLink,
-  onMount,
   preserveScrollForPage,
 } from '../../../helpers';
 import { copyToClipboard } from '../../../helpers/copyToClipboard';
@@ -34,7 +38,7 @@ import {
   refreshRuntimeUiState,
   subscribeRuntimeUiState,
 } from '../../services/runtimeUiState.service';
-import { isActiveLuciTab } from '../../helpers/isActiveLuciTab';
+import { watchPanel } from '../../helpers/panelLifecycle';
 import { isTransientRpcError } from '../../helpers/isTransientRpcError';
 import { shouldShowLoadingForRestoredAction } from '../../helpers/restoredActionLoading';
 import { getServiceAvailability } from '../../helpers/serviceAvailability';
@@ -43,11 +47,14 @@ const SECTIONS_REFRESH_INTERVAL_MS = 10000;
 const LATENCY_TEST_BUTTON_CLASS = 'dashboard-sections-grid-item-test-latency';
 const LATENCY_TEST_BUTTON_LABEL_CLASS =
   'dashboard-sections-grid-item-test-latency__label';
+let streamFirstFrameTimer: ReturnType<typeof setTimeout> | null = null;
+const cachedLiveWidgets = new Set<string>();
 let sectionsRefreshTimer: ReturnType<typeof setInterval> | null = null;
 let sectionsRefreshPromise: Promise<boolean> | null = null;
 let sectionsRefreshQueued = false;
 let actionStateUnsubscribe: (() => void) | null = null;
 let dashboardMounted = false;
+let allLatencyRunning = false;
 let dashboardMountId = 0;
 let dashboardDataUpdatesStarted = false;
 let dashboardDataUpdatesId = 0;
@@ -69,6 +76,7 @@ if (typeof window !== 'undefined') {
 // Fetchers
 
 async function fetchDashboardSectionsOnce(mountId: number) {
+  const dataUpdatesId = dashboardDataUpdatesId;
   if (getDashboardServiceAvailability() === 'stopped') {
     return false;
   }
@@ -93,6 +101,7 @@ async function fetchDashboardSectionsOnce(mountId: number) {
     if (
       !dashboardMounted ||
       mountId !== dashboardMountId ||
+      dataUpdatesId !== dashboardDataUpdatesId ||
       getDashboardServiceAvailability() === 'stopped'
     ) {
       return false;
@@ -120,6 +129,7 @@ async function fetchDashboardSectionsOnce(mountId: number) {
     if (
       !dashboardMounted ||
       mountId !== dashboardMountId ||
+      dataUpdatesId !== dashboardDataUpdatesId ||
       getDashboardServiceAvailability() === 'stopped'
     ) {
       return false;
@@ -141,10 +151,15 @@ async function fetchDashboardSectionsOnce(mountId: number) {
 }
 
 async function fetchAliceDevices(mountId: number) {
+  const dataUpdatesId = dashboardDataUpdatesId;
   try {
     const response = await TrafiraShellMethods.getAliceDevices();
 
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (
+      !dashboardMounted ||
+      mountId !== dashboardMountId ||
+      dataUpdatesId !== dashboardDataUpdatesId
+    ) {
       return;
     }
 
@@ -166,7 +181,11 @@ async function fetchAliceDevices(mountId: number) {
   } catch (error) {
     logger.error('[DASHBOARD]', 'fetchAliceDevices: failed', error);
 
-    if (!dashboardMounted || mountId !== dashboardMountId) {
+    if (
+      !dashboardMounted ||
+      mountId !== dashboardMountId ||
+      dataUpdatesId !== dashboardDataUpdatesId
+    ) {
       return;
     }
 
@@ -183,6 +202,7 @@ async function fetchAliceDevices(mountId: number) {
 }
 
 async function fetchDashboardSections(options: { force?: boolean } = {}) {
+  if (!dashboardMounted) return false;
   if (sectionsRefreshPromise) {
     if (options.force) {
       sectionsRefreshQueued = true;
@@ -192,6 +212,7 @@ async function fetchDashboardSections(options: { force?: boolean } = {}) {
   }
 
   const mountId = dashboardMountId;
+  const dataUpdatesId = dashboardDataUpdatesId;
   const promise = (async () => {
     let success = false;
 
@@ -201,7 +222,8 @@ async function fetchDashboardSections(options: { force?: boolean } = {}) {
     } while (
       sectionsRefreshQueued &&
       dashboardMounted &&
-      mountId === dashboardMountId
+      mountId === dashboardMountId &&
+      dataUpdatesId === dashboardDataUpdatesId
     );
 
     return success;
@@ -509,6 +531,19 @@ async function connectToClashSockets(dataUpdatesId: number) {
     return;
   }
 
+  streamFirstFrameTimer = setTimeout(() => {
+    if (!dashboardMounted || dataUpdatesId !== dashboardDataUpdatesId) return;
+    const current = store.get();
+    for (const key of [
+      'bandwidthWidget',
+      'trafficTotalWidget',
+      'systemInfoWidget',
+    ] as const) {
+      if (current[key].loading)
+        store.set({ [key]: { ...current[key], loading: false, failed: true } });
+    }
+  }, 15000);
+
   socket.subscribe(
     `${getClashWsUrl()}/traffic`,
     (msg) => {
@@ -520,6 +555,7 @@ async function connectToClashSockets(dataUpdatesId: number) {
       }
 
       const parsedMsg = JSON.parse(msg);
+      cachedLiveWidgets.add('bandwidthWidget');
 
       store.set({
         bandwidthWidget: {
@@ -546,7 +582,7 @@ async function connectToClashSockets(dataUpdatesId: number) {
         bandwidthWidget: {
           loading: false,
           failed: true,
-          data: { up: 0, down: 0 },
+          data: store.get().bandwidthWidget.data,
         },
       });
     },
@@ -563,6 +599,8 @@ async function connectToClashSockets(dataUpdatesId: number) {
       }
 
       const parsedMsg = JSON.parse(msg);
+      cachedLiveWidgets.add('trafficTotalWidget');
+      cachedLiveWidgets.add('systemInfoWidget');
 
       store.set({
         trafficTotalWidget: {
@@ -600,15 +638,12 @@ async function connectToClashSockets(dataUpdatesId: number) {
         trafficTotalWidget: {
           loading: false,
           failed: true,
-          data: { downloadTotal: 0, uploadTotal: 0 },
+          data: store.get().trafficTotalWidget.data,
         },
         systemInfoWidget: {
           loading: false,
           failed: true,
-          data: {
-            connections: 0,
-            memory: 0,
-          },
+          data: store.get().systemInfoWidget.data,
         },
       });
     },
@@ -635,6 +670,9 @@ function stopDashboardDataUpdates() {
   }
 
   sectionsRefreshQueued = false;
+  sectionsRefreshPromise = null;
+  if (streamFirstFrameTimer) clearTimeout(streamFirstFrameTimer);
+  streamFirstFrameTimer = null;
   socket.resetAll();
 }
 
@@ -649,6 +687,13 @@ function startDashboardDataUpdates() {
 
   dashboardDataUpdatesStarted = true;
   const dataUpdatesId = ++dashboardDataUpdatesId;
+  for (const key of [
+    'bandwidthWidget',
+    'trafficTotalWidget',
+    'systemInfoWidget',
+  ] as const) {
+    store.set({ [key]: { ...store.get()[key], loading: true, failed: false } });
+  }
   void fetchDashboardSections({ force: true });
   void fetchAliceDevices(dashboardMountId);
   void connectToClashSockets(dataUpdatesId);
@@ -1504,6 +1549,42 @@ function updateLatencyProgressInline(
   return true;
 }
 
+async function handleTestAllLatency() {
+  if (
+    allLatencyRunning ||
+    !dashboardMounted ||
+    getDashboardServiceAvailability() !== 'running'
+  )
+    return;
+  allLatencyRunning = true;
+  const mountId = dashboardMountId;
+  void renderSectionsWidget();
+  try {
+    await testAllSectionsLatency(
+      store.get().sectionsWidget.data,
+      async (section) => {
+        const target = getSectionLatencyTarget(section);
+        if (target)
+          await handleTestLatency(
+            target.type,
+            section.sectionName,
+            target.tag,
+            target.timeout,
+          );
+      },
+      () =>
+        dashboardMounted &&
+        mountId === dashboardMountId &&
+        getDashboardServiceAvailability() === 'running',
+    );
+  } finally {
+    if (mountId === dashboardMountId) {
+      allLatencyRunning = false;
+      void renderSectionsWidget();
+    }
+  }
+}
+
 // Renderer
 
 async function renderSectionsWidget() {
@@ -1542,6 +1623,34 @@ async function renderSectionsWidget() {
       container.replaceChildren(renderedWidget);
     });
   }
+
+  const allLatencyButton = E(
+    'div',
+    { class: 'fkp_dashboard-page__connections-heading' },
+    [
+      E('h3', {}, _('Connections')),
+      E(
+        'button',
+        {
+          type: 'button',
+          class: 'cbi-button',
+          'aria-label': _('Test latency for all sections'),
+          disabled:
+            allLatencyRunning ||
+            !sectionsWidget.data.some((section) =>
+              getSectionLatencyTarget(section),
+            )
+              ? true
+              : undefined,
+          'aria-busy': allLatencyRunning ? 'true' : 'false',
+          click: () => {
+            void handleTestAllLatency();
+          },
+        },
+        allLatencyRunning ? _('Checking latency…') : _('Check latency'),
+      ),
+    ],
+  );
 
   const renderedWidgets = sectionsWidget.data.map((section) =>
     renderSections({
@@ -1597,7 +1706,7 @@ async function renderSectionsWidget() {
   );
 
   return preserveScrollForPage(() => {
-    container.replaceChildren(...renderedWidgets);
+    container.replaceChildren(allLatencyButton, ...renderedWidgets);
   });
 }
 
@@ -1614,6 +1723,7 @@ async function renderBandwidthWidget() {
   const renderedWidget = renderWidget({
     loading: traffic.loading,
     failed: traffic.failed,
+    cached: cachedLiveWidgets.has('bandwidthWidget'),
     title: _('Traffic'),
     items: [
       { key: _('Uplink'), value: `${prettyBytes(traffic.data.up)}/s` },
@@ -1637,6 +1747,7 @@ async function renderTrafficTotalWidget() {
   const renderedWidget = renderWidget({
     loading: trafficTotalWidget.loading,
     failed: trafficTotalWidget.failed,
+    cached: cachedLiveWidgets.has('trafficTotalWidget'),
     title: _('Traffic Total'),
     items: [
       {
@@ -1663,20 +1774,10 @@ async function renderSystemInfoWidget() {
     return;
   }
 
-  if (systemInfoWidget.loading || systemInfoWidget.failed) {
-    const renderedWidget = renderWidget({
-      loading: systemInfoWidget.loading,
-      failed: systemInfoWidget.failed,
-      title: '',
-      items: [],
-    });
-
-    return container.replaceChildren(renderedWidget);
-  }
-
   const renderedWidget = renderWidget({
     loading: systemInfoWidget.loading,
     failed: systemInfoWidget.failed,
+    cached: cachedLiveWidgets.has('systemInfoWidget'),
     title: _('System info'),
     items: [
       {
@@ -1701,17 +1802,6 @@ async function renderServicesInfoWidget() {
 
   if (!container) {
     return;
-  }
-
-  if (servicesInfoWidget.loading || servicesInfoWidget.failed) {
-    const renderedWidget = renderWidget({
-      loading: servicesInfoWidget.loading,
-      failed: servicesInfoWidget.failed,
-      title: '',
-      items: [],
-    });
-
-    return container.replaceChildren(renderedWidget);
   }
 
   const renderedWidget = renderWidget({
@@ -1822,20 +1912,6 @@ async function onPageMount() {
   failurePoliciesPanel.mount();
   dashboardMountId += 1;
   const mountId = dashboardMountId;
-  const hasRuntimeSnapshot = Boolean(getCachedRuntimeUiState());
-
-  if (!hasRuntimeSnapshot) {
-    const uiState = await refreshRuntimeUiState({ force: true });
-
-    if (!dashboardMounted || mountId !== dashboardMountId) {
-      return;
-    }
-
-    if (!uiState) {
-      void fetchServicesInfo();
-    }
-  }
-
   // Add new listener
   store.subscribe(onStoreUpdate);
   startActionStateWatcher();
@@ -1847,14 +1923,22 @@ async function onPageMount() {
   void renderAliceDevicesWidget();
   syncDashboardServiceAvailability();
 
-  if (hasRuntimeSnapshot) {
-    void refreshRuntimeUiState({ force: true });
-  }
+  void refreshRuntimeUiState({ force: true })
+    .then((uiState) => {
+      if (!dashboardMounted || mountId !== dashboardMountId) return;
+      if (!uiState) void fetchServicesInfo();
+    })
+    .catch((error) => {
+      logger.error('[DASHBOARD]', 'runtime refresh failed', error);
+      if (dashboardMounted && mountId === dashboardMountId)
+        void fetchServicesInfo();
+    });
 }
 
 function onPageUnmount() {
   failurePoliciesPanel.unmount();
   dashboardMounted = false;
+  allLatencyRunning = false;
   dashboardMountId += 1;
 
   stopDashboardDataUpdates();
@@ -1863,69 +1947,16 @@ function onPageUnmount() {
   sectionsRefreshPromise = null;
   // Remove old listener
   store.unsubscribe(onStoreUpdate);
-  // Clear store
-  store.reset(['bandwidthWidget', 'trafficTotalWidget', 'systemInfoWidget']);
+  // Keep last live measurements for immediate rendering on re-entry.
 }
 
-let dashboardLifecycleRegistered = false;
 let dashboardControllerInitialized = false;
 
-function registerLifecycleListeners() {
-  if (dashboardLifecycleRegistered) {
-    return;
-  }
-
-  dashboardLifecycleRegistered = true;
-
-  store.subscribe((next, prev, diff) => {
-    if (
-      diff.tabService &&
-      next.tabService.current !== prev.tabService.current
-    ) {
-      logger.debug(
-        '[DASHBOARD]',
-        'active tab diff event, active tab:',
-        diff.tabService.current,
-      );
-      const isDashboardVisible = next.tabService.current === 'dashboard';
-
-      if (isDashboardVisible) {
-        logger.debug(
-          '[DASHBOARD]',
-          'registerLifecycleListeners',
-          'onPageMount',
-        );
-        return onPageMount();
-      }
-
-      if (!isDashboardVisible) {
-        logger.debug(
-          '[DASHBOARD]',
-          'registerLifecycleListeners',
-          'onPageUnmount',
-        );
-        return onPageUnmount();
-      }
-    }
-  });
-}
-
 export async function initController(): Promise<void> {
-  if (dashboardControllerInitialized) {
-    return;
-  }
-
+  if (dashboardControllerInitialized) return;
   dashboardControllerInitialized = true;
-
-  onMount('dashboard-status').then(() => {
-    logger.debug('[DASHBOARD]', 'initController', 'onMount');
-    registerLifecycleListeners();
-    if (
-      store.get().tabService.current === 'dashboard' ||
-      isActiveLuciTab('dashboard')
-    ) {
-      onPageMount();
-    }
+  watchPanel('dashboard-status', {
+    mount: onPageMount,
+    unmount: onPageUnmount,
   });
 }
-import { failurePoliciesPanel } from './renderFailurePolicies';
