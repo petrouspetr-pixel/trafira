@@ -1075,7 +1075,7 @@ msgid "Disable QUIC"
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:544
-msgid "Disable the QUIC protocol to improve compatibility or fix issues with video streaming"
+msgid "Reject intercepted UDP port 443 traffic for both IPv4 and IPv6, even if QUIC is not recognized. Other UDP services on port 443 are also rejected. Excluded devices and direct traffic are unchanged."
 msgstr ""
 
 #: ../luci-app-trafira/htdocs/luci-static/resources/view/trafira/section.js:6149

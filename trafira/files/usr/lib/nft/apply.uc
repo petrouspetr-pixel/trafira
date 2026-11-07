@@ -975,6 +975,16 @@ function nft_create_runtime_base(table, localv4_set, common_set, port_set, ip_po
     if (arg_bool(exclude_ntp) && !nft_insert_rule(table, "mangle", [ "udp", "dport", "123", "return" ]))
         return false;
 
+    // Reject only traffic already selected for TPROXY. This preserves device,
+    // local-network and direct-routing exclusions, including router transports.
+    // reject is valid in INPUT, not PREROUTING; run before fw4's INPUT accepts
+    // and before the packet reaches the proxy socket, for both address families.
+    if (common.bool_option(settings, "disable_quic", false) &&
+        (!nft_create_chain(table, "quic_reject", "{ type filter hook input priority -1; policy accept; }") ||
+         !nft_add_rule(table, "quic_reject", [ "meta", "mark", "&", fakeip_mark, "==", fakeip_mark,
+            "udp", "dport", "443", "counter", "reject", "with", "icmpx", "type", "port-unreachable" ])))
+        return false;
+
     return true;
 }
 

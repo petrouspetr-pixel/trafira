@@ -861,6 +861,8 @@ function nft_runtime_signature_body(settings, sections) {
     body = signature_add_value(body, "settings.exclude_ntp", bool_option(settings, "exclude_ntp", false) ? "1" : "0");
     if (bool_option(settings, "exclude_wifi_calling", false))
         body = signature_add_value(body, "settings.exclude_wifi_calling", "1");
+    if (bool_option(settings, "disable_quic", false))
+        body = signature_add_value(body, "settings.disable_quic", "1");
     body = alice_config.signature_body(settings, signature_add_value, body);
     if (bool_option(settings, "router_origin_enabled", false)) {
         body = signature_add_value(body, "settings.router_origin_enabled", "1");
