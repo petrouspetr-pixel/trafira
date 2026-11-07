@@ -48,8 +48,7 @@ class Echo(socketserver.BaseRequestHandler):
    data=self.request.recv(65536)
    if not data:break
    self.request.sendall(data)
-for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10'),
-                    (socket.AF_INET,'192.0.2.1'),(socket.AF_INET6,'2001:db8::1'),
+for family,host in [(socket.AF_INET,'192.0.2.1'),(socket.AF_INET6,'2001:db8::1'),
                     (socket.AF_INET,'127.0.0.1')]:
  for base in [socketserver.ThreadingTCPServer,socketserver.ThreadingUDPServer]:
   cls=type('Server',(base,),{'address_family':family,'allow_reuse_address':True,'daemon_threads':True})
