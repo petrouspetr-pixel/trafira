@@ -88,6 +88,10 @@ let componentActionStateRefreshPromise: Promise<void> | null = null;
 const followedComponentJobs = new Set<string>();
 const handledComponentJobs = new Set<string>();
 const activeComponentJobs = new Map<UpdatesActionKey, string>();
+const completedComponentMutations = new Map<
+  Trafira.ComponentName,
+  { jobId: string; result: Trafira.ComponentActionResult }
+>();
 
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', () => {
@@ -198,6 +202,7 @@ function beginComponentAction(button: ComponentActionButton) {
     return false;
   }
 
+  completedComponentMutations.delete(button.component);
   setActionLoading(button.key, true, true);
   return true;
 }
@@ -547,6 +552,12 @@ async function completeComponentActionJob(
   }
 
   handledComponentJobs.add(jobId);
+  if (response.data.action !== 'check_update') {
+    completedComponentMutations.set(response.data.component, {
+      jobId,
+      result: response.data,
+    });
+  }
   await applyCompletedComponentAction({
     key,
     result: response.data,
@@ -654,7 +665,28 @@ function isComponentActionAlreadyRunningError(message: string | undefined) {
 }
 
 function handleComponentUiState(uiState: Trafira.UiState) {
-  for (const state of uiState.actions.component || []) {
+  const actions = uiState.actions.component || [];
+  for (const [component, completed] of completedComponentMutations) {
+    const oldJobStillRunning = actions.some(
+      (state) => state.job_id === completed.jobId && state.running,
+    );
+    const newerJobRunning = actions.some(
+      (state) =>
+        state.component === component &&
+        state.running &&
+        state.job_id !== completed.jobId,
+    );
+
+    if (oldJobStillRunning && !newerJobRunning) {
+      // get_ui_state can have been captured before the terminal job response.
+      // Its capabilities are then older than the confirmed mutation result.
+      patchSystemInfoAfterMutation(completed.result);
+    } else {
+      // A fresh snapshot or a genuine new operation owns the component again.
+      completedComponentMutations.delete(component);
+    }
+  }
+  for (const state of actions) {
     void followComponentActionState(state);
   }
 }

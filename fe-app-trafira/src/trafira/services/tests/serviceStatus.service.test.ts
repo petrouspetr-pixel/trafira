@@ -1,6 +1,20 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { store } from '../store.service';
 import { startServiceStatusBanner } from '../serviceStatus.service';
+import type { Trafira } from '../../types';
+
+const runtime = vi.hoisted(() => ({
+  listener: (_state: Trafira.UiState) => {},
+}));
+vi.mock('../runtimeUiState.service', () => ({
+  getCachedRuntimeUiState: () => undefined,
+  subscribeRuntimeUiState: (listener: typeof runtime.listener) => {
+    runtime.listener = listener;
+    return () => {
+      runtime.listener = () => {};
+    };
+  },
+}));
 
 vi.mock('../../../helpers', () => ({ executeShellCommand: vi.fn() }));
 
@@ -132,4 +146,83 @@ it('remounts exactly once after native Reset replaces the form map and releases 
   });
   expect(map.children).toHaveLength(0);
   expect(status.textContent).toContain('Loading');
+});
+
+it('keeps a failed start visible after action acknowledgement and native Reset', () => {
+  store.set({
+    servicesInfoWidget: {
+      loading: false,
+      failed: false,
+      data: {
+        singbox: 0,
+        trafiraRunning: 0,
+        trafiraEnabled: 1,
+        trafiraStatus: 'stopped but enabled',
+      },
+    },
+  });
+  stop = startServiceStatusBanner();
+  const snapshot: Trafira.UiState = {
+    service: {
+      trafira: {
+        running: 0,
+        enabled: 1,
+        status: 'stopped but enabled',
+        dns_configured: 0,
+      },
+      sing_box: { running: 0, enabled: 0, status: 'stopped & disabled' },
+    },
+    capabilities: {
+      sing_box_extended: 0,
+      sing_box_tiny: 0,
+      sing_box_compressed: 0,
+      sing_box_tailscale: 0,
+      zapret_installed: 0,
+      zapret2_installed: 0,
+      byedpi_installed: 0,
+      server_inbounds_enabled_count: 0,
+    },
+    actions: {
+      service: [
+        {
+          kind: 'service',
+          action: 'start',
+          job_id: 'failed-1',
+          started_at: 1,
+          success: false,
+          running: false,
+          exit_code: 1,
+        },
+      ],
+      latency: [],
+      subscription: [],
+      component: [],
+    },
+  };
+  runtime.listener(snapshot);
+  expect(map.children[0].children[0].textContent).toContain('Failed to start');
+  runtime.listener({
+    ...snapshot,
+    actions: { ...snapshot.actions, service: [] },
+  });
+  expect(map.children[0].children[0].textContent).toContain('Failed to start');
+  map.connected = false;
+  map = new Node();
+  mutation();
+  expect(map.children[0].children[0].textContent).toContain('Failed to start');
+  store.set({
+    diagnosticsActions: {
+      ...store.get().diagnosticsActions,
+      stop: { loading: true },
+    },
+  });
+  expect(map.children[0].children[0].textContent).toContain('Stopping');
+  store.set({
+    diagnosticsActions: {
+      ...store.get().diagnosticsActions,
+      stop: { loading: false },
+    },
+  });
+  runtime.listener(snapshot);
+  expect(map.children[0].children[0].textContent).toContain('Stopped');
 });

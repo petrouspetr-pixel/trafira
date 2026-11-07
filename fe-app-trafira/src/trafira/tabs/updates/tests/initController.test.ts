@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import type { store as Store } from '../../../services/store.service';
+import type { Trafira } from '../../../types';
 let store: typeof Store;
 
 const mocks = vi.hoisted(() => ({
@@ -371,41 +372,119 @@ it('unlocks retry after an installation error without claiming success', async (
   );
 });
 
-it('does not restore completed action loading from a late running snapshot', async () => {
-  mocks.cache.mockResolvedValue({
-    success: true,
-    data: { enabled: false, results: [] },
-  });
-  mocks.start.mockResolvedValue({ success: true, data: { job_id: 'install' } });
-  mocks.wait.mockResolvedValue({
-    success: true,
-    data: {
-      success: true,
-      component: 'byedpi',
-      action: 'install',
-      current_version: '3.0.0',
+async function emitRuntimeState(
+  byedpiInstalled: 0 | 1,
+  componentActions: Trafira.ComponentActionResult[],
+) {
+  const state: Trafira.UiState = {
+    service: {
+      trafira: { running: 0, enabled: 0, status: 'stopped', dns_configured: 0 },
+      sing_box: { running: 0, enabled: 0, status: 'stopped' },
     },
-  });
-  const view = await mountComponents(false);
-  view.button('Install').onClick!();
-  await flush();
-  mocks.wait.mockReturnValue(new Promise(() => {}));
-  mocks.runtimeListener!({
+    capabilities: {
+      sing_box_extended: 0,
+      sing_box_tiny: 0,
+      sing_box_compressed: 0,
+      sing_box_tailscale: 1,
+      zapret_installed: 0,
+      zapret2_installed: 0,
+      byedpi_installed: byedpiInstalled,
+      server_inbounds_enabled_count: 0,
+    },
     actions: {
-      component: [
-        {
-          running: true,
-          job_id: 'install',
-          component: 'byedpi',
-          action: 'install',
-        },
-      ],
+      component: componentActions,
+      service: [],
+      subscription: [],
+      latency: [],
     },
-  });
+  };
+  const { applyUiStateToStore } = await import(
+    '../../../services/uiState.service'
+  );
+  applyUiStateToStore(state);
+  mocks.runtimeListener!(state);
   await flush();
-  expect(view.version()).toBe('3.0.0');
-  expect(store.get().updatesActions.byedpiInstall.loading).toBe(false);
-});
+}
+
+it.each(['install', 'remove'] as const)(
+  'keeps the confirmed %s result when a delayed runtime response predates completion',
+  async (action) => {
+    mocks.cache.mockResolvedValue({
+      success: true,
+      data: { enabled: false, results: [] },
+    });
+    mocks.start.mockResolvedValue({ success: true, data: { job_id: action } });
+    mocks.wait.mockResolvedValue({
+      success: true,
+      data: {
+        success: true,
+        component: 'byedpi',
+        action,
+        current_version: '3.0.0',
+      },
+    });
+    const view = await mountComponents(action === 'remove');
+    view.button(action === 'remove' ? 'Remove' : 'Install').onClick!();
+    await flush();
+    mocks.wait.mockReturnValue(new Promise(() => {}));
+    await emitRuntimeState(action === 'remove' ? 1 : 0, [
+      {
+        success: true,
+        running: true,
+        job_id: action,
+        component: 'byedpi',
+        action,
+        message: '',
+        current_version: '',
+        latest_version: '',
+        changed: false,
+      },
+    ]);
+    expect(view.version()).toBe(
+      action === 'remove' ? 'Not installed' : '3.0.0',
+    );
+    expect(store.get().updatesActions.byedpiInstall.loading).toBe(false);
+    expect(store.get().updatesActions.byedpiRemove.loading).toBe(false);
+    expect(store.get().diagnosticsSystemInfo.byedpi_installed).toBe(
+      action === 'remove' ? 0 : 1,
+    );
+
+    // A genuine later operation from another page becomes authoritative.
+    await emitRuntimeState(action === 'remove' ? 0 : 1, [
+      {
+        success: true,
+        running: true,
+        job_id: 'foreign-next',
+        component: 'byedpi',
+        action: action === 'remove' ? 'install' : 'remove',
+        message: '',
+        current_version: '',
+        latest_version: '',
+        changed: false,
+      },
+    ]);
+    expect(view.version()).toBe(action === 'remove' ? 'Install…' : 'Remove…');
+    await emitRuntimeState(action === 'remove' ? 1 : 0, [
+      {
+        success: true,
+        running: false,
+        job_id: 'foreign-next',
+        component: 'byedpi',
+        action: action === 'remove' ? 'install' : 'remove',
+        current_version: '4.0.0',
+        message: '',
+        latest_version: '4.0.0',
+        changed: true,
+      },
+    ]);
+    expect(view.version()).toBe(
+      action === 'remove' ? '4.0.0' : 'Not installed',
+    );
+    expect(
+      view.button(action === 'remove' ? 'Remove' : 'Install').disabled,
+    ).toBe(false);
+  },
+);
 
 it.each(['sing_box'] as const)(
   'shows %s update immediately and does not replace it with a late cached result',

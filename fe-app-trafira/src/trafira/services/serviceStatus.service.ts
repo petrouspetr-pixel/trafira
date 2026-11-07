@@ -1,4 +1,7 @@
-import { getServiceStatus, ServiceStatus } from '../helpers/serviceStatus';
+import {
+  createServiceStatusPresenter,
+  ServiceStatus,
+} from '../helpers/serviceStatus';
 import {
   getCachedRuntimeUiState,
   subscribeRuntimeUiState,
@@ -23,12 +26,13 @@ function statusLabel(status: ServiceStatus) {
 export function startServiceStatusBanner() {
   let banner: HTMLElement | null = null;
   let statusNode: HTMLElement | null = null;
-  let cachedState = getCachedRuntimeUiState();
+  const presentStatus = createServiceStatusPresenter();
+  presentStatus(store.get(), getCachedRuntimeUiState()?.actions.service);
   let stopped = false;
 
   const render = () => {
+    const status = presentStatus(store.get());
     if (!statusNode) return;
-    const status = getServiceStatus(store.get(), cachedState?.actions.service);
     const label = `Trafira: ${statusLabel(status)}`;
     if (statusNode.textContent !== label) statusNode.textContent = label;
   };
@@ -73,7 +77,7 @@ export function startServiceStatusBanner() {
 
   const unsubscribeStore = store.subscribe(render);
   const unsubscribeRuntime = subscribeRuntimeUiState((state) => {
-    cachedState = state;
+    presentStatus(store.get(), state.actions.service);
     render();
   });
   const observer = new MutationObserver(mount);
