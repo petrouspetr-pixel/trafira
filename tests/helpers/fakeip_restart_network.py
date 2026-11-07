@@ -48,7 +48,8 @@ class Echo(socketserver.BaseRequestHandler):
    data=self.request.recv(65536)
    if not data:break
    self.request.sendall(data)
-for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10')]:
+for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10'),
+                    (socket.AF_INET,'192.0.2.1'),(socket.AF_INET6,'2001:db8::1')]:
  for base in [socketserver.ThreadingTCPServer,socketserver.ThreadingUDPServer]:
   cls=type('Server',(base,),{'address_family':family,'allow_reuse_address':True,'daemon_threads':True})
   server=cls((host,443),Echo)
@@ -166,15 +167,17 @@ print('recovered',flush=True)
             self.rules(enabled,selected)
             result=self.run_in(self.client,['python3','-c','''
 import socket
-for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10')]:
- print('family',family,'blocked',BLOCK,flush=True)
+targets=[(socket.AF_INET,'192.0.2.1',False),(socket.AF_INET6,'2001:db8::1',False)]
+if SELECTED:targets += [(socket.AF_INET,'198.18.0.10',BLOCK),(socket.AF_INET6,'2001:2::10',BLOCK)]
+for family,host,blocked in targets:
+ print('family',family,'blocked',blocked,flush=True)
  s=socket.socket(family,socket.SOCK_DGRAM);s.settimeout(2);s.connect((host,443))
  try:
   s.send(b'not-recognizable-as-quic');data=s.recv(100)
-  assert not BLOCK and data==b'not-recognizable-as-quic','UDP/443 escaped rejection'
- except ConnectionRefusedError:assert BLOCK,'unexpected rejection when disabled'
+  assert not blocked and data==b'not-recognizable-as-quic','UDP/443 escaped rejection'
+ except ConnectionRefusedError:assert blocked,'unexpected rejection of excluded/direct traffic'
  s.close()
-'''.replace('BLOCK',str(enabled and selected))])
+'''.replace('BLOCK',str(enabled and selected)).replace('SELECTED',str(selected))])
             self.assertEqual(result.returncode,0)
 
 
