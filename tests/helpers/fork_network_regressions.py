@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import socket
 import socketserver
+import ssl
 import struct
 import subprocess
 import tempfile
@@ -14,6 +15,7 @@ import threading
 import time
 import unittest
 import urllib.request
+import urllib.parse
 
 ROOT = Path(__file__).resolve().parents[2]
 LIB = ROOT / "trafira/files/usr/lib"
@@ -187,10 +189,112 @@ class NetworkRegressions(unittest.TestCase):
         with urllib.request.urlopen(f"http://127.0.0.1:{api_port}/proxies/choice", timeout=2) as response:
             self.assertEqual(json.load(response)["now"], "B", "no deletion of unrelated selector state")
 
+    def test_imported_ech_uses_its_explicit_https_dns_and_bootstrap(self):
+        queries, requests = [], []
+        class Bootstrap(socketserver.BaseRequestHandler):
+            def handle(self):
+                data, sock = self.request
+                end, labels = 12, []
+                while data[end]:
+                    size = data[end]
+                    labels.append(data[end+1:end+1+size].decode())
+                    end += size + 1
+                end += 5
+                kind = struct.unpack("!H", data[end-4:end-2])[0]
+                queries.append((".".join(labels), kind))
+                answer = b""
+                if kind == 1:
+                    answer = b"\xc0\x0c" + struct.pack("!HHIH", 1, 1, 60, 4) + socket.inet_aton("127.0.0.1")
+                sock.sendto(data[:2] + struct.pack("!HHHHH", 0x8180, 1, bool(answer), 0, 0) +
+                            data[12:end] + answer, self.client_address)
+        dns = socketserver.UDPServer(("127.0.0.1", 0), Bootstrap)
+        self.addCleanup(dns.server_close)
+        threading.Thread(target=dns.serve_forever, daemon=True).start()
+        self.addCleanup(dns.shutdown)
+        cert, key = self.work / "cert.pem", self.work / "key.pem"
+        subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+                        "-keyout", str(key), "-out", str(cert), "-days", "1",
+                        "-subj", "/CN=resolver.example", "-addext", "subjectAltName=DNS:resolver.example",
+                        "-addext", "basicConstraints=critical,CA:TRUE"],
+                       capture_output=True, check=True, timeout=15)
+        class DoH(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                requests.append(self.path)
+                data = self.rfile.read(int(self.headers.get("Content-Length", "0")))
+                end = 12
+                while data[end]:
+                    end += data[end] + 1
+                end += 5
+                response = data[:2] + struct.pack("!HHHHH", 0x8180, 1, 0, 0, 0) + data[12:end]
+                self.send_response(200)
+                self.send_header("Content-Type", "application/dns-message")
+                self.send_header("Content-Length", str(len(response)))
+                self.end_headers()
+                self.wfile.write(response)
+            def log_message(self, *_):
+                pass
+        doh = http.server.ThreadingHTTPServer(("127.0.0.1", 0), DoH)
+        tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        tls.load_cert_chain(cert, key)
+        tls.set_alpn_protocols(["http/1.1"])
+        doh.socket = tls.wrap_socket(doh.socket, server_side=True)
+        self.addCleanup(doh.server_close)
+        threading.Thread(target=doh.serve_forever, daemon=True).start()
+        self.addCleanup(doh.shutdown)
+        class Sink(socketserver.BaseRequestHandler):
+            def handle(self):
+                self.request.settimeout(3)
+                try:
+                    self.request.recv(4096)
+                except TimeoutError:
+                    pass
+        sink = socketserver.ThreadingTCPServer(("127.0.0.1", 0), Sink)
+        sink.daemon_threads = True
+        self.addCleanup(sink.server_close)
+        threading.Thread(target=sink.serve_forever, daemon=True).start()
+        self.addCleanup(sink.shutdown)
+        ech = urllib.parse.quote(f"ech.example+https://resolver.example:{doh.server_port}/ech-record", safe="")
+        link = ("vless://00000000-0000-4000-8000-000000000001@127.0.0.1:" +
+                str(sink.server_address[1]) + "?security=tls&sni=target.example&ech=" + ech)
+        fixture = {"settings": {"dns_server": ["127.0.0.1:9"],
+                                "bootstrap_dns_server": [f"127.0.0.1:{dns.server_address[1]}"]},
+                   "section": [{".name": "proxy", "action": "connection", "selector_proxy_links": [link]}]}
+        source, output = self.work / "input.json", self.work / "generated.json"
+        source.write_text(json.dumps(fixture))
+        generated = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "singbox/generator.uc"),
+                                    "generate-config-fixture", str(source), str(output), "127.0.0.1",
+                                    "0", "1", "", "1.14.2", "check-only"],
+                                   env=self.env, capture_output=True, text=True, timeout=15)
+        self.assertEqual(generated.returncode, 0, generated.stderr)
+        config = json.loads(output.read_text())
+        inbound = port()
+        config["inbounds"] = [{"type": "mixed", "tag": "test", "listen": "127.0.0.1", "listen_port": inbound}]
+        config["route"]["final"] = "proxy-out"
+        config["certificate"] = {"certificate_path": [str(cert)]}
+        config["experimental"] = {}
+        config["log"] = {"level": "debug"}
+        self.start_core(config)
+        subprocess.run(["curl", "--max-time", "3", "-s", "--proxy", f"http://127.0.0.1:{inbound}",
+                        "https://example.com/"], capture_output=True, timeout=5)
+        log = (self.work / "core.log").read_text()
+        self.assertEqual(requests, ["/ech-record"], log)
+        self.assertTrue(any(name == "resolver.example" and kind == 1 for name, kind in queries), log)
+
     def test_stalled_local_api_returns_a_bounded_structured_error(self):
+        self.check_stalled_api("get_connections", [])
+
+    def test_bulk_metadata_timeout_stops_before_measuring_any_nodes(self):
+        self.check_stalled_api("get_proxy_latencies", ['["group","node"]', "5000"])
+
+    def test_probe_has_http_deadline_independent_of_core_timeout(self):
+        self.check_stalled_api("get_proxy_latency", ["node", "100"])
+
+    def check_stalled_api(self, action, arguments):
         release = threading.Event()
+        paths = []
         class Handler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
+                paths.append(self.path)
                 release.wait(8)
             def log_message(self, *_):
                 pass
@@ -206,10 +310,44 @@ class NetworkRegressions(unittest.TestCase):
                "SB_CLASH_API_CONTROLLER_PORT": str(api.server_address[1])}
         started = time.monotonic()
         result = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "diagnostics/runtime.uc"),
-                                 "clash-api", "get_connections"], env=env, capture_output=True, text=True, timeout=7)
+                                 "clash-api", action, *arguments], env=env, capture_output=True, text=True, timeout=7)
         self.assertLess(time.monotonic() - started, 7)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("error", json.loads(result.stdout))
+        if action == "get_proxy_latency":
+            self.assertEqual(len(paths), 1)
+            self.assertTrue(paths[0].startswith("/proxies/node/delay?"))
+        else:
+            self.assertEqual(paths, ["/connections" if action == "get_connections" else "/proxies"])
+
+    def test_large_api_reply_without_content_length_is_bounded(self):
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()  # Deliberately no Content-Length.
+                try:
+                    self.wfile.write(b'{"connections":[],"padding":"')
+                    for _ in range(768):
+                        self.wfile.write(b'x' * 4096)
+                    self.wfile.write(b'"}')
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+            def log_message(self, *_):
+                pass
+        api = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        api.daemon_threads = True
+        self.addCleanup(api.server_close)
+        threading.Thread(target=api.serve_forever, daemon=True).start()
+        self.addCleanup(api.shutdown)
+        state = self.work / "uci"
+        state.write_text("trafira.settings=settings\ntrafira.settings.service_listen_address=127.0.0.1\n")
+        env = {**self.env, "TRAFIRA_UCI_STATE_FILE": str(state),
+               "SB_CLASH_API_CONTROLLER_PORT": str(api.server_address[1])}
+        result = subprocess.run(["ucode", "-L", str(LIB), str(LIB / "diagnostics/runtime.uc"),
+                                 "clash-api", "get_connections"], env=env, capture_output=True, text=True, timeout=7)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertLess(len(result.stdout), 1024)
+        self.assertIn("too_large", json.loads(result.stdout)["error"])
 
 
 if __name__ == "__main__":

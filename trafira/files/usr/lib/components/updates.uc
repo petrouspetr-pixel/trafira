@@ -61,6 +61,7 @@ let community_subnets = null;
 let rule_config = null;
 let routing_rulesets_module_value = null;
 let singbox_rulesets_module_value = null;
+let section_nft_collection = null;
 
 function community_subnets_module() {
     if (community_subnets == null)
@@ -1257,6 +1258,10 @@ function launch_subscription_worker(args) {
 }
 
 function subscription_update_worker(state_file, output_file, section, source_index) {
+    // Publish from the worker before doing any work. The parent may resume
+    // after this job has finished and must not rewrite its terminal state.
+    if (!set_subscription_running_job_pid(state_file, fs.readlink("/proc/self")))
+        exit(1);
     let status = command_status(command_from_args([
         BIN_PATH,
         "subscription_update",
@@ -1296,10 +1301,8 @@ function subscription_update_async(section, source_index) {
         as_string(source_index)
     ]);
 
-    if (pid == "" || !set_subscription_running_job_pid(state_file, pid)) {
-        if (pid != "")
-            command_success_from_args([ "kill", pid ]);
-        subscription_job_json_response(false, "", "Failed to write subscription update worker pid");
+    if (!job_pid_valid(pid)) {
+        subscription_job_json_response(false, "", "Failed to start subscription update worker");
         exit(1);
     }
 
@@ -2054,15 +2057,18 @@ function list_reference_label(section, kind, reference) {
 function download_to_file(url, filepath, proxy_address, identity) {
     let attempt = 1;
     let transport = require("singbox.ruleset_cache");
+    let bounded = require("routing.list_download");
+    // Plain/JSON sources have a larger allowance than compiled startup snapshots.
+    let limit = 8 * 1024 * 1024;
     while (attempt <= 3) {
         // Bound the entire attempt, including a peer that keeps sending tiny chunks.
         let args = [ "curl", "--fail", "--location", "--silent", "--show-error",
-            "--connect-timeout", "10", "--max-time", "30", "--output", filepath ];
+            "--connect-timeout", "10", "--max-time", "30", "--max-filesize", "" + limit ];
         if (as_string(proxy_address) != "")
             push(args, "--proxy", "http://" + as_string(proxy_address), "--noproxy", "");
         push(args, "--write-out", "%{http_code}", url);
 
-        let result = transport.download_status(args);
+        let result = bounded.download(args, filepath, limit);
         if (result.code == 0)
             return true;
 
@@ -2121,9 +2127,45 @@ function cleanup_empty_ruleset(path) {
     return false;
 }
 
+function collect_section_nft_input(kind, source, label) {
+    let info = fs.stat(source);
+    if (!info || info.type != "file" || info.size > 8388608 ||
+        section_nft_collection.bytes + info.size > 16777216)
+        return false;
+    let path = temp_path();
+    if (path == "")
+        return false;
+    if (!copy_file(source, path) || !command_success_from_args([ "cmp", "-s", source, path ])) {
+        remove_file(path);
+        return false;
+    }
+    push(section_nft_collection.files, path);
+    push(section_nft_collection.inputs, {kind, path, label: as_string(label)});
+    section_nft_collection.bytes += info.size;
+    return true;
+}
+
+function stage_section_list_publication(path) {
+    let staged_path = path + ".stage." + owner_pid();
+    let info = fs.stat(path);
+    if (info && (info.type != "file" || info.size > 8388608))
+        return "";
+    if (file_exists_value(staged_path) || file_exists_value(staged_path + ".previous"))
+        return "";
+    if (file_exists_value(path) && (!copy_file(path, staged_path) ||
+        !command_success_from_args([ "cmp", "-s", path, staged_path ]))) {
+        remove_file(staged_path);
+        return "";
+    }
+    push(section_nft_collection.publications, {path, staged_path});
+    return staged_path;
+}
+
 function add_plain_subnet_file_to_nft_for_section(section, filepath) {
     if (!file_nonempty(filepath))
         return true;
+    if (section_nft_collection != null)
+        return collect_section_nft_input("plain", filepath, "section subnet list");
 
     return nft_module_success([
         "nft-add-subnet-file-for-uci-section",
@@ -2139,6 +2181,8 @@ function add_plain_subnet_file_to_nft_for_section(section, filepath) {
 }
 
 function add_json_ruleset_subnets_to_nft_for_section(section, json_file, label) {
+    if (section_nft_collection != null)
+        return collect_section_nft_input("source", json_file, label);
     let unscoped_tmpfile = temp_path();
     let scoped_tmpfile = temp_path();
     if (unscoped_tmpfile == "" || scoped_tmpfile == "") {
@@ -2165,7 +2209,8 @@ function add_json_ruleset_subnets_to_nft_for_section(section, json_file, label) 
 }
 
 function import_domain_ip_list_file_into_rulesets(filepath, section, staged_path, subnet_chunks) {
-    if (!file_exists_value(filepath)) {
+    let info = fs.stat(filepath);
+    if (!info || info.type != "file" || info.size > 8388608) {
         log_message("Domain/IP list source is missing: " + as_string(filepath), "error");
         return false;
     }
@@ -2190,7 +2235,9 @@ function import_domain_ip_list_file_into_rulesets(filepath, section, staged_path
     if (ok && !domains_only)
         ok = ruleset_module_success([ "import-plain-list", subnets_tmpfile, ruleset_filepath, "ip_cidr", "subnets", "5000" ]);
     if (ok && !domains_only) {
-        if (type(subnet_chunks) == "array") {
+        if (section_nft_collection != null)
+            ok = add_plain_subnet_file_to_nft_for_section(section, subnets_tmpfile);
+        else if (type(subnet_chunks) == "array") {
             let data = fs.readfile(subnets_tmpfile);
             if (data == null)
                 ok = false;
@@ -2255,6 +2302,17 @@ function rebuild_domain_ip_lists_from_rule(section, settings) {
     if (ok && length(subnet_chunks) > 0) {
         subnets_path = temp_path();
         ok = subnets_path != "" && write_file(subnets_path, join("\n", subnet_chunks));
+    }
+    if (section_nft_collection != null) {
+        if (ok && subnets_path != "")
+            ok = add_plain_subnet_file_to_nft_for_section(section, subnets_path);
+        if (ok)
+            push(section_nft_collection.publications, {path, staged_path});
+        else
+            remove_file(staged_path);
+        if (subnets_path != "")
+            remove_file(subnets_path);
+        return ok;
     }
     let previous_path = staged_path + ".previous";
     let saved_previous = false;
@@ -2334,6 +2392,15 @@ function import_builtin_subnets_from_rule(section, settings) {
             }
 
             ensure_dir(TMP_RULESET_FOLDER);
+            if (section_nft_collection != null) {
+                let staged_path = stage_section_list_publication(entry.path);
+                if (staged_path == "") {
+                    ok = false;
+                    remove_file(tmpfile);
+                    continue;
+                }
+                entry.path = staged_path;
+            }
             if (!community_subnets_module().publish(entry, tmpfile, tmpfile)) {
                 log_message("Failed to publish built-in " + as_string(service) + " subnet rules; keeping previous rules", "error");
                 ok = false;
@@ -2341,7 +2408,7 @@ function import_builtin_subnets_from_rule(section, settings) {
                 continue;
             }
 
-            if (!nft_module_success([
+            if (section_nft_collection != null ? !collect_section_nft_input("plain", tmpfile, entry.tag) : !nft_module_success([
                 "nft-add-community-subnet-file-for-uci-section",
                 section_name(section),
                 service,
@@ -2834,6 +2901,106 @@ function run_list_update_stage(stage, sections, settings, operation) {
     return ok;
 }
 
+function finish_section_nft_collection(section, collection, prepared) {
+    let ok = prepared, manifest = "", locked = false;
+    try {
+        if (ok) {
+            manifest = temp_path();
+            let text = json_text({section, inputs: collection.inputs});
+            ok = manifest != "" && write_file(manifest, text) && fs.readfile(manifest) == text;
+        }
+        // Downloads do not hold the reload lock. Only publication needs to be
+        // serialized against a runtime table rebuild or retaining-list reload.
+        if (ok) {
+            locked = acquire_runtime_lock(RELOAD_LOCK_DIR, false);
+            ok = locked;
+        }
+        if (ok) {
+            for (let publication in collection.publications) {
+                let info = fs.stat(publication.staged_path);
+                if (!info || info.type != "file" || info.size > 8388608) { ok = false; break; }
+                publication.previous_path = publication.staged_path + ".previous";
+                if (file_exists_value(publication.previous_path)) {
+                    publication.recovery_pending = true;
+                    ok = false;
+                    break;
+                }
+                publication.had_previous = file_exists_value(publication.path);
+                if (publication.had_previous && (!copy_file(publication.path, publication.previous_path) ||
+                    !command_success_from_args([ "cmp", "-s", publication.path, publication.previous_path ]))) {
+                    remove_file(publication.previous_path);
+                    ok = false;
+                    break;
+                }
+            }
+        }
+        if (ok) {
+            for (let publication in collection.publications) {
+                if (!fs.rename(publication.staged_path, publication.path)) { ok = false; break; }
+                publication.published = true;
+            }
+        }
+        if (ok) {
+            let status = module_status([ LIB_DIR + "/nft/apply.uc", "nft-replace-section-subnets-for-uci-section",
+                section_name(section), manifest, NFT_TABLE_NAME ]);
+            // A stopped runtime has no kernel sets yet; keep the materialized
+            // JSON for startup instead of creating a partial runtime table.
+            ok = status == 0 || status == 2;
+        }
+    } catch (e) { ok = false; }
+
+    for (let publication in collection.publications) {
+        let keep_previous = publication.recovery_pending === true;
+        if (!ok && publication.published) {
+            if (publication.had_previous) {
+                if (!fs.rename(publication.previous_path, publication.path)) {
+                    keep_previous = true;
+                    log_message("Could not restore section list JSON; recovery copy kept at " + publication.previous_path, "error");
+                }
+            }
+            else {
+                remove_file(publication.path);
+                if (file_exists_value(publication.path))
+                    log_message("Could not remove failed initial domain/IP JSON at " + publication.path, "error");
+            }
+        }
+        if (!keep_previous && publication.previous_path != null)
+            remove_file(publication.previous_path);
+        remove_file(publication.staged_path);
+        remove_file(publication.staged_path + ".new");
+    }
+    if (locked)
+        release_runtime_lock(RELOAD_LOCK_DIR);
+    if (manifest != "")
+        remove_file(manifest);
+    remove_files(collection.files);
+    if (!ok)
+        log_message("Section list replacement failed; previous nft sets were kept for " + section_name(section), "error");
+    return ok;
+}
+
+function update_section_subnet_lists(section, settings) {
+    if (!bool_option(section, "enabled", true))
+        return true;
+    if (length(list_option_values(section, "remote_domain_lists")) || length(list_option_values(section, "remote_subnet_lists"))) {
+        log_message("Legacy remote list options must be migrated before replacing section lists: " + section_name(section), "error");
+        return false;
+    }
+    let collection = {inputs: [], files: [], publications: [], bytes: 0}, ok = true;
+    section_nft_collection = collection;
+    try {
+        for (let stage in [
+            [ "domain_ip", rebuild_domain_ip_lists_from_rule ],
+            [ "builtin_subnets", import_builtin_subnets_from_rule ],
+            [ "ruleset_subnets", import_rule_sets_with_subnets_from_rule ]
+        ])
+            if (!run_list_update_stage(stage[0], [section], settings, stage[1]))
+                ok = false;
+    } catch (e) { ok = false; }
+    section_nft_collection = null;
+    return finish_section_nft_collection(section, collection, ok);
+}
+
 function list_update_pass() {
     let settings = uci_settings();
     let proxy_address = service_proxy_address(settings, "lists");
@@ -2852,15 +3019,8 @@ function list_update_pass() {
     if (type(current_config) == "object" && !startup_cache.refresh(current_config, proxy_address, log_list_refresh_failure))
         ok = false;
 
-    for (let stage in [
-        [ "domain_ip", rebuild_domain_ip_lists_from_rule ],
-        [ "builtin_subnets", import_builtin_subnets_from_rule ],
-        [ "remote_domains", import_domains_from_remote_domain_lists ],
-        [ "remote_subnets", import_subnets_from_remote_subnet_lists ],
-        [ "ruleset_subnets", import_rule_sets_with_subnets_from_rule ]
-    ])
-        if (!run_list_update_stage(stage[0], sections, settings, stage[1]))
-            ok = false;
+    if (!run_list_update_stage("section_subnets", sections, settings, update_section_subnet_lists))
+        ok = false;
 
     if (ok) {
         write_list_update_timestamp(now_seconds());

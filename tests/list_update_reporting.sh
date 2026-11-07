@@ -125,12 +125,12 @@ check(length(messages)==3 && index(messages[0].text,"http=429")>=0 && index(mess
 reset();
 
 check(list_update_pass(),"successful pass");check(writes==1 && messages[length(messages)-1].level=="info","success updates timestamp once");
-check(join("|",order)=="domain_ip:one|domain_ip:two|builtin_subnets:one|builtin_subnets:two|remote_domains:one|remote_domains:two|remote_subnets:one|remote_subnets:two|ruleset_subnets:one|ruleset_subnets:two","preserve stage and section order");
+check(join("|",order)=="domain_ip:one|builtin_subnets:one|ruleset_subnets:one|domain_ip:two|builtin_subnets:two|ruleset_subnets:two","collect all contributions once per section");
 reset();fail="builtin_subnets:two";
-check(!list_update_pass() && writes==0 && length(order)==10,"failure still runs later stages without success timestamp");
+check(!list_update_pass() && writes==0 && length(order)==6,"failure still runs later stages without success timestamp");
 check(index(sprintf("%J",messages),"section=two stage=builtin_subnets reason=operation_failed")>=0 && messages[length(messages)-1].level=="error","failed section and stage reach error summary");
-reset();throw_at="remote_subnets:one";
-check(!list_update_pass() && length(order)==10 && writes==0,"stage exception does not hide later results");
+reset();throw_at="ruleset_subnets:one";
+check(!list_update_pass() && length(order)==6 && writes==0,"stage exception does not hide later results");
 check(index(sprintf("%J",messages),"reason=internal_error")>=0 && index(sprintf("%J",messages),"internal secret")<0,"exception text is not logged");
 reset();cache_fail=true;
 check(!list_update_pass() && writes==0,"cache failure prevents successful timestamp");
@@ -138,6 +138,7 @@ check(index(sprintf("%J",messages),"list=failed-list stage=download reason=downl
 reset();dns_ok=false;check(!list_update_pass() && length(order)==0 && messages[length(messages)-1].level=="error","DNS failure logs stage without modifying lists");
 print("List update stage order, error severity and timestamp tests passed\\n");
 `;
-fs.writeFileSync(`${dir}/stages.uc`,extract('as_string')+extract('shell_quote')+extract('command_from_args')+prefix+extract('safe_list_log_text')+extract('log_message')+extract('list_reference_label')+extract('download_to_file')+extract('log_list_refresh_failure')+extract('run_list_update_stage')+extract('list_update_pass').replace('require("singbox.ruleset_cache")','startup_cache_stub')+suffix);
+const collector=`function update_section_subnet_lists(section,settings){let ok=true;for(let stage in [["domain_ip",rebuild_domain_ip_lists_from_rule],["builtin_subnets",import_builtin_subnets_from_rule],["ruleset_subnets",import_rule_sets_with_subnets_from_rule]])if(!run_list_update_stage(stage[0],[section],settings,stage[1]))ok=false;return ok;}\n`;
+fs.writeFileSync(`${dir}/stages.uc`,extract('as_string')+extract('shell_quote')+extract('command_from_args')+prefix+extract('safe_list_log_text')+extract('log_message')+extract('list_reference_label')+extract('download_to_file')+extract('log_list_refresh_failure')+extract('run_list_update_stage')+collector+extract('list_update_pass').replace('require("singbox.ruleset_cache")','startup_cache_stub')+suffix);
 JS
 ucode -L "$ROOT_DIR/trafira/files/usr/lib" "$WORK_DIR/stages.uc"

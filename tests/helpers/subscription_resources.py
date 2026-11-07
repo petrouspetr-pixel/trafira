@@ -1,0 +1,322 @@
+"""Bounded subscription I/O using real ucode and loopback HTTP; no host UCI."""
+import base64
+import gzip
+import http.server
+import json
+import os
+from pathlib import Path
+import resource
+import signal
+import subprocess
+import tempfile
+import threading
+import time
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+LIB = ROOT / "trafira/files/usr/lib"
+SOURCE_LIMIT = 8 * 1024 * 1024
+CACHE_LIMIT = 32 * 1024 * 1024
+NODE = {"type": "socks", "tag": "working", "server": "127.0.0.1", "server_port": 1080}
+VALID = json.dumps({"outbounds": [NODE]}).encode()
+
+
+class SubscriptionResources(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="trafira-subscription-resources-")
+        self.addCleanup(self.temp.cleanup)
+        self.work = Path(self.temp.name)
+        self.env = dict(os.environ, TRAFIRA_LIB=str(LIB),
+                        TMP_SING_BOX_FOLDER=str(self.work / "sing-box"),
+                        TMP_SUBSCRIPTION_FOLDER=str(self.work / "subscriptions"),
+                        TRAFIRA_RUNTIME_STATE_DIR=str(self.work / "run"),
+                        TRAFIRA_SECTION_CACHE_DIR=str(self.work / "sections"),
+                        TRAFIRA_PERSISTENT_SUBSCRIPTION_CACHE_DIR=str(self.work / "persistent"),
+                        TRAFIRA_UCI_STATE_FILE=str(self.work / "uci"),
+                        TRAFIRA_SUBSCRIPTION_DOWNLOAD_BUDGET="2")
+
+    def uc(self, *args, timeout=12, memory=None, file_size=None):
+        def bound():
+            if memory:
+                resource.setrlimit(resource.RLIMIT_AS, (memory, memory))
+            if file_size:
+                signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
+                resource.setrlimit(resource.RLIMIT_FSIZE, (file_size, file_size))
+        command = ["ucode", "-L", str(LIB), *args]
+        process = subprocess.Popen(command, env=self.env, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, start_new_session=True,
+                                   preexec_fn=bound if memory or file_size else None)
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            # The old downloader can leave curl holding our capture pipes.
+            os.killpg(process.pid, signal.SIGKILL)
+            process.communicate(timeout=3)
+            raise
+        return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+
+    def serve(self, behavior, payload=VALID):
+        owner = self
+        self.paths = []
+        self.release = threading.Event()
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                owner.paths.append(self.path)
+                self.send_response(200)
+                if behavior == "declared-large":
+                    self.send_header("Content-Length", str(len(VALID[:-1]) + 12 + SOURCE_LIMIT + 1 + 2))
+                elif behavior == "valid":
+                    self.send_header("Content-Length", str(len(payload)))
+                self.send_header("profile-title", "Guard fixture")
+                self.end_headers()
+                try:
+                    if behavior == "slow":
+                        while not owner.release.wait(0.05):
+                            self.wfile.write(b"x")
+                            self.wfile.flush()
+                    elif behavior == "invalid-slow":
+                        owner.release.wait(1)
+                        self.wfile.write(b"not a subscription")
+                    elif behavior in ("large", "declared-large"):
+                        self.wfile.write(VALID[:-1] + b',"padding":"')
+                        for _ in range(SOURCE_LIMIT // 65536):
+                            self.wfile.write(b"x" * 65536)
+                        self.wfile.write(b'x"}')
+                    else:
+                        self.wfile.write(payload)
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+            def log_message(self, *_):
+                pass
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        server.daemon_threads = True
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        self.addCleanup(self.release.set)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{server.server_port}/private-token-not-for-logs"
+        (self.work / "uci").write_text(
+            "trafira.settings=settings\ntrafira.proxy=section\n"
+            "trafira.proxy.connection_type=proxy\ntrafira.proxy.action=connection\n"
+            "trafira.source=subscription_url\ntrafira.source.section=proxy\n"
+            f"trafira.source.url={self.url}\ntrafira.source.auto_user_agent=0\n"
+            "trafira.source.user_agent=GuardTest\n")
+        return self.url
+
+    def seed_cache(self):
+        folder = self.work / "subscriptions"
+        folder.mkdir(exist_ok=True)
+        self.cached = folder / "proxy-subscription-1.json"
+        self.cached.write_bytes(VALID)
+        (folder / "proxy-subscription-1.url").write_text(self.url)
+        (folder / "proxy-subscription-1.user_agent").write_text("GuardTest")
+        (folder / "proxy-subscription-1.hwid").write_text("")
+        (folder / "proxy-subscription-1.device_headers").write_text("")
+
+    def update(self, timeout=12):
+        return self.uc(str(LIB / "subscription/cache.uc"), "update-source", "proxy", "1",
+                       self.url, "runtime", "", timeout=timeout)
+
+    def test_trickling_response_obeys_source_budget_and_preserves_cache(self):
+        self.serve("slow")
+        self.seed_cache()
+        started = time.monotonic()
+        try:
+            result = self.update(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.fail("trickling subscription exceeded total download budget")
+        self.assertLess(time.monotonic() - started, 5)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.cached.read_bytes(), VALID)
+        self.assertNotIn("private-token-not-for-logs", result.stdout + result.stderr)
+        self.assertFalse(list((self.work / "subscriptions").glob("*.part.*")))
+
+    def test_oversized_download_is_rejected_before_cache_replacement(self):
+        for behavior in ["large", "declared-large"]:
+            with self.subTest(behavior=behavior):
+                self.serve(behavior)
+                self.seed_cache()
+                result = self.update()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(self.cached.read_bytes(), VALID)
+                self.assertEqual(len(self.paths), 1, "oversize must not retry compatibility profiles")
+                self.assertFalse(list((self.work / "subscriptions").glob("*.part.*")))
+
+    def test_automatic_profile_fallbacks_share_the_same_time_budget(self):
+        self.serve("invalid-slow")
+        path = self.work / "uci"
+        path.write_text(path.read_text().replace("auto_user_agent=0", "auto_user_agent=1"))
+        self.seed_cache()
+        (self.work / "subscriptions/proxy-subscription-1.user_agent").write_text("Happ")
+        started = time.monotonic()
+        try:
+            result = self.update(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.fail("automatic request profiles each received a fresh download budget")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertLess(time.monotonic() - started, 5)
+        self.assertLessEqual(len(self.paths), 3)
+        self.assertEqual(self.cached.read_bytes(), VALID)
+
+    def test_supported_formats_update_normally(self):
+        uri = b"socks5://127.0.0.1:1080#working\n"
+        yaml = b"proxies:\n  - name: working\n    type: socks5\n    server: 127.0.0.1\n    port: 1080\n"
+        for payload in [VALID, uri, base64.b64encode(uri), gzip.compress(uri), yaml]:
+            with self.subTest(payload=payload[:25]):
+                self.serve("valid", payload)
+                result = self.update()
+                self.assertIn(result.returncode, (0, 2), result.stdout + result.stderr)
+                cache = self.work / "subscriptions/proxy-subscription-1.json"
+                self.assertTrue(json.loads(cache.read_text())["outbounds"])
+
+    def test_parser_rejects_oversize_plain_and_gzip_expansion(self):
+        for compressed in [False, True]:
+            with self.subTest(compressed=compressed):
+                # Valid JSON with a large unrelated field must still be bounded.
+                source = VALID[:-1] + b',"padding":"' + b"x" * SOURCE_LIMIT + b'"}'
+                path, output = self.work / "input", self.work / "output.json"
+                path.write_bytes(gzip.compress(source) if compressed else source)
+                output.unlink(missing_ok=True)
+                result = self.uc(str(LIB / "subscription/parser.uc"),
+                                 "normalize-content-validated", str(path), str(output))
+                self.assertNotEqual(result.returncode, 0, "oversized input was materialized and accepted")
+                self.assertFalse(output.exists(), "rejected parse left successful-looking output")
+
+    def test_gzip_header_detection_uses_binary_bytes(self):
+        path = self.work / "binary-gzip"
+        path.write_bytes(gzip.compress(VALID))
+        script = self.work / "gzip-header.uc"
+        script.write_text('exit(require("subscription.parser").content_is_gzip(ARGV[0])?0:1);')
+        result = self.uc(str(script), str(path))
+        self.assertEqual(result.returncode, 0, "gzip magic was not recognized: " + result.stderr)
+
+    def test_cache_io_binary_identity_and_bounded_memory(self):
+        source, target = self.work / "binary", self.work / "copy"
+        block = bytes(range(256)) * 256
+        with source.open("wb") as output:
+            for _ in range(CACHE_LIMIT // len(block)):
+                output.write(block)
+        script = ('let io=require("subscription.io");'
+                  'if(!io.copy_file(ARGV[0],ARGV[1])||!io.files_equal(ARGV[0],ARGV[1]))exit(1);')
+        result = self.uc("-e", script, str(source), str(target), memory=48 * 1024 * 1024)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(target.stat().st_size, CACHE_LIMIT)
+        with target.open("r+b") as output:
+            output.seek(CACHE_LIMIT // 2)
+            output.write(b"different")
+        result = self.uc("-e", 'exit(require("subscription.io").files_equal(ARGV[0],ARGV[1])?1:0);',
+                         str(source), str(target), memory=48 * 1024 * 1024)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_bounded_reads_and_failed_copy_do_not_damage_target(self):
+        source, target = self.work / "source", self.work / "target"
+        source.write_bytes(b"abcd")
+        target.write_bytes(b"retained")
+        script = ('let io=require("subscription.io"),fs=require("fs");'
+                  'if(io.read_file(ARGV[0],3)!=null||io.read_file(ARGV[0],4)!="abcd")exit(1);'
+                  'if(io.copy_file(ARGV[0]+".missing",ARGV[1]))exit(2);'
+                  'if(fs.readfile(ARGV[1])!="retained")exit(3);')
+        result = self.uc("-e", script, str(source), str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.uc("-e", 'exit(require("subscription.io").read_file(ARGV[0],33554432)=="abcd"?0:1);',
+                         str(source), memory=24 * 1024 * 1024)
+        self.assertEqual(result.returncode, 0, "small reads must not allocate the entire size ceiling: " + result.stderr)
+
+    def test_buffered_write_failure_keeps_last_complete_copy(self):
+        source, target = self.work / "short-source", self.work / "last-complete"
+        source.write_bytes(b"x" * 512)
+        target.write_bytes(b"retained")
+        result = self.uc("-e", 'exit(require("subscription.io").copy_file(ARGV[0],ARGV[1])?1:0);',
+                         str(source), str(target), file_size=256)
+        self.assertEqual(result.returncode, 0, "buffered flush failure was reported as a complete copy: " + result.stderr)
+        self.assertEqual(target.read_bytes(), b"retained")
+        self.assertFalse(list(self.work.glob("last-complete.*.tmp")))
+
+    def test_gzip_and_link_population_keep_input_after_buffered_write_failure(self):
+        source = self.work / "compressed"
+        compressed = gzip.compress(VALID[:-1] + b',"padding":"' + b"x" * 512 + b'"}')
+        source.write_bytes(compressed)
+        result = self.uc(str(LIB / "subscription/parser.uc"), "try-decode-gzip-content", str(source), file_size=256)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(source.read_bytes(), compressed)
+        source = self.work / "normalized"
+        original = json.dumps({"outbounds": [{**NODE, "tag": "n" * 300}]}).encode()
+        source.write_bytes(original)
+        result = self.uc("-e", 'exit(require("subscription.share_link").populate_subscription_file(ARGV[0])?1:0);',
+                         str(source), file_size=256)
+        self.assertEqual(result.returncode, 0, "truncated link-populated cache was accepted: " + result.stderr)
+        self.assertEqual(source.read_bytes(), original)
+
+    def test_persistent_identity_files_survive_buffered_write_failure(self):
+        source = self.work / "working.json"
+        source.write_bytes(VALID)
+        folder = self.work / "persistent"
+        folder.mkdir()
+        prefix = folder / "proxy-subscription-1"
+        (folder / "proxy-subscription-1.json").write_bytes(VALID)
+        original = {"url": "https://example.test/sub", "user_agent": "Old/1", "hwid": "old-hwid", "device_headers": ""}
+        for field in ["url", "user_agent", "hwid"]:
+            with self.subTest(field=field):
+                for key, value in original.items():
+                    Path(str(prefix) + "." + key).write_text(value)
+                wanted = {**original, field: "https://new.example.test/sub" if field == "url" else "new-profile-value"}
+                result = self.uc(str(LIB / "subscription/cache.uc"), "persist-source-cache", "proxy-subscription-1",
+                                 str(source), wanted["url"], wanted["user_agent"], wanted["hwid"], "", "", file_size=8)
+                self.assertNotEqual(result.returncode, 0, "incomplete identity file was reported as saved")
+                for key, value in original.items():
+                    self.assertEqual(Path(str(prefix) + "." + key).read_text(), value)
+                self.assertEqual((folder / "proxy-subscription-1.json").read_bytes(), VALID)
+                self.assertFalse(list(folder.glob("*.tmp")))
+
+    def test_restoring_runtime_identity_reports_failed_write_and_keeps_previous_file(self):
+        folder, runtime = self.work / "persistent", self.work / "subscriptions"
+        folder.mkdir()
+        runtime.mkdir()
+        url = "https://example.test/" + "x" * 512
+        for suffix, value in {"json": VALID, "url": url.encode(), "user_agent": b"GuardTest",
+                              "hwid": b"", "device_headers": b""}.items():
+            (folder / ("proxy-subscription-1." + suffix)).write_bytes(value)
+        path = runtime / "proxy-subscription-1.url"
+        path.write_bytes(b"previous-url")
+        result = self.uc(str(LIB / "subscription/cache.uc"), "restore-persistent-source", "proxy-subscription-1",
+                         str(runtime), str(folder), url, "GuardTest", "", "GuardTest", "", file_size=256)
+        self.assertNotEqual(result.returncode, 0, "runtime identity restoration silently accepted a short write")
+        self.assertEqual(path.read_bytes(), b"previous-url")
+        self.assertFalse(list(runtime.glob("*.tmp")))
+
+    def test_update_does_not_replace_working_cache_when_identity_cannot_be_saved(self):
+        self.serve("valid", json.dumps({"outbounds": [{**NODE, "server": "127.0.0.2"}]}).encode())
+        self.seed_cache()
+        # Individual normalized files fit, but the complete authoritative
+        # source (body + identity) must fail rather than publish a partial set.
+        result = self.uc(str(LIB / "subscription/cache.uc"), "update-source", "proxy", "1",
+                         self.url, "runtime", "", file_size=300)
+        self.assertNotEqual(result.returncode, 0, "incomplete source publication was reported as successful")
+        self.assertEqual(self.cached.read_bytes(), VALID)
+        self.assertFalse(list((self.work / "subscriptions").glob("*.tmp")))
+
+    def test_atomic_text_writes_preserve_noop_identity_empty_values_and_rename_failure(self):
+        target = self.work / "identity"
+        target.write_text("same")
+        before = target.stat()
+        script = ('let io=require("subscription.io");'
+                  'if(!io.write_file(ARGV[0],"same"))exit(1);')
+        result = self.uc("-e", script, str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((target.stat().st_ino, target.stat().st_mtime_ns), (before.st_ino, before.st_mtime_ns))
+        result = self.uc("-e", 'exit(require("subscription.io").write_file(ARGV[0],"")?0:1);', str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(target.read_bytes(), b"")
+        self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+        directory = self.work / "directory"
+        directory.mkdir()
+        sentinel = directory / "retained"
+        sentinel.write_text("retained")
+        result = self.uc("-e", 'exit(require("subscription.io").write_file(ARGV[0],"new")?1:0);', str(directory))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(sentinel.read_text(), "retained")
+        self.assertFalse(list(self.work.glob("directory.*.tmp")))
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

@@ -26,10 +26,8 @@ function test(name, file, names, setup, body) {
   }).sort((a,b) => a.start-b.start);
   fs.writeFileSync(`${dir}/${name}.uc`, common+setup+'\n'+functions.map(f=>f.code).join('\n')+'\n'+body);
 }
-for (const file of ['service/initd.uc','service/state.uc']) {
-  test(file.replaceAll('/','-'), file, ['acquire_runtime_dir_lock','release_runtime_dir_lock'], '',
-    'assert(acquire_runtime_dir_lock("/fixture/lock", "123") === false); assert(index(calls, "rmdir") >= 0);');
-}
+// Real state/initd lock failures, publication races and cleanup are covered by
+// runtime_dir_lock_concurrency.sh, including RLIMIT_FSIZE and SIGKILL.
 test('ui', 'service/ui.uc', ['acquire_dir_lock','release_dir_lock'], `
 let current_pid = () => "123";
 let job_pid_valid = pid => true;

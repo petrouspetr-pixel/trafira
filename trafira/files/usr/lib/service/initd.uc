@@ -1,6 +1,8 @@
 #!/usr/bin/env ucode
 
 let fs = require("fs");
+let runtime_dir_lock = require("service.runtime_dir_lock");
+let worker_owner = require("service.worker_owner");
 let constants = require("core.constants");
 let uci_core = require("core.uci");
 
@@ -177,46 +179,12 @@ function pid_alive(pid) {
     return match(pid, /^[0-9]+$/) != null && command_success_from_args([ "kill", "-0", pid ]);
 }
 
-function lock_dir_write_owner(lock_dir, owner_pid) {
-    return write_text_file(as_string(lock_dir) + "/pid", as_string(owner_pid) + "\n");
-}
-
 function release_runtime_dir_lock(lock_dir) {
-    lock_dir = as_string(lock_dir);
-    if (lock_dir == "")
-        return;
-
-    command_success_from_args([ "rm", "-f", lock_dir + "/pid" ]);
-    command_success_from_args([ "rmdir", lock_dir ]);
+    runtime_dir_lock.release(as_string(lock_dir));
 }
 
 function acquire_runtime_dir_lock(lock_dir, owner_pid) {
-    lock_dir = as_string(lock_dir);
-    owner_pid = as_string(owner_pid);
-    if (lock_dir == "" || owner_pid == "")
-        return false;
-
-    if (command_success_from_args([ "mkdir", lock_dir ])) {
-        if (lock_dir_write_owner(lock_dir, owner_pid))
-            return true;
-        release_runtime_dir_lock(lock_dir);
-        return false;
-    }
-
-    if (pid_alive(first_line_value(lock_dir + "/pid")))
-        return false;
-
-    command_success_from_args([ "rm", "-f", lock_dir + "/pid" ]);
-    if (!command_success_from_args([ "rmdir", lock_dir ]))
-        return false;
-    if (!command_success_from_args([ "mkdir", lock_dir ]))
-        return false;
-
-    if (lock_dir_write_owner(lock_dir, owner_pid))
-        return true;
-
-    release_runtime_dir_lock(lock_dir);
-    return false;
+    return runtime_dir_lock.acquire(as_string(lock_dir), as_string(owner_pid));
 }
 
 function mark_pending_reload(path, reason) {
@@ -251,11 +219,17 @@ function start_retry_pending(path) {
 
 function cancel_scheduled_start_retry(path) {
     path = as_string(path || START_RETRY_PID_FILE);
-    let pid = first_line_value(path);
-    if (pid_alive(pid))
-        command_success_from_args([ "kill", pid ]);
-    if (file_exists(path))
-        unlink_file(path);
+    return worker_owner.cancel(path, "wan").ok;
+}
+
+function scheduled_start_retry_worker(path, delay_seconds, launcher_pid, init_script, launcher_ticks) {
+    let owner = worker_owner.wait(path, "wan", launcher_pid, launcher_ticks);
+    if (!owner)
+        return 1;
+    sleep(int(delay_seconds) * 1000);
+    if (!worker_owner.owned(path, owner) || !worker_owner.forget(path, owner))
+        return 1;
+    return command_status_from_args([ init_script, "retry_start_on_wan_up" ]);
 }
 
 function schedule_start_retry(path, delay_seconds) {
@@ -264,23 +238,52 @@ function schedule_start_retry(path, delay_seconds) {
     if (!numeric_text(delay_seconds))
         delay_seconds = "30";
 
-    let scheduled_pid = first_line_value(path);
-    if (pid_alive(scheduled_pid))
-        return true;
-    if (file_exists(path))
-        unlink_file(path);
     if (!ensure_parent_dir(path))
         return false;
-
-    let worker = command_from_args([ "sleep", delay_seconds ]) +
-        "; " + command_from_args([ "rm", "-f", path ]) +
-        "; exec " + command_from_args([ SERVICE_INIT, "retry_start_on_wan_up" ]);
-    let result = command_capture(command_from_args([ "sh", "-c", worker ]) + " >/dev/null 2>&1 & echo $!");
-    let pid = trim(result.output);
-    if (result.status != 0 || !numeric_text(pid))
+    let guard = worker_owner.lock(path);
+    if (!guard)
         return false;
+    let existing = worker_owner.current(path, "wan");
+    if (existing && !existing.orphaned) {
+        guard.close();
+        return true;
+    }
+    if (existing && !worker_owner.cancel(path, "wan", guard).ok) {
+        guard.close();
+        return false;
+    }
+    worker_owner.discard(path);
+    let launcher = worker_owner.identity(), token = worker_owner.token();
+    if (!launcher || !token) {
+        guard.close();
+        return false;
+    }
 
-    return write_text_file(path, pid + "\n");
+    // rc.common's procd lock must not outlive this action in the sleeping retry.
+    let inherited_lock = fs.fdopen(1000, "r") || fs.fdopen(1000, "w");
+    if (inherited_lock)
+        inherited_lock.close();
+
+    let script = sourcepath(), library = getenv("TRAFIRA_LIB") || fs.dirname(fs.dirname(script));
+    let worker = command_from_args([
+        "setsid", "ucode", "-L", library, script, "scheduled-start-retry-worker",
+        path, delay_seconds, launcher.pid, SERVICE_INIT, launcher.ticks
+    ]);
+    let result = command_capture("TRAFIRA_WORKER_TOKEN=" + shell_quote(token) + " " + worker + " </dev/null >/dev/null 2>&1 & echo $!");
+    let pid = trim(result.output);
+    if (result.status != 0 || !numeric_text(pid)) {
+        guard.close();
+        return false;
+    }
+
+    if (!worker_owner.publish(path, pid, "wan", token)) {
+        worker_owner.kill_unpublished(pid, "wan", token);
+        worker_owner.discard(path);
+        guard.close();
+        return false;
+    }
+    guard.close();
+    return true;
 }
 
 function consume_pending_reload(path) {
@@ -573,8 +576,10 @@ function start_service(reason, owner_pid) {
     }
     else {
         mark_start_retry(START_RETRY_FILE, as_string(reason) == "triggered" ? "wan_retry_failed" : "start_failed");
-        schedule_start_retry(START_RETRY_PID_FILE, START_RETRY_DELAY_SECONDS);
-        command_success_from_args([ "logger", "-t", SERVICE_NAME, "[warn] Trafira start failed; scheduled an automatic retry" ]);
+        if (schedule_start_retry(START_RETRY_PID_FILE, START_RETRY_DELAY_SECONDS))
+            command_success_from_args([ "logger", "-t", SERVICE_NAME, "[warn] Trafira start failed; scheduled an automatic retry" ]);
+        else
+            command_success_from_args([ "logger", "-t", SERVICE_NAME, "[error] Trafira start failed; could not schedule an automatic retry" ]);
     }
     finish_external_service_action("start", plan.job_id, status);
     return status;
@@ -793,8 +798,10 @@ else if (mode == "start-retry-pending")
     exit(start_retry_pending(ARGV[1]) ? 0 : 1);
 else if (mode == "schedule-start-retry")
     exit(schedule_start_retry(ARGV[1], ARGV[2]) ? 0 : 1);
+else if (mode == "scheduled-start-retry-worker")
+    exit(scheduled_start_retry_worker(ARGV[1], ARGV[2], ARGV[3], ARGV[4], ARGV[5]));
 else if (mode == "cancel-scheduled-start-retry")
-    cancel_scheduled_start_retry(ARGV[1]);
+    exit(cancel_scheduled_start_retry(ARGV[1]) ? 0 : 1);
 else if (mode == "begin-action") {
     let job_id = begin_external_service_action(ARGV[1], ARGV[2] || "initd", ARGV[3]);
     if (job_id != "")

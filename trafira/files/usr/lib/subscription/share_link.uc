@@ -2,6 +2,9 @@
 
 let fs = require("fs");
 let common = require("core.common");
+let ech_links = require("subscription.ech");
+let subscription_io = require("subscription.io");
+let subscription_bundle = require("subscription.bundle");
 
 let as_string = common.as_string;
 let array_or_empty = common.array_or_empty;
@@ -137,6 +140,7 @@ function add_tls_query(params, outbound, trojan_default_tls) {
         add_query(params, "fp", tls.utls.fingerprint);
     if (type(tls.alpn) == "array" && length(tls.alpn) > 0)
         add_query(params, "alpn", join(",", tls.alpn));
+    add_query(params, "ech", ech_links.value(outbound));
 }
 
 function add_transport_query(params, outbound) {
@@ -247,6 +251,7 @@ function serialize_hysteria2(outbound) {
             add_query(params, "insecure", "1");
         if (type(tls.alpn) == "array" && length(tls.alpn) > 0)
             add_query(params, "alpn", join(",", tls.alpn));
+        add_query(params, "ech", ech_links.value(outbound));
     }
     if (type(outbound.obfs) == "object") {
         add_query(params, "obfs", outbound.obfs.type);
@@ -282,6 +287,11 @@ function serialize_vmess(outbound) {
         vmess.sni = as_string(outbound.tls.server_name);
         if (type(outbound.tls.utls) == "object")
             vmess.fp = as_string(outbound.tls.utls.fingerprint);
+        if (type(outbound.tls.alpn) == "array" && length(outbound.tls.alpn) > 0)
+            vmess.alpn = join(",", outbound.tls.alpn);
+        let ech = ech_links.value(outbound);
+        if (ech != "")
+            vmess.ech = ech;
     }
 
     if (type(outbound.transport) == "object") {
@@ -309,6 +319,9 @@ function serialize_vmess(outbound) {
 
 function serialize_outbound_link(outbound) {
     if (type(outbound) != "object")
+        return "";
+    let tls = type(outbound.tls) == "object" ? outbound.tls : {};
+    if (type(tls.ech) == "object" && tls.ech.enabled === true && ech_links.value(outbound) == "")
         return "";
 
     let outbound_type = as_string(outbound.type);
@@ -367,7 +380,12 @@ function shell_quote(value) {
 
 function populate_subscription_file(path) {
     path = as_string(path);
-    let data = fs.readfile(path);
+    let own = subscription_bundle.inspect(path);
+    // Bundles were populated before their atomic publication; a plain JSON
+    // rewrite here would destroy their validated identity prologue.
+    if (own.present)
+        return own.valid;
+    let data = subscription_io.read_file(path, subscription_io.CACHE_LIMIT);
     if (data == null)
         return false;
 
@@ -384,8 +402,13 @@ function populate_subscription_file(path) {
 
     let stamp = clock();
     let tmp_path = sprintf("%s.%d.%d.tmp", path, stamp[0], stamp[1]);
-    if (fs.writefile(tmp_path, sprintf("%J\n", subscription)) == null)
+    let serialized = sprintf("%J\n", subscription);
+    if (length(serialized) > subscription_io.CACHE_LIMIT ||
+        fs.writefile(tmp_path, serialized) == null ||
+        !subscription_io.complete_file(tmp_path, length(serialized))) {
+        fs.unlink(tmp_path);
         return false;
+    }
 
     system("chmod 600 " + shell_quote(tmp_path) + " >/dev/null 2>&1");
     if (!fs.rename(tmp_path, path)) {

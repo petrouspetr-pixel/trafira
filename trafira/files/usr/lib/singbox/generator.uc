@@ -19,6 +19,7 @@ let source_rulesets = require("routing.rulesets");
 let rule_config = require("config.rule");
 let connections = require("config.connections");
 let subscription_share_link = require("subscription.share_link");
+let ech_links = require("subscription.ech");
 let uci = null;
 let fixture_uci_data = null;
 let runtime_settings_cache = null;
@@ -638,6 +639,12 @@ function compatible_subscription_outbounds(outbounds, section_name) {
     for (let outbound in array_or_empty(outbounds)) {
         if (!supported_subscription_outbound(outbound))
             continue;
+        let restored = ech_links.restore_cached(outbound);
+        if (restored.error) {
+            warn_skipped_subscription_outbound(section_name, outbound, restored.error);
+            continue;
+        }
+        outbound = restored.outbound;
         if (!runtime_supports_xhttp && outbound_uses_xhttp(outbound)) {
             warn_skipped_subscription_outbound(section_name, outbound, "XHTTP requires sing-box-extended");
             continue;
@@ -808,16 +815,18 @@ function assert_unique_outbound_tags(config) {
 function add_subscription_source_with_state(config, section, source_index, source_entry, taken, selector_tags, urltest_candidate_tags, state, show_metadata, include_urltest_groups, hide_urltest_group_outbounds, hide_detour_outbounds, node_prefix) {
     let section_name = section[".name"];
     let source_section = runtime_subscription.source_id(section_name, source_index);
+    let source_snapshot = runtime_subscription.read_source_snapshot(source_section);
     if (!runtime_subscription.source_cache_is_current(
         source_section,
         source_entry,
         connections.subscription_user_agent(section, source_entry),
         connections.subscription_hwid(section, source_entry),
-        connections.subscription_device_headers_signature(section, source_entry)
+        connections.subscription_device_headers_signature(section, source_entry),
+        source_snapshot
     ))
         return 0;
 
-    let source_outbounds = runtime_subscription.read_source_outbounds(source_section);
+    let source_outbounds = runtime_subscription.read_source_outbounds(source_section, source_snapshot);
     if (length(source_outbounds) == 0)
         return 0;
 
@@ -832,7 +841,7 @@ function add_subscription_source_with_state(config, section, source_index, sourc
     let outbounds = compatible_subscription_outbounds(source_outbounds, section_name);
 
     if (show_metadata !== false)
-        runtime_subscription.merge_source_metadata(state, section_name, source_section, source_index, source_entry);
+        runtime_subscription.merge_source_metadata(state, section_name, source_section, source_index, source_entry, source_snapshot);
     let visibility_refs = subscription_visibility_refs(outbounds);
     if (include_urltest_groups === false)
         hide_urltest_group_outbounds = false;
@@ -1892,6 +1901,11 @@ function manual_vmess_outbound(link, tag_name) {
             outbound.transport.host = hosts;
     }
 
+    if ("ech" in vmess) {
+        let error = ech_links.apply(outbound, vmess.ech);
+        if (error != "")
+            runtime_generate_unsupported(error);
+    }
     return outbound;
 }
 
@@ -1964,7 +1978,7 @@ function manual_hysteria2_outbound(link, tag_name) {
     return outbound;
 }
 
-function manual_link_outbound(link, tag_name) {
+function manual_link_outbound_value(link, tag_name) {
     let scheme = url_scheme(link);
     if (scheme == "vmess")
         return manual_vmess_outbound(link, tag_name);
@@ -1982,6 +1996,30 @@ function manual_link_outbound(link, tag_name) {
     if (scheme == "hysteria2" || scheme == "hy2")
         return manual_hysteria2_outbound(link, tag_name);
     runtime_generate_unsupported("manual proxy link scheme is not supported by sing-box config generation yet");
+}
+
+function manual_link_outbound(link, tag_name) {
+    if (url_scheme(link) == "vmess")
+        return manual_vmess_outbound(link, tag_name);
+    let ech = ech_links.query(link);
+    if (!ech.present)
+        return manual_link_outbound_value(link, tag_name);
+    if (ech.error)
+        runtime_generate_unsupported(ech.error);
+    let scheme = url_scheme(link), security = as_string(url_query_params(ech.link).security || "");
+    if (index(["vless", "trojan", "hysteria2", "hy2"], scheme) < 0 ||
+        (security != "" && security != "tls"))
+        runtime_generate_unsupported("ECH requires a supported TLS proxy link without REALITY");
+    // The older manual parser decodes the complete URI. Remove ECH first so
+    // its PEM newlines, base64 '+' and encoded DoH separators survive intact.
+    let plain = url_strip_fragment_value(ech.link);
+    if (security == "")
+        plain += (index(plain, "?") >= 0 ? "&" : "?") + "security=tls";
+    let outbound = manual_link_outbound_value(plain, tag_name);
+    let error = ech_links.apply(outbound, ech.value);
+    if (error != "")
+        runtime_generate_unsupported(error);
+    return outbound;
 }
 
 function add_manual_proxy_link(config, state, section_name, manual_index, link, taken, selector_tags, urltest_candidate_tags) {
@@ -3149,30 +3187,79 @@ function add_server_routes(config, servers, sections) {
 }
 
 function allow_dynamic_ech_queries(config) {
-    let names = [];
+    let queries = {}, resolvers = {};
     for (let outbound in config.outbounds) {
         let tls = object_or_empty(outbound.tls), ech = object_or_empty(tls.ech);
+        let doh = as_string(outbound.__trafira_ech_doh || "");
+        delete outbound.__trafira_ech_doh;
         if (!bool_option(tls, "enabled", false) || !bool_option(ech, "enabled", false) ||
-            trim(option(ech, "config", "")) != "" || trim(option(ech, "config_path", "")) != "")
+            trim(option(ech, "config", "")) != "" || trim(option(ech, "config_path", "")) != "") {
+            if (doh != "")
+                runtime_generate_unsupported("ECH resolver metadata requires dynamic TLS ECH");
             continue;
+        }
         let name = lc(trim(option(ech, "query_server_name", "") || option(tls, "server_name", "") || as_string(outbound.server)));
         if (substr(name, length(name) - 1) == ".")
             name = substr(name, 0, length(name) - 1);
-        if (name == "" || length(name) > 253 || !match(name, /^[a-z0-9_.-]+$/) || index(name, "..") >= 0)
+        // Raw query_server_name may be a DNS service owner such as
+        // _8443._https.example. Preserve its existing exact-name exception.
+        if (name == "" || length(name) > 253 || !match(name, /^[a-z0-9_.-]+$/) || index(name, "..") >= 0) {
+            if (doh != "")
+                runtime_generate_unsupported("ECH query domain is invalid");
             continue;
-        if (index(names, name) < 0)
-            push(names, name);
+        }
+        if (doh != "") {
+            if (ech_links.doh_url(doh) == null)
+                runtime_generate_unsupported("ECH resolver must be a valid HTTPS URL without credentials, query or fragment");
+            if (queries[name] && queries[name] != doh)
+                runtime_generate_unsupported("ECH query domain has conflicting explicit DoH resolvers: " + name);
+            queries[name] = doh;
+        }
+        else if (!(name in queries)) {
+            queries[name] = "";
+        }
     }
-    if (length(names) == 0)
+    if (length(keys(queries)) == 0)
         return;
+    let rules = [];
+    for (let name, doh in queries) {
+        let tag = runtime_constants.BOOTSTRAP_DNS_SERVER_TAG;
+        if (doh != "") {
+            if (!(doh in resolvers)) {
+                let parsed = ech_links.doh_url(doh), suffix = length(keys(resolvers)) + 1;
+                let taken = {};
+                for (let server in config.dns.servers)
+                    taken[server.tag] = true;
+                while (taken["ech-dns-server-" + suffix])
+                    suffix++;
+                tag = "ech-dns-server-" + suffix;
+                let server = {
+                    type: "https", tag, server: parsed.server,
+                    server_port: parsed.server_port, path: parsed.path
+                };
+                // No detour uses the core's direct dialer. An explicit detour
+                // to our empty built-in direct outbound is rejected at startup.
+                if (!parsed.is_ip)
+                    server.domain_resolver = runtime_constants.BOOTSTRAP_DNS_SERVER_TAG;
+                push(config.dns.servers, server);
+                resolvers[doh] = tag;
+            }
+            tag = resolvers[doh];
+        }
+        let existing = null;
+        for (let rule in rules)
+            if (rule.server == tag)
+                existing = rule;
+        if (existing != null)
+            push(existing.domain, name);
+        else
+            push(rules, { query_type: "HTTPS", domain: [name], action: "route", server: tag });
+    }
     // ECH inherits its caller's inbound context. Its exact-name exception must
     // precede router/DNS-health catch-alls too, not just the HTTPS rejection.
-    // Bootstrap avoids a cycle when the main DNS uses this same TLS tunnel.
+    // Bootstrap/direct DoH avoids a cycle when main DNS uses the TLS tunnel.
     // Other names and types retain their policy; static ECH needs no exception.
-    unshift(config.dns.rules, {
-        query_type: "HTTPS", domain: names, action: "route",
-        server: runtime_constants.BOOTSTRAP_DNS_SERVER_TAG
-    });
+    config.dns.rules = [...rules, ...config.dns.rules];
 }
 
 function generate_config(output_path, service_address, mwan3_active, supports_xhttp, deferred_sections, sing_box_version, validation_only) {

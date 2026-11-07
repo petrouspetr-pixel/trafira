@@ -78,12 +78,30 @@ function failure(diagnostic, reason) {
     if (type(diagnostic) == "object") diagnostic.reason = reason;
     return false;
 }
+function cleanup_staging_locked(input) {
+    let source = input ? fs.stat(input) : null, names = fs.lsdir(CACHE_DIR);
+    if ((input && !source) || names == null) return false;
+    let source_device = source ? sprintf("%J", source.dev) : null;
+    // mktemp reserves exactly six alphanumeric suffix characters. All managed
+    // writers hold .cache.lock until rename/cleanup, so a regular file in this
+    // namespace cannot belong to another live writer while we hold that lock.
+    for (let name in names) {
+        if (!match(name, /^[.]stage[.][A-Za-z0-9]{6}$/)) continue;
+        let staged = CACHE_DIR + "/" + name, info = fs.lstat(staged);
+        if (!info || info.type != "file") continue;
+        // Protect input aliases and hard links as well as the literal pathname.
+        if (source && info.inode == source.inode && sprintf("%J", info.dev) == source_device) continue;
+        if (!fs.unlink(staged)) return false;
+    }
+    return true;
+}
 function save_locked(rule, file, session, diagnostic) {
     let target = path(rule);
     if (!target) return failure(diagnostic, "invalid_source");
     if (size(file) <= 0) return failure(diagnostic, "empty_download");
     if (size(file) > MAX_FILE) return failure(diagnostic, "file_size_limit");
     if (!validate(rule, file, session)) return failure(diagnostic, "invalid_rule_set");
+    if (!cleanup_staging_locked(file)) return failure(diagnostic, "staging_cleanup_failed");
     if (success(["cmp", "-s", file, target])) return true;
     if (!success(["mkdir", "-p", CACHE_DIR]) || !success(["chmod", "700", CACHE_DIR])) return failure(diagnostic, "cache_directory_failed");
     let bytes = size(file);
@@ -175,7 +193,7 @@ function refresh(config, proxy, report) {
         let info = fs.lstat(target);
         if (!info || info.type != "file" || active[target]) continue;
         if ((match(name, /^[a-f0-9]{64}[.]snapshot$/) && time() - info.mtime > 300) ||
-            (match(name, /^[.]stage[.][A-Za-z0-9]+$/) && time() - info.mtime > 3600))
+            (match(name, /^[.]stage[.][A-Za-z0-9]{6}$/) && time() - info.mtime > 3600))
             fs.unlink(target);
     }
     guard.close();

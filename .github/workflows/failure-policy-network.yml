@@ -60,11 +60,17 @@ jobs:
       - name: Verify atomic nft transactions and packet priority
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/nft_transaction_network.sh
 
+      - name: Verify complete section list replacement in the kernel
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/nft_section_replace_network.sh
+
       - name: Verify router-origin packet paths
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/router_origin_network.sh
 
       - name: Verify isolated rule-set bootstrap transport
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_bootstrap_network.sh
+
+      - name: Verify direct cold startup with stopped system DNS
+        run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_direct_bootstrap_network.sh
 
       - name: Verify section selector live TCP switching on sing-box 1.12
         run: env RUN_TRAFIRA_NETWORK_TESTS=1 python3 tests/helpers/selector_interrupt_network.py
@@ -77,6 +83,7 @@ jobs:
           tar -xzf /tmp/sing-box-1.14.tar.gz -C /tmp
           sudo install -m 0755 /tmp/sing-box-1.14.2-linux-amd64/sing-box /usr/local/bin/sing-box
           sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_bootstrap_network.sh
+          sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/ruleset_direct_bootstrap_network.sh
           sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/native_wireguard_bootstrap_network.sh
           sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/route_dns_network.sh
           sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/route_ip_resolve_network.sh
@@ -86,6 +93,8 @@ jobs:
           env RUN_TRAFIRA_NETWORK_TESTS=1 python3 tests/helpers/selector_interrupt_network.py
       - name: Verify fork regressions with real core and stalled local API
         run: sudo env RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/fork_network_regressions.sh
+      - name: Verify ECH link generation against real core
+        run: env TRAFIRA_REAL_ECH_CORE=1 python3 tests/ech_links.py
       - name: Verify provider Base62 ranges against pinned Extended core
         shell: bash
         run: |
@@ -101,5 +110,7 @@ jobs:
       - uses: actions/setup-node@v5.0.0
         with:
           node-version: '22'
+      - name: Verify bounded Chromium lifecycle
+        run: node --test tests/helpers/chromium_lifecycle.test.cjs
       - name: Verify Chromium FakeIP address-space classification
         run: sudo env PATH="$PATH" RUN_TRAFIRA_NETWORK_TESTS=1 bash tests/fakeip_chromium_network.sh

@@ -39,6 +39,16 @@ from pathlib import Path
 from unittest.mock import patch
 
 workflow = Path(sys.argv[1]).read_text()
+
+# Both package formats use preverified archives from build.sh's shared cache.
+assert 'SDK_CACHE_DIR: ${{ runner.temp }}/trafira-sdk-cache' in workflow
+assert workflow.count('python3 tools/download-verified-range.py') == 2
+for size, digest in [
+    (258600841, '9e398ea7efc098e4a986f97efff595e32d08c615fe356bcb3d885d7ad3a39ac0'),
+    (284199892, '70fc990b2f9a2705e8bbca610e421a55e789901d4aeba10d9fdd7c89777bf695')]:
+    assert f'--size {size} --sha256 {digest}' in workflow
+assert '"$SDK_CACHE_DIR/${IPK_SDK_URL##*/}"' in workflow
+assert '"$SDK_CACHE_DIR/${APK_SDK_URL##*/}"' in workflow
 events = workflow.split('on:\n', 1)[1].split('\npermissions:', 1)[0].split('\nconcurrency:', 1)[0]
 assert re.findall(r'^  ([a-z_]+):', events, re.M) == ['workflow_dispatch'], 'Release builds must only start by workflow_dispatch'
 assert 'group: release-${{ inputs.release_tag }}' in workflow

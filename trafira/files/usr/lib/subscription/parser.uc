@@ -1,6 +1,9 @@
 #!/usr/bin/env ucode
 
 let fs = require("fs");
+let ech_links = loadfile(replace(sourcepath(), /\/[^\/]+$/, "/ech.uc"))();
+let subscription_io = loadfile(replace(sourcepath(), /\/[^\/]+$/, "/io.uc"))();
+let subscription_bundle = loadfile(replace(sourcepath(), /\/[^\/]+$/, "/bundle.uc"))();
 
 function as_string(value) {
     return value == null ? "" : "" + value;
@@ -284,11 +287,11 @@ function json_decode_text(text) {
 }
 
 function read_file(path) {
-    return fs.readfile(path);
+    return subscription_io.read_file(path, subscription_io.SOURCE_LIMIT);
 }
 
 function read_json_file(path) {
-    let data = read_file(path);
+    let data = subscription_io.read_file(path, subscription_io.CACHE_LIMIT);
     return data == null ? null : json_decode_text(data);
 }
 
@@ -297,7 +300,8 @@ function reality_public_key_valid(value) {
 }
 
 function validate_subscription(path) {
-    let value = read_json_file(path);
+    let snapshot = subscription_bundle.snapshot(path);
+    let value = snapshot.valid ? snapshot.document : null;
     if (type(value) != "object" || type(value.outbounds) != "array" || length(value.outbounds) == 0)
         return false;
 
@@ -312,7 +316,17 @@ function validate_subscription(path) {
 }
 
 function write_json_file(path, value) {
-    return fs.writefile(path, sprintf("%J", value) + "\n");
+    let data = sprintf("%J", value) + "\n";
+    if (length(data) > subscription_io.CACHE_LIMIT) {
+        warn("Normalized subscription exceeds size limit\n");
+        return false;
+    }
+    let written = fs.writefile(path, data);
+    if (written == null || !subscription_io.complete_file(path, length(data))) {
+        fs.unlink(path);
+        return false;
+    }
+    return written;
 }
 
 function write_json(value) {
@@ -1052,6 +1066,13 @@ function process_vmess_json(raw, decoded) {
             outbound.transport.host = split_csv(string_value(vmess.host));
     }
 
+    if ("ech" in vmess) {
+        let error = ech_links.apply(outbound, vmess.ech);
+        if (error != "") {
+            warn(error, "\n");
+            return null;
+        }
+    }
     return outbound;
 }
 
@@ -1075,24 +1096,47 @@ function process_vmess(raw) {
 }
 
 function parse_share_link(line) {
+    if (length(as_string(line)) > subscription_io.LINK_LIMIT)
+        return null;
     if (starts_with(line, "vmess://"))
         return process_vmess(line);
+    let ech = ech_links.query(line);
+    if (ech.present && ech.error) {
+        warn(ech.error, "\n");
+        return null;
+    }
     if (starts_with(line, "ss://"))
-        return process_shadowsocks(line);
+        return ech.present ? null : process_shadowsocks(line);
 
-    let url = parse_url(line);
+    let url = parse_url(ech.present ? ech.link : line);
     if (!url)
         return null;
-
+    if (ech.present) {
+        let security = url.query.security || "";
+        if (security != "" && security != "tls" && security != "xtls") {
+            warn("ECH requires TLS without REALITY\n");
+            return null;
+        }
+        if (security == "")
+            url.query.security = "tls";
+    }
+    let outbound = null;
     if (url.scheme == "vless")
-        return process_vless(line, url);
-    if (url.scheme == "trojan")
-        return process_trojan(line, url);
-    if (url.scheme == "hysteria2" || url.scheme == "hy2")
-        return process_hysteria2(line, url);
-    if (match(url.scheme, /^socks/))
-        return process_socks(line, url);
-    return null;
+        outbound = process_vless(line, url);
+    else if (url.scheme == "trojan")
+        outbound = process_trojan(line, url);
+    else if (url.scheme == "hysteria2" || url.scheme == "hy2")
+        outbound = process_hysteria2(line, url);
+    else if (match(url.scheme, /^socks/) && !ech.present)
+        outbound = process_socks(line, url);
+    if (outbound != null && ech.present) {
+        let error = ech_links.apply(outbound, ech.value);
+        if (error != "") {
+            warn(error, "\n");
+            return null;
+        }
+    }
+    return outbound;
 }
 
 function share_link_outbound(raw, tag) {
@@ -1530,7 +1574,8 @@ function normalize_uri_list_data(data, output_file) {
 
     let added = 0;
     let skipped = 0;
-    output.write("{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[");
+    let prefix = "{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[";
+    let bytes = length(prefix), ok = output.write(prefix) == bytes;
 
     for (let line in split(data, "\n")) {
         if (index(line, "\r") >= 0)
@@ -1539,9 +1584,11 @@ function normalize_uri_list_data(data, output_file) {
         if (line != "" && !starts_with(line, "#")) {
             let outbound = parse_share_link(line);
             if (outbound) {
-                if (added > 0)
-                    output.write(",");
-                output.write(sprintf("%J", outbound));
+                let piece = (added > 0 ? "," : "") + sprintf("%J", outbound);
+                bytes += length(piece);
+                ok = ok && bytes + 128 <= subscription_io.CACHE_LIMIT && output.write(piece) == length(piece);
+                if (!ok)
+                    break;
                 added++;
             }
             else {
@@ -1550,10 +1597,12 @@ function normalize_uri_list_data(data, output_file) {
         }
     }
 
-    output.write("],\"skipped\":" + skipped + "}\n");
+    let final = "],\"skipped\":" + skipped + "}\n";
+    bytes += length(final);
+    ok = ok && output.write(final) == length(final);
     output.close();
 
-    if (added == 0) {
+    if (added == 0 || !ok || !subscription_io.complete_file(output_file, bytes)) {
         fs.unlink(output_file);
         return false;
     }
@@ -1903,7 +1952,8 @@ function normalize_uri_list_stream(input, output_file, strip_metadata) {
     let added = 0;
     let skipped = 0;
     let line_no = 0;
-    output.write("{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[");
+    let prefix = "{\"version\":1,\"format\":\"uri-list\",\"outbounds\":[";
+    let bytes = length(prefix), ok = output.write(prefix) == bytes;
 
     while (true) {
         let line = input.read("line");
@@ -1916,9 +1966,11 @@ function normalize_uri_list_stream(input, output_file, strip_metadata) {
         if (line != "" && !starts_with(line, "#")) {
             let outbound = parse_share_link(line);
             if (outbound) {
-                if (added > 0)
-                    output.write(",");
-                output.write(sprintf("%J", outbound));
+                let piece = (added > 0 ? "," : "") + sprintf("%J", outbound);
+                bytes += length(piece);
+                ok = ok && bytes + 128 <= subscription_io.CACHE_LIMIT && output.write(piece) == length(piece);
+                if (!ok)
+                    break;
                 added++;
             }
             else {
@@ -1927,10 +1979,12 @@ function normalize_uri_list_stream(input, output_file, strip_metadata) {
         }
     }
 
-    output.write("],\"skipped\":" + skipped + "}\n");
+    let final = "],\"skipped\":" + skipped + "}\n";
+    bytes += length(final);
+    ok = ok && output.write(final) == length(final);
     output.close();
 
-    if (added == 0) {
+    if (added == 0 || !ok || !subscription_io.complete_file(output_file, bytes)) {
         fs.unlink(output_file);
         return false;
     }
@@ -1966,6 +2020,11 @@ function file_looks_like_uri_list(input_file) {
 }
 
 function normalize_uri_list_file(input_file, output_file, strip_metadata) {
+    if (subscription_io.exceeds_limit(input_file, subscription_io.SOURCE_LIMIT)) {
+        warn("Subscription input exceeds size limit\n");
+        fs.unlink(output_file);
+        return false;
+    }
     let input = fs.open(input_file, "r");
     if (!input)
         return false;
@@ -2753,18 +2812,30 @@ function gzip_decode_file(input_file, output_file) {
         if (!pipe)
             continue;
 
-        let data = pipe.read("all");
+        let output = fs.open(output_file, "w");
+        let result = output ? subscription_io.copy_stream(pipe, output, subscription_io.SOURCE_LIMIT) : { ok: false };
+        let closed = output ? output.close() : false;
         let status = pipe.close();
-        if (status == 0 && data != null && data != "") {
-            if (fs.writefile(output_file, data))
-                return true;
-            fs.unlink(output_file);
+        if (status == 0 && result.ok && result.bytes > 0 && closed &&
+            subscription_io.complete_file(output_file, result.bytes))
+            return true;
+        fs.unlink(output_file);
+        if (result.too_large) {
+            warn("Decoded subscription exceeds size limit\n");
             return false;
         }
-        fs.unlink(output_file);
     }
 
     return false;
+}
+
+function content_is_gzip(path) {
+    let input = fs.open(path, "r");
+    if (!input)
+        return false;
+    let magic = input.read(2);
+    input.close();
+    return length(magic) == 2 && ord(substr(magic, 0, 1)) == 31 && ord(substr(magic, 1, 1)) == 139;
 }
 
 function try_decode_gzip_content_file(input_file) {
@@ -2859,6 +2930,11 @@ function normalize_content_data(data, output_file, depth) {
 }
 
 function normalize_content_file(input_file, output_file) {
+    if (subscription_io.exceeds_limit(input_file, subscription_io.SOURCE_LIMIT)) {
+        warn("Subscription input exceeds size limit\n");
+        fs.unlink(output_file);
+        return false;
+    }
     if (file_looks_like_uri_list(input_file))
         return normalize_uri_list_file(input_file, output_file, true);
 
@@ -2867,14 +2943,24 @@ function normalize_content_file(input_file, output_file) {
 }
 
 function normalize_content_validated(input_file, output_file) {
+    if (subscription_io.exceeds_limit(input_file, subscription_io.SOURCE_LIMIT)) {
+        warn("Subscription input exceeds size limit\n");
+        fs.unlink(output_file);
+        return false;
+    }
     let normalize_input = input_file;
     let decoded_tmp = temp_path("trafira-subscription-gzip");
-    let decoded = gzip_decode_file(input_file, decoded_tmp);
+    let compressed = content_is_gzip(input_file);
+    let decoded = compressed && gzip_decode_file(input_file, decoded_tmp);
     if (decoded)
         normalize_input = decoded_tmp;
     else
         fs.unlink(decoded_tmp);
 
+    if (compressed && !decoded) {
+        fs.unlink(output_file);
+        return false;
+    }
     let ok = normalize_content_file(normalize_input, output_file);
     if (decoded)
         fs.unlink(decoded_tmp);
@@ -2938,6 +3024,7 @@ function module_exports() {
         normalize_content_validated,
         normalized_skipped_message,
         try_decode_gzip_content_file,
+        content_is_gzip,
         extract_ui_metadata_file,
         runtime_outbounds_equal
     };
