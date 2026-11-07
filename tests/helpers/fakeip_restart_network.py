@@ -141,7 +141,7 @@ print('recovered',flush=True)
                         # Reproduce a lost FIN/RST during the outage, rather than
                         # assuming SIGKILL suppresses the kernel's socket close.
                         self.run_in(self.router,['nft','-f','-'],input='add table inet LostClose\n'
-                            'add chain inet LostClose output { type filter hook output priority -1; policy accept; }\n'
+                            'add chain inet LostClose output { type filter hook output priority -301; policy accept; }\n'
                             'add rule inet LostClose output tcp flags & (fin | rst) != 0 drop\n')
                     core.send_signal(shutdown);core.wait(timeout=5)
                     if shutdown == signal.SIGKILL:
