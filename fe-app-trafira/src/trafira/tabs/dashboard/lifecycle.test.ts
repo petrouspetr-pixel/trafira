@@ -197,10 +197,19 @@ it('wires the common latency button to the existing job action for each applicab
     .slice()
     .reverse()
     .find(
-      (args) => args[0]?.children?.children === 'Test latency for all sections',
+      (args) =>
+        args[0]?.attrs?.class === 'fkp_dashboard-page__connections-heading',
     );
   expect(call).toBeDefined();
-  call![0].children.attrs.click();
+  expect(call![0].children[0]).toMatchObject({
+    tag: 'h3',
+    children: 'Connections',
+  });
+  const button = call![0].children[1];
+  expect(button.children).toBe('Check latency');
+  expect(button.attrs.class).toBe('cbi-button');
+  expect(button.attrs['aria-label']).toBe('Test latency for all sections');
+  button.attrs.click();
   await vi.advanceTimersByTimeAsync(0);
   expect(h.start.mock.calls).toEqual([
     ['proxy_list', 'main', '["node"]', undefined],

@@ -72,6 +72,6 @@ describe('route explanation messages', () => {
     ['render_failed', 'display'],
   ])('shows a safe useful explanation for %s', (category, fragment) => {
     expect(routeError(category)).toContain(fragment);
-    expect(routeError(category)).toContain(`(${category})`);
+    expect(routeError(category)).not.toContain(`(${category})`);
   });
 });

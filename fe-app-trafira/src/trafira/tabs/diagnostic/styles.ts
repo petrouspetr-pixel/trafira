@@ -49,7 +49,6 @@ export const styles = `
     grid-column-gap: 10px;
 }
 
-.fkp_diagnostic-page__right-bar__wiki__texts {}
 
 .fkp_diagnostic-page__right-bar__actions {
     border: 2px var(--background-color-low, lightgray) solid;
@@ -78,9 +77,6 @@ export const styles = `
     grid-row-gap: 10px;
 }
 
-.fkp_diagnostic-page__right-bar__system-info__title {
-
-}
 
 .fkp_diagnostic-page__right-bar__system-info__row {
     display: grid;
@@ -116,7 +112,6 @@ export const styles = `
     grid-row-gap: 10px;
 }
 
-.fkp_diagnostic-page__run_check_wrapper {}
 
 .fkp_diagnostic-page__run_check_wrapper button {
     width: 100%;
@@ -158,17 +153,13 @@ export const styles = `
     color: var(--success-color-medium, green);
 }
 
-.fkp_diagnostic_alert--skipped {}
 
-.fkp_diagnostic_alert__icon {}
 
-.fkp_diagnostic_alert__content {}
 
 .fkp_diagnostic_alert__title {
     display: block;
 }
 
-.fkp_diagnostic_alert__description {}
 
 .fkp_diagnostic_alert__summary {
     margin-top: 10px;
@@ -282,18 +273,4 @@ export const styles = `
     max-width: 80ch;
 }
 
-.fkp_route-decision {
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid var(--border-color-low, #ddd);
-    border-left: 3px solid var(--success-color-medium, #39834a);
-    border-radius: 4px;
-}
-.fkp_route-decision--indeterminate,
-.fkp_route-decision--blocked {
-    border-left-color: var(--warning-color-medium, #b47916);
-}
-.fkp_route-basis {
-    color: var(--text-color-medium, #666);
-}
 `;

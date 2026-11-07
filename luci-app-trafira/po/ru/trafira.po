@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TRAFIRA\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 12:52+0300\n"
-"PO-Revision-Date: 2026-10-13 12:52+0300\n"
+"POT-Creation-Date: 2026-11-07 17:44+0300\n"
+"PO-Revision-Date: 2026-11-07 17:44+0300\n"
 "Last-Translator: petrouspetr-pixel\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -80,6 +80,9 @@ msgstr "Нужная копия списка отсутствует или не 
 msgid "A saved list changed during the check. Try again."
 msgstr "Во время проверки изменилась копия списка. Повторите проверку."
 
+msgid "A Trafira rule blocks this connection."
+msgstr "Одно из правил Trafira блокирует это соединение."
+
 msgid "Absolute path to an existing file on the router. Enter the path, not the file contents."
 msgstr "Абсолютный путь к существующему файлу на роутере. Введите путь, а не содержимое файла."
 
@@ -91,6 +94,9 @@ msgstr "Принимать маршруты"
 
 msgid "Action"
 msgstr "Действие"
+
+msgid "Actions"
+msgstr "Действия"
 
 msgid "Active"
 msgstr "Активные"
@@ -104,8 +110,14 @@ msgstr "Активные соединения"
 msgid "Active Main DNS"
 msgstr "Активный основной DNS"
 
+msgid "Active node"
+msgstr "Активный узел"
+
 msgid "Add %s to Source Network Interface first"
 msgstr "Сначала добавьте %s в «Сетевой интерфейс источника»"
+
+msgid "Add a gaming preset"
+msgstr "Добавить игровой пресет"
 
 msgid "Add a section"
 msgstr "Добавить секцию"
@@ -122,8 +134,14 @@ msgstr "Добавьте хотя бы один DNS-сервер"
 msgid "Add IPv4 and IPv6 addresses or subnets as separate entries. For LAN or Wi-Fi devices, use a MAC address if the IP may change. IP addresses can be spoofed."
 msgstr "Добавляйте адреса и подсети IPv4 и IPv6 отдельными записями. Если IP-адрес устройства в LAN или Wi-Fi может измениться, укажите его MAC-адрес. IP-адрес можно подменить."
 
+msgid "Add platforms to the list, then click Apply below."
+msgstr "Добавьте нужные платформы в список, затем нажмите «Применить» внизу страницы."
+
 msgid "Add prefix to nodes"
 msgstr "Добавлять префикс к узлам"
+
+msgid "Add to list"
+msgstr "Добавить в список"
 
 msgid "Add URLs or local paths to .lst lists containing domains and subnets."
 msgstr "Добавьте URL или локальные пути к спискам .lst с доменами и подсетями."
@@ -146,6 +164,9 @@ msgstr "Добавлено"
 msgid "Additional marking rules found"
 msgstr "Найдены дополнительные правила маркировки"
 
+msgid "Additional settings"
+msgstr "Дополнительные настройки"
+
 msgid "Additionally exclude servers by protocol, transport, and security. Exclude only servers matching the specified parameters."
 msgstr "Дополнительно исключать серверы по протоколу, транспорту и защите. Исключать только серверы, совпавшие по указанным параметрам."
 
@@ -161,6 +182,12 @@ msgstr "Дополнительно показывать серверы по пр
 msgid "Address"
 msgstr "Адрес"
 
+msgid "Addresses were found through Trafira. A device using its own DNS may receive different addresses."
+msgstr "Адреса получены через Trafira. Если на устройстве задан свой DNS, адреса могут отличаться."
+
+msgid "Advanced"
+msgstr "Дополнительно"
+
 msgid "Advertise exit node"
 msgstr "Анонсировать exit node"
 
@@ -172,21 +199,6 @@ msgstr "После ошибки соединения повторять попы
 
 msgid "After existing device rules"
 msgstr "После существующих правил устройств"
-
-msgid "Device routing"
-msgstr "Маршрутизация устройств"
-
-msgid "Device routing bypasses this device. Explicitly enable its selected addresses before applying."
-msgstr "Маршрутизация устройств исключает это устройство. Перед применением явно включите обработку выбранных адресов."
-
-msgid "Device routing information is currently unavailable"
-msgstr "Данные о маршрутизации устройств временно недоступны"
-
-msgid "Device routing needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
-msgstr "Для маршрутизации устройств нужны MAC-адрес или входящий интерфейс устройства. Выберите обнаруженное устройство или укажите недостающие сведения."
-
-msgid "Device routing sends this device directly, bypassing Trafira."
-msgstr "Маршрутизация устройств направляет это устройство напрямую, в обход Trafira."
 
 msgid "All"
 msgstr "Все"
@@ -230,17 +242,8 @@ msgstr "Более раннее правило проверяет IP назна�
 msgid "An earlier rule checks the application protocol. Select the protocol to continue."
 msgstr "Более раннее правило проверяет протокол приложения. Выберите протокол для продолжения."
 
-msgid "An earlier rule needs additional data. See the rule evaluation details below."
-msgstr "Для более раннего правила нужны дополнительные данные. Подробнее — в порядке проверки правил ниже."
-
 msgid "An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed."
 msgstr "Более раннее правило использует условие, которое эта проверка не рассчитывает. Подтвердить маршрут нельзя."
-
-msgid "An existing device rule may overlap. The selected priority determines which rule takes effect."
-msgstr "Правила устройства могут пересекаться. Выбранный приоритет определяет, какое правило сработает первым."
-
-msgid "Analysis of the applied configuration, not a live connection capture."
-msgstr "Анализ применённой конфигурации. Фактическое соединение может зависеть от дополнительных условий."
 
 msgid "Another component action is already running"
 msgstr "Другое действие с компонентом уже выполняется"
@@ -250,6 +253,12 @@ msgstr "Уже выполняется другая операция с конф�
 
 msgid "Another list update is already running. Wait for it to finish, then download the copies again."
 msgstr "Списки уже обновляются. Дождитесь завершения и повторите загрузку копий."
+
+msgid "Another route calculation is preparing lists. Wait for it to finish, then try again."
+msgstr "Другой расчёт маршрута подготавливает списки. Дождитесь его завершения и повторите проверку."
+
+msgid "Applied configuration migrations"
+msgstr "Применённые обновления формата настроек"
 
 msgid "Apply profile"
 msgstr "Применить профиль"
@@ -262,9 +271,6 @@ msgstr "Применять правила секции только к указ�
 
 msgid "Apply the Trafira configuration again to enable saved copies for this core"
 msgstr "Повторно примените конфигурацию Trafira, чтобы включить сохранение копий для этого ядра"
-
-msgid "Applying configuration. You can reconnect to this page."
-msgstr "Применение конфигурации. Можно закрыть страницу и вернуться позднее."
 
 msgid "Applying settings in the background. You can close this page."
 msgstr "Настройки применяются в фоне. Эту страницу можно закрыть."
@@ -286,6 +292,9 @@ msgstr "Автообновление"
 
 msgid "Auto-generate HWID"
 msgstr "Авто-генерация HWID"
+
+msgid "Automatic address lookup is unavailable in the running configuration. Restart Trafira after updating, or enter a known real IP in Additional settings."
+msgstr "В работающей конфигурации недоступно автоматическое определение адреса. После обновления перезапустите Trafira или укажите известный IP сервера в дополнительных настройках."
 
 msgid "Automatic component update checks"
 msgstr "Автоматическая проверка обновлений компонентов"
@@ -319,9 +328,6 @@ msgstr "Заблокировать соединение"
 
 msgid "Block traffic"
 msgstr "Блокировать трафик"
-
-msgid "Blocked"
-msgstr "Заблокировано"
 
 msgid "Bootstrap DNS"
 msgstr "Bootstrap DNS"
@@ -401,8 +407,26 @@ msgstr "Путь к файлу кэша не может быть пустым"
 msgid "Cached servers: %s; included: %s; excluded: %s"
 msgstr "Серверов в кеше: %s; остаётся: %s; исключено: %s"
 
-msgid "Calculated using saved list copies. The running sing-box may have newer lists; this is a configuration check, not a live connection test."
-msgstr "Расчёт по сохранённым копиям списков. Работающий sing-box мог обновить их. Это проверка конфигурации, а не реального соединения."
+msgid "Calculated from saved Trafira rules. This does not test whether the website opens."
+msgstr "Это расчёт по сохранённым правилам Trafira, а не проверка открытия сайта."
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Cancel editing"
+msgstr "Отменить редактирование"
+
+msgid "Cannot determine the route yet"
+msgstr "Пока не удалось определить маршрут"
+
+msgid "Cannot finish already installed core selection"
+msgstr "Не удалось завершить выбор уже установленной версии sing-box."
+
+msgid "Cannot prepare verified Extended rollback in RAM; running service was not changed"
+msgstr "Не удалось проверить обновление Extended в RAM. Работающая служба не изменена."
+
+msgid "Cannot preserve verified Extended rollback in RAM; running service was not changed"
+msgstr "Не хватает ресурсов для безопасного отката Extended в RAM. Работающая служба не изменена."
 
 msgid "Cannot receive checks result"
 msgstr "Не удалось получить результаты проверки"
@@ -419,6 +443,9 @@ msgstr "Каскадное подключение"
 msgid "Catalog checked"
 msgstr "Список проверен"
 
+msgid "Certificate file"
+msgstr "Файл сертификата"
+
 msgid "Certificate path"
 msgstr "Путь к сертификату"
 
@@ -431,11 +458,23 @@ msgstr "Изменение"
 msgid "Changed"
 msgstr "Изменено"
 
-msgid "Changed rules"
-msgstr "Изменения правил"
+msgid "Changes are not applied. Click Apply below to activate all changes together. Save stores settings without applying them; Reset discards unsaved changes."
+msgstr "Изменения ещё не применены. Нажмите «Применить» внизу страницы, чтобы применить их вместе. «Сохранить» записывает настройки без применения, «Сброс» отменяет несохранённые изменения."
+
+msgid "Check dependencies"
+msgstr "Проверить зависимости"
+
+msgid "Check external files referenced by custom component strategies separately."
+msgstr "Отдельно проверьте внешние файлы, указанные в пользовательских стратегиях компонентов."
 
 msgid "Check interval"
 msgstr "Интервал проверки"
+
+msgid "Check latency"
+msgstr "Проверить задержку"
+
+msgid "Check routing"
+msgstr "Проверить маршрут"
 
 msgid "Check timeout after which the server is considered dead"
 msgstr "Таймаут проверки, после которого сервер считается мёртвым"
@@ -446,11 +485,17 @@ msgstr "Проверить обновление"
 msgid "Check URL"
 msgstr "URL проверки"
 
-msgid "Check which Trafira rule applies to a connection. This does not test whether the website opens and does not send traffic from the selected device."
-msgstr "Проверьте, какое правило Trafira применяется к соединению. Это не проверка доступности сайта: запросы от имени выбранного устройства не отправляются."
+msgid "Checked against this router. File contents and live connections are not checked."
+msgstr "Проверено на текущем роутере. Содержимое файлов и реальные соединения не проверяются."
 
-msgid "Checking route"
-msgstr "Проверка маршрута"
+msgid "Checking latency…"
+msgstr "Проверяем задержку…"
+
+msgid "Checking profile dependencies..."
+msgstr "Проверяем зависимости профиля..."
+
+msgid "Checking routing. Please wait…"
+msgstr "Проверяем маршрут. Пожалуйста, подождите…"
 
 msgid "Checking, please wait"
 msgstr "Проверяем, пожалуйста подождите"
@@ -467,17 +512,20 @@ msgstr "Проверки пройдены"
 msgid "Checks passed with manual DHCP"
 msgstr "Проверки пройдены с ручным DHCP"
 
+msgid "Choose a device, enter a website and click Check routing."
+msgstr "Выберите устройство, введите сайт и нажмите «Проверить маршрут»."
+
 msgid "Choose a platform"
 msgstr "Выберите платформу"
 
-msgid "Choose a platform, device addresses, connection and rule priority before previewing."
-msgstr "Для предпросмотра выберите платформу, IP-адреса устройства, подключение и приоритет правил."
+msgid "Choose a platform, device addresses and connection, or cancel editing before saving."
+msgstr "Перед сохранением выберите платформу, адреса устройства и подключение либо отмените редактирование."
 
 msgid "Choose an available version of the installed variant. Compatibility is checked before replacement. Pinning affects updates through Trafira only."
 msgstr "Выберите доступную версию установленного варианта. Перед заменой проверяется совместимость. Закрепление влияет только на обновления через Trafira."
 
-msgid "Choose rule priority"
-msgstr "Выберите приоритет правил"
+msgid "Choose the device that will open the website."
+msgstr "Выберите устройство, с которого будете открывать сайт."
 
 msgid "Choose what happens after confirmed connection failures. Direct fallback sends this section's traffic without its VPN. Switching interrupts existing connections; protection requires Trafira to be running."
 msgstr "Выберите действие при подтверждённом отказе подключения. Прямой выход отправляет трафик секции без её VPN. Переключение прерывает текущие соединения; защита действует, пока Trafira работает."
@@ -487,6 +535,9 @@ msgstr "Выберите, будут ли устройства из списка
 
 msgid "CIDR must be between 0 and 32 for IPv4 or 0 and 128 for IPv6"
 msgstr "CIDR должен быть от 0 до 32 для IPv4 или от 0 до 128 для IPv6"
+
+msgid "Clean shutdown state"
+msgstr "Состояние корректного завершения работы"
 
 msgid "Client certificate file"
 msgstr "Файл клиентского сертификата"
@@ -518,6 +569,12 @@ msgstr "Закрыть подключение"
 msgid "Closed"
 msgstr "Закрытые"
 
+msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
+msgstr "При применении профиль проверяется автоматически. Просматривать различия необязательно."
+
+msgid "Component"
+msgstr "Компонент"
+
 msgid "Component action job is stale or the worker process exited unexpectedly"
 msgstr "Задание компонента устарело или его процесс неожиданно завершился"
 
@@ -548,8 +605,8 @@ msgstr "Конфигурация изменилась. Просмотрите р
 msgid "Configuration for Trafira service"
 msgstr "Настройки сервиса Trafira"
 
-msgid "Configuration validation passed. Review the changes below."
-msgstr "Конфигурация прошла проверку. Просмотрите изменения ниже."
+msgid "Configuration version"
+msgstr "Версия формата настроек"
 
 msgid "Configure User-Agent in the item settings"
 msgstr "Настройте User-Agent в настройках элемента"
@@ -557,14 +614,20 @@ msgstr "Настройте User-Agent в настройках элемента"
 msgid "Connect through"
 msgstr "Подключаться через"
 
-msgid "Connection options"
-msgstr "Параметры соединения"
+msgid "Connection"
+msgstr "Подключение"
+
+msgid "Connection blocked"
+msgstr "Соединение заблокировано"
 
 msgid "Connection route"
 msgstr "Маршрут соединения"
 
 msgid "Connection URL"
 msgstr "URL подключения"
+
+msgid "Connections"
+msgstr "Подключения"
 
 msgid "Connections are unavailable"
 msgstr "Подключения недоступны"
@@ -620,6 +683,9 @@ msgstr "Не удалось загрузить доступные версии. 
 msgid "Could not load detected devices. Enter the address manually or refresh the list."
 msgstr "Не удалось загрузить устройства. Введите адрес вручную или обновите список."
 
+msgid "Could not read profiles. Check the router connection and try again."
+msgstr "Не удалось получить ответ роутера. Проверьте соединение и обновите список профилей."
+
 msgid "Could not read saved-copy status. Refresh the status to try again."
 msgstr "Не удалось прочитать состояние копий. Нажмите «Обновить состояние», чтобы повторить."
 
@@ -647,14 +713,17 @@ msgstr "Текущую секцию нельзя использовать как
 msgid "Current section cannot download its own subscription"
 msgstr "Текущую секцию нельзя выбрать для скачивания её же подписки"
 
-msgid "Current selected node"
-msgstr "Текущий выбранный узел"
-
 msgid "Currently unavailable"
 msgstr "Временно недоступно"
 
+msgid "Currently used"
+msgstr "Используется сейчас"
+
 msgid "Custom device headers"
 msgstr "Пользовательские заголовки устройства"
+
+msgid "Custom JSON may contain additional dependencies. Review it before transferring."
+msgstr "Пользовательский JSON может содержать другие зависимости. Проверьте его перед переносом."
 
 msgid "Custom outbound configurations in JSON format"
 msgstr "Пользовательские конфигурации outbound в формате JSON"
@@ -677,11 +746,11 @@ msgstr "Значение задержки не может быть пустым"
 msgid "Delete"
 msgstr "Удалить"
 
+msgid "Delete gaming preset"
+msgstr "Удалить игровой пресет"
+
 msgid "Delete profile"
 msgstr "Удалить профиль"
-
-msgid "Delete the edited preset rules? The next step shows the changes."
-msgstr "Удалить изменённые правила пресета? На следующем шаге будут показаны изменения."
 
 msgid "Delete the selected saved profile? Current settings will remain unchanged."
 msgstr "Удалить выбранный сохранённый профиль? Текущие настройки останутся без изменений."
@@ -689,26 +758,23 @@ msgstr "Удалить выбранный сохранённый профиль?
 msgid "Destination port"
 msgstr "Порт назначения"
 
-msgid "Detect protocol"
-msgstr "Определить протокол"
-
 msgid "Detect server country"
 msgstr "Определять страну сервера"
 
-msgid "Detected device"
-msgstr "Обнаруженное устройство"
+msgid "Determined automatically"
+msgstr "Определяется автоматически"
 
 msgid "detour must be a non-empty string"
 msgstr "detour должен быть непустой строкой"
 
-msgid "Device by IP address"
-msgstr "Устройство по IP-адресу"
+msgid "Device"
+msgstr "Устройство"
 
 msgid "Device filter"
 msgstr "Фильтр по устройствам"
 
-msgid "Device IP address"
-msgstr "IP-адрес устройства"
+msgid "Device gaming rule priority"
+msgstr "Приоритет игровых правил устройства"
 
 msgid "Device IP addresses"
 msgstr "IP-адреса устройства"
@@ -725,8 +791,26 @@ msgstr "Устройство или IP"
 msgid "Device or MAC"
 msgstr "Устройство или MAC"
 
+msgid "Device routing"
+msgstr "Маршрутизация устройств"
+
+msgid "Device routing bypasses this device. Explicitly enable its selected addresses before applying."
+msgstr "Маршрутизация устройств исключает это устройство. Перед применением явно включите обработку выбранных адресов."
+
+msgid "Device routing information is currently unavailable"
+msgstr "Данные о маршрутизации устройств временно недоступны"
+
+msgid "Device routing needs this device MAC or incoming interface. Select a detected device, or enter the missing details."
+msgstr "Для маршрутизации устройств нужны MAC-адрес или входящий интерфейс устройства. Выберите обнаруженное устройство или укажите недостающие сведения."
+
+msgid "Device routing sends this device directly, bypassing Trafira."
+msgstr "Маршрутизация устройств направляет это устройство напрямую, в обход Trafira."
+
 msgid "Device, subnet or IP"
 msgstr "Устройство, подсеть или IP"
+
+msgid "Devices"
+msgstr "Устройства"
 
 msgid "Devices in the list"
 msgstr "Устройства из списка"
@@ -755,6 +839,9 @@ msgstr "Отключить автостарт"
 msgid "Disable QUIC"
 msgstr "Отключить QUIC"
 
+msgid "Disable selected IPv6 probes"
+msgstr "Отключить отдельные IPv6-проверки"
+
 msgid "Disable the QUIC protocol to improve compatibility or fix issues with video streaming"
 msgstr "Отключить QUIC протокол для улучшения совместимости или исправления видео стриминга"
 
@@ -779,9 +866,6 @@ msgstr "DNS через HTTPS (DoH)"
 msgid "DNS over TLS (DoT)"
 msgstr "DNS через TLS (DoT)"
 
-msgid "DNS policy (A query)"
-msgstr "Правило DNS для запроса A"
-
 msgid "DNS protocol"
 msgstr "Протокол DNS"
 
@@ -793,6 +877,9 @@ msgstr "DNS-протокол, который будет использовать
 
 msgid "DNS requests through section"
 msgstr "DNS-запросы через секцию"
+
+msgid "DNS returned a virtual FakeIP instead of a real server address. The address cannot be used to check IP rules. Restart Trafira after updating, or enter a known real IP in Additional settings."
+msgstr "DNS вернул виртуальный FakeIP вместо настоящего адреса сервера. По нему нельзя проверить правила для IP-адресов. После обновления перезапустите Trafira или укажите настоящий IP в дополнительных настройках."
 
 msgid "DNS Rewrite TTL"
 msgstr "Перезапись TTL для DNS"
@@ -848,9 +935,6 @@ msgstr "Не тестировать серверы с одним из выбра
 msgid "Do not test specified servers."
 msgstr "Не тестировать указанные серверы."
 
-msgid "Does not match"
-msgstr "Не совпадает"
-
 msgid "Does not match inclusion filters"
 msgstr "Не соответствует фильтрам включения"
 
@@ -863,8 +947,8 @@ msgstr "Имя хоста для сертификата DoH"
 msgid "DoH client certificate authentication"
 msgstr "Аутентификация DoH клиентским сертификатом"
 
-msgid "Domain"
-msgstr "Домен"
+msgid "Domain and IP list file"
+msgstr "Файл списка доменов и IP"
 
 msgid "Domain and IP lists"
 msgstr "Списки доменов и IP"
@@ -938,17 +1022,23 @@ msgstr "Такой тег JSON outbound уже используется"
 msgid "Duplicate value"
 msgstr "Дублирующееся значение"
 
+msgid "Edit"
+msgstr "Изменить"
+
+msgid "Edit gaming preset"
+msgstr "Изменить игровой пресет"
+
 msgid "Edit rule action"
 msgstr "Изменить"
 
 msgid "Edited"
 msgstr "Изменено вручную"
 
+msgid "Editing was cancelled. Your changes have not been saved."
+msgstr "Редактирование отменено. Изменения не сохранены."
+
 msgid "Enable"
 msgstr "Включить"
-
-msgid "Enable device routing"
-msgstr "Включить маршрутизацию устройств"
 
 msgid "Enable authentication"
 msgstr "Включить авторизацию"
@@ -962,6 +1052,12 @@ msgstr "Включить автостарт"
 msgid "Enable built-in DNS resolver for domains handled by this section"
 msgstr "Включить встроенный DNS-резолвер для доменов, обрабатываемых этой секцией"
 
+msgid "Enable device routing"
+msgstr "Включить маршрутизацию устройств"
+
+msgid "Enable gaming presets"
+msgstr "Включить игровые пресеты"
+
 msgid "Enable list updates"
 msgstr "Включить обновление списков"
 
@@ -971,11 +1067,11 @@ msgstr "Включить смешанный прокси"
 msgid "Enable Mixed Proxy Authentication"
 msgstr "Включить авторизацию смешанного прокси"
 
-msgid "Enable device routing only for these addresses if required"
-msgstr "При необходимости включить маршрутизацию устройств только для этих адресов"
-
 msgid "Enable Output Network Interface"
 msgstr "Включить выходной сетевой интерфейс"
+
+msgid "Enable these addresses in device routing if needed"
+msgstr "При необходимости включить маршрутизацию устройств для этих адресов"
 
 msgid "Enter a complete sing-box inbound object"
 msgstr "Введите полный объект inbound sing-box"
@@ -1001,14 +1097,8 @@ msgstr "Укажите корректный домен, порт назначе�
 msgid "Enter an absolute file path"
 msgstr "Введите абсолютный путь к файлу"
 
-msgid "Enter an address manually"
-msgstr "Ввести адрес вручную"
-
 msgid "Enter HWID"
 msgstr "Укажите HWID"
-
-msgid "Enter the actual server IP for this domain from the connection you want to check. This tool does not resolve the domain automatically; DNS may return several addresses. Do not use a FakeIP address."
-msgstr "Укажите фактический IP сервера для этого домена из соединения, которое хотите проверить. Инструмент не разрешает домен автоматически; DNS может вернуть несколько адресов. Не используйте адрес FakeIP."
 
 msgid "Enter the device IP address, or select a detected device."
 msgstr "Введите IP-адрес устройства или выберите обнаруженное устройство."
@@ -1019,8 +1109,8 @@ msgstr "Укажите MAC устройства в разделе «MAC устр
 msgid "Enter the HWID sent with subscription requests"
 msgstr "HWID, который будет отправляться при запросах подписки"
 
-msgid "Enter the real destination IP in the form above. A domain alone cannot determine the router firewall route."
-msgstr "Укажите реальный IP назначения в форме выше. Одного домена недостаточно для расчёта маршрута приложений роутера."
+msgid "Enter the real destination IP to check the NTP bypass for this packet."
+msgstr "Укажите реальный IP назначения, чтобы проверить исключение NTP для этого пакета."
 
 msgid "Enter the subscription URL"
 msgstr "Введите URL подписки"
@@ -1070,9 +1160,6 @@ msgstr "Ожидается: %s"
 msgid "Expires"
 msgstr "Истекает"
 
-msgid "Explain route"
-msgstr "Проверить маршрут"
-
 msgid "Export profile"
 msgstr "Экспортировать профиль"
 
@@ -1081,6 +1168,12 @@ msgstr "Экспортированные профили содержат пар�
 
 msgid "Expose this section as a local HTTP+SOCKS proxy"
 msgstr "Открыть эту секцию как локальный HTTP+SOCKS прокси"
+
+msgid "Extended required"
+msgstr "Требуется Extended"
+
+msgid "External file"
+msgstr "Внешний файл"
 
 msgid "External nfqws config files bypass Trafira queue management and explicit validation."
 msgstr "Внешние конфиги nfqws обходят управление очередями и явную валидацию Trafira."
@@ -1130,6 +1223,9 @@ msgstr "Не удалось установить пакет Trafira"
 msgid "Failed to install Trafira release packages"
 msgstr "Не удалось установить пакеты релиза Trafira"
 
+msgid "Failed to start Trafira"
+msgstr "Ошибка запуска Trafira"
+
 msgid "Failed to update package lists"
 msgstr "Не удалось обновить списки пакетов"
 
@@ -1160,6 +1256,9 @@ msgstr "Интервал поиска более быстрого сервера
 msgid "Fastest"
 msgstr "Самый быстрый"
 
+msgid "File"
+msgstr "Файл"
+
 msgid "Filter the servers that will be displayed on the dashboard. Excluded servers are also removed from the URLTest and Priority groups of this section."
 msgstr "Отфильтровать серверы, которые будут отображаться в дашборде. Исключённые серверы также убираются из URLTest и Приоритет групп этой секции."
 
@@ -1172,11 +1271,14 @@ msgstr "Порт в firewall для WAN"
 msgid "Fix the highlighted fields and save again."
 msgstr "Исправьте подсвеченные поля и сохраните снова."
 
-msgid "For a phone or PC, select its detected address or enter its LAN IP. If needed, enter the incoming interface (usually br-lan) below."
-msgstr "Для телефона или ПК выберите обнаруженный адрес устройства или введите его IP в локальной сети. При необходимости укажите ниже входящий интерфейс, обычно br-lan."
+msgid "For this UDP bypass check, select a device address in the same IP family as the destination: IPv4 with IPv4, or IPv6 with IPv6."
+msgstr "Для проверки этого UDP-исключения выберите адрес устройства того же семейства, что и IP назначения: IPv4 с IPv4 или IPv6 с IPv6."
 
 msgid "Forced device routing"
 msgstr "Принудительная маршрутизация устройств"
+
+msgid "Found"
+msgstr "Найдено"
 
 msgid "Fronting IP"
 msgstr "IP фронтинга"
@@ -1208,14 +1310,17 @@ msgstr "Созданный inbound"
 msgid "Get global check"
 msgstr "Получить глобальную проверку"
 
+msgid "GitHub request limit reached. Saved versions are shown for reference. Try again later."
+msgstr "Достигнут лимит запросов GitHub. Сохранённые версии показаны для справки. Повторите попытку позже."
+
+msgid "GitHub request limit reached. Try again later."
+msgstr "Достигнут лимит запросов GitHub. Повторите попытку позже."
+
 msgid "Global check"
 msgstr "Глобальная проверка"
 
 msgid "gRPC service"
 msgstr "gRPC-сервис"
-
-msgid "Handle DNS"
-msgstr "Обработать DNS"
 
 msgid "Handshake timeout"
 msgstr "Таймаут рукопожатия"
@@ -1304,6 +1409,9 @@ msgstr "Добавлять URLTest группы из подписки"
 msgid "Import URLTest groups returned by this subscription provider"
 msgstr "Импортировать URLTest группы, если провайдер подписки возвращает их"
 
+msgid "Inactive settings"
+msgstr "Для неактивных настроек"
+
 msgid "Inbound JSON"
 msgstr "Inbound JSON"
 
@@ -1334,6 +1442,9 @@ msgstr "Остаётся"
 msgid "Incoming interface (optional)"
 msgstr "Входящий интерфейс (необязательно)"
 
+msgid "Incompatible"
+msgstr "Несовместимо"
+
 msgid "Information"
 msgstr "Информация"
 
@@ -1355,8 +1466,8 @@ msgstr "Установлена версия новее релиза"
 msgid "Installing in the background. You may close this page."
 msgstr "Установка выполняется в фоне. Можно закрыть эту страницу."
 
-msgid "Insufficient information"
-msgstr "Недостаточно данных"
+msgid "Installing…"
+msgstr "Установка…"
 
 msgid "Interface %s is in the device list but not selected in Source Network Interface, so its rule has no effect."
 msgstr "Интерфейс %s добавлен в список устройств, но не выбран в поле «Сетевой интерфейс источника» — правило для него не действует."
@@ -1384,6 +1495,9 @@ msgstr "Прерывать соединения"
 
 msgid "Interrupt connections when priority failover switches server"
 msgstr "Разрывать соединения при переключении сервера приоритетом"
+
+msgid "Interrupt connections when switching this section"
+msgstr "Разрывать соединения при смене подключения"
 
 msgid "Interrupt connections when URLTest switches the selected server"
 msgstr "Прерывать соединения, когда URLTest переключает выбранный сервер"
@@ -1634,6 +1748,9 @@ msgstr "Установлена последняя версия"
 msgid "Latest version:"
 msgstr "Последняя версия:"
 
+msgid "Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server."
+msgstr "Оставьте поле пустым — Trafira сама узнает адреса сайта через свой DNS. Укажите IP, только если хотите проверить конкретный сервер."
+
 msgid "Leave empty to omit this header"
 msgstr "Оставьте пустым, чтобы не отправлять этот заголовок"
 
@@ -1669,6 +1786,9 @@ msgstr "Загрузка подключений"
 
 msgid "Loading detected devices"
 msgstr "Загрузка обнаруженных устройств"
+
+msgid "Loading service status…"
+msgstr "Проверка состояния службы…"
 
 msgid "Loading..."
 msgstr "Загрузка..."
@@ -1706,12 +1826,6 @@ msgstr "Совпадение по портам назначения. Испол�
 msgid "Matched by %s"
 msgstr "Совпадение: %s"
 
-msgid "Matched route"
-msgstr "Найденный маршрут"
-
-msgid "Matches"
-msgstr "Совпадает"
-
 msgid "Matches exclusion filters"
 msgstr "Соответствует фильтрам исключения"
 
@@ -1732,6 +1846,9 @@ msgstr "Минимальная разница задержки в миллисе
 
 msgid "Minimum time between switches (seconds)"
 msgstr "Минимальное время между переключениями (секунды)"
+
+msgid "Missing or incompatible required dependencies:"
+msgstr "Отсутствуют или несовместимы обязательные зависимости:"
 
 msgid "Mixed Proxy Password"
 msgstr "Пароль смешанного прокси"
@@ -1754,6 +1871,9 @@ msgstr "Мониторинг"
 msgid "Must be a number in the range of 0 - 10000"
 msgstr "Должно быть числом в диапазоне 0 - 10000"
 
+msgid "Name"
+msgstr "Название"
+
 msgid "Name displayed on the dashboard"
 msgstr "Имя, которое отображается в дашборде"
 
@@ -1766,8 +1886,8 @@ msgstr "Нативный fallback (sing-box extended)"
 msgid "Native fallback reacts to real connection failures and requires sing-box extended. The watchdog mode works with all supported sing-box variants."
 msgstr "Нативный fallback реагирует на реальные ошибки соединения и требует sing-box extended. Режим контроля Trafira работает со всеми поддерживаемыми вариантами sing-box."
 
-msgid "Needs more information"
-msgstr "Нужны дополнительные сведения"
+msgid "Network interface"
+msgstr "Сетевой интерфейс"
 
 msgid "Network Interface"
 msgstr "Сетевой интерфейс"
@@ -1780,6 +1900,9 @@ msgstr "Новое название выбранного профиля"
 
 msgid "New version %s is available for %s"
 msgstr "Доступна новая версия %s для %s"
+
+msgid "Next attempt"
+msgstr "Следующая попытка"
 
 msgid "NFQUEUE range is available"
 msgstr "Диапазон NFQUEUE свободен"
@@ -1823,20 +1946,20 @@ msgstr "Устройства не обнаружены. Введите адре�
 msgid "No devices"
 msgstr "Нет устройств"
 
-msgid "No DNS query was sent from the selected device."
-msgstr "DNS-запрос от выбранного устройства не отправлялся."
-
-msgid "No enabled connection rules. Add a connection first."
-msgstr "Нет включённых правил подключения. Сначала добавьте подключение в разделе «Секции»."
-
 msgid "No enabled server inbounds configured"
 msgstr "Включённые серверные inbounds не настроены"
 
-msgid "No gaming presets are available."
-msgstr "Нет доступных игровых пресетов."
+msgid "No gaming presets in the list yet."
+msgstr "В списке пока нет игровых пресетов."
 
-msgid "No known devices. Connect the device to the router and refresh the list."
-msgstr "Нет обнаруженных устройств. Подключите устройство к роутеру и обновите список."
+msgid "No known external files are referenced."
+msgstr "Ссылок на известные внешние файлы не найдено."
+
+msgid "No latency result is available. Use the latency test button to check this connection."
+msgstr "Результат проверки задержки отсутствует. Нажмите кнопку проверки задержки для этого подключения."
+
+msgid "No measurement"
+msgstr "Нет замера"
 
 msgid "No other marking rules found"
 msgstr "Другие правила маркировки не найдены"
@@ -1871,14 +1994,23 @@ msgstr "Узлы"
 msgid "None"
 msgstr "Нет"
 
+msgid "Not a regular file"
+msgstr "Не является обычным файлом"
+
 msgid "Not captured"
 msgstr "Не перехватываются"
+
+msgid "Not checked"
+msgstr "Не проверено"
 
 msgid "Not configured"
 msgstr "Не настроено"
 
 msgid "Not detected"
 msgstr "Не обнаружено"
+
+msgid "Not found"
+msgstr "Не найдено"
 
 msgid "Not implement yet"
 msgstr "Ещё не реализовано"
@@ -1916,6 +2048,9 @@ msgstr "Пароль обфускации"
 msgid "Offline: %d"
 msgstr "Не в сети: %d"
 
+msgid "One DNS query did not finish. Results below apply only to the addresses that were returned. Try again to check all addresses."
+msgstr "Один из DNS-запросов не завершился. Ниже показаны маршруты только для полученных адресов. Повторите проверку, чтобы проверить остальные."
+
 msgid "Only changed section and option names are shown; values are hidden."
 msgstr "Показаны только названия изменённых секций и параметров; значения скрыты."
 
@@ -1939,9 +2074,6 @@ msgstr "Только серверы с одним из выбранных тип
 
 msgid "Only servers with one of the selected transports."
 msgstr "Только серверы с одним из выбранных транспортов."
-
-msgid "Only the first 200 rules are displayed"
-msgstr "Показаны только первые 200 правил"
 
 msgid "Only the specified servers."
 msgstr "Только указанные серверы."
@@ -1973,17 +2105,11 @@ msgstr "Необязательные значения здесь должны з
 msgid "Other devices do the opposite. Match devices by interface, MAC address or IP address."
 msgstr "Для остальных устройств действует обратное. Сопоставление выполняется по интерфейсу, MAC- или IP-адресу."
 
-msgid "Other traffic"
-msgstr "Остальной трафик"
-
 msgid "outbounds must be a non-empty array of strings"
 msgstr "outbounds должен быть непустым массивом строк"
 
 msgid "Output Network Interface"
 msgstr "Выходной сетевой интерфейс"
-
-msgid "Overridden by an earlier rule"
-msgstr "Перекрыто более ранним правилом"
 
 msgid "Override the default OpenWrt device headers for this subscription"
 msgstr "Заменить стандартные заголовки устройства OpenWrt для этой подписки"
@@ -2033,6 +2159,9 @@ msgstr "Закреплённая версия sing-box недоступна в �
 msgid "Pinned version"
 msgstr "Закреплённая версия"
 
+msgid "Platform"
+msgstr "Платформа"
+
 msgid "Policy"
 msgstr "Политика"
 
@@ -2066,17 +2195,14 @@ msgstr "Предпочитаемый IP"
 msgid "Prefix text"
 msgstr "Текст префикса"
 
-msgid "Preview deletion"
-msgstr "Просмотреть удаление"
+msgid "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists."
+msgstr "Время фоновой подготовки истекло до обработки этого списка. Повторите проверку: уже подготовленные списки будут использованы из кэша."
 
 msgid "Preview failed: %s"
 msgstr "Не удалось выполнить предпросмотр: %s"
 
 msgid "Preview filters"
 msgstr "Проверить фильтры"
-
-msgid "Preview gaming rules"
-msgstr "Просмотреть игровые правила"
 
 msgid "Preview server filters"
 msgstr "Предпросмотр фильтров серверов"
@@ -2099,6 +2225,9 @@ msgstr "Предыдущие настройки"
 msgid "Previous settings were restored."
 msgstr "Предыдущие настройки восстановлены."
 
+msgid "Previous sing-box process did not stop; existing package files were not removed"
+msgstr "Предыдущий процесс sing-box не остановился. Файлы установленного пакета сохранены."
+
 msgid "Primary connection"
 msgstr "Основное подключение"
 
@@ -2120,11 +2249,20 @@ msgstr "Уровни приоритета"
 msgid "Priority settings"
 msgstr "Настройки приоритета"
 
+msgid "Private key file"
+msgstr "Файл закрытого ключа"
+
+msgid "Processing profile operation..."
+msgstr "Выполняется операция с профилем…"
+
 msgid "Profile created."
 msgstr "Профиль создан."
 
 msgid "Profile deleted."
 msgstr "Профиль удалён."
+
+msgid "Profile dependencies"
+msgstr "Зависимости профиля"
 
 msgid "Profile differences"
 msgstr "Различия профиля"
@@ -2134,6 +2272,9 @@ msgstr "Название профиля"
 
 msgid "Profile renamed."
 msgstr "Профиль переименован."
+
+msgid "Profile storage is unavailable. Check free space and access permissions."
+msgstr "Хранилище профилей недоступно. Проверьте свободное место и права доступа."
 
 msgid "Profile transfer completed"
 msgstr "Передача профиля завершена"
@@ -2147,26 +2288,23 @@ msgstr "Профили"
 msgid "Protocol"
 msgstr "Протокол"
 
+msgid "Proxy"
+msgstr "Прокси"
+
 msgid "Proxy link is unavailable"
 msgstr "Ссылка прокси недоступна"
 
 msgid "Public host"
 msgstr "Публичный хост"
 
+msgid "Purpose"
+msgstr "Назначение"
+
 msgid "QR code is too large"
 msgstr "QR-код слишком большой"
 
-msgid "Read-only access: you can preview rules but cannot apply changes."
-msgstr "Доступ только для чтения: можно просмотреть правила, но нельзя применить изменения."
-
 msgid "Read-only access. Configuration changes require write permission."
 msgstr "Доступ только для чтения. Для изменения настроек нужны права записи."
-
-msgid "Real destination IP (optional)"
-msgstr "Реальный IP назначения (необязательно)"
-
-msgid "Real destination IP (required for the router)"
-msgstr "Реальный IP назначения (обязателен для роутера)"
 
 msgid "Reality fake site"
 msgstr "Fake-сайт Reality"
@@ -2213,6 +2351,9 @@ msgstr "Обновить состояние"
 msgid "Regular expression must not contain spaces or commas"
 msgstr "Регулярное выражение не должно содержать пробелы или запятые"
 
+msgid "Reload the page before editing gaming presets."
+msgstr "Обновите страницу перед редактированием игровых пресетов."
+
 msgid "Remove"
 msgstr "Удалить"
 
@@ -2228,14 +2369,26 @@ msgstr "Исключить из уровня указанные серверы."
 msgid "Removed"
 msgstr "Удалено"
 
+msgid "Removing…"
+msgstr "Удаление…"
+
 msgid "Rename profile"
 msgstr "Переименовать профиль"
 
-msgid "Replace my edits to this preset after preview"
-msgstr "Заменить мои правки этого пресета после предпросмотра"
+msgid "Replace"
+msgstr "Заменить"
+
+msgid "Replace edited preset"
+msgstr "Заменить изменённый пресет"
+
+msgid "Replace the saved configuration with the settings backed up before the last profile or preset operation?"
+msgstr "Заменить сохранённую конфигурацию настройками, которые были сохранены перед последней операцией с профилем или пресетом?"
 
 msgid "Require a username and password for the local mixed proxy"
 msgstr "Требовать логин и пароль для локального смешанного прокси"
+
+msgid "Required"
+msgstr "Обязательно"
 
 msgid "Requires sing-box 1.14 or newer"
 msgstr "Требуется sing-box 1.14 или новее"
@@ -2245,9 +2398,6 @@ msgstr "Резервное подключение"
 
 msgid "Reserve section"
 msgstr "Резервная секция"
-
-msgid "Resolve domain"
-msgstr "Определить IP домена"
 
 msgid "Resolve domain names before routing so sing-box can use real destination IPs."
 msgstr "Разрешать доменные имена перед маршрутизацией, чтобы sing-box использовал реальные IP-адреса назначения."
@@ -2270,6 +2420,9 @@ msgstr "Выбор ресурсов по IP или CIDR внутри nfqws2 зд
 msgid "Restart Trafira"
 msgstr "Перезапустить Trafira"
 
+msgid "Restarting…"
+msgstr "Перезапускается…"
+
 msgid "Restoration failed. Check the service before continuing."
 msgstr "Восстановление не завершено. Перед продолжением проверьте состояние службы."
 
@@ -2282,11 +2435,11 @@ msgstr "Перед продолжением восстановите настр�
 msgid "Resume updates"
 msgstr "Продолжить обновление"
 
+msgid "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected."
+msgstr "Возвращать DNS-ответ «домен не найден» для отдельных IPv6-проверок Meta и Cloudflare до выдачи FakeIP. Действует только при «Только IPv4». Остальные домены CDN и устройства в обход Trafira не затрагиваются."
+
 msgid "Route"
 msgstr "Маршрут"
-
-msgid "Route connection"
-msgstr "Направить соединение"
 
 msgid "Route main DNS requests through the selected section."
 msgstr "Маршрутизировать основные DNS-запросы через выбранную секцию."
@@ -2315,6 +2468,9 @@ msgstr "Сведения о маршрутизации роутера недос
 msgid "Router traffic section"
 msgstr "Секция для трафика роутера"
 
+msgid "Routing check"
+msgstr "Проверка маршрутизации"
+
 msgid "Routing mode"
 msgstr "Режим маршрутизации"
 
@@ -2327,11 +2483,8 @@ msgstr "Действуют правила маршрутизации и FakeIP D
 msgid "Routing section"
 msgstr "Секция маршрутизации"
 
-msgid "Rule action"
-msgstr "Действие правила"
-
-msgid "Rule evaluation order"
-msgstr "Порядок проверки правил"
+msgid "Rule set file"
+msgstr "Файл набора правил"
 
 msgid "Rule set must be an HTTP(S) URL or a local .srs / .json path"
 msgstr "Набор правил должен быть HTTP(S) URL или локальным путём .srs / .json"
@@ -2369,6 +2522,9 @@ msgstr "Правила прокси существуют"
 msgid "Run Diagnostic"
 msgstr "Запустить диагностику"
 
+msgid "Running"
+msgstr "Запущена"
+
 msgid "Save"
 msgstr "Сохранить"
 
@@ -2399,6 +2555,9 @@ msgstr "Секция"
 msgid "Section name"
 msgstr "Имя секции"
 
+msgid "Section type"
+msgstr "Тип секции"
+
 msgid "Sections"
 msgstr "Секции"
 
@@ -2414,8 +2573,8 @@ msgstr "Выберите подключение"
 msgid "Select a detected device, or enter its incoming interface, usually br-lan, under Device MAC and incoming interface."
 msgstr "Выберите обнаруженное устройство или укажите его входящий интерфейс, обычно br-lan, в разделе «MAC устройства и входящий интерфейс»."
 
-msgid "Select a device to fill its IP, MAC and incoming interface. You can also enter them manually."
-msgstr "Выберите устройство для заполнения IP, MAC и входящего интерфейса. Эти данные также можно ввести вручную."
+msgid "Select a device from the list, or enter its local IP address."
+msgstr "Выберите устройство из списка или введите его IP-адрес в локальной сети."
 
 msgid "Select a known device"
 msgstr "Выберите обнаруженное устройство"
@@ -2459,9 +2618,6 @@ msgstr "Выберите промежуточную секцию"
 msgid "Select DNS protocol to use"
 msgstr "Выберите протокол DNS"
 
-msgid "Select host addresses explicitly, including IPv6 if needed. DHCP and IPv6 address changes require updating the rules. No ports or UPnP are opened."
-msgstr "Явно выберите адреса устройства, включая IPv6 при необходимости. После смены DHCP- или IPv6-адресов правила нужно обновить. Порты и UPnP не открываются."
-
 msgid "Select network interface for VPN connection"
 msgstr "Выберите сетевой интерфейс для VPN-подключения"
 
@@ -2492,6 +2648,9 @@ msgstr "Выберите WAN интерфейсы для мониторинга"
 msgid "Selected"
 msgstr "Выбран"
 
+msgid "Selected connection"
+msgstr "Выбранное подключение"
+
 msgid "Selected profile"
 msgstr "Выбранный профиль"
 
@@ -2518,6 +2677,12 @@ msgstr "Группа автоматически выбирает рабочий 
 
 msgid "Server information"
 msgstr "Информация о сервере"
+
+msgid "Server IP"
+msgstr "IP-адрес сервера"
+
+msgid "Server IP (optional override)"
+msgstr "IP сервера (необязательно)"
 
 msgid "Server name"
 msgstr "Имя сервера"
@@ -2546,17 +2711,26 @@ msgstr "Действие сервиса не выполнено"
 msgid "Service list"
 msgstr "Список сервисов"
 
+msgid "Service status unavailable"
+msgstr "Состояние службы недоступно"
+
 msgid "Services info"
 msgstr "Информация о сервисах"
 
 msgid "Settings"
 msgstr "Настройки"
 
+msgid "Settings were applied successfully."
+msgstr "Настройки успешно применены."
+
 msgid "Show differences"
 msgstr "Показать различия"
 
 msgid "Show each device's routing status on the dashboard."
 msgstr "Показывать на дашборде, как маршрутизируется каждое устройство."
+
+msgid "Show gaming preset management. Changes to routing take effect after Apply. Saved presets are kept when disabled."
+msgstr "Показать управление игровыми пресетами. Изменения маршрутизации вступят в силу после нажатия «Применить». При выключении сохранённые пресеты остаются."
 
 msgid "Show metadata on dashboard"
 msgstr "Отображать метаданные в дашборде"
@@ -2633,20 +2807,20 @@ msgstr "Часть адресов использует Trafira, остальны
 msgid "Some copies could not be downloaded or saved. Previous copies were preserved for failed lists. Check the internet connection, list-download proxy and router storage."
 msgstr "Часть копий не удалось скачать или сохранить. Прежние копии этих списков сохранены. Проверьте интернет, прокси для загрузки списков и свободное место на роутере."
 
+msgid "Some custom JSON is invalid and could not be inspected."
+msgstr "Часть пользовательского JSON содержит ошибки и не проверена."
+
 msgid "Some DHCP lease entries were invalid and skipped."
 msgstr "Некоторые записи DHCP leases некорректны и пропущены."
+
+msgid "Some file paths are invalid and were omitted from this report."
+msgstr "Некоторые пути к файлам некорректны и не включены в отчёт."
 
 msgid "Some LAN neighbor entries were invalid and skipped."
 msgstr "Некоторые записи соседей LAN некорректны и пропущены."
 
 msgid "Some lists exceed the diagnostic size or time limits. Their rules cannot be confirmed by this check."
 msgstr "Часть списков превышает ограничения диагностики по размеру или времени. Эта проверка не может подтвердить их правила."
-
-msgid "Some required lists could not be analyzed within the diagnostic limits. Device selection cannot remove this limitation."
-msgstr "Некоторые необходимые списки не удалось обработать в пределах ограничений диагностики. Выбор устройства не устранит это ограничение."
-
-msgid "Some routes could not be fully verified. Review existing rules and saved list copies."
-msgstr "Некоторые маршруты не удалось проверить полностью. Проверьте существующие правила и сохранённые копии списков."
 
 msgid "Some WireGuard peer entries were invalid and skipped."
 msgstr "Некоторые записи пиров WireGuard некорректны и пропущены."
@@ -2708,6 +2882,9 @@ msgstr "Запустить Trafira"
 msgid "Starting the copy download…"
 msgstr "Запуск загрузки копий…"
 
+msgid "Starting…"
+msgstr "Запускается…"
+
 msgid "State"
 msgstr "Состояние"
 
@@ -2720,11 +2897,17 @@ msgstr "Останавливать проверку если URLTest групп�
 msgid "Stop Trafira"
 msgstr "Остановить Trafira"
 
+msgid "Stopped"
+msgstr "Остановлена"
+
+msgid "Stopping…"
+msgstr "Останавливается…"
+
 msgid "Storage"
 msgstr "Занято места"
 
-msgid "Store and sign-in services use your chosen connection; other traffic from the selected device addresses goes directly. Shared services may also carry game traffic."
-msgstr "Магазины и вход в учётную запись используют выбранное подключение. Остальной трафик выбранных IP-адресов идёт напрямую. Общие сервисы платформы могут передавать и игровой трафик."
+msgid "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together."
+msgstr "Магазины и сервисы учётных записей используют выбранное подключение. Остальной трафик идёт напрямую. Для одного устройства можно добавить несколько платформ — их правила работают вместе."
 
 msgid "Subnets from the list will be extracted and added to nftables"
 msgstr "IP-адреса и подсети из списка будут извлечены и добавлены в nftables"
@@ -2746,6 +2929,9 @@ msgstr "URL подписки"
 
 msgid "Subscription URL settings"
 msgstr "Настройки URL подписки"
+
+msgid "Subscriptions"
+msgstr "Подписки"
 
 msgid "Subscriptions updated"
 msgstr "Подписки обновлены"
@@ -2777,11 +2963,11 @@ msgstr "Hostname Tailscale"
 msgid "TCP, unknown protocol"
 msgstr "TCP, протокол неизвестен"
 
-msgid "Technical details"
-msgstr "Технические подробности"
-
 msgid "Test latency"
 msgstr "Тестирование задержки"
+
+msgid "Test latency for all sections"
+msgstr "Проверить задержку всех секций"
 
 msgid "Test only selected servers."
 msgstr "Тестировать только выбранные серверы."
@@ -2810,17 +2996,47 @@ msgstr "Список разрешённых устройств пуст — Traf
 msgid "The applied routing state is unavailable. Start Trafira and try again."
 msgstr "Сведения о действующих правилах недоступны. Запустите Trafira и повторите проверку."
 
+msgid "The background route calculation reached its time limit. Already verified lists remain cached for another attempt."
+msgstr "Истекло время фонового расчёта маршрута. Уже проверенные списки сохранены в кэше для повторной проверки."
+
+msgid "The background route worker stopped unexpectedly. Try again."
+msgstr "Фоновый расчёт маршрута неожиданно остановился. Повторите проверку."
+
+msgid "The check needs more information. Select a detected device and try again."
+msgstr "Не хватает сведений об устройстве. Выберите его из списка и повторите проверку."
+
+msgid "The configuration has more rule sets than this diagnostic can process safely."
+msgstr "В конфигурации больше списков, чем эта диагностика может безопасно обработать."
+
+msgid "The configured DNS server could not resolve this website. Try again, or enter a known real IP in Additional settings."
+msgstr "Настроенный DNS-сервер не смог определить адрес сайта. Повторите проверку или укажите известный IP сервера в дополнительных настройках."
+
+msgid "The configured DNS server did not respond in time. Try again, or enter a known real server IP in Additional settings."
+msgstr "Настроенный DNS-сервер не ответил вовремя. Повторите проверку или укажите известный IP сервера в дополнительных настройках."
+
+msgid "The configured DNS server returned no usable address for this website and selected IP family. Check the website name or enter a known real IP in Additional settings."
+msgstr "DNS не вернул подходящий адрес сайта для выбранной версии IP. Проверьте название сайта или укажите известный IP сервера в дополнительных настройках."
+
 msgid "The desync fwmark is managed by Trafira for loop prevention and must not be overridden here."
 msgstr "Desync fwmark управляется Trafira для защиты от циклов и не должен переопределяться здесь."
 
 msgid "The entered address is a FakeIP. Enter the real destination IP instead."
 msgstr "Указан адрес FakeIP. Введите реальный IP назначения."
 
-msgid "The generated configuration did not pass validation."
-msgstr "Созданная конфигурация не прошла проверку."
+msgid "The gaming draft could not be processed. Reduce the number of pending changes and try again."
+msgstr "Не удалось обработать черновик игровых пресетов. Сохраните меньше изменений за один раз и повторите попытку."
+
+msgid "The inspection limit was reached. Some dependencies are not listed."
+msgstr "Достигнут предел проверки. Часть зависимостей не попала в отчёт."
 
 msgid "The installed version changed. Refresh the version list."
 msgstr "Установленная версия изменилась. Обновите список версий."
+
+msgid "The JSON profile includes settings, not packages or external files. Transfer those separately."
+msgstr "JSON-профиль содержит настройки, но не пакеты и внешние файлы. Их нужно перенести отдельно."
+
+msgid "The last connection check failed. Repeat the latency test to check availability."
+msgstr "Последняя проверка соединения завершилась неудачно. Повторите проверку задержки, чтобы уточнить доступность."
 
 msgid "The NFQUEUE number is assigned by Trafira for each rule and must not be overridden here."
 msgstr "Номер NFQUEUE назначается Trafira для каждого правила и не должен переопределяться здесь."
@@ -2840,20 +3056,29 @@ msgstr "Формат профиля некорректен или не подд�
 msgid "The profile operation failed."
 msgstr "Не удалось выполнить операцию с профилем."
 
-msgid "The request completed, but the route cannot be confirmed with the available data. This is not a website availability failure. See the reasons below."
-msgstr "Запрос выполнен, но имеющихся данных недостаточно для подтверждения маршрута. Это не ошибка доступности сайта. Причины указаны ниже."
-
 msgid "The route check exceeded its time limit. The router may still be processing the lists. Wait before trying again."
 msgstr "Истекло время проверки маршрута. Роутер может продолжать обработку списков. Подождите перед повторной проверкой."
 
 msgid "The route check returned an invalid response. Check that the Trafira backend and LuCI app versions match."
 msgstr "Проверка маршрута вернула некорректный ответ. Проверьте, что версии Trafira и приложения LuCI совпадают."
 
+msgid "The route depends on the server address"
+msgstr "Маршрут зависит от адреса сервера"
+
 msgid "The route diagnostic command failed. Its system output is needed to identify the cause."
 msgstr "Команда проверки маршрута завершилась с ошибкой. Для выяснения причины нужен её вывод из терминала."
 
 msgid "The route result could not be displayed. Refresh the page; if this repeats, report this display error."
 msgstr "Не удалось отобразить результат проверки маршрута. Обновите страницу; если ошибка повторится, сообщите об этом."
+
+msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and device routing bypass settings. This result alone does not identify which setting caused the bypass."
+msgstr "Проверка FakeIP DNS роутера пройдена, но браузерный тест не подтвердил FakeIP. Проверьте защищённый DNS браузера, VPN или прокси на устройстве и исключения маршрутизации устройств. Этот результат сам по себе не определяет, какая настройка вызвала обход."
+
+msgid "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure."
+msgstr "Роутер возвращает адреса FakeIP. Отдельная проверка из браузера может быть заблокирована или недоступна. Само по себе это предупреждение не означает сбой DNS роутера."
+
+msgid "The routing check stopped to preserve router memory. Trafira continues running; no route was confirmed. Try again when more memory is available."
+msgstr "Проверка маршрутизации остановлена для сохранения памяти роутера. Trafira продолжает работать; маршрут не подтверждён. Повторите проверку, когда будет больше свободной памяти."
 
 msgid "The routing configuration changed during the check. Try again."
 msgstr "Во время проверки изменилась конфигурация маршрутизации. Повторите проверку."
@@ -2870,8 +3095,8 @@ msgstr "Сохранённый профиль недоступен. Обнови
 msgid "The selected address is no longer known. Refresh the device list."
 msgstr "Выбранный адрес больше не найден. Обновите список устройств."
 
-msgid "Device routing will be enabled for the selected addresses."
-msgstr "Маршрутизация устройств будет включена для выбранных IP-адресов."
+msgid "The server IP could not be determined automatically. Try again, or enter a known real destination IP in Additional settings."
+msgstr "Не удалось автоматически определить IP сервера. Повторите проверку или укажите известный настоящий IP-адрес сервера в дополнительных настройках."
 
 msgid "The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again."
 msgstr "Конфигурация sing-box недоступна. Запустите Trafira или примените настройки и повторите проверку."
@@ -2888,8 +3113,20 @@ msgstr "Есть правила использующие Zapret"
 msgid "There are rules using Zapret2"
 msgstr "Есть правила, использующие Zapret2"
 
+msgid "There is not enough available RAM storage to prepare this route check."
+msgstr "Для подготовки этой проверки недостаточно свободного места в RAM."
+
+msgid "There is not enough information to confirm the route. This does not mean the website is unavailable."
+msgstr "Пока не удалось определить маршрут. Это не означает, что сайт недоступен."
+
 msgid "These rules were edited. Confirm replacement or keep them as ordinary rules."
 msgstr "Эти правила были изменены вручную. Подтвердите замену или сохраните их как обычные правила."
+
+msgid "This checks apps running on the router itself, not your phone or computer. In Settings, enable \"Route router applications\" and click Apply."
+msgstr "Проверяются приложения самого роутера, а не телефона или компьютера. Во вкладке «Настройки» включите «Маршрутизацию приложений роутера» и нажмите «Применить»."
+
+msgid "This connection is selected by the Trafira routing settings."
+msgstr "Это подключение выбрано в настройках маршрутизации Trafira."
 
 msgid "This device routing exception also covers other devices. Edit it manually before applying this preset."
 msgstr "Исключение маршрутизации устройств затрагивает и другие устройства. Измените его вручную перед применением пресета."
@@ -2924,8 +3161,17 @@ msgstr "Это локальный адрес. Его маршрут зависи
 msgid "This option requires a value."
 msgstr "Этой опции требуется значение."
 
+msgid "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure."
+msgstr "Эта часть диагностики не умеет рассчитывать указанное действие. Это ограничение проверки, а не ошибка соединения."
+
+msgid "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after clicking Apply."
+msgstr "Этот пресет был изменён вручную в «Секциях». Замена создаст его правила заново, удалив ваши правки этих правил. Другие пресеты и секции сохранятся. Изменения вступят в силу после нажатия «Применить»."
+
 msgid "This preview uses the last generated cache; unsaved subscription URLs, source settings and group changes are not reflected."
 msgstr "Предпросмотр использует последний созданный кеш. Несохранённые адреса подписок, настройки источников и изменения групп не учитываются."
+
+msgid "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first."
+msgstr "Приоритет действует на все игровые пресеты этого устройства. Если обычные правила устройства стоят раньше, они могут выбрать маршрут первыми."
 
 msgid "This profile matches the saved configuration."
 msgstr "Профиль совпадает с сохранёнными настройками."
@@ -2933,17 +3179,35 @@ msgstr "Профиль совпадает с сохранёнными настр
 msgid "This router"
 msgstr "Сам роутер"
 
+msgid "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed."
+msgstr "Не удалось обработать этот список за отведённое время подготовки. Его правила не были пропущены; маршрут остаётся неподтверждённым."
+
+msgid "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed."
+msgstr "Этот список превышает допустимый объём данных для диагностики. Его правила нельзя достоверно проверить."
+
 msgid "This saved profile is invalid. Delete it or import a valid file."
 msgstr "Сохранённый профиль повреждён. Удалите его или импортируйте исправный файл."
 
-msgid "This source is for applications running on the router, not for your phone or PC. Router application routing must be enabled and applied in Settings."
-msgstr "Этот источник означает приложения, запущенные на самом роутере, а не ваш телефон или ПК. В настройках должна быть включена и применена «Маршрутизация приложений роутера»."
+msgid "This shows the route in your current settings. It does not test whether the website opens."
+msgstr "Проверяем правила Trafira, а не доступность сайта."
 
 msgid "This time synchronization connection is excluded from router application routing."
 msgstr "Это соединение для синхронизации времени исключено из маршрутизации приложений роутера."
 
+msgid "This UDP 123 connection is excluded from Trafira interception by NTP bypass."
+msgstr "Это UDP-соединение на порт 123 исключено из перехвата Trafira настройкой «Исключить NTP»."
+
+msgid "This UDP connection is excluded from Trafira interception by Wi-Fi Calling bypass."
+msgstr "Это UDP-соединение исключено из перехвата Trafira настройкой «Wi-Fi Calling напрямую»."
+
 msgid "This VPN transport connection is excluded to prevent a routing loop."
 msgstr "Это служебное VPN-соединение исключено, чтобы избежать петли маршрутизации."
+
+msgid "This website has several server addresses with different routing results. See the result for each address below."
+msgstr "У сайта несколько адресов, и для них действуют разные маршруты. Ниже показан результат для каждого адреса."
+
+msgid "This website returned more addresses than can be checked at once. Results below apply only to the displayed addresses. Enter one address in Additional settings to check it separately."
+msgstr "У сайта больше адресов, чем можно проверить за один раз. Ниже показан результат только для перечисленных адресов. Чтобы проверить другой адрес, укажите его в дополнительных настройках."
 
 msgid "Time"
 msgstr "Время"
@@ -2992,6 +3256,9 @@ msgstr "Trafira сам управляет жизненным циклом nfqws,
 
 msgid "Trafira manages the nfqws2 process lifecycle itself, so daemon mode is not allowed here."
 msgstr "Trafira сам управляет жизненным циклом nfqws2, поэтому режим daemon здесь запрещён."
+
+msgid "Trafira sends this connection directly, without a proxy."
+msgstr "Trafira направляет соединение напрямую, без прокси."
 
 msgid "Trafira service is stopped. Start the service to display connections."
 msgstr "Служба Trafira остановлена. Запустите сервис для отображения подключений."
@@ -3089,6 +3356,9 @@ msgstr "Не удалось проверить стратегию NFQWS2 чер�
 msgid "Unavailability timeout"
 msgstr "Таймаут недоступности"
 
+msgid "Unavailable"
+msgstr "Недоступен"
+
 msgid "Unavailable for this installation"
 msgstr "Недоступно для этой установки"
 
@@ -3142,6 +3412,9 @@ msgstr "Этот протокол не поддерживает выбранны
 
 msgid "Update"
 msgstr "Обновить"
+
+msgid "Update in list"
+msgstr "Обновить в списке"
 
 msgid "Update is available"
 msgstr "Доступно обновление"
@@ -3227,6 +3500,9 @@ msgstr "Используйте CIDR-префиксы, например 192.168.1
 msgid "Use CIDR prefixes or IP addresses like 192.168.1.0/24, 192.168.1.10, or 2001:db8::1"
 msgstr "Используйте CIDR-префиксы или IP-адреса, например 192.168.1.0/24, 192.168.1.10 или 2001:db8::1"
 
+msgid "Use if Devices excludes these IPs. Apply lets Trafira handle only these addresses; other devices are unchanged. Edit subnet, MAC or interface exclusions in Devices."
+msgstr "Нужно, если выбранные IP исключены во вкладке «Устройства». После «Применить» Trafira обработает только эти адреса, не затрагивая остальные. Исключения по подсети, MAC или интерфейсу измените в «Устройствах»."
+
 msgid "Use letters, digits, dots, underscores, or hyphens"
 msgstr "Используйте буквы, цифры, точки, подчёркивания или дефисы"
 
@@ -3251,6 +3527,9 @@ msgstr "Имя пользователя"
 msgid "Username cannot be empty"
 msgstr "Логин не может быть пустым"
 
+msgid "Using the server address you entered."
+msgstr "Используется адрес сервера, который вы ввели."
+
 msgid "Valid"
 msgstr "Валидно"
 
@@ -3262,6 +3541,12 @@ msgstr "Значение не может быть пустым"
 
 msgid "Value must not contain control characters"
 msgstr "Значение не должно содержать управляющие символы"
+
+msgid "Version"
+msgstr "Версия"
+
+msgid "Via %s"
+msgstr "Через %s"
 
 msgid "Via country.is"
 msgstr "Через сервис country.is"
@@ -3284,20 +3569,29 @@ msgstr "ссылки vless://, vmess://, ss://, trojan://, socks4/5://, hy2/hyst
 msgid "VPN failure policy"
 msgstr "Поведение при отказе VPN"
 
+msgid "Waiting for configuration changes to finish. Devices will refresh automatically."
+msgstr "Ожидаем завершения применения настроек. Список устройств обновится автоматически."
+
 msgid "WAN"
 msgstr "WAN"
 
 msgid "WAN public IP"
 msgstr "Публичный WAN IP"
 
+msgid "Website"
+msgstr "Сайт"
+
+msgid "Website addresses"
+msgstr "Адреса сайта"
+
 msgid "What Trafira should do when this section matches"
 msgstr "Что Trafira должен делать при совпадении этой секции"
 
+msgid "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections."
+msgstr "Если выключено, открытые клиентские соединения остаются на прежнем подключении, а новые используют выбранное. У URLTest и Priority свои настройки. Перезапуск службы или отказ сервера всё равно может прервать соединения."
+
 msgid "When switching to another level, test every server and select the fastest instead of the first working one."
 msgstr "При переходе на другой уровень тестировать все сервера и выбирать самый быстрый, а не первый работающий."
-
-msgid "Where will the connection go?"
-msgstr "Проверка маршрутизации"
 
 msgid "Wi-Fi Calling bypass depends on the real destination IP. Enter it in the form above."
 msgstr "Обход Trafira для Wi-Fi Calling зависит от реального IP назначения. Укажите его в форме выше."
@@ -3314,8 +3608,11 @@ msgstr "Да"
 msgid "You can select Output Network Interface, by default autodetect"
 msgstr "Вы можете выбрать выходной сетевой интерфейс, по умолчанию он определяется автоматически."
 
-msgid "You can start with the domain only. If an earlier rule checks IP addresses, also enter the real destination IP. FakeIP addresses cannot be used for this check."
-msgstr "Можно начать только с домена. Если более раннее правило проверяет IP-адреса, укажите также реальный IP назначения. Адреса FakeIP для этой проверки не подходят."
+msgid "You do not have permission to change these settings."
+msgstr "У вас нет прав на изменение этих настроек."
+
+msgid "You do not have permission to manage profiles."
+msgstr "Недостаточно прав для управления профилями."
 
 msgid "Zapret hostlist templates are not supported here because Trafira does not expand them for per-rule NFQWS strategies."
 msgstr "Шаблоны hostlist zapret здесь не поддерживаются, потому что Trafira не разворачивает их для per-rule стратегий NFQWS."
@@ -3358,658 +3655,3 @@ msgstr "sing-box outbound для Zapret2 настроен"
 
 msgid "Zapret2 sing-box outbound is not configured"
 msgstr "sing-box outbound для Zapret2 не настроен"
-
-msgid "The router is returning FakeIP addresses. The separate browser check may be blocked or unavailable. This warning alone does not indicate a router DNS failure."
-msgstr "Роутер возвращает адреса FakeIP. Отдельная проверка из браузера может быть заблокирована или недоступна. Само по себе это предупреждение не означает сбой DNS роутера."
-
-msgid "Lists preventing a confirmed result"
-msgstr "Списки, мешающие подтвердить результат"
-
-msgid "Calculating route from prepared lists"
-msgstr "Расчёт маршрута по подготовленным спискам"
-
-msgid "Preparing rule sets"
-msgstr "Подготовка списков"
-
-msgid "Starting route analysis"
-msgstr "Запуск анализа маршрута"
-
-msgid "The first check prepares saved lists and may take longer. Verified exports are reused from RAM until a list or sing-box changes."
-msgstr "Первая проверка подготавливает сохранённые списки и может занять больше времени. Проверенные данные повторно используются из RAM, пока список или sing-box не изменится."
-
-msgid "Lists available for calculation"
-msgstr "Доступно списков для расчёта"
-
-msgid "Reused from RAM"
-msgstr "Повторно использовано из RAM"
-
-msgid "This saved list could not be decoded within its preparation timeout. Its rules were not skipped; the route remains unconfirmed."
-msgstr "Не удалось обработать этот список за отведённое время подготовки. Его правила не были пропущены; маршрут остаётся неподтверждённым."
-
-msgid "This saved list exceeds the diagnostic memory or size budget. Its rules cannot be confirmed."
-msgstr "Этот список превышает допустимый объём данных для диагностики. Его правила нельзя достоверно проверить."
-
-msgid "Preparation reached the background time budget before this list could be processed. Try again to reuse already prepared lists."
-msgstr "Время фоновой подготовки истекло до обработки этого списка. Повторите проверку: уже подготовленные списки будут использованы из кэша."
-
-msgid "Another route calculation is preparing lists. Wait for it to finish, then try again."
-msgstr "Другой расчёт маршрута подготавливает списки. Дождитесь его завершения и повторите проверку."
-
-msgid "The background route calculation reached its time limit. Already verified lists remain cached for another attempt."
-msgstr "Истекло время фонового расчёта маршрута. Уже проверенные списки сохранены в кэше для повторной проверки."
-
-msgid "The background route worker stopped unexpectedly. Try again."
-msgstr "Фоновый расчёт маршрута неожиданно остановился. Повторите проверку."
-
-msgid "There is not enough available RAM storage to prepare this route check."
-msgstr "Для подготовки этой проверки недостаточно свободного места в RAM."
-
-msgid "The configuration has more rule sets than this diagnostic can process safely."
-msgstr "В конфигурации больше списков, чем эта диагностика может безопасно обработать."
-
-msgid "Disable selected IPv6 probes"
-msgstr "Отключить отдельные IPv6-проверки"
-
-msgid "Return a DNS not-found response for selected IPv6-only Meta and Cloudflare probes before FakeIP. Applies only with IPv4 only. Other CDN domains and clients bypassing Trafira are unaffected."
-msgstr "Возвращать DNS-ответ «домен не найден» для отдельных IPv6-проверок Meta и Cloudflare до выдачи FakeIP. Действует только при «Только IPv4». Остальные домены CDN и устройства в обход Trafira не затрагиваются."
-
-msgid "Routing check"
-msgstr "Проверка маршрутизации"
-
-msgid "Checking saved rule sets"
-msgstr "Проверка сохранённых списков"
-
-msgid "Saved lists are checked one at a time without downloading them again. Only compact results for this request are cached."
-msgstr "Сохранённые списки проверяются по одному без повторного скачивания. В кэше остаются только компактные результаты этого запроса."
-
-msgid "The routing check stopped to preserve router memory. Trafira continues running; no route was confirmed. Try again when more memory is available."
-msgstr "Проверка маршрутизации остановлена для сохранения памяти роутера. Trafira продолжает работать; маршрут не подтверждён. Повторите проверку, когда будет больше свободной памяти."
-
-msgid "Delete gaming preset"
-msgstr "Удалить игровой пресет"
-
-msgid "The preset rules will be removed. Other settings will remain unchanged."
-msgstr "Правила этого пресета будут удалены. Остальные настройки сохранятся."
-
-msgid "Installed gaming presets"
-msgstr "Установленные игровые пресеты"
-
-msgid "Create or update a gaming preset"
-msgstr "Создать или изменить игровой пресет"
-
-msgid "Platform"
-msgstr "Платформа"
-
-msgid "Device"
-msgstr "Устройство"
-
-msgid "Connection"
-msgstr "Подключение"
-
-msgid "Actions"
-msgstr "Действия"
-
-msgid "Settings were applied successfully."
-msgstr "Настройки успешно применены."
-
-msgid "Checking configuration..."
-msgstr "Проверка конфигурации…"
-
-msgid "Processing profile operation..."
-msgstr "Выполняется операция с профилем…"
-
-msgid "Replace the saved configuration with the settings backed up before the last profile or preset operation?"
-msgstr "Заменить сохранённую конфигурацию настройками, которые были сохранены перед последней операцией с профилем или пресетом?"
-
-msgid "Route not determined"
-msgstr "Маршрут не определён"
-
-msgid "The route has not been determined. Complete the request using the reasons below and run the check again."
-msgstr "Маршрут не определён. Дополните запрос по подсказкам ниже и повторите проверку."
-
-msgid "Enter the real destination IP"
-msgstr "Указать реальный IP назначения"
-
-msgid "Proxy"
-msgstr "Прокси"
-
-msgid "The router FakeIP DNS check passed, but the browser check did not confirm FakeIP. Check browser Secure DNS, a device VPN or proxy, and device routing bypass settings. This result alone does not identify which setting caused the bypass."
-msgstr "Проверка FakeIP DNS роутера пройдена, но браузерный тест не подтвердил FakeIP. Проверьте защищённый DNS браузера, VPN или прокси на устройстве и исключения маршрутизации устройств. Этот результат сам по себе не определяет, какая настройка вызвала обход."
-
-msgid "Not evaluated"
-msgstr "Не проверялось"
-
-msgid "This UDP connection is excluded from Trafira interception by Wi-Fi Calling bypass."
-msgstr "Это UDP-соединение исключено из перехвата Trafira настройкой «Wi-Fi Calling напрямую»."
-
-msgid "This UDP 123 connection is excluded from Trafira interception by NTP bypass."
-msgstr "Это UDP-соединение на порт 123 исключено из перехвата Trafira настройкой «Исключить NTP»."
-
-msgid "Enter the real destination IP to check the NTP bypass for this packet."
-msgstr "Укажите реальный IP назначения, чтобы проверить исключение NTP для этого пакета."
-
-msgid "For this UDP bypass check, select a device address in the same IP family as the destination: IPv4 with IPv4, or IPv6 with IPv6."
-msgstr "Для проверки этого UDP-исключения выберите адрес устройства того же семейства, что и IP назначения: IPv4 с IPv4 или IPv6 с IPv6."
-
-msgid "Delete removes this preset's rules. Keep as ordinary rules preserves routing and moves further management to Sections."
-msgstr "«Удалить» удаляет правила этого пресета. «Оставить как обычные правила» сохраняет маршрутизацию; дальнейшее управление будет в разделе «Секции»."
-
-msgid "The rules will remain active. The preset will disappear from this list; edit or delete its rules in Sections."
-msgstr "Правила продолжат работать. Пресет исчезнет из этого списка; изменить или удалить его правила можно будет в разделе «Секции»."
-
-msgid "Devices"
-msgstr "Устройства"
-
-msgid "Please wait while Trafira checks the proposed configuration. Your settings have not been changed."
-msgstr "Пожалуйста, подождите: Trafira проверяет предложенную конфигурацию. Ваши настройки ещё не изменены."
-
-msgid "Please wait while Trafira saves and applies the configuration. The service may restart briefly."
-msgstr "Пожалуйста, подождите: Trafira сохраняет и применяет конфигурацию. Возможен короткий перезапуск сервиса."
-
-msgid "Continue in background"
-msgstr "Продолжить в фоне"
-
-msgid "Applying configuration..."
-msgstr "Применение конфигурации…"
-
-msgid "Network interface"
-msgstr "Сетевой интерфейс"
-
-msgid "No measurement"
-msgstr "Нет замера"
-
-msgid "No latency result is available. Use the latency test button to check this connection."
-msgstr "Результат проверки задержки отсутствует. Нажмите кнопку проверки задержки для этого подключения."
-
-msgid "Enable gaming presets"
-msgstr "Включить игровые пресеты"
-
-msgid "Enable gaming presets before creating or updating their rules."
-msgstr "Включите игровые пресеты перед созданием или изменением их правил."
-
-msgid "Gaming presets are disabled. Saved presets are kept; their rules do not route traffic."
-msgstr "Игровые пресеты отключены. Сохранённые пресеты остаются, но их правила не участвуют в маршрутизации."
-
-msgid "Gaming presets are enabled. Changes to this switch are applied immediately and may briefly restart routing."
-msgstr "Игровые пресеты включены. Изменение переключателя применяется сразу и может ненадолго перезапустить маршрутизацию."
-
-msgid "The rules keep their current enabled or disabled state. The preset disappears from this list; enable, edit or delete its rules in Sections."
-msgstr "Правила сохранят своё текущее состояние: включены или выключены. Пресет исчезнет из этого списка; включить, изменить или удалить его правила можно в разделе «Секции»."
-
-msgid "Disable gaming presets"
-msgstr "Отключить игровые пресеты"
-
-msgid "Restore the previous enabled state of each saved preset rule. Ordinary rules are not changed."
-msgstr "Восстановить прежнее состояние каждого правила сохранённых пресетов. Обычные правила не изменяются."
-
-msgid "Disable all saved preset rules without deleting the presets. Ordinary rules are not changed."
-msgstr "Отключить все правила сохранённых пресетов, сохранив сами пресеты. Обычные правила не изменяются."
-
-msgid "Disable"
-msgstr "Отключить"
-
-msgid "Show gaming preset management. Changes to routing take effect after Apply. Saved presets are kept when disabled."
-msgstr "Показать управление игровыми пресетами. Изменения маршрутизации вступят в силу после нажатия «Применить». При выключении сохранённые пресеты остаются."
-
-msgid "Apply the gaming preset switch first, then create or update presets."
-msgstr "Сначала нажмите «Применить», чтобы включить игровые пресеты, затем создавайте или изменяйте их."
-
-msgid "Determined automatically"
-msgstr "Определяется автоматически"
-
-msgid "Server IP (optional override)"
-msgstr "IP сервера (необязательно)"
-
-msgid "Leave empty to find the server addresses through Trafira DNS. Enter an IP only to check a particular server."
-msgstr "Оставьте поле пустым — Trafira сама узнает адреса сайта через свой DNS. Укажите IP, только если хотите проверить конкретный сервер."
-
-msgid "Additional settings"
-msgstr "Дополнительные настройки"
-
-msgid "Choose a device and enter a website, for example ya.ru. We will find its server addresses and explain how Trafira would route the connection. This does not open the website or change your settings."
-msgstr "Выберите устройство и введите сайт, например ya.ru. Trafira определит адреса сайта и покажет, как будет направлено соединение. Проверка не открывает сайт и не меняет настройки."
-
-msgid "Website"
-msgstr "Сайт"
-
-msgid "Check routing"
-msgstr "Проверить маршрут"
-
-msgid "Applies to this connection"
-msgstr "Подходит для этого соединения"
-
-msgid "Does not apply"
-msgstr "Не подходит"
-
-msgid "Could not check this condition"
-msgstr "Не удалось проверить это условие"
-
-msgid "Block the connection"
-msgstr "Заблокировать соединение"
-
-msgid "Recognize the connection protocol (e.g. HTTPS)"
-msgstr "Распознать протокол соединения (например, HTTPS)"
-
-msgid "Look up the website address"
-msgstr "Узнать IP-адрес сайта"
-
-msgid "Set connection parameters"
-msgstr "Задать параметры соединения"
-
-msgid "Send the DNS request to Trafira"
-msgstr "Передать DNS-запрос в Trafira"
-
-msgid "Rule"
-msgstr "Правило"
-
-msgid "Purpose"
-msgstr "Назначение"
-
-msgid "Result"
-msgstr "Результат"
-
-msgid "Other routing action"
-msgstr "Другое действие маршрутизации"
-
-msgid "Not needed: an earlier rule already chose the route"
-msgstr "Не требуется: маршрут уже выбран предыдущим правилом"
-
-msgid "Checking routing. Please wait…"
-msgstr "Проверяем маршрут. Пожалуйста, подождите…"
-
-msgid "Checking saved lists: %s of %s"
-msgstr "Проверяем сохранённые списки: %s из %s"
-
-msgid "Finding the website addresses and checking your settings."
-msgstr "Определяем адреса сайта и проверяем настройки маршрутизации."
-
-msgid "Lists are read from the router one at a time, without downloading them again."
-msgstr "Списки читаются по одному из памяти роутера. Повторно скачивать их не нужно."
-
-msgid "How the routing rules were checked"
-msgstr "Как проверялись правила маршрутизации"
-
-msgid "Results for the website server addresses"
-msgstr "Маршрут для каждого адреса сайта"
-
-msgid "Server IP"
-msgstr "IP-адрес сервера"
-
-msgid "Addresses were requested through the main DNS configured in Trafira. A device using its own DNS may receive different addresses."
-msgstr "DNS-запрос выполнен через основной DNS, настроенный в Trafira. Если устройство использует собственный DNS, адреса могут отличаться."
-
-msgid "The check uses the server IP you entered. No DNS lookup was needed."
-msgstr "Проверен указанный вами IP сервера. DNS-запрос не выполнялся."
-
-msgid "This explains your routing settings. It does not test website availability or capture a real connection."
-msgstr "Результат объясняет настройки маршрутизации. Он не проверяет доступность сайта и не отслеживает реальное соединение."
-
-msgid "The route depends on the server address"
-msgstr "Маршрут зависит от адреса сервера"
-
-msgid "Cannot determine the route yet"
-msgstr "Пока не удалось определить маршрут"
-
-msgid "See what prevented the check below. An incomplete answer does not mean that the website is unavailable."
-msgstr "Ниже указано, что помешало проверке. Это не означает, что сайт недоступен."
-
-msgid "Connection blocked"
-msgstr "Соединение заблокировано"
-
-msgid "A Trafira rule blocks this connection."
-msgstr "Одно из правил Trafira блокирует это соединение."
-
-msgid "Trafira does not send this connection through a proxy or VPN. Other system VPN and firewall rules may still apply."
-msgstr "Trafira не направляет это соединение через прокси или VPN. На него могут влиять другие VPN и правила межсетевого экрана роутера."
-
-msgid "Selected connection"
-msgstr "Выбранное подключение"
-
-msgid "Via %s"
-msgstr "Через %s"
-
-msgid "A rule in section \"%s\" selected this connection."
-msgstr "Это подключение выбрало правило из секции «%s»."
-
-msgid "This connection is selected by the Trafira routing settings."
-msgstr "Это подключение выбрано в настройках маршрутизации Trafira."
-
-msgid "One DNS query did not finish. Results below apply only to the addresses that were returned. Try again to check all addresses."
-msgstr "Один из DNS-запросов не завершился. Ниже показаны маршруты только для полученных адресов. Повторите проверку, чтобы проверить остальные."
-
-msgid "This website has several server addresses with different routing results. See the result for each address below."
-msgstr "У сайта несколько адресов, и для них действуют разные маршруты. Ниже показан результат для каждого адреса."
-
-msgid "This website returned more addresses than can be checked at once. Results below apply only to the displayed addresses. Enter one address in Additional settings to check it separately."
-msgstr "У сайта больше адресов, чем можно проверить за один раз. Ниже показан результат только для перечисленных адресов. Чтобы проверить другой адрес, укажите его в дополнительных настройках."
-
-msgid "The configured DNS server did not respond in time. Try again, or enter a known real server IP in Additional settings."
-msgstr "Настроенный DNS-сервер не ответил вовремя. Повторите проверку или укажите известный IP сервера в дополнительных настройках."
-
-msgid "The configured DNS server returned no usable address for this website and selected IP family. Check the website name or enter a known real IP in Additional settings."
-msgstr "DNS не вернул подходящий адрес сайта для выбранной версии IP. Проверьте название сайта или укажите известный IP сервера в дополнительных настройках."
-
-msgid "DNS returned a virtual FakeIP instead of a real server address. The address cannot be used to check IP rules. Restart Trafira after updating, or enter a known real IP in Additional settings."
-msgstr "DNS вернул виртуальный FakeIP вместо настоящего адреса сервера. По нему нельзя проверить правила для IP-адресов. После обновления перезапустите Trafira или укажите настоящий IP в дополнительных настройках."
-
-msgid "Automatic address lookup is unavailable in the running configuration. Restart Trafira after updating, or enter a known real IP in Additional settings."
-msgstr "В работающей конфигурации недоступно автоматическое определение адреса. После обновления перезапустите Trafira или укажите известный IP сервера в дополнительных настройках."
-
-msgid "The configured DNS server could not resolve this website. Try again, or enter a known real IP in Additional settings."
-msgstr "Настроенный DNS-сервер не смог определить адрес сайта. Повторите проверку или укажите известный IP сервера в дополнительных настройках."
-
-msgid "Phone or computer"
-msgstr "Телефон или компьютер"
-
-msgid "Choose the device that will open the website."
-msgstr "Выберите устройство, с которого будете открывать сайт."
-
-msgid "This checks apps running on the router itself, not your phone or computer. In Settings, enable \"Route router applications\" and click Apply."
-msgstr "Проверяются приложения самого роутера, а не телефона или компьютера. Во вкладке «Настройки» включите «Маршрутизацию приложений роутера» и нажмите «Применить»."
-
-msgid "Select a device from the list, or enter its local IP address."
-msgstr "Выберите устройство из списка или введите его IP-адрес в локальной сети."
-
-msgid "The server IP could not be determined automatically. Try again, or enter a known real destination IP in Additional settings."
-msgstr "Не удалось автоматически определить IP сервера. Повторите проверку или укажите известный настоящий IP-адрес сервера в дополнительных настройках."
-
-msgid "Applied configuration migrations"
-msgstr "Применённые обновления формата настроек"
-
-msgid "Configuration version"
-msgstr "Версия формата настроек"
-
-msgid "Clean shutdown state"
-msgstr "Состояние корректного завершения работы"
-
-msgid "Section type"
-msgstr "Тип секции"
-
-msgid "Name"
-msgstr "Название"
-
-msgid "DNS lookup: website addresses found"
-msgstr "DNS: адреса сайта найдены"
-
-msgid "Finishing the check and verifying that the configuration has not changed."
-msgstr "Завершаем проверку и убеждаемся, что настройки не изменились."
-
-msgid "Request a DNS answer for later rules"
-msgstr "Получить DNS-ответ для следующих правил"
-
-msgid "Return a predefined DNS answer"
-msgstr "Вернуть заранее заданный DNS-ответ"
-
-msgid "Return the received DNS answer"
-msgstr "Вернуть полученный DNS-ответ"
-
-msgid "Route the connection"
-msgstr "Направить соединение"
-
-msgid "The check runs on the router. It does not send a request from the selected device or open the website."
-msgstr "Проверка выполняется на роутере. Она не отправляет запрос с выбранного устройства и не открывает сайт."
-
-msgid "This part of the diagnostic cannot simulate a configured action. This is a limitation of the check, not a connection failure."
-msgstr "Эта часть диагностики не умеет рассчитывать указанное действие. Это ограничение проверки, а не ошибка соединения."
-
-msgid "Conditions in section “%s”"
-msgstr "Условия секции «%s»"
-
-msgid "Lists in section “%s”"
-msgstr "Списки секции «%s»"
-
-msgid "Domains in section “%s”"
-msgstr "Домены секции «%s»"
-
-msgid "IP addresses in section “%s”"
-msgstr "IP-адреса секции «%s»"
-
-msgid "Add a gaming preset"
-msgstr "Добавить игровой пресет"
-
-msgid "Add platforms to the list, then click Apply below."
-msgstr "Добавьте нужные платформы в список, затем нажмите «Применить» внизу страницы."
-
-msgid "Add to list"
-msgstr "Добавить в список"
-
-msgid "Advanced"
-msgstr "Дополнительно"
-
-msgid "Cancel editing"
-msgstr "Отменить редактирование"
-
-msgid "Changes are not applied. Click Apply below to activate all changes together. Save stores settings without applying them; Reset discards unsaved changes."
-msgstr "Изменения ещё не применены. Нажмите «Применить» внизу страницы, чтобы применить их вместе. «Сохранить» записывает настройки без применения, «Сброс» отменяет несохранённые изменения."
-
-msgid "Choose a platform, device addresses and connection, or cancel editing before saving."
-msgstr "Перед сохранением выберите платформу, адреса устройства и подключение либо отмените редактирование."
-
-msgid "Device gaming rule priority"
-msgstr "Приоритет игровых правил устройства"
-
-msgid "Edit"
-msgstr "Изменить"
-
-msgid "Edit gaming preset"
-msgstr "Изменить игровой пресет"
-
-msgid "Editing was cancelled. Your changes have not been saved."
-msgstr "Редактирование отменено. Изменения не сохранены."
-
-msgid "Enable these addresses in device routing if needed"
-msgstr "При необходимости включить маршрутизацию устройств для этих адресов"
-
-msgid "No gaming presets in the list yet."
-msgstr "В списке пока нет игровых пресетов."
-
-msgid "Reload the page before editing gaming presets."
-msgstr "Обновите страницу перед редактированием игровых пресетов."
-
-msgid "Replace"
-msgstr "Заменить"
-
-msgid "Replace edited preset"
-msgstr "Заменить изменённый пресет"
-
-msgid "Stores and account services use the selected connection. Other traffic uses a direct connection. Multiple platforms for the same device work together."
-msgstr "Магазины и сервисы учётных записей используют выбранное подключение. Остальной трафик идёт напрямую. Для одного устройства можно добавить несколько платформ — их правила работают вместе."
-
-msgid "The gaming draft could not be processed. Reduce the number of pending changes and try again."
-msgstr "Не удалось обработать черновик игровых пресетов. Сохраните меньше изменений за один раз и повторите попытку."
-
-msgid "This priority applies to all gaming presets for this device. Existing device rules may take priority when placed first."
-msgstr "Приоритет действует на все игровые пресеты этого устройства. Если обычные правила устройства стоят раньше, они могут выбрать маршрут первыми."
-
-msgid "Update in list"
-msgstr "Обновить в списке"
-
-msgid "You do not have permission to change these settings."
-msgstr "У вас нет прав на изменение этих настроек."
-
-msgid "This preset was changed manually in Sections. Replacement rebuilds its rules from the selected settings and discards your manual edits to these rules. Other presets and ordinary sections are kept. The replacement takes effect only after clicking Apply."
-msgstr "Этот пресет был изменён вручную в «Секциях». Замена создаст его правила заново, удалив ваши правки этих правил. Другие пресеты и секции сохранятся. Изменения вступят в силу после нажатия «Применить»."
-
-msgid "Use if Devices excludes these IPs. Apply lets Trafira handle only these addresses; other devices are unchanged. Edit subnet, MAC or interface exclusions in Devices."
-msgstr "Нужно, если выбранные IP исключены во вкладке «Устройства». После «Применить» Trafira обработает только эти адреса, не затрагивая остальные. Исключения по подсети, MAC или интерфейсу измените в «Устройствах»."
-
-msgid "No server IP is needed: a matching rule blocks this domain."
-msgstr "IP-адрес сервера не требуется: подходящее правило блокирует этот домен."
-
-msgid "Waiting for configuration changes to finish. Devices will refresh automatically."
-msgstr "Ожидаем завершения применения настроек. Список устройств обновится автоматически."
-
-msgid "GitHub request limit reached. Saved versions are shown for reference. Try again later."
-msgstr "Достигнут лимит запросов GitHub. Сохранённые версии показаны для справки. Повторите попытку позже."
-
-msgid "Next attempt"
-msgstr "Следующая попытка"
-
-msgid "GitHub request limit reached. Try again later."
-msgstr "Достигнут лимит запросов GitHub. Повторите попытку позже."
-
-msgid "Service step: later rules choose the route"
-msgstr "Служебный этап: маршрут выбирают следующие правила"
-
-msgid "Compatibility is checked automatically when you apply a profile. Viewing differences is optional."
-msgstr "При применении профиль проверяется автоматически. Просматривать различия необязательно."
-
-msgid "Active node"
-msgstr "Активный узел"
-
-msgid "Currently used"
-msgstr "Используется сейчас"
-
-msgid "Unavailable"
-msgstr "Недоступен"
-
-msgid "The last connection check failed. Repeat the latency test to check availability."
-msgstr "Последняя проверка соединения завершилась неудачно. Повторите проверку задержки, чтобы уточнить доступность."
-
-msgid "Cannot prepare verified Extended rollback in RAM; running service was not changed"
-msgstr "Не удалось проверить обновление Extended в RAM. Работающая служба не изменена."
-
-msgid "Cannot preserve verified Extended rollback in RAM; running service was not changed"
-msgstr "Не хватает ресурсов для безопасного отката Extended в RAM. Работающая служба не изменена."
-
-msgid "Previous sing-box process did not stop; existing package files were not removed"
-msgstr "Предыдущий процесс sing-box не остановился. Файлы установленного пакета сохранены."
-
-msgid "Cannot finish already installed core selection"
-msgstr "Не удалось завершить выбор уже установленной версии sing-box."
-
-msgid "Could not read profiles. Check the router connection and try again."
-msgstr "Не удалось получить ответ роутера. Проверьте соединение и обновите список профилей."
-
-msgid "You do not have permission to manage profiles."
-msgstr "Недостаточно прав для управления профилями."
-
-msgid "Profile storage is unavailable. Check free space and access permissions."
-msgstr "Хранилище профилей недоступно. Проверьте свободное место и права доступа."
-
-msgid "Check dependencies"
-msgstr "Проверить зависимости"
-
-msgid "Checking profile dependencies..."
-msgstr "Проверяем зависимости профиля..."
-
-msgid "Profile dependencies"
-msgstr "Зависимости профиля"
-
-msgid "Found"
-msgstr "Найдено"
-
-msgid "Not found"
-msgstr "Не найдено"
-
-msgid "Not a regular file"
-msgstr "Не является обычным файлом"
-
-msgid "Incompatible"
-msgstr "Несовместимо"
-
-msgid "Not checked"
-msgstr "Не проверено"
-
-msgid "Certificate file"
-msgstr "Файл сертификата"
-
-msgid "Private key file"
-msgstr "Файл закрытого ключа"
-
-msgid "Rule set file"
-msgstr "Файл набора правил"
-
-msgid "Domain and IP list file"
-msgstr "Файл списка доменов и IP"
-
-msgid "Custom JSON may contain additional dependencies. Review it before transferring."
-msgstr "Пользовательский JSON может содержать другие зависимости. Проверьте его перед переносом."
-
-msgid "Some custom JSON is invalid and could not be inspected."
-msgstr "Часть пользовательского JSON содержит ошибки и не проверена."
-
-msgid "Check external files referenced by custom component strategies separately."
-msgstr "Отдельно проверьте внешние файлы, указанные в пользовательских стратегиях компонентов."
-
-msgid "The inspection limit was reached. Some dependencies are not listed."
-msgstr "Достигнут предел проверки. Часть зависимостей не попала в отчёт."
-
-msgid "Some file paths are invalid and were omitted from this report."
-msgstr "Некоторые пути к файлам некорректны и не включены в отчёт."
-
-msgid "Checked against this router. File contents and live connections are not checked."
-msgstr "Проверено на текущем роутере. Содержимое файлов и реальные соединения не проверяются."
-
-msgid "Missing or incompatible required dependencies:"
-msgstr "Отсутствуют или несовместимы обязательные зависимости:"
-
-msgid "Extended required"
-msgstr "Требуется Extended"
-
-msgid "Inactive settings"
-msgstr "Для неактивных настроек"
-
-msgid "External file"
-msgstr "Внешний файл"
-
-msgid "No known external files are referenced."
-msgstr "Ссылок на известные внешние файлы не найдено."
-
-msgid "The JSON profile includes settings, not packages or external files. Transfer those separately."
-msgstr "JSON-профиль содержит настройки, но не пакеты и внешние файлы. Их нужно перенести отдельно."
-
-msgid "Component"
-msgstr "Компонент"
-
-msgid "Required"
-msgstr "Обязательно"
-
-msgid "File"
-msgstr "Файл"
-
-msgid "Version"
-msgstr "Версия"
-
-msgid "Subscriptions"
-msgstr "Подписки"
-
-
-msgid "Interrupt connections when switching this section"
-msgstr "Разрывать соединения при смене подключения"
-
-msgid "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections."
-msgstr "Если выключено, открытые клиентские соединения остаются на прежнем подключении, а новые используют выбранное. У URLTest и Priority свои настройки. Перезапуск службы или отказ сервера всё равно может прервать соединения."
-
-msgid "Loading service status…"
-msgstr "Проверка состояния службы…"
-
-msgid "Service status unavailable"
-msgstr "Состояние службы недоступно"
-
-msgid "Running"
-msgstr "Запущена"
-
-msgid "Stopped"
-msgstr "Остановлена"
-
-msgid "Starting…"
-msgstr "Запускается…"
-
-msgid "Restarting…"
-msgstr "Перезапускается…"
-
-msgid "Stopping…"
-msgstr "Останавливается…"
-
-msgid "Failed to start Trafira"
-msgstr "Ошибка запуска Trafira"
-
-msgid "Test latency for all sections"
-msgstr "Проверить задержку всех секций"
-
-msgid "Installing…"
-msgstr "Установка…"
-
-msgid "Removing…"
-msgstr "Удаление…"

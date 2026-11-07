@@ -1626,26 +1626,30 @@ async function renderSectionsWidget() {
 
   const allLatencyButton = E(
     'div',
-    { class: 'cbi-section-node' },
-    E(
-      'button',
-      {
-        type: 'button',
-        class: 'btn cbi-button cbi-button-action',
-        disabled:
-          allLatencyRunning ||
-          !sectionsWidget.data.some((section) =>
-            getSectionLatencyTarget(section),
-          )
-            ? true
-            : undefined,
-        'aria-busy': allLatencyRunning ? 'true' : 'false',
-        click: () => {
-          void handleTestAllLatency();
+    { class: 'fkp_dashboard-page__connections-heading' },
+    [
+      E('h3', {}, _('Connections')),
+      E(
+        'button',
+        {
+          type: 'button',
+          class: 'cbi-button',
+          'aria-label': _('Test latency for all sections'),
+          disabled:
+            allLatencyRunning ||
+            !sectionsWidget.data.some((section) =>
+              getSectionLatencyTarget(section),
+            )
+              ? true
+              : undefined,
+          'aria-busy': allLatencyRunning ? 'true' : 'false',
+          click: () => {
+            void handleTestAllLatency();
+          },
         },
-      },
-      allLatencyRunning ? _('Loading...') : _('Test latency for all sections'),
-    ),
+        allLatencyRunning ? _('Checking latency…') : _('Check latency'),
+      ),
+    ],
   );
 
   const renderedWidgets = sectionsWidget.data.map((section) =>

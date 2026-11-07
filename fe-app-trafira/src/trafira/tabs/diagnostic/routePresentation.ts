@@ -12,7 +12,7 @@ export function routeOutcome(
       reason: decision.missing.includes('multiple_destination_routes')
         ? routeReason('multiple_destination_routes')
         : _(
-            'See what prevented the check below. An incomplete answer does not mean that the website is unavailable.',
+            'There is not enough information to confirm the route. This does not mean the website is unavailable.',
           ),
     };
   if (decision.status === 'blocked')
@@ -23,23 +23,13 @@ export function routeOutcome(
   if (decision.status === 'direct')
     return {
       title: _('Direct connection'),
-      reason: _(
-        'Trafira does not send this connection through a proxy or VPN. Other system VPN and firewall rules may still apply.',
-      ),
+      reason: _('Trafira sends this connection directly, without a proxy.'),
     };
   const name =
     connection?.label || decision.outbound || _('Selected connection');
-  const matched = decision.trace.find(
-    (row) => row.index === decision.rule_index,
-  );
   return {
     title: _('Via %s').replace('%s', name),
-    reason: matched?.origin?.section
-      ? _('A rule in section "%s" selected this connection.').replace(
-          '%s',
-          matched.origin.section,
-        )
-      : _('This connection is selected by the Trafira routing settings.'),
+    reason: _('This connection is selected by the Trafira routing settings.'),
   };
 }
 
@@ -173,7 +163,7 @@ export function routeReason(reason: string): string {
       'An earlier rule uses a condition this diagnostic cannot evaluate. The route cannot be confirmed.',
     );
   return _(
-    'An earlier rule needs additional data. See the rule evaluation details below.',
+    'The check needs more information. Select a detected device and try again.',
   );
 }
 
@@ -253,17 +243,6 @@ export function routeError(error: string): string {
       'The sing-box configuration is unavailable. Start Trafira or apply its settings, then try again.',
     ),
   };
-  if (
-    [
-      'timeout',
-      'permission_denied',
-      'command_failed',
-      'rpc_failed',
-      'invalid_response',
-      'render_failed',
-    ].includes(error)
-  )
-    return `${messages[error]} (${error})`;
   return (
     messages[error] ||
     _('Could not explain route. Check that Trafira is running, then try again.')
