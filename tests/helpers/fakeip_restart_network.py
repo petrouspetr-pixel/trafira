@@ -162,6 +162,7 @@ print('recovered',flush=True)
     def test_unknown_quic_udp_is_blocked_before_core_for_both_families(self):
         self.core()
         for enabled,selected in ((False,True), (True,True), (True,False), (False,True)):
+            print(f'UDP/443 policy enabled={enabled}, selected={selected}',flush=True)
             self.rules(enabled,selected)
             result=self.run_in(self.client,['python3','-c','''
 import socket
