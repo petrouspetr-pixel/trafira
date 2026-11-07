@@ -1796,8 +1796,8 @@
     ]
   },
   {
-    "call": "Disable the QUIC protocol to improve compatibility or fix issues with video streaming",
-    "key": "Disable the QUIC protocol to improve compatibility or fix issues with video streaming",
+    "call": "Reject intercepted UDP port 443 traffic for both IPv4 and IPv6, even if QUIC is not recognized. Other UDP services on port 443 are also rejected. Excluded devices and direct traffic are unchanged.",
+    "key": "Reject intercepted UDP port 443 traffic for both IPv4 and IPv6, even if QUIC is not recognized. Other UDP services on port 443 are also rejected. Excluded devices and direct traffic are unchanged.",
     "places": [
       "../luci-app-trafira/htdocs/luci-static/resources/view/trafira/settings.js:544"
     ]

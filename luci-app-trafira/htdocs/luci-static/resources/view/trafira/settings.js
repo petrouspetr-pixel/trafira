@@ -531,7 +531,7 @@ function createSettingsContent(section, capabilities) {
     "disable_quic",
     _("Disable QUIC"),
     _(
-      "Disable the QUIC protocol to improve compatibility or fix issues with video streaming",
+      "Reject intercepted UDP port 443 traffic for both IPv4 and IPv6, even if QUIC is not recognized. Other UDP services on port 443 are also rejected. Excluded devices and direct traffic are unchanged.",
     ),
   );
   o.default = "0";

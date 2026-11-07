@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import select
 import signal
 import subprocess
 import tempfile
@@ -57,8 +58,10 @@ while True:time.sleep(1)
 '''], 'echo', ready='ready')
 
     def run_in(self, ns, args, **kw):
-        return subprocess.run(['ip', 'netns', 'exec', ns, *args], check=True,
-                              text=True, capture_output=True, timeout=15, **kw)
+        result = subprocess.run(['ip', 'netns', 'exec', ns, *args], check=False,
+                                text=True, capture_output=True, timeout=15, **kw)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        return result
 
     def start(self, ns, args, name, ready=None):
         log = (self.work / (name+'.log')).open('w+')
@@ -81,13 +84,13 @@ while True:time.sleep(1)
             proc.wait(timeout=5)
             log.close()
 
-    def rules(self, enabled):
+    def rules(self, enabled, selected=True):
         self.run_in(self.router, ['nft', 'delete', 'table', 'inet', 'TrafiraTable']) if getattr(self, 'table', False) else None
         fixture = self.work/'fixture.json'
         fixture.write_text(json.dumps({'settings': {'disable_quic': str(int(enabled))}, 'section': []}))
         self.run_in(self.router, ['ucode', '-L', str(LIB), str(LIB/'nft/apply.uc'),
             'nft-create-runtime-base-fixture', str(fixture), 'TrafiraTable', 'localv4',
-            'subnets', 'ports', 'ip_ports', 'interfaces', 'lan', '0x00100000', '0x08000000',
+            'subnets', 'ports', 'ip_ports', 'interfaces', 'lan' if selected else 'excluded', '0x00100000', '0x08000000',
             '198.18.0.0/15', '1602', '0'])
         self.table = True
 
@@ -127,8 +130,15 @@ print('recovered',flush=True)
                     client = subprocess.Popen(['ip','netns','exec',self.client,'python3','-u','-c',code],
                                               stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
                     self.addCleanup(lambda p=client: p.kill() if p.poll() is None else None)
+                    self.assertTrue(select.select([client.stdout],[],[],5)[0], 'client did not connect')
                     self.assertEqual(client.stdout.readline().strip(),'connected')
                     core.send_signal(shutdown);core.wait(timeout=5)
+                    if shutdown == signal.SIGKILL:
+                        host='198.18.0.10' if family==4 else '2001:2::10'
+                        source='192.0.2.2' if family==4 else '2001:db8::2'
+                        entries=self.run_in(self.router,['conntrack','-L','-f','ipv4' if family==4 else 'ipv6',
+                            '-p','tcp','-s',source,'-d',host]).stdout
+                        self.assertIn('ESTABLISHED',entries,'must reproduce the leftover conntrack entry')
                     self.core()
                     out,err=client.communicate('\n',timeout=8)
                     self.assertEqual(client.returncode,0,err)
@@ -139,8 +149,8 @@ print('recovered',flush=True)
 
     def test_unknown_quic_udp_is_blocked_before_core_for_both_families(self):
         self.core()
-        for enabled in (False, True, False):
-            self.rules(enabled)
+        for enabled,selected in ((False,True), (True,True), (True,False), (False,True)):
+            self.rules(enabled,selected)
             result=self.run_in(self.client,['python3','-c','''
 import socket
 for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10')]:
@@ -150,7 +160,7 @@ for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10'
   assert not BLOCK and data==b'not-recognizable-as-quic','UDP/443 escaped rejection'
  except ConnectionRefusedError:assert BLOCK,'unexpected rejection when disabled'
  s.close()
-'''.replace('BLOCK',str(enabled))])
+'''.replace('BLOCK',str(enabled and selected))])
             self.assertEqual(result.returncode,0)
 
 
