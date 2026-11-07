@@ -1,4 +1,4 @@
-import { onMount, preserveScrollForPage } from '../../../helpers';
+import { preserveScrollForPage } from '../../../helpers';
 import { TRAFIRA_ACTION_PROVIDERS_AVAILABILITY_EVENT } from '../../../constants';
 import { normalizeCompiledVersion } from '../../../helpers/normalizeCompiledVersion';
 import { showToast } from '../../../helpers/showToast';
@@ -12,7 +12,7 @@ import { renderButton } from '../../../partials';
 import { getComponentActionKey } from '../../helpers/getComponentActionKey';
 import type { UpdatesActionKey } from '../../helpers/getComponentActionKey';
 import { isTransientRpcError } from '../../helpers/isTransientRpcError';
-import { isActiveLuciTab } from '../../helpers/isActiveLuciTab';
+import { watchPanel } from '../../helpers/panelLifecycle';
 import { shouldShowLoadingForRestoredAction } from '../../helpers/restoredActionLoading';
 import {
   formatSingBoxVersion,
@@ -71,7 +71,6 @@ interface ComponentCard {
   actions: ComponentActionButton[];
 }
 
-let updatesLifecycleRegistered = false;
 let updatesControllerInitialized = false;
 let updatesCanWrite = true;
 let updatesMounted = false;
@@ -88,6 +87,7 @@ let componentActionStateUnsubscribe: (() => void) | null = null;
 let componentActionStateRefreshPromise: Promise<void> | null = null;
 const followedComponentJobs = new Set<string>();
 const handledComponentJobs = new Set<string>();
+const activeComponentJobs = new Map<UpdatesActionKey, string>();
 
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', () => {
@@ -100,6 +100,16 @@ if (typeof window !== 'undefined') {
 
 function isNotInstalled(version: string | undefined) {
   return !version || version === 'not installed';
+}
+
+function formatOptionalComponentVersion(installed: boolean, version: string) {
+  if (!installed) {
+    return _('Not installed');
+  }
+
+  // Capabilities and versions arrive independently; a stale sentinel is not proof
+  // of absence when the runtime already confirms the component is installed.
+  return isNotInstalled(version) ? _('unknown') : version;
 }
 
 function shouldShowInstallAfterCheck(component: Trafira.ComponentName) {
@@ -161,7 +171,7 @@ function isServiceRuntimeActionLoading() {
 function isSystemInfoLoading() {
   const systemInfo = store.get().diagnosticsSystemInfo;
 
-  return systemInfo.loading || !systemInfo.loaded;
+  return !systemInfo.loaded;
 }
 
 function setActionLoading(
@@ -507,11 +517,14 @@ async function completeComponentActionJob(
   const alreadyHandled = handledComponentJobs.has(jobId);
 
   if (alreadyHandled) {
-    setActionLoading(key, false);
     return;
   }
 
   const shouldNotify = shouldNotifyOwnedUiAction('component', jobId);
+
+  if (activeComponentJobs.get(key) === jobId) {
+    activeComponentJobs.delete(key);
+  }
 
   if (!response.success || response.data.success === false) {
     const message = response.success
@@ -534,12 +547,12 @@ async function completeComponentActionJob(
   }
 
   handledComponentJobs.add(jobId);
-  await ackComponentActionJob(jobId);
   await applyCompletedComponentAction({
     key,
     result: response.data,
     notify: shouldNotify,
   });
+  void ackComponentActionJob(jobId);
 }
 
 async function followComponentActionState(
@@ -548,15 +561,32 @@ async function followComponentActionState(
   const jobId = state.job_id;
   const key = getComponentActionKey(state.component, state.action);
 
-  if (!jobId || !key || followedComponentJobs.has(jobId)) {
+  if (!jobId || !key) {
     return;
   }
 
-  if (!state.running && handledComponentJobs.has(jobId)) {
+  if (handledComponentJobs.has(jobId)) {
+    if (!activeComponentJobs.has(key)) {
+      setActionLoading(key, false);
+    }
+    return;
+  }
+
+  // The shared runtime poll may finish before the dedicated job-status RPC.
+  if (!state.running) {
+    await completeComponentActionJob(key, jobId, {
+      success: true,
+      data: state,
+    });
+    return;
+  }
+
+  if (followedComponentJobs.has(jobId)) {
     return;
   }
 
   followedComponentJobs.add(jobId);
+  activeComponentJobs.set(key, jobId);
   if (shouldShowLoadingForRestoredAction(state)) {
     setActionLoading(key, true);
   }
@@ -709,6 +739,7 @@ async function handleComponentAction(button: ComponentActionButton) {
     }
 
     jobId = startResponse.data.job_id;
+    activeComponentJobs.set(button.key, jobId);
     markUiActionOwned('component', jobId);
     if (followedComponentJobs.has(jobId)) {
       return;
@@ -800,6 +831,12 @@ function getOptionalComponentActions({
   installKey: UpdatesActionKey;
   removeKey: UpdatesActionKey;
 }) {
+  // Capabilities can change before the job finishes. Keep its button visible.
+  if (store.get().updatesActions[removeKey].loading) {
+    installed = true;
+  } else if (store.get().updatesActions[installKey].loading) {
+    installed = false;
+  }
   if (!installed) {
     return [getInstallAction(component, installKey, false)];
   }
@@ -937,9 +974,10 @@ function getComponentCards(): ComponentCard[] {
       title: 'Zapret',
       version: systemInfoLoading
         ? _('Loading...')
-        : zapretInstalled
-          ? systemInfo.zapret_version
-          : _('Not installed'),
+        : formatOptionalComponentVersion(
+            zapretInstalled,
+            systemInfo.zapret_version,
+          ),
       latestVersion: getLatestVersion('zapret'),
       releaseUrl: getGitHubReleaseUrl('zapret'),
       actions: zapretActions,
@@ -950,9 +988,10 @@ function getComponentCards(): ComponentCard[] {
       title: 'Zapret2',
       version: systemInfoLoading
         ? _('Loading...')
-        : zapret2Installed
-          ? systemInfo.zapret2_version
-          : _('Not installed'),
+        : formatOptionalComponentVersion(
+            zapret2Installed,
+            systemInfo.zapret2_version,
+          ),
       latestVersion: getLatestVersion('zapret2'),
       releaseUrl: getGitHubReleaseUrl('zapret2'),
       actions: zapret2Actions,
@@ -963,9 +1002,10 @@ function getComponentCards(): ComponentCard[] {
       title: 'ByeDPI',
       version: systemInfoLoading
         ? _('Loading...')
-        : byedpiInstalled
-          ? systemInfo.byedpi_version
-          : _('Not installed'),
+        : formatOptionalComponentVersion(
+            byedpiInstalled,
+            systemInfo.byedpi_version,
+          ),
       latestVersion: getLatestVersion('byedpi'),
       releaseUrl: getGitHubReleaseUrl('byedpi'),
       actions: byedpiActions,
@@ -978,6 +1018,24 @@ function renderComponentCard(card: ComponentCard) {
   const anyActionLoading = isAnyActionLoading();
   const serviceRuntimeActionLoading = isServiceRuntimeActionLoading();
   const systemInfoLoading = isSystemInfoLoading();
+  const pendingAction = (
+    [
+      'remove',
+      'install',
+      'install_stable',
+      'install_tiny',
+      'install_extended',
+      'install_extended_compressed',
+      'check_update',
+    ] as Trafira.ComponentAction[]
+  ).find((action) => {
+    const key = getComponentActionKey(card.component, action);
+    return key && updatesActions[key].loading;
+  });
+  const pendingMutation = pendingAction && pendingAction !== 'check_update';
+  const version = pendingMutation
+    ? `${pendingAction === 'remove' ? _('Remove') : _('Install')}…`
+    : card.version;
 
   // 1. Header (displays Title, Current Version, no badges)
   const headerChildren: Node[] = [
@@ -985,7 +1043,7 @@ function renderComponentCard(card: ComponentCard) {
     E(
       'span',
       { class: 'fkp_updates-page__component__header-version' },
-      card.version,
+      version,
     ),
   ];
   const header = E(
@@ -998,7 +1056,7 @@ function renderComponentCard(card: ComponentCard) {
   const detailsChildren: Node[] = [];
   const checkResult = getVisibleCheckResult(card.component);
 
-  if (checkResult && checkResult.status) {
+  if (!pendingMutation && checkResult && checkResult.status) {
     let labelText = '';
     const latestValueNodes: Node[] = [];
 
@@ -1302,6 +1360,8 @@ async function onPageMount() {
   store.subscribe(onStoreUpdate);
   renderUpdatesComponents();
   coreVersionsPanel.mount(updatesCanWrite);
+  startComponentActionStateWatcher();
+  void ensureSystemInfo();
 
   const componentUpdateCheckCache = await loadComponentUpdateCheckCache({
     force: Boolean(prefetchedComponentUpdateCheckCache),
@@ -1328,9 +1388,7 @@ async function onPageMount() {
     }
   }
 
-  startComponentActionStateWatcher();
   renderUpdatesComponents();
-  void ensureSystemInfo();
   if (hasRuntimeSnapshot) {
     void refreshRuntimeUiState({ force: true });
   }
@@ -1344,31 +1402,6 @@ function onPageUnmount() {
   store.unsubscribe(onStoreUpdate);
 }
 
-function registerLifecycleListeners() {
-  if (updatesLifecycleRegistered) {
-    return;
-  }
-
-  updatesLifecycleRegistered = true;
-
-  store.subscribe((next, prev, diff) => {
-    if (
-      diff.tabService &&
-      next.tabService.current !== prev.tabService.current
-    ) {
-      const isUpdatesVisible = next.tabService.current === 'updates';
-
-      if (isUpdatesVisible) {
-        return onPageMount();
-      }
-
-      if (updatesMounted) {
-        return onPageUnmount();
-      }
-    }
-  });
-}
-
 export async function initController(canWrite = true): Promise<void> {
   updatesCanWrite = canWrite;
   if (updatesControllerInitialized) {
@@ -1378,14 +1411,8 @@ export async function initController(canWrite = true): Promise<void> {
   updatesControllerInitialized = true;
   void loadComponentUpdateCheckCache();
 
-  onMount('updates-status').then(() => {
-    logger.debug('[UPDATES]', 'initController', 'onMount');
-    registerLifecycleListeners();
-    if (
-      store.get().tabService.current === 'updates' ||
-      isActiveLuciTab('updates')
-    ) {
-      onPageMount();
-    }
+  watchPanel('updates-status', {
+    mount: onPageMount,
+    unmount: onPageUnmount,
   });
 }

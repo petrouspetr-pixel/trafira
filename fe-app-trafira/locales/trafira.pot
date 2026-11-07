@@ -5408,3 +5408,30 @@ msgstr ""
 
 msgid "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections."
 msgstr ""
+
+msgid "Loading service status…"
+msgstr ""
+
+msgid "Service status unavailable"
+msgstr ""
+
+msgid "Running"
+msgstr ""
+
+msgid "Stopped"
+msgstr ""
+
+msgid "Starting…"
+msgstr ""
+
+msgid "Restarting…"
+msgstr ""
+
+msgid "Stopping…"
+msgstr ""
+
+msgid "Failed to start Trafira"
+msgstr ""
+
+msgid "Test latency for all sections"
+msgstr ""

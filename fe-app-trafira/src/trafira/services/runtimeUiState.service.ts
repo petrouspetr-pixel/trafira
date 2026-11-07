@@ -2,6 +2,7 @@ import { TrafiraShellMethods } from '../methods';
 import { Trafira } from '../types';
 import { logger } from './logger.service';
 import { applyUiStateToStore } from './uiState.service';
+import { store } from './store.service';
 
 const RUNTIME_UI_STATE_REFRESH_MIN_INTERVAL_MS = 500;
 const RUNTIME_UI_STATE_IDLE_POLL_INTERVAL_MS = 1000;
@@ -67,6 +68,16 @@ function notifyRuntimeUiStateListeners(uiState: Trafira.UiState) {
   }
 }
 
+function markRuntimeStatusUnavailable() {
+  store.set({
+    servicesInfoWidget: {
+      ...store.get().servicesInfoWidget,
+      loading: false,
+      failed: true,
+    },
+  });
+}
+
 export async function refreshRuntimeUiState({
   force = false,
 }: { force?: boolean } = {}): Promise<Trafira.UiState | undefined> {
@@ -91,6 +102,7 @@ export async function refreshRuntimeUiState({
   const promise = TrafiraShellMethods.getUiState()
     .then((response) => {
       if (!response.success) {
+        markRuntimeStatusUnavailable();
         return undefined;
       }
 
@@ -101,6 +113,7 @@ export async function refreshRuntimeUiState({
       return response.data;
     })
     .catch((error) => {
+      markRuntimeStatusUnavailable();
       logger.error('[RUNTIME_UI_STATE]', 'refresh failed', error);
       return undefined;
     })

@@ -1,6 +1,7 @@
 interface IRenderWidgetProps {
   loading: boolean;
   failed: boolean;
+  cached?: boolean;
   title: string;
   items: Array<{
     key: string;
@@ -75,6 +76,20 @@ function renderDefaultState({ title, items, loading }: IRenderWidgetProps) {
 }
 
 export function renderWidget(props: IRenderWidgetProps) {
+  if (props.cached && (props.loading || props.failed)) {
+    const card = renderDefaultState(props);
+    card.appendChild(
+      E(
+        'div',
+        {
+          role: 'status',
+          class: 'fkp_dashboard-page__widgets-section__item__row',
+        },
+        props.failed ? _('Currently unavailable') : _('Loading...'),
+      ),
+    );
+    return card;
+  }
   // Keep labelled cards in place while sockets connect; no invented zeroes
   // and no stale measurements when the connection is unavailable.
   if (props.title && props.items.length && (props.loading || props.failed)) {

@@ -59,6 +59,33 @@ describe('refreshRuntimeUiState', () => {
     mocks.executeShellCommand.mockReset();
   });
 
+  it('marks a failed status read unavailable while retaining the last measurements', async () => {
+    mocks.executeShellCommand.mockResolvedValue({
+      stdout: JSON.stringify(createUiState()),
+      stderr: '',
+      code: 0,
+    });
+    await refreshRuntimeUiState({ force: true });
+    mocks.executeShellCommand.mockResolvedValue({
+      stdout: '',
+      stderr: 'unavailable',
+      code: 1,
+    });
+    await refreshRuntimeUiState({ force: true });
+    expect(store.get().servicesInfoWidget).toMatchObject({
+      loading: false,
+      failed: true,
+      data: { trafiraRunning: 1 },
+    });
+    mocks.executeShellCommand.mockResolvedValue({
+      stdout: JSON.stringify(createUiState()),
+      stderr: '',
+      code: 0,
+    });
+    await refreshRuntimeUiState({ force: true });
+    expect(store.get().servicesInfoWidget.failed).toBe(false);
+  });
+
   it('applies current UI state to the shared store', async () => {
     const uiState = createUiState('stopped but enabled', 0);
 

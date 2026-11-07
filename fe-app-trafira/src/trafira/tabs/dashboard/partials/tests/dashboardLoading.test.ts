@@ -30,6 +30,9 @@ beforeEach(() => {
       attrs = {},
       children: Node | string | Array<Node | string> = [],
     ) => ({
+      appendChild(child: Node | string) {
+        this.children.push(child);
+      },
       tag,
       attrs,
       children: Array.isArray(children) ? children : [children],
@@ -91,4 +94,33 @@ it('keeps the traffic title on failure instead of an anonymous replacement box',
   expect(text(failed)).toContain('Traffic');
   expect(text(failed)).toContain('Currently unavailable');
   expect(text(failed)).not.toContain('3 MB/s');
+});
+
+it('keeps the last successful measurements visible during a refresh or outage', () => {
+  const root = renderWidget({
+    title: 'Traffic',
+    loading: true,
+    failed: false,
+    cached: true,
+    items,
+  }) as unknown as Node;
+  expect(text(root)).toContain('12 KB/s');
+  const outage = renderWidget({
+    title: 'Traffic',
+    loading: false,
+    failed: true,
+    cached: true,
+    items,
+  }) as unknown as Node;
+  expect(text(outage)).toContain('3 MB/s');
+  expect(text(outage)).toContain('Currently unavailable');
+});
+it('labels all four initial dashboard cards before responses arrive', () => {
+  const root = render() as unknown as Node;
+  expect(text(find(root, 'dashboard-widget-system-info')!)).toContain(
+    'System info',
+  );
+  expect(text(find(root, 'dashboard-widget-service-info')!)).toContain(
+    'Services info',
+  );
 });

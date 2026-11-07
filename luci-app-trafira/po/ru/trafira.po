@@ -3980,3 +3980,30 @@ msgstr "Разрывать соединения при смене подключ
 
 msgid "When disabled, existing client connections stay on the previous outbound and only new connections use the selected outbound. URLTest and Priority have their own settings. A service restart or server failure can still close connections."
 msgstr "Если выключено, открытые клиентские соединения остаются на прежнем подключении, а новые используют выбранное. У URLTest и Priority свои настройки. Перезапуск службы или отказ сервера всё равно может прервать соединения."
+
+msgid "Loading service status…"
+msgstr "Проверка состояния службы…"
+
+msgid "Service status unavailable"
+msgstr "Состояние службы недоступно"
+
+msgid "Running"
+msgstr "Запущена"
+
+msgid "Stopped"
+msgstr "Остановлена"
+
+msgid "Starting…"
+msgstr "Запускается…"
+
+msgid "Restarting…"
+msgstr "Перезапускается…"
+
+msgid "Stopping…"
+msgstr "Останавливается…"
+
+msgid "Failed to start Trafira"
+msgstr "Ошибка запуска Trafira"
+
+msgid "Test latency for all sections"
+msgstr "Проверить задержку всех секций"
