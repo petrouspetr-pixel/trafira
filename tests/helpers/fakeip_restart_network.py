@@ -49,10 +49,11 @@ class Echo(socketserver.BaseRequestHandler):
    if not data:break
    self.request.sendall(data)
 for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10'),
-                    (socket.AF_INET,'192.0.2.1'),(socket.AF_INET6,'2001:db8::1')]:
+                    (socket.AF_INET,'192.0.2.1'),(socket.AF_INET6,'2001:db8::1'),
+                    (socket.AF_INET,'127.0.0.1')]:
  for base in [socketserver.ThreadingTCPServer,socketserver.ThreadingUDPServer]:
   cls=type('Server',(base,),{'address_family':family,'allow_reuse_address':True,'daemon_threads':True})
-  server=cls((host,443),Echo)
+  server=cls((host,8443 if host=='127.0.0.1' else 443),Echo)
   threading.Thread(target=server.serve_forever,daemon=True).start()
 print('ready',flush=True)
 while True:time.sleep(1)
@@ -106,7 +107,10 @@ while True:time.sleep(1)
             {'type': 'tproxy', 'tag': 'tproxy-in', 'listen': '0.0.0.0', 'listen_port': 1602},
             {'type': 'tproxy', 'tag': 'tproxy6-in', 'listen': '::1', 'listen_port': 1602}],
             'outbounds': [{'type': 'direct', 'tag': 'direct'}],
-            'route': {'final': 'direct', 'default_mark': 0x8000000}}))
+            # Keep the actual server separate from the synthetic destination:
+            # TPROXY's transparent UDP reply socket also binds the FakeIP tuple.
+            'route': {'rules': [{'action': 'route-options', 'override_address': '127.0.0.1',
+                                 'override_port': 8443}], 'final': 'direct', 'default_mark': 0x8000000}}))
         return self.start(self.router, ['sing-box', 'run', '-c', str(path)], 'core-'+str(len(self.procs)))
 
     def test_restart_socket_recovery_without_global_conntrack_flush(self):
