@@ -84,6 +84,11 @@ while True:time.sleep(1)
             proc.wait(timeout=5)
             log.close()
 
+    def close_client(self, proc):
+        if proc.poll() is None:
+            proc.kill()
+        proc.communicate(timeout=5)
+
     def rules(self, enabled, selected=True):
         self.run_in(self.router, ['nft', 'delete', 'table', 'inet', 'TrafiraTable']) if getattr(self, 'table', False) else None
         fixture = self.work/'fixture.json'
@@ -129,9 +134,15 @@ print('recovered',flush=True)
 '''.replace('FAMILY', str(family))
                     client = subprocess.Popen(['ip','netns','exec',self.client,'python3','-u','-c',code],
                                               stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-                    self.addCleanup(lambda p=client: p.kill() if p.poll() is None else None)
+                    self.addCleanup(self.close_client,client)
                     self.assertTrue(select.select([client.stdout],[],[],5)[0], 'client did not connect')
                     self.assertEqual(client.stdout.readline().strip(),'connected')
+                    if shutdown == signal.SIGKILL:
+                        # Reproduce a lost FIN/RST during the outage, rather than
+                        # assuming SIGKILL suppresses the kernel's socket close.
+                        self.run_in(self.router,['nft','-f','-'],input='add table inet LostClose\n'
+                            'add chain inet LostClose output { type filter hook output priority -1; policy accept; }\n'
+                            'add rule inet LostClose output tcp flags & (fin | rst) != 0 drop\n')
                     core.send_signal(shutdown);core.wait(timeout=5)
                     if shutdown == signal.SIGKILL:
                         host='198.18.0.10' if family==4 else '2001:2::10'
@@ -139,6 +150,7 @@ print('recovered',flush=True)
                         entries=self.run_in(self.router,['conntrack','-L','-f','ipv4' if family==4 else 'ipv6',
                             '-p','tcp','-s',source,'-d',host]).stdout
                         self.assertIn('ESTABLISHED',entries,'must reproduce the leftover conntrack entry')
+                        self.run_in(self.router,['nft','delete','table','inet','LostClose'])
                     self.core()
                     out,err=client.communicate('\n',timeout=8)
                     self.assertEqual(client.returncode,0,err)
@@ -154,6 +166,7 @@ print('recovered',flush=True)
             result=self.run_in(self.client,['python3','-c','''
 import socket
 for family,host in [(socket.AF_INET,'198.18.0.10'),(socket.AF_INET6,'2001:2::10')]:
+ print('family',family,'blocked',BLOCK,flush=True)
  s=socket.socket(family,socket.SOCK_DGRAM);s.settimeout(2);s.connect((host,443))
  try:
   s.send(b'not-recognizable-as-quic');data=s.recv(100)

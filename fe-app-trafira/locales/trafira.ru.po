@@ -755,8 +755,8 @@ msgstr "Отключить автостарт"
 msgid "Disable QUIC"
 msgstr "Отключить QUIC"
 
-msgid "Disable the QUIC protocol to improve compatibility or fix issues with video streaming"
-msgstr "Отключить QUIC протокол для улучшения совместимости или исправления видео стриминга"
+msgid "Reject intercepted UDP port 443 traffic for both IPv4 and IPv6, even if QUIC is not recognized. Other UDP services on port 443 are also rejected. Excluded devices and direct traffic are unchanged."
+msgstr "Отклонять перехваченный UDP-трафик на порт 443 для IPv4 и IPv6, даже если QUIC не распознан. Другие UDP-сервисы на этом порту тоже будут недоступны. Исключённые устройства и прямой трафик не затрагиваются."
 
 msgid "Disabling interception is incompatible with action=zapret2 because Trafira sends matched traffic through NFQUEUE."
 msgstr "Отключение перехвата несовместимо с action=zapret2, потому что Trafira отправляет совпавший трафик через NFQUEUE."
